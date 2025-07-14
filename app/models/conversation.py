@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING, List, Optional, Dict, Any
 from sqlalchemy import String, Integer, Text, JSON, ForeignKey, Index, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModel
+from .base import BaseModelDB
 
 if TYPE_CHECKING:
     from .user import User
 
 
-class Conversation(BaseModel):
+class Conversation(BaseModelDB):
     """
     Conversation model for chat sessions.
     
@@ -65,7 +65,7 @@ class Conversation(BaseModel):
         return f"<Conversation(title='{self.title}', user_id={self.user_id})>"
 
 
-class Message(BaseModel):
+class Message(BaseModelDB):
     """
     Message model for individual chat messages.
     

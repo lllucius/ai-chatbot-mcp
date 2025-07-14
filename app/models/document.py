@@ -17,7 +17,7 @@ from sqlalchemy import String, Text, Integer, Float, ForeignKey, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, TimestampMixin, UUIDMixin
+from .base import BaseModelDB, TimestampMixin, UUIDMixin
 
 
 class DocumentStatus(str, Enum):
@@ -40,7 +40,7 @@ class DocumentType(str, Enum):
     OTHER = "other"
 
 
-class Document(Base, UUIDMixin, TimestampMixin):
+class Document(BaseModelDB, UUIDMixin, TimestampMixin):
     """
     Document model for storing uploaded files and their metadata.
     
@@ -154,7 +154,7 @@ class Document(Base, UUIDMixin, TimestampMixin):
         return f"<Document(id={self.id}, title='{self.title}', status='{self.status}')>"
 
 
-class DocumentChunk(Base, UUIDMixin, TimestampMixin):
+class DocumentChunk(BaseModelDB, UUIDMixin, TimestampMixin):
     """
     Document chunk model for storing text segments with embeddings.
     

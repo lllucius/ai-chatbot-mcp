@@ -9,26 +9,23 @@ Current User: lllucius
 """
 
 # Import SQLAlchemy base classes only
-from .base import Base, TimestampMixin, SoftDeleteMixin, UUIDMixin
+from .base import BaseModelDB, TimestampMixin, UUIDMixin
 
 # Import database models (SQLAlchemy)
 from .user import User
 from .document import Document, DocumentChunk
 from .conversation import Conversation, Message
-from .search import SearchQuery, SearchResult
 
 __all__ = [
     # Base classes
-    "Base",
+    "BaseModelDB",
     "TimestampMixin", 
-    "SoftDeleteMixin",
     "UUIDMixin",
+
     # Models
     "User",
     "Document",
     "DocumentChunk", 
     "Conversation",
-    "Message",
-    "SearchQuery",
-    "SearchResult"
+    "Message"
 ]

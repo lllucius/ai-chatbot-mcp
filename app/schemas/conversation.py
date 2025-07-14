@@ -12,10 +12,11 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
+from .base import BaseSchema
 from .common import BaseResponse, PaginatedResponse
 
 
-class ConversationBase(BaseModel):
+class ConversationBase(BaseSchema):
     """Base conversation schema with common fields."""
     
     title: str = Field(..., min_length=1, max_length=500, description="Conversation title")
@@ -38,7 +39,7 @@ class ConversationCreate(ConversationBase):
     }
 
 
-class ConversationUpdate(BaseModel):
+class ConversationUpdate(BaseSchema):
     """Schema for updating conversation information."""
     
     title: Optional[str] = Field(None, min_length=1, max_length=500, description="New title")
@@ -88,7 +89,7 @@ class ConversationResponse(ConversationBase):
     }
 
 
-class MessageBase(BaseModel):
+class MessageBase(BaseSchema):
     """Base message schema with common fields."""
     
     role: str = Field(..., pattern="^(user|assistant|system)$", description="Message role")
@@ -149,7 +150,7 @@ class MessageResponse(MessageBase):
     }
 
 
-class ChatRequest(BaseModel):
+class ChatRequest(BaseSchema):
     """Schema for chat request."""
     
     user_message: str = Field(..., min_length=1, max_length=10000, description="User message")
@@ -211,7 +212,7 @@ class MessageListResponse(BaseResponse):
     total: int = Field(0, description="Total number of messages")
 
 
-class ConversationStats(BaseModel):
+class ConversationStats(BaseSchema):
     """Schema for conversation statistics."""
     
     total_conversations: int = Field(0, description="Total conversations")

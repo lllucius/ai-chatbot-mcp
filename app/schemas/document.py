@@ -14,7 +14,7 @@ from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .base import BaseModelSchema
+from .base import BaseSchema
 from .common import BaseResponse, PaginationParams
 
 
@@ -38,16 +38,8 @@ class DocumentTypeEnum(str, Enum):
     OTHER = "other"
 
 
-class DocumentBase(BaseModel):
+class DocumentBase(BaseSchema):
     """Base document schema with common fields."""
-    
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-        use_enum_values=True,
-        validate_assignment=True,
-        extra='ignore'
-    )
     
     title: str = Field(
         max_length=500,
@@ -69,7 +61,7 @@ class DocumentCreate(DocumentBase):
     pass
 
 
-class DocumentUpdate(BaseModel):
+class DocumentUpdate(BaseSchema):
     """Schema for updating a document."""
     
     model_config = ConfigDict(
@@ -93,7 +85,7 @@ class DocumentUpdate(BaseModel):
     )
 
 
-class DocumentResponse(BaseModelSchema):
+class DocumentResponse(BaseSchema):
     """Schema for document API responses."""
     
     title: str = Field(description="Document title")
@@ -110,7 +102,7 @@ class DocumentResponse(BaseModelSchema):
     user_id: uuid.UUID = Field(description="ID of user who uploaded the document")
 
 
-class DocumentChunkResponse(BaseModelSchema):
+class DocumentChunkResponse(BaseSchema):
     """Schema for document chunk API responses."""
     
     content: str = Field(description="Text content of the chunk")
@@ -185,7 +177,7 @@ class DocumentProcessingResponse(BaseResponse):
     error_message: Optional[str] = Field(default=None, description="Error message if failed")
 
 
-class DocumentStatsResponse(BaseModel):
+class DocumentStatsResponse(BaseSchema):
     """Response schema for document statistics."""
     
     model_config = ConfigDict(

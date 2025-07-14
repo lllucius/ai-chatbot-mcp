@@ -13,10 +13,11 @@ from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, EmailStr, field_validator
 
+from .base import BaseSchema
 from .common import BaseResponse, PaginationParams
 
 
-class UserBase(BaseModel):
+class UserBase(BaseSchema):
     """Base user schema with common fields."""
     
     model_config = ConfigDict(
@@ -77,7 +78,7 @@ class UserCreate(UserBase):
         return v
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(BaseSchema):
     """Schema for updating a user."""
     
     model_config = ConfigDict(
@@ -95,7 +96,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = Field(default=None, description="Whether user is active")
 
 
-class UserPasswordUpdate(BaseModel):
+class UserPasswordUpdate(BaseSchema):
     """Schema for updating user password."""
     
     model_config = ConfigDict(validate_assignment=True)
@@ -184,7 +185,7 @@ class UserSearchParams(PaginationParams):
     )
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(BaseSchema):
     """Schema for login requests."""
     
     model_config = ConfigDict(validate_assignment=True)
@@ -202,7 +203,7 @@ class LoginResponse(BaseResponse):
     user: UserResponse = Field(description="Authenticated user details")
 
 
-class RefreshTokenRequest(BaseModel):
+class RefreshTokenRequest(BaseSchema):
     """Schema for token refresh requests."""
     
     model_config = ConfigDict(validate_assignment=True)
@@ -210,7 +211,7 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str = Field(description="Refresh token")
 
 
-class PasswordResetRequest(BaseModel):
+class PasswordResetRequest(BaseSchema):
     """Schema for password reset requests."""
     
     model_config = ConfigDict(validate_assignment=True)
@@ -218,7 +219,7 @@ class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(description="Email address for password reset")
 
 
-class PasswordResetConfirm(BaseModel):
+class PasswordResetConfirm(BaseSchema):
     """Schema for password reset confirmation."""
     
     model_config = ConfigDict(validate_assignment=True)
@@ -245,7 +246,7 @@ class PasswordResetConfirm(BaseModel):
         return v
 
 
-class UserStatsResponse(BaseModel):
+class UserStatsResponse(BaseSchema):
     """Response schema for user statistics."""
     
     model_config = ConfigDict(

@@ -13,14 +13,14 @@ from sqlalchemy import String, Boolean, DateTime, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
-from .base import BaseModel
+from .base import BaseModelDB
 
 if TYPE_CHECKING:
     from .document import Document
     from .conversation import Conversation
 
 
-class User(BaseModel):
+class User(BaseModelDB):
     """
     User model for authentication and profile management.
     

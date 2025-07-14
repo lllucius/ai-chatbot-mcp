@@ -12,8 +12,10 @@ from typing import Optional
 from pydantic import BaseModel, Field, EmailStr, field_validator
 import re
 
+from .base import BaseSchema
 
-class LoginRequest(BaseModel):
+
+class LoginRequest(BaseSchema):
     """Schema for user login request."""
     
     username: str = Field(..., min_length=3, max_length=50, description="Username or email")
@@ -29,7 +31,7 @@ class LoginRequest(BaseModel):
     }
 
 
-class RegisterRequest(BaseModel):
+class RegisterRequest(BaseSchema):
     """Schema for user registration request."""
     
     username: str = Field(..., min_length=3, max_length=50, description="Unique username")
@@ -71,7 +73,7 @@ class RegisterRequest(BaseModel):
     }
 
 
-class Token(BaseModel):
+class Token(BaseSchema):
     """Schema for JWT token response."""
     
     access_token: str = Field(..., description="JWT access token")
@@ -89,7 +91,7 @@ class Token(BaseModel):
     }
 
 
-class PasswordResetRequest(BaseModel):
+class PasswordResetRequest(BaseSchema):
     """Schema for password reset request."""
     
     email: EmailStr = Field(..., description="Email address for password reset")
@@ -103,7 +105,7 @@ class PasswordResetRequest(BaseModel):
     }
 
 
-class PasswordResetConfirm(BaseModel):
+class PasswordResetConfirm(BaseSchema):
     """Schema for password reset confirmation."""
     
     token: str = Field(..., description="Password reset token")
