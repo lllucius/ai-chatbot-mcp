@@ -1,0 +1,363 @@
+"""
+FastAPI application entry point with middleware and exception handling.
+
+This module creates and configures the FastAPI application with all necessary
+middleware, exception handlers, and API routes.
+
+Generated on: 2025-07-14 04:24:47 UTC
+Current User: lllucius
+"""
+
+import logging
+import time
+from contextlib import asynccontextmanager
+from typing import Dict, Any
+from datetime import datetime
+
+from fastapi import FastAPI, Request, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
+
+from .config import settings
+from .database import init_db, close_db
+from .core.exceptions import ChatbotPlatformException
+from .utils.logging import setup_logging
+
+# Import API routers
+from .api import (
+    auth_router,
+    users_router,
+    documents_router,
+    conversations_router,
+    search_router,
+    health_router
+)
+
+# Setup logging
+setup_logging()
+logger = logging.getLogger(__name__)
+
+
+def get_current_timestamp() -> str:
+    """Get current UTC timestamp in ISO format."""
+    return datetime.utcnow().isoformat() + "Z"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan manager.
+    
+    Handles startup and shutdown events for the FastAPI application.
+    """
+    # Startup
+    logger.info("Starting AI Chatbot Platform...")
+    try:
+        await init_db()
+        logger.info("Database initialized successfully")
+        
+        # Initialize FastMCP (required)
+        try:
+            from .services.mcp_client import get_mcp_client
+            mcp_client = await get_mcp_client()
+            logger.info("FastMCP client initialized successfully")
+        except Exception as e:
+            logger.error(f"FastMCP initialization failed (REQUIRED): {e}")
+            raise
+        
+    except Exception as e:
+        logger.error(f"Application initialization failed: {e}")
+        raise
+    
+    logger.info("Application startup completed")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down AI Chatbot Platform...")
+    try:
+        # Cleanup FastMCP
+        try:
+            from .services.mcp_client import cleanup_mcp_client
+            await cleanup_mcp_client()
+            logger.info("FastMCP client cleaned up")
+        except Exception as e:
+            logger.warning(f"FastMCP cleanup failed: {e}")
+        
+        await close_db()
+        logger.info("Database connections closed")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
+    
+    logger.info("Application shutdown completed")
+
+
+# Create FastAPI application
+app = FastAPI(
+    title=settings.app_name,
+    description=settings.app_description,
+    version=settings.app_version,
+    debug=settings.debug,
+    lifespan=lifespan,
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
+    openapi_url="/openapi.json" if settings.debug else None,
+)
+
+
+# Custom OpenAPI schema
+def custom_openapi():
+    """Generate custom OpenAPI schema with additional information."""
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=settings.app_name,
+        version=settings.app_version,
+        description=settings.app_description,
+        routes=app.routes,
+    )
+    
+    # Add custom information
+    openapi_schema["info"]["x-logo"] = {
+        "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
+    }
+    
+    # Add authentication security scheme
+    openapi_schema["components"]["securitySchemes"] = {
+        "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT token"
+        }
+    }
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
+
+# Request timing middleware
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    """Add processing time header to responses."""
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(f"{process_time:.4f}")
+    return response
+
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all requests for monitoring and debugging."""
+    start_time = time.time()
+    
+    # Log request
+    logger.info(
+        f"Request started",
+        extra={
+            "method": request.method,
+            "url": str(request.url),
+            "client_ip": request.client.host if request.client else "unknown",
+            "user_agent": request.headers.get("user-agent", "unknown")
+        }
+    )
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Log response
+    process_time = time.time() - start_time
+    logger.info(
+        f"Request completed",
+        extra={
+            "method": request.method,
+            "url": str(request.url),
+            "status_code": response.status_code,
+            "process_time": f"{process_time:.4f}s"
+        }
+    )
+    
+    return response
+
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=settings.allowed_methods,
+    allow_headers=settings.allowed_headers,
+)
+
+
+# Trusted host middleware for production
+if settings.is_production:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["*"]  # Configure based on deployment
+    )
+
+
+# Global exception handlers
+@app.exception_handler(ChatbotPlatformException)
+async def chatbot_platform_exception_handler(
+    request: Request, 
+    exc: ChatbotPlatformException
+) -> JSONResponse:
+    """Handle custom application exceptions."""
+    logger.error(
+        f"Application error: {exc.message}",
+        extra={
+            "error_code": exc.error_code,
+            "details": exc.details,
+            "path": request.url.path,
+            "method": request.method
+        }
+    )
+    
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "success": False,
+            "error_code": exc.error_code,
+            "message": exc.message,
+            "details": exc.details,
+            "timestamp": get_current_timestamp()
+        }
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(
+    request: Request, 
+    exc: HTTPException
+) -> JSONResponse:
+    """Handle HTTP exceptions with consistent format."""
+    logger.warning(
+        f"HTTP error {exc.status_code}: {exc.detail}",
+        extra={
+            "status_code": exc.status_code,
+            "path": request.url.path,
+            "method": request.method
+        }
+    )
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "error_code": f"HTTP_{exc.status_code}",
+            "message": exc.detail,
+            "timestamp": get_current_timestamp()
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(
+    request: Request, 
+    exc: Exception
+) -> JSONResponse:
+    """Handle unexpected exceptions."""
+    logger.error(
+        f"Unexpected error: {str(exc)}",
+        extra={
+            "exception_type": type(exc).__name__,
+            "path": request.url.path,
+            "method": request.method
+        },
+        exc_info=True
+    )
+    
+    # Don't expose internal error details in production
+    error_message = str(exc) if settings.debug else "Internal server error"
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "message": error_message,
+            "timestamp": get_current_timestamp()
+        }
+    )
+
+
+# API Routes
+app.include_router(
+    health_router,
+    prefix="/api/v1/health",
+    tags=["health"]
+)
+
+app.include_router(
+    auth_router,
+    prefix="/api/v1/auth",
+    tags=["authentication"]
+)
+
+app.include_router(
+    users_router,
+    prefix="/api/v1/users",
+    tags=["users"]
+)
+
+app.include_router(
+    documents_router,
+    prefix="/api/v1/documents",
+    tags=["documents"]
+)
+
+app.include_router(
+    conversations_router,
+    prefix="/api/v1/conversations",
+    tags=["conversations"]
+)
+
+app.include_router(
+    search_router,
+    prefix="/api/v1/search",
+    tags=["search"]
+)
+
+
+# Root endpoint
+@app.get("/", include_in_schema=False)
+async def root() -> Dict[str, Any]:
+    """Root endpoint with basic application information."""
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "description": settings.app_description,
+        "status": "operational",
+        "docs": "/docs" if settings.debug else "Documentation not available in production",
+        "timestamp": get_current_timestamp()
+    }
+
+
+# Health check endpoint (for load balancers)
+@app.get("/ping", include_in_schema=False)
+async def ping() -> Dict[str, str]:
+    """Simple health check endpoint."""
+    return {"status": "ok", "timestamp": get_current_timestamp()}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.debug,
+        log_level=settings.log_level.lower(),
+        access_log=True
+    )
