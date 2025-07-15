@@ -11,7 +11,7 @@ Current User: lllucius
 import uuid
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, field_validator
+from pydantic import ConfigDict, Field, EmailStr, field_validator
 
 from .base import BaseSchema
 from .common import BaseResponse, PaginationParams

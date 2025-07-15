@@ -14,13 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 
 from ..models.conversation import Conversation, Message
-from ..models.user import User
 from ..schemas.conversation import ConversationCreate, ConversationUpdate, ChatRequest, MessageResponse, ConversationResponse
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
 from ..services.embedding import EmbeddingService
 from ..core.exceptions import NotFoundError, ValidationError
-from ..config import settings
 
 logger = logging.getLogger(__name__)
 

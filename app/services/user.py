@@ -9,7 +9,7 @@ Current User: lllucius
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 from datetime import timedelta
@@ -20,7 +20,6 @@ from ..models.conversation import Conversation
 from ..schemas.user import UserUpdate
 from ..utils.security import get_password_hash, verify_password
 from ..core.exceptions import NotFoundError, ValidationError, AuthenticationError
-from ..config import settings
 
 logger = logging.getLogger(__name__)
 

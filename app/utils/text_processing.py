@@ -10,7 +10,7 @@ Current User: lllucius
 
 import re
 import logging
-from typing import List, Dict, Any, Tuple, Optional
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)

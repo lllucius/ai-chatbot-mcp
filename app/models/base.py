@@ -10,9 +10,8 @@ Current User: lllucius
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional
 
-from sqlalchemy import DateTime, String, Boolean, text
+from sqlalchemy import DateTime, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column

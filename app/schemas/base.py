@@ -10,8 +10,8 @@ Current User: lllucius
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional, List
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseSchema(BaseModel):

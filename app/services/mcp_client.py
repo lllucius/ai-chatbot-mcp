@@ -11,9 +11,8 @@ Current User: lllucius
 import logging
 import asyncio
 import json
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-from pathlib import Path
 
 from fastmcp import Client
 from fastmcp.client.transports import MCPConfigTransport

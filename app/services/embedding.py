@@ -14,7 +14,6 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..services.openai_client import OpenAIClient
-from ..core.exceptions import EmbeddingError
 from ..config import settings
 
 logger = logging.getLogger(__name__)

@@ -9,7 +9,7 @@ Current User: lllucius
 """
 
 from typing import Optional, Generator
-from fastapi import Depends, HTTPException, status, Query
+from fastapi import Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,7 +21,6 @@ from ..services.document import DocumentService
 from ..services.search import SearchService
 from ..services.conversation import ConversationService
 from ..services.embedding import EmbeddingService
-from ..core.exceptions import AuthenticationError
 
 # Security scheme
 security = HTTPBearer()

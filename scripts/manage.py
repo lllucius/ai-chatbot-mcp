@@ -24,7 +24,6 @@ from app.models.document import Document
 from app.models.conversation import Conversation
 from app.services.auth import AuthService
 from app.services.user import UserService
-from app.services.document import DocumentService
 from sqlalchemy import select, func
 
 console = Console()
@@ -70,7 +69,7 @@ def create_user_cmd(
                     await db.commit()
                     await db.refresh(user)
                 
-                console.print(f"[green]User created successfully:[/green]")
+                console.print("[green]User created successfully:[/green]")
                 console.print(f"  Username: {user.username}")
                 console.print(f"  Email: {user.email}")
                 console.print(f"  Superuser: {user.is_superuser}")
@@ -145,7 +144,7 @@ def delete_user_cmd(username: str, force: bool = False):
                 
                 # Confirm deletion
                 if not force:
-                    console.print(f"User to delete:")
+                    console.print("User to delete:")
                     console.print(f"  Username: {user.username}")
                     console.print(f"  Email: {user.email}")
                     console.print(f"  Superuser: {user.is_superuser}")

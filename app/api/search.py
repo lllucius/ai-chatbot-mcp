@@ -9,13 +9,12 @@ Current User: lllucius
 """
 
 import time
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..models.user import User
-from ..schemas.document import DocumentSearchRequest, DocumentSearchResponse, DocumentChunkResponse
+from ..schemas.document import DocumentSearchRequest, DocumentSearchResponse
 from ..schemas.common import BaseResponse
 from ..services.search import SearchService
 from ..core.exceptions import SearchError, ValidationError
@@ -73,7 +72,7 @@ async def search_documents(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Search operation failed"
@@ -126,7 +125,7 @@ async def find_similar_chunks(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Similar chunks search failed"
@@ -166,7 +165,7 @@ async def get_search_suggestions(
             "suggestions": suggestions[:limit]
         }
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate suggestions"
@@ -195,7 +194,7 @@ async def get_search_history(
             "total": 0
         }
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve search history"
@@ -220,7 +219,7 @@ async def clear_search_history(
             message="Search history cleared"
         )
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to clear search history"

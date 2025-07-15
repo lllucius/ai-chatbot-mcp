@@ -9,7 +9,6 @@ Current User: lllucius
 """
 
 import logging
-import asyncio
 from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession

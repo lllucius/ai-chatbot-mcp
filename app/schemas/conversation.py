@@ -9,11 +9,11 @@ Current User: lllucius
 """
 
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 from datetime import datetime
 
 from .base import BaseSchema
-from .common import BaseResponse, PaginatedResponse
+from .common import BaseResponse
 
 
 class ConversationBase(BaseSchema):

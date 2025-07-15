@@ -13,7 +13,7 @@ from pydantic import Field, field_validator
 from datetime import datetime
 
 from .base import BaseSchema
-from .common import BaseResponse, PaginationParams, SearchParams
+from .common import BaseResponse, SearchParams
 
 
 class DocumentResponse(BaseSchema):

@@ -12,8 +12,6 @@ import asyncio
 import sys
 import argparse
 from pathlib import Path
-from datetime import datetime
-from typing import Optional
 
 # Add the parent directory to the path so we can import the app
 sys.path.append(str(Path(__file__).parent.parent))
@@ -173,20 +171,20 @@ class ManagementCLI:
                 
                 print("📊 SYSTEM STATISTICS")
                 print("=" * 50)
-                print(f"👥 Users:")
+                print("👥 Users:")
                 print(f"   Total: {total_users}")
                 print(f"   Active: {active_users}")
                 print(f"   Superusers: {superusers}")
                 print()
-                print(f"📄 Documents:")
+                print("📄 Documents:")
                 print(f"   Total: {total_docs}")
                 print(f"   Processed: {completed_docs}")
                 print()
-                print(f"💬 Conversations:")
+                print("💬 Conversations:")
                 print(f"   Total: {total_convs}")
                 print(f"   Active: {active_convs}")
                 print()
-                print(f"⚙️  Configuration:")
+                print("⚙️  Configuration:")
                 print(f"   App Version: {settings.app_version}")
                 print(f"   Debug Mode: {'ON' if settings.debug else 'OFF'}")
                 print(f"   Upload Dir: {settings.upload_directory}")

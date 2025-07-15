@@ -65,7 +65,6 @@ async def init_db() -> None:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         
 
-        import sqlalchemy    
         print("TABLES", BaseModelDB.metadata.tables.keys())
         
         # Create all tables

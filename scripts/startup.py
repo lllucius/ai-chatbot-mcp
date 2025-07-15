@@ -197,7 +197,7 @@ async def setup_mcp_workspace():
         Path(mcp_workspace).mkdir(parents=True, exist_ok=True)
         
         # Create example files for the filesystem server
-        readme_content = f"""# MCP Workspace - REQUIRED
+        readme_content = """# MCP Workspace - REQUIRED
 
 This is the workspace directory for the FastMCP filesystem server.
 The AI assistant can read and write files in this directory.
@@ -312,10 +312,10 @@ async def run_startup():
         logger.info(f"📁 Upload directory: {settings.upload_directory}")
         logger.info(f"🤖 OpenAI: {'✅ Ready' if openai_ok else '⚠️  Not configured (optional)'}")
         logger.info(f"🔧 FastMCP: {'✅ Ready (REQUIRED)' if fastmcp_ok else '❌ FAILED (REQUIRED)'}")
-        logger.info(f"🔐 Admin credentials:")
-        logger.info(f"   Username: admin")
-        logger.info(f"   Email: admin@example.com")
-        logger.info(f"   Password: Admin123!")
+        logger.info("🔐 Admin credentials:")
+        logger.info("   Username: admin")
+        logger.info("   Email: admin@example.com")
+        logger.info("   Password: Admin123!")
         logger.info("")
         logger.info("🚦 To start the application:")
         logger.info("   uvicorn app.main:app --reload")

@@ -8,7 +8,6 @@ Generated on: 2025-07-14 03:12:05 UTC
 Current User: lllucius
 """
 
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,7 +19,7 @@ from ..schemas.user import (
 )
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..services.user import UserService
-from ..core.exceptions import NotFoundError, ValidationError, AuthorizationError
+from ..core.exceptions import NotFoundError, ValidationError
 from ..dependencies import get_current_user, get_current_superuser
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -46,7 +45,7 @@ async def get_my_profile(
         profile = await user_service.get_user_profile(current_user.id)
         return profile
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve profile"
@@ -74,7 +73,7 @@ async def update_my_profile(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Profile update failed"
@@ -115,7 +114,7 @@ async def change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Password change failed"
@@ -157,7 +156,7 @@ async def list_users(
             message="Users retrieved successfully"
         )
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve users"
@@ -185,7 +184,7 @@ async def get_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve user"
@@ -219,7 +218,7 @@ async def update_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="User update failed"
@@ -261,7 +260,7 @@ async def delete_user(
             
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="User deletion failed"

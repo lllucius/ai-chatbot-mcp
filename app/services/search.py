@@ -9,16 +9,14 @@ Current User: lllucius
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text, and_, func
+from sqlalchemy import select, and_, func
 
 from ..models.document import Document, DocumentChunk
-from ..models.user import User
 from ..schemas.document import DocumentSearchRequest, DocumentChunkResponse
 from ..services.embedding import EmbeddingService
 from ..core.exceptions import SearchError, NotFoundError
-from ..config import settings
 
 logger = logging.getLogger(__name__)
 

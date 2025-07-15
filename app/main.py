@@ -156,7 +156,7 @@ async def log_requests(request: Request, call_next):
     
     # Log request
     logger.info(
-        f"Request started",
+        "Request started",
         extra={
             "method": request.method,
             "url": str(request.url),
@@ -171,7 +171,7 @@ async def log_requests(request: Request, call_next):
     # Log response
     process_time = time.time() - start_time
     logger.info(
-        f"Request completed",
+        "Request completed",
         extra={
             "method": request.method,
             "url": str(request.url),

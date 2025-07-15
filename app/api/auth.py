@@ -54,7 +54,7 @@ async def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed"
@@ -85,7 +85,7 @@ async def login(
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"}
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Login failed"
@@ -135,7 +135,7 @@ async def refresh_token(
         token_data = auth_service.create_access_token({"sub": current_user.username})
         return token_data
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Token refresh failed"

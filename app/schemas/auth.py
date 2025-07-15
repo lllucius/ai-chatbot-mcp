@@ -9,7 +9,7 @@ Current User: lllucius
 """
 
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import Field, EmailStr, field_validator
 import re
 
 from .base import BaseSchema

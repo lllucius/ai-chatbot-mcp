@@ -9,7 +9,6 @@ Current User: lllucius
 """
 
 import time
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,11 +21,9 @@ from ..schemas.conversation import (
     MessageResponse,
     ChatRequest,
     ChatResponse,
-    ConversationListResponse,
-    MessageListResponse,
     ConversationStats
 )
-from ..schemas.common import BaseResponse, PaginatedResponse
+from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
 from ..services.conversation import ConversationService
 from ..core.exceptions import NotFoundError, ValidationError
 from ..dependencies import get_current_user
@@ -62,7 +59,7 @@ async def create_conversation(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create conversation"
@@ -97,6 +94,14 @@ async def list_conversations(
 
     print("CONTNNTNTN", conversation_responses)
     print(f"TOTAL {total} PAGE {page} SIZE {size}")
+    return PaginatedResponse(
+        items=conversation_responses,
+        pagination=PaginationParams(page=page, per_page=size),
+        total=total,
+        success=True,
+        message="Conversations retrieved successfully"
+    )
+    """ 
     return PaginatedResponse.create(
         items=conversation_responses,
         total=total,
@@ -104,6 +109,7 @@ async def list_conversations(
         size=size,
         message="Conversations retrieved successfully"
     )
+    """
     
 #    except Exception as e:
 #        raise HTTPException(
@@ -136,7 +142,7 @@ async def get_conversation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve conversation"
@@ -173,7 +179,7 @@ async def update_conversation(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Conversation update failed"
@@ -213,7 +219,7 @@ async def delete_conversation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Conversation deletion failed"
@@ -256,7 +262,7 @@ async def get_messages(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve messages"
@@ -301,7 +307,7 @@ async def chat(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Chat processing failed"
@@ -322,7 +328,7 @@ async def get_conversation_stats(
         stats = await conversation_service.get_user_stats(current_user.id)
         return ConversationStats.model_validate(stats)
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve conversation stats"

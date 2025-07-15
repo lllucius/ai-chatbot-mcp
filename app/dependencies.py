@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .database import get_db
 from .models.user import User
 from .services.auth import AuthService
-from .core.exceptions import AuthenticationError
 
 # Security scheme for JWT tokens
 security = HTTPBearer()
@@ -109,7 +108,7 @@ async def get_current_user(
         
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed",

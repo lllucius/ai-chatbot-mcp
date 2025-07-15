@@ -8,9 +8,7 @@ Generated on: 2025-07-14 03:12:05 UTC
 Current User: lllucius
 """
 
-import os
-import uuid
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,8 +18,7 @@ from ..schemas.document import (
     DocumentResponse,
     DocumentUpdate,
     DocumentUploadResponse,
-    ProcessingStatusResponse,
-    DocumentListResponse
+    ProcessingStatusResponse
 )
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..services.document import DocumentService
@@ -109,7 +106,7 @@ async def upload_document(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Document upload failed"
@@ -150,7 +147,7 @@ async def list_documents(
             message="Documents retrieved successfully"
         )
         
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve documents"
@@ -178,7 +175,7 @@ async def get_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve document"
@@ -216,7 +213,7 @@ async def update_document(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Document update failed"
@@ -254,7 +251,7 @@ async def delete_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Document deletion failed"
@@ -290,7 +287,7 @@ async def get_processing_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve processing status"
@@ -332,7 +329,7 @@ async def reprocess_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Reprocessing failed"
@@ -369,7 +366,7 @@ async def download_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Download failed"

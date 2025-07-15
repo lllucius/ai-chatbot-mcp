@@ -245,14 +245,12 @@ class PaginatedResponse(BaseResponse, Generic[T]):
         total: int,
         message: str
     ) -> "PaginatedResponse":
-        """Create a paginated response."""
         response = cls(
             success=True,
             message=message,
             items=items,
             pagination=PaginationParams(page=page, per_page=size)
         )
-
 
 class SearchParams(PaginationParams):
     """Query parameters for search with pagination."""
