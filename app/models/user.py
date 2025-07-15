@@ -45,13 +45,14 @@ class User(BaseModelDB):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    
+
     # Relationships
     documents: Mapped[List["Document"]] = relationship(
         "Document", 
         back_populates="owner",
         cascade="all, delete-orphan"
     )
+
     conversations: Mapped[List["Conversation"]] = relationship(
         "Conversation",
         back_populates="user", 

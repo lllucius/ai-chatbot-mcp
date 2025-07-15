@@ -14,7 +14,6 @@ import re
 
 from .base import BaseSchema
 
-
 class LoginRequest(BaseSchema):
     """Schema for user login request."""
     
@@ -133,3 +132,4 @@ class PasswordResetConfirm(BaseSchema):
             }
         }
     }
+

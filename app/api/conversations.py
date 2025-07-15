@@ -83,31 +83,33 @@ async def list_conversations(
     Returns paginated list of conversations owned by the current user
     with optional filtering by active status.
     """
-    try:
-        conversations, total = await conversation_service.list_conversations(
-            user_id=current_user.id,
-            page=page,
-            size=size,
-            active_only=active_only
-        )
-        
-        conversation_responses = [
-            ConversationResponse.model_validate(conv) for conv in conversations
-        ]
-        
-        return PaginatedResponse.create(
-            items=conversation_responses,
-            total=total,
-            page=page,
-            size=size,
-            message="Conversations retrieved successfully"
-        )
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve conversations"
-        )
+    #try:
+    conversations, total = await conversation_service.list_conversations(
+        user_id=current_user.id,
+        page=page,
+        size=size,
+        active_only=active_only
+    )
+    
+    conversation_responses = [
+        ConversationResponse.model_validate(conv) for conv in conversations
+    ]
+
+    print("CONTNNTNTN", conversation_responses)
+    print(f"TOTAL {total} PAGE {page} SIZE {size}")
+    return PaginatedResponse.create(
+        items=conversation_responses,
+        total=total,
+        page=page,
+        size=size,
+        message="Conversations retrieved successfully"
+    )
+    
+#    except Exception as e:
+#        raise HTTPException(
+#            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#            detail="Failed to retrieve conversations"
+#        )
 
 
 @router.get("/{conversation_id}", response_model=ConversationResponse)

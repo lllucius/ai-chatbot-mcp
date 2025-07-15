@@ -9,7 +9,7 @@ Current User: lllucius
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -20,6 +20,7 @@ from ..schemas.auth import RegisterRequest, Token
 from ..utils.security import get_password_hash, verify_password
 from ..core.exceptions import AuthenticationError, ValidationError
 from ..config import settings
+from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,8 @@ class AuthService:
                 raise AuthenticationError("Invalid username or password")
             
             # Update last login
-            user.last_login = datetime.utcnow()
+            print("USERID", user.id)
+            user.last_login = utcnow()
             await self.db.commit()
             
             # Create access token
@@ -150,7 +152,7 @@ class AuthService:
             Token: JWT token with expiration info
         """
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
+        expire = utcnow() + timedelta(minutes=self.access_token_expire_minutes)
         to_encode.update({"exp": expire})
         
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)

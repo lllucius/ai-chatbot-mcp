@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class BaseSchema(BaseModel):
     """Base Pydantic model with modern V2 configuration."""
-    
+
     model_config = ConfigDict(
         # Enable ORM mode for SQLAlchemy integration
         from_attributes=True,
@@ -96,53 +96,3 @@ class BaseModelSchema(BaseSchema):
         import json
         return json.dumps(data)
 
-
-class PaginationSchema(BaseSchema):
-    """Schema for pagination metadata."""
-    
-    page: int = 1
-    per_page: int = 10
-    total_items: int = 0
-    total_pages: int = 0
-    has_next: bool = False
-    has_prev: bool = False
-    
-    @classmethod
-    def create(
-        cls,
-        page: int,
-        per_page: int,
-        total_items: int
-    ) -> "PaginationSchema":
-        """Create pagination metadata."""
-        total_pages = (total_items + per_page - 1) // per_page
-        
-        return cls(
-            page=page,
-            per_page=per_page,
-            total_items=total_items,
-            total_pages=total_pages,
-            has_next=page < total_pages,
-            has_prev=page > 1
-        )
-
-
-class PaginatedResponse(BaseSchema):
-    """Generic paginated response schema."""
-    
-    items: List[Any] = Field(default_factory=list)
-    pagination: PaginationSchema
-    
-    @classmethod
-    def create(
-        cls,
-        items: List[Any],
-        page: int,
-        per_page: int,
-        total_items: int
-    ) -> "PaginatedResponse":
-        """Create a paginated response."""
-        return cls(
-            items=items,
-            pagination=PaginationSchema.create(page, per_page, total_items)
-        )

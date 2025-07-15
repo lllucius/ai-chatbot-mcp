@@ -216,7 +216,7 @@ class Settings(BaseSettings):
         Returns configurations compatible with MCPConfigTransport.
         """
         return {
-            "filesystem": {
+            "http": {
                 "command": "npx",
                 "args": ["@modelcontextprotocol/server-filesystem", "/tmp/mcp_workspace"],
                 "env": {},

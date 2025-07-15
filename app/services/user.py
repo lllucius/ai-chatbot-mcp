@@ -12,11 +12,12 @@ import logging
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
+from datetime import timedelta
 
 from ..models.user import User
 from ..models.document import Document
 from ..models.conversation import Conversation
-from ..schemas.user import UserUpdate, UserProfile
+from ..schemas.user import UserUpdate
 from ..utils.security import get_password_hash, verify_password
 from ..core.exceptions import NotFoundError, ValidationError, AuthenticationError
 from ..config import settings
@@ -41,7 +42,7 @@ class UserService:
         """
         self.db = db
     
-    async def get_user_profile(self, user_id: int) -> UserProfile:
+    async def get_user_profile(self, user_id: int) -> User:
         """
         Get detailed user profile with statistics.
         
@@ -96,7 +97,7 @@ class UserService:
             "total_messages": total_messages
         }
         
-        return UserProfile.model_validate(profile_data)
+        return User.model_validate(profile_data)
     
     async def update_user(self, user_id: int, user_update: UserUpdate) -> User:
         """
@@ -286,8 +287,7 @@ class UserService:
         superusers = super_result.scalar() or 0
         
         # Recent registrations (last 30 days)
-        from datetime import datetime, timedelta
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        thirty_days_ago = utcnow() - timedelta(days=30)
         
         recent_result = await self.db.execute(
             select(func.count(User.id)).where(User.created_at >= thirty_days_ago)

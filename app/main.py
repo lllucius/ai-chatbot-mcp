@@ -12,7 +12,6 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Dict, Any
-from datetime import datetime
 
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +23,7 @@ from .config import settings
 from .database import init_db, close_db
 from .core.exceptions import ChatbotPlatformException
 from .utils.logging import setup_logging
+from .utils.timestamp import get_current_timestamp
 
 # Import API routers
 from .api import (
@@ -38,11 +38,6 @@ from .api import (
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
-
-
-def get_current_timestamp() -> str:
-    """Get current UTC timestamp in ISO format."""
-    return datetime.utcnow().isoformat() + "Z"
 
 
 @asynccontextmanager
@@ -347,7 +342,10 @@ async def root() -> Dict[str, Any]:
 @app.get("/ping", include_in_schema=False)
 async def ping() -> Dict[str, str]:
     """Simple health check endpoint."""
-    return {"status": "ok", "timestamp": get_current_timestamp()}
+    return {
+        "status": "ok",
+        "timestamp": get_current_timestamp()
+    }
 
 
 if __name__ == "__main__":

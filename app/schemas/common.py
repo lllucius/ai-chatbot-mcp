@@ -8,14 +8,19 @@ Current Date and Time (UTC): 2025-07-14 05:01:09
 Current User: lllucius
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import TypeVar, Generic, Any, Dict, List, Optional, Union
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..utils.timestamp import utcnow
+
+
+# Generic type variable for paginated responses
+T = TypeVar('T')
 
 class BaseResponse(BaseModel):
     """Base response schema for API endpoints."""
-    
+
     model_config = ConfigDict(
         from_attributes=True,
         populate_by_name=True,
@@ -27,7 +32,7 @@ class BaseResponse(BaseModel):
     success: bool = Field(description="Whether the request was successful")
     message: str = Field(description="Human-readable message")
     timestamp: Optional[datetime] = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         description="When the response was generated"
     )
     
@@ -78,7 +83,7 @@ class ValidationErrorResponse(ErrorResponse):
     )
 
 
-class HealthCheckResponse(BaseModel):
+class HealthCheckResponse(BaseResponse):
     """Health check response schema."""
     
     model_config = ConfigDict(
@@ -89,7 +94,7 @@ class HealthCheckResponse(BaseModel):
     status: str = Field(description="Overall health status")
     version: str = Field(description="Application version")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         description="Health check timestamp"
     )
     components: Optional[Dict[str, Any]] = Field(
@@ -108,39 +113,6 @@ class HealthCheckResponse(BaseModel):
         
         import json
         return json.dumps(data)
-
-
-class PaginationParams(BaseModel):
-    """Query parameters for pagination."""
-    
-    model_config = ConfigDict(
-        from_attributes=True,
-        validate_assignment=True
-    )
-    
-    page: int = Field(default=1, ge=1, description="Page number")
-    per_page: int = Field(default=10, ge=1, le=100, description="Items per page")
-    sort_by: Optional[str] = Field(default=None, description="Field to sort by")
-    sort_order: Optional[str] = Field(
-        default="asc",
-        pattern="^(asc|desc)$",
-        description="Sort order: asc or desc"
-    )
-
-
-class SearchParams(PaginationParams):
-    """Query parameters for search with pagination."""
-    
-    q: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        max_length=500,
-        description="Search query string"
-    )
-    filters: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Additional search filters"
-    )
 
 
 class FileUploadResponse(BaseResponse):
@@ -207,7 +179,7 @@ class MetricsResponse(BaseModel):
     error_rate: Optional[float] = Field(default=None, description="Error rate percentage")
     response_time: Optional[float] = Field(default=None, description="Average response time in ms")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=utcnow,
         description="Metrics collection timestamp"
     )
     
@@ -238,3 +210,63 @@ class ConfigurationResponse(BaseModel):
     environment: str = Field(description="Runtime environment")
     features: Dict[str, bool] = Field(description="Enabled features")
     limits: Dict[str, Union[int, float]] = Field(description="Configuration limits")
+
+
+class PaginationParams(BaseModel):
+    """Query parameters for pagination."""
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        validate_assignment=True
+    )
+    
+    page: int = Field(default=1, ge=1, description="Page number")
+    per_page: int = Field(default=10, ge=1, le=100, description="Items per page")
+    sort_by: Optional[str] = Field(default=None, description="Field to sort by")
+    sort_order: Optional[str] = Field(
+        default="asc",
+        pattern="^(asc|desc)$",
+        description="Sort order: asc or desc"
+    )
+
+
+class PaginatedResponse(BaseResponse, Generic[T]):
+    """Generic paginated response schema."""
+    
+    items: List[Any] = Field(default_factory=list)
+    pagination: PaginationParams
+    
+    @classmethod
+    def create(
+        cls,
+        items: List[Any],
+        page: int,
+        size: int,
+        total: int,
+        message: str
+    ) -> "PaginatedResponse":
+        """Create a paginated response."""
+        response = cls(
+            success=True,
+            message=message,
+            items=items,
+            pagination=PaginationParams(page=page, per_page=size)
+        )
+
+
+class SearchParams(PaginationParams):
+    """Query parameters for search with pagination."""
+    
+    q: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=500,
+        description="Search query string"
+    )
+    filters: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Additional search filters"
+    )
+
+
+

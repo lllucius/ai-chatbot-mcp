@@ -8,13 +8,9 @@ Generated on: 2025-07-14 03:10:09 UTC
 Current User: lllucius
 """
 
-from passlib.context import CryptContext
-from passlib.hash import bcrypt
+import bcrypt
 import secrets
 import string
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_password_hash(password: str) -> str:
@@ -27,7 +23,10 @@ def get_password_hash(password: str) -> str:
     Returns:
         str: Hashed password
     """
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
+    return hashed_password.decode()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -41,7 +40,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         bool: True if password matches hash
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    plain_byte_enc = plain_password.encode('utf-8')
+    hashed_byte_enc = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(password = plain_byte_enc , hashed_password = hashed_byte_enc)
 
 
 def generate_random_password(length: int = 12) -> str:

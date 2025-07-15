@@ -16,8 +16,7 @@ from ..database import get_db
 from ..schemas.user import (
     UserResponse, 
     UserUpdate, 
-    UserProfile,
-    PasswordChangeRequest
+    UserPasswordUpdate
 )
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..services.user import UserService
@@ -32,7 +31,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.get("/me", response_model=UserProfile)
+@router.get("/me", response_model=UserResponse)
 async def get_my_profile(
     current_user = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
@@ -81,19 +80,18 @@ async def update_my_profile(
             detail="Profile update failed"
         )
 
-
 @router.post("/me/change-password", response_model=BaseResponse)
 async def change_password(
-    request: PasswordChangeRequest,
+    request: UserPasswordUpdate,
     current_user = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
 ):
     """
     Change current user password.
-    
+   
     Requires the current password for verification
     and the new password.
-    """
+    """ 
     try:
         success = await user_service.change_password(
             current_user.id,
@@ -166,7 +164,7 @@ async def list_users(
         )
 
 
-@router.get("/{user_id}", response_model=UserProfile)
+@router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
     current_user = Depends(get_current_superuser),

@@ -9,7 +9,6 @@ Current User: lllucius
 """
 
 import uuid
-from datetime import datetime
 from typing import Optional, List
 from enum import Enum
 
@@ -17,7 +16,7 @@ from sqlalchemy import String, Text, Integer, Float, ForeignKey, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModelDB, TimestampMixin, UUIDMixin
+from .base import BaseModelDB
 
 
 class DocumentStatus(str, Enum):
@@ -40,13 +39,14 @@ class DocumentType(str, Enum):
     OTHER = "other"
 
 
-class Document(BaseModelDB, UUIDMixin, TimestampMixin):
+class Document(BaseModelDB):
     """
     Document model for storing uploaded files and their metadata.
     
     This model stores information about uploaded documents including
     their content, processing status, and associated chunks.
     """
+    __tablename__ = "documents"
     
     # Basic document information
     title: Mapped[str] = mapped_column(
@@ -129,15 +129,15 @@ class Document(BaseModelDB, UUIDMixin, TimestampMixin):
     )
     
     # User association
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    owner_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         doc="ID of user who uploaded the document"
     )
-    
+
     # Relationships
-    user: Mapped["User"] = relationship(
+    owner: Mapped["User"] = relationship(
         "User",
         back_populates="documents",
         doc="User who uploaded this document"
@@ -154,14 +154,15 @@ class Document(BaseModelDB, UUIDMixin, TimestampMixin):
         return f"<Document(id={self.id}, title='{self.title}', status='{self.status}')>"
 
 
-class DocumentChunk(BaseModelDB, UUIDMixin, TimestampMixin):
+class DocumentChunk(BaseModelDB):
     """
     Document chunk model for storing text segments with embeddings.
     
     This model stores individual text chunks from documents along with
     their vector embeddings for semantic search capabilities.
     """
-    
+    __tablename__ = "document_chunks"
+
     # Content information
     content: Mapped[str] = mapped_column(
         Text,

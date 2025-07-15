@@ -11,7 +11,6 @@ Current User: lllucius
 import logging
 import asyncio
 from typing import Dict, Any
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -19,15 +18,11 @@ from sqlalchemy import text
 from ..database import get_db
 from ..config import settings
 from ..schemas.common import BaseResponse
+from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-def get_current_timestamp() -> str:
-    """Get current UTC timestamp in ISO format."""
-    return datetime.utcnow().isoformat() + "Z"
 
 
 @router.get("/", response_model=BaseResponse)
@@ -43,7 +38,7 @@ async def basic_health_check() -> Dict[str, Any]:
         "message": "AI Chatbot Platform is running",
         "status": "healthy",
         "version": settings.app_version,
-        "timestamp": get_current_timestamp()
+        "timestamp": utcnow()
     }
 
 
@@ -68,7 +63,7 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
         "database": await _check_database_health(db),
         "openai": await _check_openai_health(),
         "fastmcp": await _check_fastmcp_health(),
-        "timestamp": get_current_timestamp(),
+        "timestamp": utcnow(),
         "overall_status": "healthy"
     }
     
@@ -112,7 +107,7 @@ async def services_health_check() -> Dict[str, Any]:
     return {
         "openai": await _check_openai_health(),
         "fastmcp": await _check_fastmcp_health(),
-        "timestamp": get_current_timestamp()
+        "timestamp": utcnow()
     }
 
 
@@ -294,19 +289,19 @@ async def get_system_metrics() -> Dict[str, Any]:
                 "version": settings.app_version,
                 "debug_mode": settings.debug
             },
-            "timestamp": get_current_timestamp()
+            "timestamp": utcnow()
         }
         
     except ImportError:
         return {
             "error": "psutil not available for system metrics",
-            "timestamp": get_current_timestamp()
+            "timestamp": utcnow()
         }
     except Exception as e:
         logger.error(f"Failed to get system metrics: {e}")
         return {
             "error": f"Failed to get metrics: {str(e)}",
-            "timestamp": get_current_timestamp()
+            "timestamp": utcnow()
         }
 
 
@@ -341,7 +336,7 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
         return {
             "status": "ready",
             "message": "Application is ready to serve traffic",
-            "timestamp": get_current_timestamp()
+            "timestamp": utcnow()
         }
         
     except HTTPException:
@@ -365,5 +360,5 @@ async def liveness_check() -> Dict[str, Any]:
     return {
         "status": "alive",
         "message": "Application is alive",
-        "timestamp": get_current_timestamp()
+        "timestamp": utcnow()
     }

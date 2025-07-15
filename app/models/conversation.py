@@ -11,6 +11,7 @@ Current User: lllucius
 from typing import TYPE_CHECKING, List, Optional, Dict, Any
 from sqlalchemy import String, Integer, Text, JSON, ForeignKey, Index, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
 
 from .base import BaseModelDB
 
@@ -38,7 +39,7 @@ class Conversation(BaseModelDB):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     message_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     user_id: Mapped[int] = mapped_column(
-        Integer,
+        UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True
@@ -86,7 +87,7 @@ class Message(BaseModelDB):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     conversation_id: Mapped[int] = mapped_column(
-        Integer,
+        UUID(as_uuid=True),
         ForeignKey("conversations.id", ondelete="CASCADE"),
         nullable=False,
         index=True

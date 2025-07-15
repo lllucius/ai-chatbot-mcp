@@ -15,7 +15,7 @@ from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass
 from pathlib import Path
 
-from fastmcp import Client as FastMCPClient
+from fastmcp import Client
 from fastmcp.client.transports import MCPConfigTransport
 
 from ..config import settings
@@ -45,14 +45,14 @@ class FastMCPClientService:
     
     def __init__(self):
         """Initialize FastMCP client service."""
-        self.clients: Dict[str, FastMCPClient] = {}
+        self.clients: Dict[str, Client] = {}
         self.servers: Dict[str, MCPServerConfig] = {}
         self.tools: Dict[str, Dict[str, Any]] = {}
         self.is_initialized = False
         
         # Parse server configurations
         self._parse_server_configs()
-        
+
         logger.info("FastMCP client service initialized")
     
     def _parse_server_configs(self):
@@ -87,7 +87,7 @@ class FastMCPClientService:
         
         try:
             successful_connections = 0
-            
+            """
             for server_name, server in self.servers.items():
                 try:
                     await self._connect_server(server_name, server)
@@ -95,12 +95,22 @@ class FastMCPClientService:
                     logger.info(f"✅ Connected to MCP server: {server_name}")
                 except Exception as e:
                     logger.error(f"❌ Failed to connect to MCP server {server_name}: {e}")
-            
-            if successful_connections == 0:
-                raise ExternalServiceError(
-                    "Failed to connect to any MCP servers - at least one server is required"
-                )
-            
+            """
+            config = {
+                "mcpServers": {
+                    "local": {
+                        "url": "http://localhost:9000/mcp",
+                        "transport": "http"
+                    },
+                }
+            }
+
+
+            # Create a client with the config
+            client = Client(config)
+            self.clients["local"] = client
+            print(dir(client))
+
             # Discover available tools
             await self._discover_tools()
             
@@ -118,7 +128,8 @@ class FastMCPClientService:
     
     async def _connect_server(self, server_name: str, server: MCPServerConfig):
         """Connect to a specific MCP server using FastMCP."""
-        try:
+#        try:
+        if True:
             # Create MCP configuration for transport
             mcp_config = {
                 "command": server.command,
@@ -133,91 +144,96 @@ class FastMCPClientService:
             transport = MCPConfigTransport(mcp_config)
             
             # Create FastMCP client
-            client = FastMCPClient(transport=transport)
+            client = Client(transport=transport)
             
             # Initialize connection with timeout
             await asyncio.wait_for(client.initialize(), timeout=server.timeout)
             
             # Store client
-            self.clients[server_name] = client
+            self.clients["local"] = client
             
             logger.info(f"Successfully connected to MCP server: {server_name}")
             
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout connecting to MCP server {server_name}")
-            raise
-        except Exception as e:
-            logger.error(f"Failed to connect to MCP server {server_name}: {e}")
-            raise
+#        except asyncio.TimeoutError:
+#            logger.error(f"Timeout connecting to MCP server {server_name}")
+#            raise
+#        except Exception as e:
+#            logger.error(f"Failed to connect to MCP server {server_name}: {e}")
+#            raise
     
     async def _discover_tools(self):
         """Discover available tools from connected servers."""
+        print("dISC", self.clients)
         for server_name, client in self.clients.items():
-            try:
-                # List available tools from the server
-                tools_response = await client.list_tools()
-                
-                server_tools = []
-                
-                # Handle the tools response structure
-                if hasattr(tools_response, 'tools'):
-                    tools_list = tools_response.tools
-                elif isinstance(tools_response, dict) and 'tools' in tools_response:
-                    tools_list = tools_response['tools']
-                elif isinstance(tools_response, list):
-                    tools_list = tools_response
-                else:
-                    logger.warning(f"Unexpected tools response format from {server_name}: {type(tools_response)}")
-                    continue
-                
-                for tool_info in tools_list:
-                    # Handle different tool info structures
-                    if hasattr(tool_info, 'name'):
-                        tool_name_attr = tool_info.name
-                        tool_desc = getattr(tool_info, 'description', f"Tool from {server_name}")
-                        tool_schema = getattr(tool_info, 'inputSchema', None)
-                    elif isinstance(tool_info, dict):
-                        tool_name_attr = tool_info.get('name', f'unknown_tool_{len(server_tools)}')
-                        tool_desc = tool_info.get('description', f"Tool from {server_name}")
-                        tool_schema = tool_info.get('inputSchema', None)
+#            try:
+            if True:
+                print("client", client)
+                async with client:
+                    # List available tools from the server
+                    tools_response = await client.list_tools()
+                    print("=================================================================")
+                    print("tools", tools_response)                    
+                    server_tools = []
+                    
+                    # Handle the tools response structure
+                    if hasattr(tools_response, 'tools'):
+                        tools_list = tools_response.tools
+                    elif isinstance(tools_response, dict) and 'tools' in tools_response:
+                        tools_list = tools_response['tools']
+                    elif isinstance(tools_response, list):
+                        tools_list = tools_response
                     else:
-                        logger.warning(f"Unexpected tool info format from {server_name}: {type(tool_info)}")
+                        logger.warning(f"Unexpected tools response format from {server_name}: {type(tools_response)}")
                         continue
                     
-                    tool_name = f"{server_name}_{tool_name_attr}"
-                    
-                    # Process tool schema
-                    if tool_schema:
-                        if hasattr(tool_schema, 'model_dump'):
-                            schema_dict = tool_schema.model_dump()
-                        elif isinstance(tool_schema, dict):
-                            schema_dict = tool_schema
+                    for tool_info in tools_list:
+                        # Handle different tool info structures
+                        if hasattr(tool_info, 'name'):
+                            tool_name_attr = tool_info.name
+                            tool_desc = getattr(tool_info, 'description', f"Tool from {server_name}")
+                            tool_schema = getattr(tool_info, 'inputSchema', None)
+                        elif isinstance(tool_info, dict):
+                            tool_name_attr = tool_info.get('name', f'unknown_tool_{len(server_tools)}')
+                            tool_desc = tool_info.get('description', f"Tool from {server_name}")
+                            tool_schema = tool_info.get('inputSchema', None)
+                        else:
+                            logger.warning(f"Unexpected tool info format from {server_name}: {type(tool_info)}")
+                            continue
+                        
+                        tool_name = f"{server_name}_{tool_name_attr}"
+                        
+                        # Process tool schema
+                        if tool_schema:
+                            if hasattr(tool_schema, 'model_dump'):
+                                schema_dict = tool_schema.model_dump()
+                            elif isinstance(tool_schema, dict):
+                                schema_dict = tool_schema
+                            else:
+                                schema_dict = {
+                                    "type": "object",
+                                    "properties": {},
+                                    "required": []
+                                }
                         else:
                             schema_dict = {
                                 "type": "object",
                                 "properties": {},
                                 "required": []
                             }
-                    else:
-                        schema_dict = {
-                            "type": "object",
-                            "properties": {},
-                            "required": []
+                        
+                        self.tools[tool_name] = {
+                            "name": tool_name,
+                            "original_name": tool_name_attr,
+                            "description": tool_desc,
+                            "server": server_name,
+                            "parameters": schema_dict
                         }
+                        server_tools.append(tool_name)
                     
-                    self.tools[tool_name] = {
-                        "name": tool_name,
-                        "original_name": tool_name_attr,
-                        "description": tool_desc,
-                        "server": server_name,
-                        "parameters": schema_dict
-                    }
-                    server_tools.append(tool_name)
-                
-                logger.info(f"Discovered {len(server_tools)} tools from {server_name}: {server_tools}")
-                
-            except Exception as e:
-                logger.warning(f"Failed to discover tools from {server_name}: {e}")
+                    logger.info(f"Discovered {len(server_tools)} tools from {server_name}: {server_tools}")
+                    
+#            except Exception as e:
+#                logger.warning(f"Failed to discover tools from {server_name}: {e}")
         
         logger.info(f"Total discovered tools: {len(self.tools)}")
     

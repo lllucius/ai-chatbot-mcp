@@ -17,17 +17,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-class BaseModelDB(DeclarativeBase):
-    """Base class for all database models."""
-    
-    @declared_attr
-    def __tablename__(cls) -> str:
-        """Generate table name from class name."""
-        # Convert CamelCase to snake_case
-        import re
-        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
-
 
 class TimestampMixin:
     """Mixin for adding timestamp fields to models."""
@@ -57,5 +46,19 @@ class UUIDMixin:
         default=uuid.uuid4,
         doc="Unique identifier for the record"
     )
+
+
+class BaseModelDB(DeclarativeBase, UUIDMixin, TimestampMixin):
+    """Base class for all database models."""
+    
+    @declared_attr
+    def __tablename__(cls) -> str:
+        """Generate table name from class name."""
+        # Convert CamelCase to snake_case
+        import re
+        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
+        print("### TABLE NAME:", re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower())
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
 
 

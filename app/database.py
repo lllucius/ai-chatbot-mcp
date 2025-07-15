@@ -8,10 +8,10 @@ and database initialization utilities.
 import logging
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import text
 
 from .config import settings
+from .models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,6 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
     expire_on_commit=False
 )
-
-# Base class for all models
-class Base(DeclarativeBase):
-    """Base class for all database models."""
-    pass
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -64,22 +59,22 @@ async def init_db() -> None:
     
     This function creates all tables and enables pgvector extension.
     """
-    try:
-        async with engine.begin() as conn:
-            # Enable pgvector extension
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-            
-            # Import all models to ensure they're registered
-            from .models import user, document, conversation  # noqa
-            
-            # Create all tables
-            await conn.run_sync(Base.metadata.create_all)
-            
-            logger.info("Database initialized successfully")
-            
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
-        raise
+    #try:
+    async with engine.begin() as conn:
+        # Enable pgvector extension
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        
+
+        import sqlalchemy    
+        print("TABLES", BaseModelDB.metadata.tables.keys())
+        
+        # Create all tables
+        await conn.run_sync(BaseModelDB.metadata.create_all)
+        logger.info("Database initialized successfully")
+        
+#    except Exception as e:
+#        logger.error(f"Failed to initialize database: {e}")
+#        raise
 
 
 async def close_db() -> None:
