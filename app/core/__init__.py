@@ -10,7 +10,7 @@ from .exceptions import *
 __all__ = [
     "ChatbotPlatformException",
     "ValidationError",
-    "AuthenticationError", 
+    "AuthenticationError",
     "AuthorizationError",
     "NotFoundError",
     "DocumentError",

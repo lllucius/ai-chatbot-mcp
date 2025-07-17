@@ -9,15 +9,15 @@ Current User: lllucius
 """
 
 from .auth import router as auth_router
-from .users import router as users_router
-from .documents import router as documents_router
 from .conversations import router as conversations_router
-from .search import router as search_router
+from .documents import router as documents_router
 from .health import router as health_router
+from .search import router as search_router
+from .users import router as users_router
 
 __all__ = [
     "auth_router",
-    "users_router", 
+    "users_router",
     "documents_router",
     "conversations_router",
     "search_router",

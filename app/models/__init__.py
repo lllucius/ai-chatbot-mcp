@@ -10,22 +10,20 @@ Current User: lllucius
 
 # Import SQLAlchemy base classes only
 from .base import BaseModelDB, TimestampMixin, UUIDMixin
-
+from .conversation import Conversation, Message
+from .document import Document, DocumentChunk
 # Import database models (SQLAlchemy)
 from .user import User
-from .document import Document, DocumentChunk
-from .conversation import Conversation, Message
 
 __all__ = [
     # Base classes
     "BaseModelDB",
-    "TimestampMixin", 
+    "TimestampMixin",
     "UUIDMixin",
-
     # Models
     "User",
     "Document",
-    "DocumentChunk", 
+    "DocumentChunk",
     "Conversation",
-    "Message"
+    "Message",
 ]

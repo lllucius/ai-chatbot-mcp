@@ -9,17 +9,18 @@ Current User: lllucius
 """
 
 from .auth import AuthService
-from .user import UserService
-from .document import DocumentService
-from .search import SearchService
-from .embedding import EmbeddingService
 from .conversation import ConversationService
+from .document import DocumentService
+from .embedding import EmbeddingService
+from .mcp_client import (FastMCPClientService, cleanup_mcp_client,
+                         get_mcp_client)
 from .openai_client import OpenAIClient
-from .mcp_client import FastMCPClientService, get_mcp_client, cleanup_mcp_client
+from .search import SearchService
+from .user import UserService
 
 __all__ = [
     "AuthService",
-    "UserService", 
+    "UserService",
     "DocumentService",
     "SearchService",
     "EmbeddingService",
@@ -27,5 +28,5 @@ __all__ = [
     "OpenAIClient",
     "FastMCPClientService",
     "get_mcp_client",
-    "cleanup_mcp_client"
+    "cleanup_mcp_client",
 ]
