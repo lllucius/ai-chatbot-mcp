@@ -84,14 +84,13 @@ class SearchService:
         print("TYPE", type(embedding))
         print("LELN", len(embedding))
 
-        distance_expr = DocumentChunk.embedding.op("<=>")(embedding)
-#query = select(Item.id, Item.name, (Item.embedding <=> query_vector).label('distance')).order_by('distance')
         distance_expr = DocumentChunk.embedding.op("<=>")(embedding).label("distance")
+
         # Build base query
         query = (
             select(
                 DocumentChunk,
-                distance_expr.label("distance")
+                distance_expr
             )
             .join(Document)
             .where(Document.owner_id == user_id)
@@ -107,7 +106,6 @@ class SearchService:
 
         # Apply similarity threshold and order
         similarity_threshold = 1.0 - request.threshold  # Convert similarity to distance
-        print("Simil", similarity_threshold)
         query = (
             query.where(
                 distance_expr <= similarity_threshold
@@ -117,10 +115,8 @@ class SearchService:
         )
 
         query = (
-            query.where(
-                DocumentChunk.embedding.op("<=>")(embedding) <= 0.3
-            )
-            .order_by(DocumentChunk.embedding.op("<=>")(embedding))
+            query.where(distance_expr <= 0.3)
+            .order_by(distance_expr)
             .limit(request.limit)
         )
 
