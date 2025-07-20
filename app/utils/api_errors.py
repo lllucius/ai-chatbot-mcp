@@ -19,6 +19,7 @@ from ..core.exceptions import (
     AuthorizationError,
     ChatbotPlatformException,
     DocumentError,
+    ExternalServiceError,
     NotFoundError,
     SearchError,
     ValidationError,
@@ -120,6 +121,25 @@ def handle_api_errors(
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=_format_error_response(str(e), e.error_code, include_details)
+                )
+                
+            except ExternalServiceError as e:
+                if log_errors:
+                    logger.error(
+                        f"External service error in {func.__name__}",
+                        error=str(e),
+                        error_type=type(e).__name__,
+                        endpoint=func.__name__
+                    )
+                # Map external service errors to appropriate HTTP status
+                status_code = (
+                    status.HTTP_503_SERVICE_UNAVAILABLE 
+                    if "not available" in str(e).lower() or "timeout" in str(e).lower()
+                    else status.HTTP_502_BAD_GATEWAY
+                )
+                raise HTTPException(
+                    status_code=status_code,
+                    detail=_format_error_response(str(e), "EXTERNAL_SERVICE_ERROR", include_details)
                 )
                 
             except ChatbotPlatformException as e:

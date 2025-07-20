@@ -69,15 +69,15 @@ async def lifespan(app: FastAPI):
         await start_system_monitoring()
         logger.info("Performance monitoring system initialized")
 
-        # Initialize FastMCP (optional)
+        # Initialize FastMCP and UnifiedToolExecutor
         try:
-            from .services.mcp_client import get_mcp_client
-
-            mcp_client = await get_mcp_client()
-            logger.info("FastMCP client initialized successfully")
+            from .core.tool_executor import get_unified_tool_executor
+            
+            tool_executor = await get_unified_tool_executor()
+            logger.info("UnifiedToolExecutor initialized successfully")
         except Exception as e:
-            logger.warning(f"FastMCP initialization failed (optional): {e}")
-            # Continue without MCP - it's not critical for basic operation
+            logger.warning(f"UnifiedToolExecutor initialization failed (optional): {e}")
+            # Continue without unified tools - it's not critical for basic operation
 
     except Exception as e:
         logger.error(f"Application initialization failed: {e}")
@@ -90,14 +90,16 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down AI Chatbot Platform...")
     try:
-        # Cleanup FastMCP
+        # Cleanup UnifiedToolExecutor and FastMCP
         try:
+            from .core.tool_executor import cleanup_unified_tool_executor
             from .services.mcp_client import cleanup_mcp_client
 
+            await cleanup_unified_tool_executor()
             await cleanup_mcp_client()
-            logger.info("FastMCP client cleaned up")
+            logger.info("Tool execution system cleaned up")
         except Exception as e:
-            logger.warning(f"FastMCP cleanup failed: {e}")
+            logger.warning(f"Tool execution cleanup failed: {e}")
 
         await close_db()
         logger.info("Database connections closed")

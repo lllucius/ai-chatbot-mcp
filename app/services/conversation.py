@@ -46,6 +46,7 @@ from ..schemas.document import DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
+from ..core.tool_executor import get_unified_tool_executor, ToolCall
 from .base import BaseService
 
 
@@ -346,12 +347,12 @@ class ConversationService(BaseService):
                             },
                         )
 
-            # Get AI response
+            # Get AI response with unified tool calling
             ai_response = await self.openai_client.chat_completion(
                 messages=ai_messages,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
-                tools=None,  # TODO: Implement tool calling
+                use_unified_tools=True,  # Use unified tools instead of manual tool calling
             )
 
             # Create AI message
@@ -378,7 +379,7 @@ class ConversationService(BaseService):
                 "conversation": ConversationResponse.model_validate(conversation),
                 "usage": ai_response["usage"],
                 "rag_context": rag_context,
-                "tool_calls_made": None,  # TODO: Implement tool calling
+                "tool_calls_made": ai_response.get("tool_calls_executed", []),
             }
 
         except Exception as e:

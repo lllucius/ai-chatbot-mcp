@@ -2,10 +2,17 @@
 Core modules for the AI Chatbot Platform.
 
 This package provides core functionality including exception handling,
-security utilities, and other foundational components.
+tool execution, and other foundational components.
 """
 
 from .exceptions import *
+from .tool_executor import (
+    UnifiedToolExecutor,
+    ToolCall,
+    ToolResult,
+    ToolProvider,
+    get_unified_tool_executor,
+)
 
 __all__ = [
     "ChatbotPlatformException",
@@ -16,4 +23,9 @@ __all__ = [
     "DocumentError",
     "EmbeddingError",
     "ExternalServiceError",
+    "UnifiedToolExecutor",
+    "ToolCall",
+    "ToolResult",
+    "ToolProvider",
+    "get_unified_tool_executor",
 ]
