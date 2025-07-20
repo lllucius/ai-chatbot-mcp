@@ -91,23 +91,7 @@ python scripts/dev_setup.py
 # Follow the printed instructions to complete setup
 ```
 
-### Option 2: Docker Development Environment
-
-```bash
-git clone <repository-url>
-cd ai-chatbot-mcp
-
-# Copy environment configuration
-cp .env.example .env
-# Edit .env with your OpenAI API key
-
-# Start development environment
-docker-compose -f docker-compose.dev.yml up --build
-
-# Access at http://localhost:8000/docs
-```
-
-### Option 3: Manual Installation
+### Option 2: Manual Installation
 
 1. **Clone and setup environment:**
 ```bash
@@ -323,48 +307,22 @@ The platform supports multiple search algorithms:
 
 ## 🚀 Deployment
 
-### Docker Deployment
+### Production Setup
 
-```dockerfile
-# Dockerfile
-FROM python:3.12-slim
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Set environment variables
+export DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/ai_chatbot
+export SECRET_KEY=your-secret-key
+export OPENAI_API_KEY=your-openai-key
 
-COPY . .
-EXPOSE 8000
+# Run database migrations
+alembic upgrade head
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/ai_chatbot
-      - SECRET_KEY=your-secret-key
-      - OPENAI_API_KEY=your-openai-key
-    depends_on:
-      - db
-
-  db:
-    image: pgvector/pgvector:pg14
-    environment:
-      - POSTGRES_DB=ai_chatbot
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+# Start production server
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ### Production Checklist
@@ -432,9 +390,6 @@ pre-commit run --all-files
 
 ### Development Environment
 ```bash
-# Docker development environment
-docker-compose -f docker-compose.dev.yml up
-
 # Manual development server
 uvicorn app.main:app --reload
 

@@ -47,8 +47,6 @@ def check_prerequisites() -> bool:
     }
     
     optional_commands = {
-        'docker': 'Docker (for containerized development)',
-        'docker-compose': 'Docker Compose',
         'psql': 'PostgreSQL client'
     }
     
@@ -214,7 +212,6 @@ def print_next_steps():
     print("5. Visit http://localhost:8000/docs for API documentation")
     print("\nOptional:")
     print("- Run code quality checks: python scripts/check_quality.py")
-    print("- Use Docker setup: docker-compose -f docker-compose.dev.yml up")
     print("- Set up your IDE/editor with Python environment at ./venv")
 
 

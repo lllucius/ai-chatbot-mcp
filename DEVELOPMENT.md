@@ -6,33 +6,23 @@ This guide will help you set up the development environment for the AI Chatbot P
 
 - Python 3.11 or 3.12
 - PostgreSQL 14+ with pgvector extension
-- Docker and Docker Compose (optional, for containerized development)
 - Git
 - OpenAI API key
 
 ## Quick Start (Recommended)
 
-### 1. Using Docker Compose (Easiest)
+### Automated Setup Script
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd ai-chatbot-mcp
 
-# Copy environment variables
-cp .env.example .env
-
-# Edit .env with your OpenAI API key
-nano .env
-
-# Start development environment
-docker-compose -f docker-compose.dev.yml up --build
-
-# The application will be available at http://localhost:8000
-# API documentation at http://localhost:8000/docs
+# Run automated setup
+python scripts/dev_setup.py
 ```
 
-### 2. Manual Setup
+### Manual Setup
 
 #### Install Dependencies
 
@@ -168,10 +158,7 @@ ai-chatbot-mcp/
 ├── .github/workflows/     # CI/CD workflows
 ├── requirements.txt       # Dependencies
 ├── pytest.ini           # Pytest configuration
-├── .pre-commit-config.yaml # Pre-commit hooks
-├── docker-compose.dev.yml # Development Docker setup
-├── Dockerfile            # Production Docker image
-└── Dockerfile.dev        # Development Docker image
+└── .pre-commit-config.yaml # Pre-commit hooks
 ```
 
 ## API Documentation
