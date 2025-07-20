@@ -12,7 +12,7 @@ import logging
 from typing import List
 from uuid import UUID
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, SearchError
@@ -54,7 +54,7 @@ class SearchService:
         Returns:
             List[DocumentChunkResponse]: Search results with similarity scores
         """
-        #try:
+        # try:
         if request.algorithm == "vector":
             return await self._vector_search(request, user_id)
         elif request.algorithm == "text":
@@ -66,7 +66,7 @@ class SearchService:
         else:
             raise SearchError(f"Unknown search algorithm: {request.algorithm}")
 
-        #except Exception as e:
+        # except Exception as e:
         #    logger.error(f"Search failed: {e}")
         #    raise SearchError(f"Search operation failed: {e}")
 
@@ -85,16 +85,37 @@ class SearchService:
         print("LELN", len(embedding))
 
         distance_expr = DocumentChunk.embedding.op("<=>")(embedding).label("distance")
-
+        similarity_threshold = 1.0 - request.threshold  # Convert similarity to distance
+        query = text(
+            """
+            SELECT 
+                document_chunk.*,
+                (document_chunk.embedding <=> :embedding) AS distance
+            FROM 
+                document_chunk
+            JOIN 
+                document ON document_chunk.document_id = document.id
+            WHERE 
+                document.owner_id = :user_id
+                AND document_chunk.embedding IS NOT NULL
+                AND distance <= :similarity_threshold
+            ORDER BY 
+                distance
+        """
+        )
         # Build base query
+        """
         query = (
             select(
                 DocumentChunk,
                 distance_expr
             )
             .join(Document)
+            .order_by(distance_expr)
+            .limit(request.limit)
             .where(Document.owner_id == user_id)
             .where(DocumentChunk.embedding.isnot(None))
+            .where(distance_expr <= similarity_threshold)
         )
 
         # Apply filters
@@ -103,26 +124,18 @@ class SearchService:
 
         if request.file_types:
             query = query.where(Document.file_type.in_(request.file_types))
-
-        # Apply similarity threshold and order
-        similarity_threshold = 1.0 - request.threshold  # Convert similarity to distance
-        query = (
-            query.where(
-                distance_expr <= similarity_threshold
-            )
-            .order_by(distance_expr)
-           .limit(request.limit)
-        )
-
-        query = (
-            query.where(distance_expr <= 0.3)
-            .order_by(distance_expr)
-            .limit(request.limit)
-        )
-
+        """
         print("QUERY", query)
         # Execute query
-        result = await self.db.execute(query)
+        result = await self.db.execute(
+            query,
+            {
+                "embedding": embedding,  # This should be a list/array, not a float!
+                "user_id": user_id,
+                "similarity_threshold": similarity_threshold,
+                "limit": request.limit,
+            },
+        )
         rows = result.fetchall()
 
         # Convert results
@@ -337,10 +350,7 @@ class SearchService:
 
         # Find similar chunks
         query = (
-            select(
-                DocumentChunk,
-                distance_expr.label("distance")
-            )
+            select(DocumentChunk, distance_expr.label("distance"))
             .join(Document)
             .where(Document.owner_id == user_id)
             .where(DocumentChunk.id != chunk_id)  # Exclude the reference chunk

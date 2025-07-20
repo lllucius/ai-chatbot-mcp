@@ -8,6 +8,8 @@ Generated on: 2025-07-14 03:47:30 UTC
 Current User: lllucius
 """
 
+import uuid
+
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from sqlalchemy import JSON, Boolean, ForeignKey, Index, Integer, String, Text
@@ -41,7 +43,7 @@ class Conversation(BaseModelDB):
         Boolean, default=True, nullable=False, index=True
     )
     message_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -89,7 +91,7 @@ class Message(BaseModelDB):
     role: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    conversation_id: Mapped[int] = mapped_column(
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("conversations.id", ondelete="CASCADE"),
         nullable=False,
@@ -113,5 +115,6 @@ class Message(BaseModelDB):
         Index("idx_messages_created_at", "created_at"),
     )
 
-    def __repr__(self) -> str:
-        return f"<Message(role='{self.role}', conv_id={self.conversation_id})>"
+
+#    def __repr__(self) -> str:
+#        return f"<Message(role='{self.role}', conv_id={self.conversation_id})>"

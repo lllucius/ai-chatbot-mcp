@@ -66,7 +66,7 @@ class ConversationUpdate(BaseSchema):
 class ConversationResponse(ConversationBase):
     """Schema for conversation response data."""
 
-    id: UUID  = Field(..., description="Conversation ID")
+    id: UUID = Field(..., description="Conversation ID")
     user_id: UUID = Field(..., description="Owner user ID")
     message_count: int = Field(0, description="Number of messages")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -76,13 +76,12 @@ class ConversationResponse(ConversationBase):
     )
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
 
-
     model_config = {
         "from_attributes": True,
         "json_encoders": {datetime: lambda v: v.isoformat()},
         "json_schema_extra": {
             "example": {
-                "id": 1,
+                "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "title": "AI Discussion",
                 "is_active": True,
                 "user_id": 1,
@@ -121,7 +120,7 @@ class MessageCreate(MessageBase):
             "example": {
                 "role": "user",
                 "content": "What is machine learning?",
-                "conversation_id": 1,
+                "conversation_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "token_count": 5,
                 "metainfo": {"source": "web_ui"},
             }
@@ -132,7 +131,7 @@ class MessageCreate(MessageBase):
 class MessageResponse(MessageBase):
     """Schema for message response data."""
 
-    id: int = Field(..., description="Message ID")
+    id: UUID = Field(..., description="Message ID")
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
@@ -147,10 +146,10 @@ class MessageResponse(MessageBase):
         "json_encoders": {datetime: lambda v: v.isoformat()},
         "json_schema_extra": {
             "example": {
-                "id": 1,
+                "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "role": "assistant",
                 "content": "Machine learning is a subset of artificial intelligence...",
-                "conversation_id": 1,
+                "conversation_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "token_count": 150,
                 "tool_calls": None,
                 "tool_call_results": None,
@@ -167,7 +166,9 @@ class ChatRequest(BaseSchema):
     user_message: str = Field(
         ..., min_length=1, max_length=10000, description="User message"
     )
-    conversation_id: Optional[UUID] = Field(None, description="Existing conversation ID")
+    conversation_id: Optional[UUID] = Field(
+        None, description="Existing conversation ID"
+    )
     conversation_title: Optional[str] = Field(
         None, max_length=500, description="New conversation title"
     )

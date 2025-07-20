@@ -12,6 +12,7 @@ Current User: lllucius
 from .base import BaseModelDB, TimestampMixin, UUIDMixin
 from .conversation import Conversation, Message
 from .document import Document, DocumentChunk
+
 # Import database models (SQLAlchemy)
 from .user import User
 

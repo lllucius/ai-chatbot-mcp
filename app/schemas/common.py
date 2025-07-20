@@ -242,12 +242,13 @@ class PaginatedResponse(BaseResponse, Generic[T]):
 
 
 class SearchParams(PaginationParams):
-
     query: Optional[str] = Field(
         default=None, min_length=1, max_length=500, description="Search query string"
     )
     algorithm: Optional[str] = Field(
-        default="hybrid", pattern="^(vector|text|hybrid|mmr)$", description= "Search algorithm to use"
+        default="hybrid",
+        pattern="^(vector|text|hybrid|mmr)$",
+        description="Search algorithm to use",
     )
     limit: Optional[int] = Field(
         default=10, ge=1, le=50, description="Number of results to return"

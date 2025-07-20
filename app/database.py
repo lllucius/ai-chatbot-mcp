@@ -9,8 +9,7 @@ import logging
 from typing import AsyncGenerator
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .config import settings
 from .models.base import BaseModelDB
@@ -61,21 +60,18 @@ async def init_db() -> None:
 
     This function creates all tables and enables pgvector extension.
     """
-    # try:
-    async with engine.begin() as conn:
-        # Enable pgvector extension
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    try:
+        async with engine.begin() as conn:
+            # Enable pgvector extension
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
 
-        print("TABLES", BaseModelDB.metadata.tables.keys())
+            # Create all tables
+            await conn.run_sync(BaseModelDB.metadata.create_all)
+            logger.info("Database initialized successfully")
 
-        # Create all tables
-        await conn.run_sync(BaseModelDB.metadata.create_all)
-        logger.info("Database initialized successfully")
-
-
-#    except Exception as e:
-#        logger.error(f"Failed to initialize database: {e}")
-#        raise
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
 
 
 async def close_db() -> None:

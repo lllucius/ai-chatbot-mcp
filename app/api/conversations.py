@@ -19,10 +19,15 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
-from ..schemas.conversation import (ChatRequest, ChatResponse,
-                                    ConversationCreate, ConversationResponse,
-                                    ConversationStats, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ChatResponse,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationStats,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..services.conversation import ConversationService
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
@@ -83,7 +88,7 @@ async def list_conversations(
         conversation_responses = [
             ConversationResponse.model_validate(conv) for conv in conversations
         ]
-        
+
         return PaginatedResponse(
             items=conversation_responses,
             pagination=PaginationParams(page=page, per_page=size),
@@ -91,10 +96,10 @@ async def list_conversations(
             success=True,
             message="Conversations retrieved successfully",
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve conversations"
+            detail="Failed to retrieve conversations",
         )
 
 
@@ -239,7 +244,7 @@ async def chat(
     Supports RAG (Retrieval-Augmented Generation) for context-aware responses
     and tool calling for enhanced functionality.
     """
-    #try:
+    # try:
     start_time = time.time()
 
     # Process chat request
@@ -259,9 +264,9 @@ async def chat(
         response_time_ms=response_time_ms,
     )
 
-    #except ValidationError as e:
+    # except ValidationError as e:
     #    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    #except Exception:
+    # except Exception:
     #    raise HTTPException(
     #        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     #        detail="Chat processing failed",

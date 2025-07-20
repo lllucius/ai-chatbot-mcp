@@ -16,8 +16,7 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import (AuthenticationError, NotFoundError,
-                               ValidationError)
+from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User
@@ -204,9 +203,9 @@ class UserService:
         # Build filters
         filters = []
         if active_only:
-            filters.append(User.is_active == True)
+            filters.append(User.is_active is True)
         if superuser_only:
-            filters.append(User.is_superuser == True)
+            filters.append(User.is_superuser is True)
 
         # Count total users
         count_query = select(func.count(User.id))
@@ -268,13 +267,13 @@ class UserService:
 
         # Active users
         active_result = await self.db.execute(
-            select(func.count(User.id)).where(User.is_active == True)
+            select(func.count(User.id)).where(User.is_active is True)
         )
         active_users = active_result.scalar() or 0
 
         # Superusers
         super_result = await self.db.execute(
-            select(func.count(User.id)).where(User.is_superuser == True)
+            select(func.count(User.id)).where(User.is_superuser is True)
         )
         superusers = super_result.scalar() or 0
 

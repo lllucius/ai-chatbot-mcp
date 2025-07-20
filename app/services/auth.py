@@ -127,7 +127,6 @@ class AuthService:
                 raise AuthenticationError("Invalid username or password")
 
             # Update last login
-            print("USERID", user.id)
             user.last_login = utcnow()
             await self.db.commit()
 

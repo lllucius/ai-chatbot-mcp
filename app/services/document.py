@@ -12,7 +12,7 @@ import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from uuid import uuid4, UUID
+from uuid import UUID
 
 from fastapi import UploadFile
 from sqlalchemy import and_, desc, func, select
@@ -353,9 +353,7 @@ class DocumentService:
         logger.info(f"Document deleted: {document_id}")
         return True
 
-    async def get_status(
-        self, document_id: UUID, user_id: UUID
-    ) -> Dict[str, Any]:
+    async def get_status(self, document_id: UUID, user_id: UUID) -> Dict[str, Any]:
         """
         Get document processing status and progress.
 

@@ -61,8 +61,7 @@ class EmbeddingService:
 
             # Generate embedding using OpenAI
             embedding = await self.openai_client.create_embedding(
-                text=cleaned_text,
-                encoding_format="base64"
+                text=cleaned_text, encoding_format="base64"
             )
 
             # Validate embedding dimensions

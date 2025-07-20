@@ -17,9 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.conversation import Conversation, Message
-from ..schemas.conversation import (ChatRequest, ConversationCreate,
-                                    ConversationResponse, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..schemas.document import DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
@@ -128,7 +132,7 @@ class ConversationService:
         # Build filters
         filters = [Conversation.user_id == user_id]
         if active_only:
-            filters.append(Conversation.is_active == True)
+            filters.append(Conversation.is_active is True)
 
         # Count total conversations
         count_query = select(func.count(Conversation.id)).where(and_(*filters))
@@ -249,17 +253,13 @@ class ConversationService:
             dict: Chat response data including AI message and conversation
         """
         print("===================================================")
-        #try:
+        # try:
         # Get or create conversation
         if request.conversation_id:
-            conversation = await self.get_conversation(
-                request.conversation_id, user_id
-            )
+            conversation = await self.get_conversation(request.conversation_id, user_id)
         else:
             # Create new conversation
-            title = (
-                request.conversation_title or f"Chat {request.user_message[:50]}..."
-            )
+            title = request.conversation_title or f"Chat {request.user_message[:50]}..."
             conversation = await self.create_conversation(
                 ConversationCreate(title=title, is_active=True), user_id
             )
@@ -312,8 +312,6 @@ class ConversationService:
                         },
                     )
 
-        print("MESSAGES", ai_messages)
-
         # Get AI response
         ai_response = await self.openai_client.chat_completion(
             messages=ai_messages,
@@ -321,6 +319,14 @@ class ConversationService:
             max_tokens=request.max_tokens,
             tools=None,  # TODO: Implement tool calling
         )
+        print(
+            "#########################################################################"
+        )
+        print("AIRESP", ai_response)
+        import json
+
+        print(json.dumps(ai_response, indent=4))
+        print(dir(ai_response))
 
         # Create AI message
         ai_message = Message(
@@ -339,8 +345,24 @@ class ConversationService:
         await self.db.refresh(ai_message)
         await self.db.refresh(conversation)
 
+        print(
+            "#########################################################################"
+        )
+        print("AIRESP", ai_response)
         logger.info(f"Chat processed for conversation {conversation.id}")
 
+        print("AIME", ai_message)
+        print("id", ai_message.role)
+        print("content", ai_message.content)
+        print("token_count", ai_message.token_count)
+        print("conv_id", ai_message.conversation_id)
+        print("tool_Calls", ai_message.tool_calls)
+        print("tool_call_results", ai_message.tool_call_results)
+        print("CONV", conversation)
+        print("RESP", ai_response)
+        print("RAGC", rag_context)
+        print("ai_message", MessageResponse.model_validate(ai_message))
+        print("conversation", ConversationResponse.model_validate(conversation))
         return {
             "ai_message": MessageResponse.model_validate(ai_message),
             "conversation": ConversationResponse.model_validate(conversation),
@@ -349,9 +371,9 @@ class ConversationService:
             "tool_calls_made": None,  # TODO: Implement tool calling
         }
 
-#        except Exception as e:
-#            logger.error(f"Chat processing failed: {e}")
-#            raise ValidationError(f"Chat processing failed: {e}")
+    #        except Exception as e:
+    #            logger.error(f"Chat processing failed: {e}")
+    #            raise ValidationError(f"Chat processing failed: {e}")
 
     async def _get_conversation_history(
         self, conversation_id: UUID, limit: int = 20
@@ -391,7 +413,7 @@ class ConversationService:
     ) -> Optional[List[Dict[str, Any]]]:
         """Get RAG context for the chat request."""
         print("GET_RAG_CONTEXT", request)
-        #try:
+        # try:
         print("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
         # Create search request
         search_request = DocumentSearchRequest(
@@ -416,8 +438,7 @@ class ConversationService:
             context.append(
                 {
                     "content": result.content,
-                    "source": result.document_title
-                    or f"Document {result.document_id}",
+                    "source": result.document_title or f"Document {result.document_id}",
                     "similarity": result.similarity_score,
                     "chunk_id": result.id,
                 }
@@ -425,7 +446,7 @@ class ConversationService:
 
         return context
 
-        #except Exception as e:
+        # except Exception as e:
         #    logger.warning(f"Failed to get RAG context: {e}")
         #    return None
 
@@ -459,7 +480,7 @@ class ConversationService:
         # Active conversations
         active_result = await self.db.execute(
             select(func.count(Conversation.id)).where(
-                and_(Conversation.user_id == user_id, Conversation.is_active == True)
+                and_(Conversation.user_id == user_id, Conversation.is_active is True)
             )
         )
         active_conversations = active_result.scalar() or 0

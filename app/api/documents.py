@@ -10,8 +10,16 @@ Current User: lllucius
 
 from typing import Optional
 
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, Query,
-                     UploadFile, status)
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
@@ -21,9 +29,12 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.document import (DocumentResponse, DocumentUpdate,
-                                DocumentUploadResponse,
-                                ProcessingStatusResponse)
+from ..schemas.document import (
+    DocumentResponse,
+    DocumentUpdate,
+    DocumentUploadResponse,
+    ProcessingStatusResponse,
+)
 from ..services.document import DocumentService
 
 router = APIRouter(prefix="/documents", tags=["documents"])

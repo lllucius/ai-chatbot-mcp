@@ -280,88 +280,88 @@ class FastMCPClientService:
         if server_name not in self.clients:
             raise ExternalServiceError(f"Server '{server_name}' not connected")
 
-        try:
-            client = self.clients[server_name]
+        # try:
+        client = self.clients[server_name]
 
-            # Call the tool using FastMCP
+        # Call the tool using FastMCP
+        async with client:
             result = await client.call_tool(
                 name=original_tool_name, arguments=parameters
             )
 
-            # Format the response
-            formatted_result = {
-                "success": True,
-                "tool_name": tool_name,
-                "server": server_name,
-                "content": [],
-                "raw_result": self._serialize_result(result),
-            }
+        # Format the response
+        formatted_result = {
+            "success": True,
+            "tool_name": tool_name,
+            "server": server_name,
+            "content": [],
+            "raw_result": self._serialize_result(result),
+        }
 
-            # Process result content
-            if hasattr(result, "content") and result.content:
-                for content_item in result.content:
-                    if hasattr(content_item, "text"):
+        # Process result content
+        if hasattr(result, "content") and result.content:
+            for content_item in result.content:
+                if hasattr(content_item, "text"):
+                    formatted_result["content"].append(
+                        {"type": "text", "text": content_item.text}
+                    )
+                elif hasattr(content_item, "data"):
+                    formatted_result["content"].append(
+                        {
+                            "type": "data",
+                            "data": content_item.data,
+                            "mimeType": getattr(
+                                content_item, "mimeType", "application/octet-stream"
+                            ),
+                        }
+                    )
+                elif isinstance(content_item, dict):
+                    if "text" in content_item:
                         formatted_result["content"].append(
-                            {"type": "text", "text": content_item.text}
+                            {"type": "text", "text": content_item["text"]}
                         )
-                    elif hasattr(content_item, "data"):
+                    elif "data" in content_item:
                         formatted_result["content"].append(
                             {
                                 "type": "data",
-                                "data": content_item.data,
-                                "mimeType": getattr(
-                                    content_item, "mimeType", "application/octet-stream"
+                                "data": content_item["data"],
+                                "mimeType": content_item.get(
+                                    "mimeType", "application/octet-stream"
                                 ),
                             }
                         )
-                    elif isinstance(content_item, dict):
-                        if "text" in content_item:
-                            formatted_result["content"].append(
-                                {"type": "text", "text": content_item["text"]}
-                            )
-                        elif "data" in content_item:
-                            formatted_result["content"].append(
-                                {
-                                    "type": "data",
-                                    "data": content_item["data"],
-                                    "mimeType": content_item.get(
-                                        "mimeType", "application/octet-stream"
-                                    ),
-                                }
-                            )
-            elif isinstance(result, dict) and "content" in result:
-                # Handle dict-based result
-                for content_item in result["content"]:
-                    if isinstance(content_item, dict):
-                        if "text" in content_item:
-                            formatted_result["content"].append(
-                                {"type": "text", "text": content_item["text"]}
-                            )
-                        elif "data" in content_item:
-                            formatted_result["content"].append(
-                                {
-                                    "type": "data",
-                                    "data": content_item["data"],
-                                    "mimeType": content_item.get(
-                                        "mimeType", "application/octet-stream"
-                                    ),
-                                }
-                            )
+        elif isinstance(result, dict) and "content" in result:
+            # Handle dict-based result
+            for content_item in result["content"]:
+                if isinstance(content_item, dict):
+                    if "text" in content_item:
+                        formatted_result["content"].append(
+                            {"type": "text", "text": content_item["text"]}
+                        )
+                    elif "data" in content_item:
+                        formatted_result["content"].append(
+                            {
+                                "type": "data",
+                                "data": content_item["data"],
+                                "mimeType": content_item.get(
+                                    "mimeType", "application/octet-stream"
+                                ),
+                            }
+                        )
 
-            # If no content was found, add the raw result as text
-            if not formatted_result["content"]:
-                formatted_result["content"].append(
-                    {"type": "text", "text": str(result)}
-                )
+        # If no content was found, add the raw result as text
+        if not formatted_result["content"]:
+            formatted_result["content"].append({"type": "text", "text": str(result)})
 
-            logger.info(
-                f"Tool '{tool_name}' executed successfully on server '{server_name}'"
-            )
-            return formatted_result
+        logger.info(
+            f"Tool '{tool_name}' executed successfully on server '{server_name}'"
+        )
 
-        except Exception as e:
-            logger.error(f"Tool call failed for '{tool_name}': {e}")
-            raise ExternalServiceError(f"Tool call failed: {e}")
+        return formatted_result
+
+    #        except Exception as e:
+    #            logger.error(f"Tool call failed for '{tool_name}': {e}")
+    #            raise ExternalServiceError(f"Tool call failed: {e}")
 
     def _serialize_result(self, result: Any) -> str:
         """Serialize result for logging/debugging."""
@@ -416,6 +416,7 @@ class FastMCPClientService:
         openai_tools = []
 
         for tool_name, tool in self.tools.items():
+            print("TOOL_NAME", tool_name, tool)
             openai_tool = {
                 "type": "function",
                 "function": {
@@ -424,6 +425,9 @@ class FastMCPClientService:
                     "parameters": tool["parameters"],
                 },
             }
+            import json
+
+            print("=====TOOL=====", json.dumps(openai_tool, indent=4))
             openai_tools.append(openai_tool)
 
         return openai_tools
@@ -440,6 +444,8 @@ class FastMCPClientService:
         Returns:
             list: Results from tool executions
         """
+        print("EXECUITE=============================================================")
+        print("TOOL_CALLS", tool_calls)
         if not self.is_initialized:
             raise ExternalServiceError(
                 "MCP client not initialized - cannot execute tool calls"
@@ -448,35 +454,29 @@ class FastMCPClientService:
         results = []
 
         for tool_call in tool_calls:
-            try:
-                function_name = tool_call["function"]["name"]
-                function_args = json.loads(tool_call["function"]["arguments"])
+            # try:
+            function_name = tool_call["function"]["name"]
+            function_args = json.loads(tool_call["function"]["arguments"])
 
-                result = await self.call_tool(function_name, function_args)
+            result = await self.call_tool(function_name, function_args)
+            print("TOOL CALL RESUILT========================================")
+            print(json.dumps(result, indent=4))
 
-                results.append(
-                    {
-                        "tool_call_id": tool_call["id"],
-                        "function_name": function_name,
-                        "success": True,
-                        "result": result,
-                    }
-                )
-
-            except Exception as e:
-                logger.error(
-                    f"Failed to execute tool call {tool_call.get('id', 'unknown')}: {e}"
-                )
-                results.append(
-                    {
-                        "tool_call_id": tool_call.get("id", "unknown"),
-                        "function_name": tool_call.get("function", {}).get(
-                            "name", "unknown"
-                        ),
-                        "success": False,
-                        "error": str(e),
-                    }
-                )
+            results.append(result)
+        #            except Exception as e:
+        #                logger.error(
+        #                    f"Failed to execute tool call {tool_call.get('id', 'unknown')}: {e}"
+        #                )
+        #                results.append(
+        #                    {
+        #                        "tool_call_id": tool_call.get("id", "unknown"),
+        #                        "function_name": tool_call.get("function", {}).get(
+        #                            "name", "unknown"
+        #                        ),
+        #                        "success": False,
+        #                        "error": str(e),
+        #                    }
+        #                )
 
         return results
 

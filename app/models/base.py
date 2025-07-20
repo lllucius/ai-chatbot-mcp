@@ -57,5 +57,4 @@ class BaseModelDB(DeclarativeBase, UUIDMixin, TimestampMixin):
         import re
 
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__)
-        print("### TABLE NAME:", re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower())
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()

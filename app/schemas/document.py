@@ -10,6 +10,7 @@ Current User: lllucius
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from pydantic import Field, field_validator
 
@@ -20,14 +21,14 @@ from .common import BaseResponse, SearchParams
 class DocumentResponse(BaseSchema):
     """Schema for document response data."""
 
-    id: int = Field(..., description="Document ID")
+    id: UUID = Field(..., description="Document ID")
     title: str = Field(..., description="Document title")
     filename: str = Field(..., description="Original filename")
     file_type: str = Field(..., description="File type/extension")
     file_size: int = Field(..., description="File size in bytes")
     mime_type: Optional[str] = Field(None, description="MIME type")
     processing_status: str = Field(..., description="Processing status")
-    owner_id: int = Field(..., description="Owner user ID")
+    owner_id: UUID = Field(..., description="Owner user ID")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
     chunk_count: int = Field(0, description="Number of chunks")
     created_at: datetime = Field(..., description="Upload timestamp")
@@ -38,14 +39,14 @@ class DocumentResponse(BaseSchema):
         "json_encoders": {datetime: lambda v: v.isoformat()},
         "json_schema_extra": {
             "example": {
-                "id": 1,
+                "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "title": "Machine Learning Guide",
                 "filename": "ml_guide.pdf",
                 "file_type": "pdf",
                 "file_size": 2048576,
                 "mime_type": "application/pdf",
                 "processing_status": "completed",
-                "owner_id": 1,
+                "owner_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "metainfo": {"pages": 50, "language": "en"},
                 "chunk_count": 25,
                 "created_at": "2025-07-14T03:47:30Z",
@@ -76,13 +77,13 @@ class DocumentUpdate(BaseSchema):
 class DocumentChunkResponse(BaseSchema):
     """Schema for document chunk response data."""
 
-    id: int = Field(..., description="Chunk ID")
+    id: UUID = Field(..., description="Chunk ID")
     content: str = Field(..., description="Chunk text content")
     chunk_index: int = Field(..., description="Chunk index in document")
     start_char: int = Field(..., description="Start character position")
     end_char: int = Field(..., description="End character position")
     token_count: int = Field(..., description="Number of tokens")
-    document_id: int = Field(..., description="Parent document ID")
+    document_id: UUID = Field(..., description="Parent document ID")
     document_title: Optional[str] = Field(None, description="Document title")
     similarity_score: Optional[float] = Field(
         None, description="Similarity score (for search)"
@@ -95,13 +96,13 @@ class DocumentChunkResponse(BaseSchema):
         "json_encoders": {datetime: lambda v: v.isoformat()},
         "json_schema_extra": {
             "example": {
-                "id": 1,
+                "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "content": "Machine learning is a subset of artificial intelligence...",
                 "chunk_index": 0,
                 "start_char": 0,
                 "end_char": 500,
                 "token_count": 120,
-                "document_id": 1,
+                "document_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "document_title": "Machine Learning Guide",
                 "similarity_score": 0.95,
                 "metainfo": {"section": "introduction"},
@@ -114,7 +115,7 @@ class DocumentChunkResponse(BaseSchema):
 class DocumentSearchRequest(SearchParams):
     """Schema for document search requests."""
 
-    document_ids: Optional[List[int]] = Field(
+    document_ids: Optional[List[UUID]] = Field(
         None, description="Specific document IDs to search"
     )
     file_types: Optional[List[str]] = Field(None, description="File types to include")
@@ -138,7 +139,7 @@ class DocumentSearchRequest(SearchParams):
                 "limit": 10,
                 "threshold": 0.8,
                 "algorithm": "hybrid",
-                "document_ids": [1, 2, 3],
+                "document_ids": ["4b40c3d9-208c-49ed-bd96-31c0b971e318"],
                 "file_types": ["pdf", "docx"],
             }
         }
@@ -160,7 +161,7 @@ class DocumentUploadResponse(BaseResponse):
 class ProcessingStatusResponse(BaseResponse):
     """Schema for document processing status."""
 
-    document_id: int = Field(..., description="Document ID")
+    document_id: UUID = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")
     progress: float = Field(0.0, description="Processing progress (0-1)")
     chunks_processed: int = Field(0, description="Number of chunks processed")
