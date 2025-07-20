@@ -20,6 +20,7 @@ from ..core.tool_executor import get_unified_tool_executor, ToolCall, ToolResult
 from ..utils.caching import embedding_cache, make_cache_key
 from ..utils.api_errors import handle_api_errors
 from ..utils.tool_middleware import tool_operation, RetryConfig
+from ..utils.logging import get_api_logger
 
 try:
     import openai
@@ -39,15 +40,32 @@ except ImportError:
     logging.warning("Tiktoken not available. Install with: pip install tiktoken")
 
 
-logger = logging.getLogger(__name__)
+logger = get_api_logger("openai_client")
 
 
 class OpenAIClient:
     """
-    OpenAI API client with FastMCP tool integration.
+    OpenAI API client with unified tool integration.
 
     This client provides methods for chat completions, embeddings,
-    and tool calling with automatic MCP integration.
+    and content moderation with automatic unified tool calling capabilities.
+    
+    Key Features:
+    - Unified tool calling through UnifiedToolExecutor
+    - Consistent error handling via @handle_api_errors decorator
+    - Retry logic and caching through middleware decorators
+    - Structured logging for all operations
+    - Full async/await support for all operations
+    
+    Tool Integration:
+    - Automatically integrates with UnifiedToolExecutor for tool calling
+    - Supports both custom tools and unified tools from multiple providers
+    - Handles tool call execution with proper error handling and logging
+    
+    Error Handling:
+    - Uses @handle_api_errors decorator for consistent error responses
+    - Automatic retry logic for rate limits and connection errors
+    - Proper exception mapping to HTTP status codes
     """
 
     def __init__(self):

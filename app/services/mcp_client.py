@@ -24,8 +24,9 @@ from ..config import settings
 from ..core.exceptions import ExternalServiceError
 from ..utils.api_errors import handle_api_errors
 from ..utils.tool_middleware import tool_operation, RetryConfig
+from ..utils.logging import get_api_logger
 
-logger = logging.getLogger(__name__)
+logger = get_api_logger("mcp_client")
 
 
 @dataclass
@@ -45,7 +46,26 @@ class FastMCPClientService:
     FastMCP client service for tool calling and external integrations.
 
     This service manages connections to MCP servers using FastMCP and provides
-    an interface for tool discovery and execution.
+    an interface for tool discovery and execution with unified error handling.
+    
+    Key Features:
+    - Consistent error handling via @handle_api_errors decorator
+    - Retry logic and caching through middleware decorators  
+    - Structured logging for all tool operations
+    - Integration with UnifiedToolExecutor for consistent tool calling patterns
+    - Automatic server connection management and health monitoring
+    
+    Architecture:
+    - Uses decorators instead of manual try/catch blocks
+    - Centralized retry and caching logic through middleware
+    - Full async/await support throughout
+    - Proper exception handling and logging
+    
+    Tool Operations:
+    - call_tool(): Execute individual tools with unified patterns
+    - execute_tool_calls(): Batch tool execution for OpenAI integration
+    - Automatic tool discovery and schema management
+    - Health checking and connection monitoring
     """
 
     def __init__(self):

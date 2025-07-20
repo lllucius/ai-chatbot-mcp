@@ -56,15 +56,21 @@ class ConversationService(BaseService):
 
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
-    and message processing with enhanced logging and context management.
+    and unified tool calling with enhanced logging and context management.
     
     AI Capabilities:
     - Multi-turn conversations with context preservation
     - Integration with OpenAI GPT models for intelligent responses
     - RAG (Retrieval Augmented Generation) with document search
-    - Tool calling through MCP (Model Context Protocol)
+    - Unified tool calling through UnifiedToolExecutor integration
     - Token usage optimization and tracking
     - Response quality monitoring and analytics
+    
+    Tool Integration:
+    - Uses unified tool calling instead of manual tool management
+    - Automatic tool availability and execution through OpenAI client
+    - Proper tool call result handling and user feedback
+    - Complete tool calling implementation (no TODOs remaining)
     
     Responsibilities:
     - Conversation lifecycle management (create, update, archive)
