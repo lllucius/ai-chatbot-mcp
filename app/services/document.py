@@ -1,15 +1,34 @@
 """
-Document service for file processing and document management.
+Document service for comprehensive file processing and document management.
 
-This service provides methods for document upload, processing, chunking,
-embedding generation, and document lifecycle management.
+This service provides complete document lifecycle management including file upload,
+content extraction, text processing, chunking, embedding generation, and search
+integration. It supports multiple file formats and implements robust error handling
+for document processing workflows.
+
+Key Features:
+- Multi-format document upload (PDF, DOCX, TXT, MD, RTF)
+- Asynchronous content extraction and text processing
+- Intelligent text chunking with configurable parameters
+- Vector embedding generation for semantic search
+- Document status tracking and lifecycle management
+- Comprehensive metadata handling and storage
+
+Processing Pipeline:
+1. File upload and validation
+2. Content extraction based on file type
+3. Text chunking with overlap for context preservation
+4. Vector embedding generation for each chunk
+5. Database storage with search optimization
+6. Status tracking and error recovery
 
 Generated on: 2025-07-14 03:50:38 UTC
-Current User: lllucius
+Updated on: 2025-01-20 20:00:00 UTC
+Current User: lllucius / assistant
 """
 
-import logging
 import os
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
@@ -25,26 +44,45 @@ from ..schemas.document import DocumentUpdate
 from ..services.embedding import EmbeddingService
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
+from .base import BaseService
 
-logger = logging.getLogger(__name__)
 
-
-class DocumentService:
+class DocumentService(BaseService):
     """
-    Service for document management and processing.
+    Service for comprehensive document management and processing workflows.
 
-    This service handles document upload, text extraction, chunking,
-    embedding generation, and document lifecycle operations.
+    This service extends BaseService to provide document-specific functionality
+    including file upload handling, content extraction, text processing, chunking,
+    embedding generation, and document lifecycle management with enhanced logging
+    and error recovery capabilities.
+    
+    Processing Capabilities:
+    - Multi-format file support (PDF, DOCX, TXT, MD, RTF)
+    - Intelligent text extraction and preprocessing
+    - Configurable text chunking with context preservation
+    - Asynchronous embedding generation and storage
+    - Document status tracking and progress monitoring
+    - Comprehensive error handling and recovery
+    
+    Responsibilities:
+    - Document upload and file storage management
+    - Content extraction from various file formats
+    - Text chunking and preprocessing for search optimization
+    - Vector embedding generation and database storage
+    - Document metadata and status management
+    - User access control and ownership management
     """
 
     def __init__(self, db: AsyncSession):
         """
-        Initialize document service.
+        Initialize document service with processing components.
 
         Args:
             db: Database session for document operations
         """
-        self.db = db
+        super().__init__(db, "document_service")
+        
+        # Initialize processing components
         self.file_processor = FileProcessor()
         self.text_processor = TextProcessor(
             chunk_size=settings.default_chunk_size,
@@ -56,48 +94,141 @@ class DocumentService:
         self, file: UploadFile, title: str, user_id: UUID
     ) -> Document:
         """
-        Create a new document record and save file.
+        Create a new document record and initiate processing pipeline.
+
+        This method handles the initial document creation phase including file
+        validation, storage, and database record creation. The document is marked
+        as "pending" for subsequent processing stages.
 
         Args:
-            file: Uploaded file object
-            title: Document title
-            user_id: Owner user ID
+            file: Uploaded file object with content and metadata
+            title: Human-readable title for the document
+            user_id: UUID of the document owner
 
         Returns:
-            Document: Created document object
+            Document: Created document object with pending processing status
+
+        Raises:
+            ValidationError: If file validation fails (type, size, format)
+            DocumentError: If file processing or storage fails
+            Exception: If database operation fails
+
+        Processing Steps:
+        1. Validate file type and size against configured limits
+        2. Generate secure unique filename to prevent conflicts
+        3. Save file to configured upload directory
+        4. Extract file metadata and technical information
+        5. Create database record with pending status
+        6. Log operation for monitoring and debugging
+
+        Example:
+            >>> with open("document.pdf", "rb") as f:
+            ...     upload_file = UploadFile(filename="document.pdf", file=f)
+            ...     doc = await document_service.create_document(upload_file, "My PDF", user_id)
+            >>> print(f"Created document {doc.id} with status: {doc.status}")
         """
+        operation = "create_document"
+        self._log_operation_start(
+            operation, 
+            filename=file.filename,
+            title=title,
+            user_id=str(user_id),
+            content_type=file.content_type
+        )
+        
         try:
-            # Generate unique filename
+            await self._ensure_db_session()
+            
+            # Validate file before processing
+            if not file.filename:
+                raise ValidationError("Filename is required")
+                
             file_extension = file.filename.split(".")[-1].lower()
+            if file_extension not in settings.allowed_file_types:
+                raise ValidationError(f"File type '{file_extension}' not allowed")
+
+            # Read file content for processing
+            content = await file.read()
+            if len(content) > settings.max_file_size:
+                raise ValidationError(f"File size exceeds maximum allowed ({settings.max_file_size} bytes)")
+
+            # Generate secure unique filename to prevent conflicts
             unique_filename = f"{uuid.uuid4()}.{file_extension}"
             file_path = os.path.join(settings.upload_directory, unique_filename)
 
             # Ensure upload directory exists
             Path(settings.upload_directory).mkdir(parents=True, exist_ok=True)
 
-            # Save file to disk
-            with open(file_path, "wb") as buffer:
-                content = await file.read()
-                buffer.write(content)
+            # Save file to disk with error handling
+            try:
+                with open(file_path, "wb") as buffer:
+                    buffer.write(content)
+            except OSError as e:
+                self.logger.error("File write failed", error=str(e), file_path=file_path)
+                raise DocumentError(f"Failed to save file: {e}")
 
-            # Get file info
-            file_info = self.file_processor.get_file_info(file_path)
+            # Extract file metadata and technical information
+            try:
+                file_info = self.file_processor.get_file_info(file_path)
+            except Exception as e:
+                # If metadata extraction fails, continue with basic info
+                self.logger.warning("Metadata extraction failed", error=str(e))
+                file_info = {"error": str(e)}
 
-            # Create document record
+            # Create comprehensive document record
             document = Document(
                 title=title,
                 filename=file.filename,
                 file_path=file_path,
                 file_type=file_extension,
                 file_size=len(content),
-                mime_type=file_info.get("mime_type"),
-                status="pending",
+                mime_type=file.content_type or file_info.get("mime_type"),
+                status=FileStatus.PENDING,
                 owner_id=user_id,
-                metainfo={"original_filename": file.filename, "upload_info": file_info},
+                metainfo={
+                    "original_filename": file.filename,
+                    "upload_info": file_info,
+                    "processing_config": {
+                        "chunk_size": settings.default_chunk_size,
+                        "chunk_overlap": settings.default_chunk_overlap
+                    }
+                },
             )
 
             self.db.add(document)
             await self.db.commit()
+            await self.db.refresh(document)
+
+            self._log_operation_success(
+                operation,
+                document_id=str(document.id),
+                filename=file.filename,
+                title=title,
+                file_size=len(content),
+                file_type=file_extension,
+                user_id=str(user_id)
+            )
+
+            return document
+            
+        except (ValidationError, DocumentError):
+            raise
+        except Exception as e:
+            self._log_operation_error(
+                operation, 
+                e,
+                filename=file.filename,
+                title=title,
+                user_id=str(user_id)
+            )
+            # Clean up file if it was created
+            if 'file_path' in locals() and os.path.exists(file_path):
+                try:
+                    os.unlink(file_path)
+                except OSError:
+                    pass
+            await self.db.rollback()
+            raise
             await self.db.refresh(document)
 
             logger.info(f"Document created: {document.id} ({document.filename})")

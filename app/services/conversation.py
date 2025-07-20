@@ -1,14 +1,32 @@
 """
-Conversation service for chat functionality and message management.
+Conversation service for comprehensive chat functionality and message management.
 
-This service provides methods for managing conversations, processing chat requests,
-and integrating with AI models and RAG capabilities.
+This service provides complete conversation lifecycle management including chat
+session creation, message handling, AI model integration, and RAG (Retrieval
+Augmented Generation) capabilities. It orchestrates multiple services to deliver
+intelligent conversational experiences with document context.
+
+Key Features:
+- Conversation lifecycle management (create, update, archive)
+- AI-powered chat with OpenAI integration
+- RAG capabilities with document search integration
+- Message history and context management
+- Multi-turn conversation handling with context preservation
+- Usage tracking and analytics
+- Comprehensive error handling and recovery
+
+AI Integration:
+- OpenAI GPT models for intelligent responses
+- Document search integration for contextual information
+- Embedding services for semantic understanding
+- Tool calling capabilities through MCP integration
+- Token usage tracking and optimization
 
 Generated on: 2025-07-14 03:50:38 UTC
-Current User: lllucius
+Updated on: 2025-01-20 20:10:00 UTC
+Current User: lllucius / assistant
 """
 
-import logging
 from uuid import UUID
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -28,26 +46,44 @@ from ..schemas.document import DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
+from .base import BaseService
 
-logger = logging.getLogger(__name__)
 
-
-class ConversationService:
+class ConversationService(BaseService):
     """
-    Service for conversation and chat operations.
+    Service for comprehensive conversation and AI chat operations.
 
-    This service handles conversation management, message processing,
-    AI chat interactions, and RAG integration.
+    This service extends BaseService to provide conversation-specific functionality
+    including chat session management, AI model integration, RAG capabilities,
+    and message processing with enhanced logging and context management.
+    
+    AI Capabilities:
+    - Multi-turn conversations with context preservation
+    - Integration with OpenAI GPT models for intelligent responses
+    - RAG (Retrieval Augmented Generation) with document search
+    - Tool calling through MCP (Model Context Protocol)
+    - Token usage optimization and tracking
+    - Response quality monitoring and analytics
+    
+    Responsibilities:
+    - Conversation lifecycle management (create, update, archive)
+    - Message processing and storage with metadata
+    - AI model orchestration and response generation  
+    - Document search integration for context enhancement
+    - Usage analytics and performance monitoring
+    - Error handling and recovery for AI operations
     """
 
     def __init__(self, db: AsyncSession):
         """
-        Initialize conversation service.
+        Initialize conversation service with AI and search components.
 
         Args:
             db: Database session for conversation operations
         """
-        self.db = db
+        super().__init__(db, "conversation_service")
+        
+        # Initialize AI and search services
         self.openai_client = OpenAIClient()
         self.search_service = SearchService(db)
         self.embedding_service = EmbeddingService(db)
