@@ -1,27 +1,40 @@
 """
-Search service for document retrieval and similarity search.
+Search service for comprehensive document retrieval and similarity search.
 
-This service provides various search algorithms including:
-- Vector similarity (PGVector, ivfflat index)
-- Full-text search (Postgres GIN index, tsvector column, BM25 ranking if available)
-- Hybrid search (normalized and calibrated blending of vector and text scores)
-- Maximum Marginal Relevance (MMR, using embedding cosine distance for diversity)
+This service provides advanced search capabilities for the AI chatbot platform
+including multiple search algorithms, caching optimization, and performance
+monitoring. It integrates vector similarity search, full-text search, hybrid
+algorithms, and Maximum Marginal Relevance (MMR) for diverse search needs.
 
-Features:
-- Embedding caching for repeated/similar queries (in-memory LRU)
-- All queries filter by user_id first for security and performance
-- Each result contains metadata for explainability
-- Robust exception handling and logging
-- All API/search algorithms are documented in function docstrings
+Key Features:
+- Multiple search algorithms (vector, text, hybrid, MMR)
+- LRU caching for query embeddings to optimize performance
+- PGVector integration for efficient similarity search
+- PostgreSQL full-text search with GIN indexing
+- Configurable similarity thresholds and result limits
+- User-based access control and security filtering
 
-API Endpoints (suggested for documentation):
-- search_documents
-- get_similar_chunks
+Search Algorithms:
+- Vector Search: Semantic similarity using embeddings with PGVector ivfflat index
+- Text Search: Traditional full-text search with PostgreSQL tsvector and BM25 ranking
+- Hybrid Search: Normalized and calibrated blending of vector and text scores  
+- MMR Search: Maximum Marginal Relevance using embedding cosine distance for diversity
 
-Current User: lllucius
+Performance Features:
+- In-memory LRU cache for embedding queries (reduces API calls)
+- User-based filtering for security and performance optimization
+- Result metadata for search explainability and debugging
+- Comprehensive error handling and logging for monitoring
+
+API Endpoints Integration:
+- search_documents: Main search interface with algorithm selection
+- get_similar_chunks: Direct similarity search for related content
+
+Generated on: 2025-07-14 04:00:00 UTC  
+Updated on: 2025-01-20 20:15:00 UTC
+Current User: lllucius / assistant
 """
 
-import logging
 import functools
 from typing import List, Dict, Optional, Tuple
 from uuid import UUID
@@ -34,8 +47,7 @@ from ..core.exceptions import NotFoundError, SearchError
 from ..models.document import Document, DocumentChunk
 from ..schemas.document import DocumentChunkResponse, DocumentSearchRequest
 from ..services.embedding import EmbeddingService
-
-logger = logging.getLogger(__name__)
+from .base import BaseService
 
 # ----- In-memory LRU cache for embeddings -----
 class LRUCache:
@@ -63,18 +75,43 @@ class LRUCache:
 
 embedding_cache = LRUCache(capacity=256)
 
-class SearchService:
+class SearchService(BaseService):
     """
-    Service for document search and retrieval operations.
-    See method docstrings for detailed algorithm descriptions.
+    Service for comprehensive document search and retrieval operations.
+
+    This service extends BaseService to provide advanced search capabilities
+    including vector similarity search, text search, hybrid algorithms, and
+    Maximum Marginal Relevance (MMR) with enhanced caching, logging, and
+    performance optimization.
+    
+    Search Algorithms:
+    - Vector Search: Pure semantic similarity using embeddings with PGVector
+    - Text Search: Traditional full-text search with PostgreSQL GIN indexing  
+    - Hybrid Search: Weighted combination of vector and text search results
+    - MMR Search: Maximum Marginal Relevance for diverse result sets
+    
+    Performance Features:
+    - LRU caching for query embeddings to reduce API calls
+    - Optimized database queries with proper indexing
+    - Configurable similarity thresholds and result limits
+    - User-based access control and security filtering
+    
+    Responsibilities:
+    - Query embedding generation with caching optimization
+    - Multi-algorithm search execution with result ranking
+    - Search result formatting and metadata enrichment
+    - Performance monitoring and query optimization
+    - User access control and security enforcement
     """
 
     def __init__(self, db: AsyncSession):
         """
+        Initialize search service with embedding capabilities.
+
         Args:
             db: Database session for search operations
         """
-        self.db = db
+        super().__init__(db, "search_service")
         self.embedding_service = EmbeddingService(db)
 
     async def get_query_embedding(self, query: str):

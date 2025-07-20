@@ -1,0 +1,46 @@
+AI Chatbot Platform - Code Quality Report
+==================================================
+
+Total violations found: 56
+
+Import Organization: 8 violations
+  - app/utils/imports.py: Imports should be at top of file
+  - app/services/user.py: Imports should be at top of file
+  - app/services/auth.py: Imports should be at top of file
+  - app/services/conversation.py: Imports should be at top of file
+  - app/services/search.py: Imports should be at top of file
+  - app/services/document.py: Imports should be at top of file
+  - app/api/users.py: Imports should be at top of file
+  - app/api/auth.py: Imports should be at top of file
+
+Docstring Completeness: 27 violations
+  - app/models/user.py:77: Missing docstring for __repr__
+  - app/models/conversation.py:70: Missing docstring for __repr__
+  - app/models/document.py:137: Missing docstring for __repr__
+  - app/models/document.py:199: Missing docstring for __repr__
+  - app/core/exceptions.py:41: Missing docstring for __init__
+  - app/core/exceptions.py:48: Missing docstring for __init__
+  - app/core/exceptions.py:55: Missing docstring for __init__
+  - app/core/exceptions.py:62: Missing docstring for __init__
+  - app/core/exceptions.py:69: Missing docstring for __init__
+  - app/core/exceptions.py:76: Missing docstring for __init__
+  ... and 17 more
+
+Logging Consistency: 17 violations
+  - app/config.py: Using old logging pattern, consider BaseService
+  - app/database.py: Using old logging pattern, consider BaseService
+  - app/database.py: Consider using StructuredLogger for better logging
+  - app/main.py: Using old logging pattern, consider BaseService
+  - app/main.py: Consider using StructuredLogger for better logging
+  - app/utils/api_errors.py: Consider using StructuredLogger for better logging
+  - app/utils/text_processing.py: Using old logging pattern, consider BaseService
+  - app/utils/file_processing.py: Using old logging pattern, consider BaseService
+  - app/utils/file_processing.py: Consider using StructuredLogger for better logging
+  - app/services/mcp_client.py: Using old logging pattern, consider BaseService
+  ... and 7 more
+
+Error Handling: 4 violations
+  - app/api/conversations.py: Consider using @handle_api_errors decorator
+  - app/api/search.py: Consider using @handle_api_errors decorator
+  - app/api/health.py: Consider using @handle_api_errors decorator
+  - app/api/documents.py: Consider using @handle_api_errors decorator
