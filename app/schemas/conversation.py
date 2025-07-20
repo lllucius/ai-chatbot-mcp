@@ -4,7 +4,7 @@ Conversation and message-related Pydantic schemas.
 This module provides schemas for chat conversations, messages,
 and related operations.
 
-Generated on: 2025-07-14 03:47:30 UTC
+Generated on: 2025-07-20 13:48:01 UTC
 Current User: lllucius
 """
 
@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, constr
 
 from .base import BaseSchema
 from .common import BaseResponse
@@ -21,8 +21,8 @@ from .common import BaseResponse
 class ConversationBase(BaseSchema):
     """Base conversation schema with common fields."""
 
-    title: str = Field(
-        ..., min_length=1, max_length=500, description="Conversation title"
+    title: constr(min_length=1, max_length=500) = Field(
+        ..., description="Conversation title"
     )
     is_active: bool = Field(True, description="Whether conversation is active")
 
@@ -46,8 +46,8 @@ class ConversationCreate(ConversationBase):
 class ConversationUpdate(BaseSchema):
     """Schema for updating conversation information."""
 
-    title: Optional[str] = Field(
-        None, min_length=1, max_length=500, description="New title"
+    title: Optional[constr(min_length=1, max_length=500)] = Field(
+        None, description="New title"
     )
     is_active: Optional[bool] = Field(None, description="New active status")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Updated metainfo")
@@ -84,7 +84,7 @@ class ConversationResponse(ConversationBase):
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "title": "AI Discussion",
                 "is_active": True,
-                "user_id": 1,
+                "user_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                 "message_count": 5,
                 "last_message_at": "2025-07-14T03:47:30Z",
                 "metainfo": {"category": "technical"},
@@ -98,10 +98,10 @@ class ConversationResponse(ConversationBase):
 class MessageBase(BaseSchema):
     """Base message schema with common fields."""
 
-    role: str = Field(
-        ..., pattern="^(user|assistant|system)$", description="Message role"
+    role: constr(pattern="^(user|assistant|system)$") = Field(
+        ..., description="Message role"
     )
-    content: str = Field(..., min_length=1, description="Message content")
+    content: constr(min_length=1, max_length=10000) = Field(..., description="Message content")
 
 
 class MessageCreate(MessageBase):
@@ -163,14 +163,14 @@ class MessageResponse(MessageBase):
 class ChatRequest(BaseSchema):
     """Schema for chat request."""
 
-    user_message: str = Field(
-        ..., min_length=1, max_length=10000, description="User message"
+    user_message: constr(min_length=1, max_length=10000) = Field(
+        ..., description="User message"
     )
     conversation_id: Optional[UUID] = Field(
         None, description="Existing conversation ID"
     )
-    conversation_title: Optional[str] = Field(
-        None, max_length=500, description="New conversation title"
+    conversation_title: Optional[constr(max_length=500)] = Field(
+        None, description="New conversation title"
     )
     use_rag: bool = Field(True, description="Whether to use RAG for context")
     use_tools: bool = Field(True, description="Whether to enable tool calling")
@@ -198,7 +198,10 @@ class ChatRequest(BaseSchema):
                 "conversation_title": "ML Discussion",
                 "use_rag": True,
                 "use_tools": True,
-                "rag_documents": [1, 2],
+                "rag_documents": [
+                    "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+                    "5c50a4ea-1111-49ed-bd96-31c0b971e319"
+                ],
                 "max_tokens": 1000,
                 "temperature": 0.7,
             }
