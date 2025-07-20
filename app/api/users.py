@@ -1,23 +1,40 @@
 """
-User management API endpoints.
+User management API endpoints with comprehensive profile and administration features.
 
-This module provides endpoints for user profile management,
-user administration, and user-related operations.
+This module provides endpoints for user profile management, user administration,
+and user-related operations. It implements role-based access control, input
+validation, and comprehensive logging for user management activities.
+
+Key Features:
+- User profile management with statistics and analytics
+- User administration for superuser operations
+- Password change with security verification
+- User listing with pagination and filtering
+- Comprehensive user statistics and metrics
+
+Security Features:
+- Role-based access control (regular users vs superusers)
+- Input validation and sanitization
+- Password verification for sensitive operations
+- Audit logging for administrative actions
+- Protection against unauthorized access
 
 Generated on: 2025-07-14 03:12:05 UTC
-Current User: lllucius
+Updated on: 2025-01-20 20:40:00 UTC
+Current User: lllucius / assistant
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
-from ..core.exceptions import NotFoundError, ValidationError
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 from ..services.user import UserService
+from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -28,25 +45,44 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
 
 
 @router.get("/me", response_model=UserResponse)
+@handle_api_errors("Failed to retrieve user profile")
 async def get_my_profile(
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
     """
-    Get current user profile with statistics.
+    Get current user profile with comprehensive statistics.
 
-    Returns detailed profile information including
-    document and conversation statistics.
+    Returns detailed profile information for the authenticated user including
+    account details, activity statistics, and engagement metrics. This endpoint
+    provides a complete view of the user's interaction with the platform.
+
+    Args:
+        current_user: Automatically injected current user from JWT token
+        user_service: Injected user service instance
+
+    Returns:
+        UserResponse: Complete user profile including:
+            - Basic profile (username, email, full_name, status)
+            - Account metadata (created_at, updated_at, last_login)
+            - Activity statistics (document_count, conversation_count, total_messages)
+
+    Example Response:
+        {
+            "id": "uuid-here",
+            "username": "johndoe",
+            "email": "john@example.com",
+            "full_name": "John Doe",
+            "is_active": true,
+            "document_count": 15,
+            "conversation_count": 8,
+            "total_messages": 142
+        }
     """
-    try:
-        profile = await user_service.get_user_profile(current_user.id)
-        return profile
-
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve profile",
-        )
+    log_api_call("get_my_profile", user_id=str(current_user.id))
+    
+    profile = await user_service.get_user_profile(current_user.id)
+    return profile
 
 
 @router.put("/me", response_model=UserResponse)
