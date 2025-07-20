@@ -20,6 +20,7 @@ from ..database import get_db, health_check_db
 from ..schemas.common import BaseResponse
 from ..utils.timestamp import utcnow
 from ..utils.caching import embedding_cache, api_response_cache, search_result_cache
+from ..utils.performance import get_performance_stats
 
 logger = logging.getLogger(__name__)
 
@@ -406,6 +407,17 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Application not ready: {str(e)}",
         )
+
+
+@router.get("/performance")
+async def get_performance_metrics() -> Dict[str, Any]:
+    """
+    Get comprehensive performance metrics and statistics.
+
+    Returns:
+        dict: Performance metrics and system health data
+    """
+    return get_performance_stats()
 
 
 @router.get("/liveness")
