@@ -235,11 +235,6 @@ class OpenAIClient:
                 # Add tool call results to conversation if needed
                 # This would require continuing the conversation with tool results
 
-            print("CALL", json.dumps(tool_calls_made, indent=4))
-            print("MESSAGE + + + +", message)
-            for tool_call in message.tool_calls:
-                print(json.dumps(tool_call.model_dump(), indent=4))
-
             # Format response
             result = {
                 "content": message.content or "",
@@ -258,8 +253,6 @@ class OpenAIClient:
                 },
             }
 
-            print("AAAAAAAAA")
-            print(json.dumps(result, indent=4))
             return result
 
         except Exception as e:
@@ -286,10 +279,6 @@ class OpenAIClient:
 
             # Execute tool calls
             results = await mcp_client.execute_tool_calls(mcp_tool_calls)
-            import json
-
-            print("_execute_tool_calls")
-            print(json.dumps(results, indent=4))
             return results
 
         except Exception as e:
@@ -320,7 +309,6 @@ class OpenAIClient:
                 input=text.strip(),
                 encoding_format="float",
             )
-            print("EMBE RESP", response)
 
             return response.data[0].embedding
 

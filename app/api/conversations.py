@@ -244,33 +244,33 @@ async def chat(
     Supports RAG (Retrieval-Augmented Generation) for context-aware responses
     and tool calling for enhanced functionality.
     """
-    # try:
-    start_time = time.time()
+    try:
+        start_time = time.time()
 
-    # Process chat request
-    result = await conversation_service.process_chat(request, current_user.id)
+        # Process chat request
+        result = await conversation_service.process_chat(request, current_user.id)
 
-    # Calculate response time
-    response_time_ms = (time.time() - start_time) * 1000
+        # Calculate response time
+        response_time_ms = (time.time() - start_time) * 1000
 
-    return ChatResponse(
-        success=True,
-        message="Chat response generated successfully",
-        ai_message=result["ai_message"],
-        conversation=result["conversation"],
-        usage=result.get("usage"),
-        rag_context=result.get("rag_context"),
-        tool_calls_made=result.get("tool_calls_made"),
-        response_time_ms=response_time_ms,
-    )
+        return ChatResponse(
+            success=True,
+            message="Chat response generated successfully",
+            ai_message=result["ai_message"],
+            conversation=result["conversation"],
+            usage=result.get("usage"),
+            rag_context=result.get("rag_context"),
+            tool_calls_made=result.get("tool_calls_made"),
+            response_time_ms=response_time_ms,
+        )
 
-    # except ValidationError as e:
-    #    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    # except Exception:
-    #    raise HTTPException(
-    #        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #        detail="Chat processing failed",
-    #    )
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Chat processing failed",
+        )
 
 
 @router.get("/stats", response_model=ConversationStats)

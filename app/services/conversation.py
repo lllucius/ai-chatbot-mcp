@@ -252,128 +252,102 @@ class ConversationService:
         Returns:
             dict: Chat response data including AI message and conversation
         """
-        print("===================================================")
-        # try:
-        # Get or create conversation
-        if request.conversation_id:
-            conversation = await self.get_conversation(request.conversation_id, user_id)
-        else:
-            # Create new conversation
-            title = request.conversation_title or f"Chat {request.user_message[:50]}..."
-            conversation = await self.create_conversation(
-                ConversationCreate(title=title, is_active=True), user_id
+        try:
+            # Get or create conversation
+            if request.conversation_id:
+                conversation = await self.get_conversation(request.conversation_id, user_id)
+            else:
+                # Create new conversation
+                title = request.conversation_title or f"Chat {request.user_message[:50]}..."
+                conversation = await self.create_conversation(
+                    ConversationCreate(title=title, is_active=True), user_id
+                )
+
+            # Add user message
+            user_message = Message(
+                role="user",
+                content=request.user_message,
+                conversation_id=conversation.id,
+                token_count=self.openai_client.count_tokens(request.user_message),
+            )
+            self.db.add(user_message)
+
+            # Get conversation history
+            history_messages = await self._get_conversation_history(conversation.id)
+
+            # Prepare messages for AI
+            ai_messages = []
+
+            # Add system message if needed
+            system_prompt = self._build_system_prompt(request)
+            if system_prompt:
+                ai_messages.append({"role": "system", "content": system_prompt})
+
+            # Add conversation history
+            for msg in history_messages:
+                ai_messages.append({"role": msg.role, "content": msg.content})
+
+            # Add current user message
+            ai_messages.append({"role": "user", "content": request.user_message})
+
+            # Get RAG context if enabled
+            rag_context = None
+            if request.use_rag:
+                rag_context = await self._get_rag_context(request, user_id)
+                if rag_context:
+                    # Add RAG context to system message
+                    context_text = self._format_rag_context(rag_context)
+                    if ai_messages[0]["role"] == "system":
+                        ai_messages[0][
+                            "content"
+                        ] += f"\n\nRelevant context:\n{context_text}"
+                    else:
+                        ai_messages.insert(
+                            0,
+                            {
+                                "role": "system",
+                                "content": f"Use the following context to help answer questions:\n{context_text}",
+                            },
+                        )
+
+            # Get AI response
+            ai_response = await self.openai_client.chat_completion(
+                messages=ai_messages,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                tools=None,  # TODO: Implement tool calling
             )
 
-        # Add user message
-        user_message = Message(
-            role="user",
-            content=request.user_message,
-            conversation_id=conversation.id,
-            token_count=self.openai_client.count_tokens(request.user_message),
-        )
-        self.db.add(user_message)
+            # Create AI message
+            ai_message = Message(
+                role="assistant",
+                content=ai_response["content"],
+                conversation_id=conversation.id,
+                token_count=ai_response["usage"]["completion_tokens"],
+            )
+            self.db.add(ai_message)
 
-        # Get conversation history
-        history_messages = await self._get_conversation_history(conversation.id)
+            # Update conversation
+            conversation.message_count += 2  # User + AI message
 
-        # Prepare messages for AI
-        ai_messages = []
+            await self.db.commit()
+            await self.db.refresh(user_message)
+            await self.db.refresh(ai_message)
+            await self.db.refresh(conversation)
 
-        # Add system message if needed
-        system_prompt = self._build_system_prompt(request)
-        if system_prompt:
-            ai_messages.append({"role": "system", "content": system_prompt})
-        print("PROMPT", system_prompt)
+            logger.info(f"Chat processed for conversation {conversation.id}")
 
-        # Add conversation history
-        for msg in history_messages:
-            ai_messages.append({"role": msg.role, "content": msg.content})
+            return {
+                "ai_message": MessageResponse.model_validate(ai_message),
+                "conversation": ConversationResponse.model_validate(conversation),
+                "usage": ai_response["usage"],
+                "rag_context": rag_context,
+                "tool_calls_made": None,  # TODO: Implement tool calling
+            }
 
-        # Add current user message
-        ai_messages.append({"role": "user", "content": request.user_message})
-
-        # Get RAG context if enabled
-        rag_context = None
-        if request.use_rag:
-            rag_context = await self._get_rag_context(request, user_id)
-            if rag_context:
-                # Add RAG context to system message
-                context_text = self._format_rag_context(rag_context)
-                if ai_messages[0]["role"] == "system":
-                    ai_messages[0][
-                        "content"
-                    ] += f"\n\nRelevant context:\n{context_text}"
-                else:
-                    ai_messages.insert(
-                        0,
-                        {
-                            "role": "system",
-                            "content": f"Use the following context to help answer questions:\n{context_text}",
-                        },
-                    )
-
-        # Get AI response
-        ai_response = await self.openai_client.chat_completion(
-            messages=ai_messages,
-            temperature=request.temperature,
-            max_tokens=request.max_tokens,
-            tools=None,  # TODO: Implement tool calling
-        )
-        print(
-            "#########################################################################"
-        )
-        print("AIRESP", ai_response)
-        import json
-
-        print(json.dumps(ai_response, indent=4))
-        print(dir(ai_response))
-
-        # Create AI message
-        ai_message = Message(
-            role="assistant",
-            content=ai_response["content"],
-            conversation_id=conversation.id,
-            token_count=ai_response["usage"]["completion_tokens"],
-        )
-        self.db.add(ai_message)
-
-        # Update conversation
-        conversation.message_count += 2  # User + AI message
-
-        await self.db.commit()
-        await self.db.refresh(user_message)
-        await self.db.refresh(ai_message)
-        await self.db.refresh(conversation)
-
-        print(
-            "#########################################################################"
-        )
-        print("AIRESP", ai_response)
-        logger.info(f"Chat processed for conversation {conversation.id}")
-
-        print("AIME", ai_message)
-        print("id", ai_message.role)
-        print("content", ai_message.content)
-        print("token_count", ai_message.token_count)
-        print("conv_id", ai_message.conversation_id)
-        print("tool_Calls", ai_message.tool_calls)
-        print("tool_call_results", ai_message.tool_call_results)
-        print("CONV", conversation)
-        print("RESP", ai_response)
-        print("RAGC", rag_context)
-        print("ai_message", MessageResponse.model_validate(ai_message))
-        print("conversation", ConversationResponse.model_validate(conversation))
-        return {
-            "ai_message": MessageResponse.model_validate(ai_message),
-            "conversation": ConversationResponse.model_validate(conversation),
-            "usage": ai_response["usage"],
-            "rag_context": rag_context,
-            "tool_calls_made": None,  # TODO: Implement tool calling
-        }
-
-    #        except Exception as e:
-    #            logger.error(f"Chat processing failed: {e}")
-    #            raise ValidationError(f"Chat processing failed: {e}")
+        except Exception as e:
+            logger.error(f"Chat processing failed: {e}")
+            raise ValidationError(f"Chat processing failed: {e}")
 
     async def _get_conversation_history(
         self, conversation_id: UUID, limit: int = 20
@@ -412,43 +386,41 @@ class ConversationService:
         self, request: ChatRequest, user_id: UUID
     ) -> Optional[List[Dict[str, Any]]]:
         """Get RAG context for the chat request."""
-        print("GET_RAG_CONTEXT", request)
-        # try:
-        print("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
-        # Create search request
-        search_request = DocumentSearchRequest(
-            query=request.user_message,
-            limit=5,
-            threshold=0.7,
-            algorithm="hybrid",
-            document_ids=request.rag_documents,
-        )
-
-        # Search for relevant chunks
-        search_results = await self.search_service.search_documents(
-            search_request, user_id
-        )
-
-        if not search_results:
-            return None
-
-        # Format context
-        context = []
-        for result in search_results:
-            context.append(
-                {
-                    "content": result.content,
-                    "source": result.document_title or f"Document {result.document_id}",
-                    "similarity": result.similarity_score,
-                    "chunk_id": result.id,
-                }
+        try:
+            # Create search request
+            search_request = DocumentSearchRequest(
+                query=request.user_message,
+                limit=5,
+                threshold=0.7,
+                algorithm="hybrid",
+                document_ids=request.rag_documents,
             )
 
-        return context
+            # Search for relevant chunks
+            search_results = await self.search_service.search_documents(
+                search_request, user_id
+            )
 
-        # except Exception as e:
-        #    logger.warning(f"Failed to get RAG context: {e}")
-        #    return None
+            if not search_results:
+                return None
+
+            # Format context
+            context = []
+            for result in search_results:
+                context.append(
+                    {
+                        "content": result.content,
+                        "source": result.document_title or f"Document {result.document_id}",
+                        "similarity": result.similarity_score,
+                        "chunk_id": result.id,
+                    }
+                )
+
+            return context
+
+        except Exception as e:
+            logger.warning(f"Failed to get RAG context: {e}")
+            return None
 
     def _format_rag_context(self, context: List[Dict[str, Any]]) -> str:
         """Format RAG context for inclusion in prompt."""
