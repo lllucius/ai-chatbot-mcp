@@ -75,16 +75,28 @@ ai-chatbot-platform/
 ## 🚦 Quick Start
 
 ### Prerequisites
-- Python 3.12+
+- Python 3.11+ or 3.12
 - PostgreSQL 14+ with pgvector extension
 - OpenAI API key
 
-### Installation
+### Option 1: Automated Development Setup (Recommended)
+
+```bash
+git clone <repository-url>
+cd ai-chatbot-mcp
+
+# Run automated setup script
+python scripts/dev_setup.py
+
+# Follow the printed instructions to complete setup
+```
+
+### Option 2: Manual Installation
 
 1. **Clone and setup environment:**
 ```bash
 git clone <repository-url>
-cd ai-chatbot-platform
+cd ai-chatbot-mcp
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -295,48 +307,22 @@ The platform supports multiple search algorithms:
 
 ## 🚀 Deployment
 
-### Docker Deployment
+### Production Setup
 
-```dockerfile
-# Dockerfile
-FROM python:3.12-slim
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Set environment variables
+export DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/ai_chatbot
+export SECRET_KEY=your-secret-key
+export OPENAI_API_KEY=your-openai-key
 
-COPY . .
-EXPOSE 8000
+# Run database migrations
+alembic upgrade head
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/ai_chatbot
-      - SECRET_KEY=your-secret-key
-      - OPENAI_API_KEY=your-openai-key
-    depends_on:
-      - db
-
-  db:
-    image: pgvector/pgvector:pg14
-    environment:
-      - POSTGRES_DB=ai_chatbot
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+# Start production server
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ### Production Checklist
@@ -354,18 +340,61 @@ volumes:
 
 ## 🧪 Testing
 
+The project includes comprehensive test coverage with unit and integration tests.
+
 ```bash
-# Run tests
+# Run all tests
 pytest
 
-# Run with coverage
-pytest --cov=app --cov-report=html
+# Run with coverage report
+pytest --cov=app --cov-report=html --cov-report=term-missing
+
+# Run specific test categories
+pytest -m unit          # Unit tests only
+pytest -m integration   # Integration tests only
+pytest -m auth          # Authentication tests
 
 # Run specific test file
-pytest tests/test_auth.py
+pytest tests/test_auth.py -v
 
-# Run with debug output
-pytest -v -s
+# Check code quality (includes testing)
+python scripts/check_quality.py
+
+# Run tests with coverage in CI mode
+python scripts/check_quality.py --coverage
+```
+
+### Test Structure
+- **Unit Tests**: Fast tests that test individual components
+- **Integration Tests**: Tests that verify API endpoints and database interactions  
+- **Test Fixtures**: Comprehensive test data factories and database setup
+- **Authentication Tests**: Complete auth flow testing
+- **Health Check Tests**: System monitoring validation
+
+## 🛠️ Development Tools
+
+### Code Quality Tools
+```bash
+# Automated development setup
+python scripts/dev_setup.py
+
+# Code quality checks
+python scripts/check_quality.py
+
+# Fix formatting automatically
+python scripts/check_quality.py --fix
+
+# Pre-commit hooks (run automatically on commit)
+pre-commit run --all-files
+```
+
+### Development Environment
+```bash
+# Manual development server
+uvicorn app.main:app --reload
+
+# Watch for changes and run tests
+pytest --looponfail
 ```
 
 ## 📊 Monitoring
@@ -385,11 +414,43 @@ pytest -v -s
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Please see [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development setup instructions.
+
+### Quick Contribution Guide
+
+1. **Fork and setup**:
+   ```bash
+   git clone <your-fork>
+   cd ai-chatbot-mcp
+   python scripts/dev_setup.py  # Automated setup
+   ```
+
+2. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+
+3. **Make changes with quality checks**:
+   ```bash
+   # Make your changes
+   python scripts/check_quality.py --fix  # Fix formatting
+   python scripts/check_quality.py        # Run all checks
+   ```
+
+4. **Commit and push**:
+   ```bash
+   git commit -m 'Add amazing feature'
+   git push origin feature/amazing-feature
+   ```
+
+5. **Open a Pull Request**
+
+### Code Standards
+- **Testing**: All new features must include tests
+- **Documentation**: Update documentation for API changes
+- **Code Quality**: All checks must pass (`python scripts/check_quality.py`)
+- **Type Hints**: Use comprehensive type hints
+- **Security**: Follow security best practices
 
 ### Development Setup
 ```bash

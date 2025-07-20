@@ -36,6 +36,7 @@ from ..schemas.document import (
     ProcessingStatusResponse,
 )
 from ..services.document import DocumentService
+from ..utils.api_errors import handle_api_errors
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -46,6 +47,7 @@ async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentSe
 
 
 @router.post("/upload", response_model=DocumentUploadResponse)
+@handle_api_errors("Failed to upload document", log_errors=True)
 async def upload_document(
     file: UploadFile = File(...),
     title: Optional[str] = Form(None),

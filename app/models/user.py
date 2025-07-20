@@ -75,4 +75,5 @@ class User(BaseModelDB):
     )
 
     def __repr__(self) -> str:
+        """Return string representation of User model."""
         return f"<User(username='{self.username}', email='{self.email}')>"
