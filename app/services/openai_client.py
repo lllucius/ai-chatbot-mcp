@@ -8,12 +8,14 @@ Generated on: 2025-07-14 04:13:26 UTC
 Current User: lllucius
 """
 
+import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional, Union
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
+from ..utils.caching import embedding_cache, make_cache_key
 from .mcp_client import get_mcp_client
 
 try:
@@ -176,9 +178,10 @@ class OpenAIClient:
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
         use_mcp_tools: bool = True,
+        max_retries: int = 3,
     ) -> Dict[str, Any]:
         """
-        Create a chat completion with optional tool calling.
+        Create a chat completion with optional tool calling and retry logic.
 
         Args:
             messages: List of messages
@@ -187,6 +190,7 @@ class OpenAIClient:
             tools: Custom tools (if None, will use MCP tools if available)
             tool_choice: Tool choice strategy
             use_mcp_tools: Whether to automatically include MCP tools
+            max_retries: Maximum number of retry attempts
 
         Returns:
             dict: Chat completion response with usage information
@@ -194,70 +198,94 @@ class OpenAIClient:
         if not OPENAI_AVAILABLE or not self.client:
             raise ExternalServiceError("OpenAI client not available")
 
-        try:
-            # Prepare tools
-            final_tools = tools or []
+        last_exception = None
+        for attempt in range(max_retries):
+            try:
+                # Prepare tools
+                final_tools = tools or []
 
-            # Add MCP tools if requested and no custom tools provided
-            if use_mcp_tools and not tools:
-                try:
-                    mcp_client = await get_mcp_client()
-                    mcp_tools = mcp_client.get_tools_for_openai()
-                    final_tools.extend(mcp_tools)
-                    logger.info(f"Added {len(mcp_tools)} MCP tools to chat completion")
-                except Exception as e:
-                    logger.warning(f"Failed to add MCP tools: {e}")
+                # Add MCP tools if requested and no custom tools provided
+                if use_mcp_tools and not tools:
+                    try:
+                        mcp_client = await get_mcp_client()
+                        mcp_tools = mcp_client.get_tools_for_openai()
+                        final_tools.extend(mcp_tools)
+                        logger.info(f"Added {len(mcp_tools)} MCP tools to chat completion")
+                    except Exception as e:
+                        logger.warning(f"Failed to add MCP tools: {e}")
 
-            # Prepare request parameters
-            request_params = {
-                "model": settings.openai_chat_model,
-                "messages": messages,
-                "temperature": temperature,
-            }
+                # Prepare request parameters
+                request_params = {
+                    "model": settings.openai_chat_model,
+                    "messages": messages,
+                    "temperature": temperature,
+                }
 
-            if max_tokens:
-                request_params["max_tokens"] = max_tokens
+                if max_tokens:
+                    request_params["max_tokens"] = max_tokens
 
-            if final_tools:
-                request_params["tools"] = final_tools
-                request_params["tool_choice"] = tool_choice
+                if final_tools:
+                    request_params["tools"] = final_tools
+                    request_params["tool_choice"] = tool_choice
 
-            # Make the API call
-            response = await self.client.chat.completions.create(**request_params)
+                # Make the API call
+                response = await self.client.chat.completions.create(**request_params)
 
-            message = response.choices[0].message
+                message = response.choices[0].message
 
-            # Handle tool calls
-            tool_calls_made = []
-            if message.tool_calls:
-                tool_calls_made = await self._execute_tool_calls(message.tool_calls)
+                # Handle tool calls
+                tool_calls_made = []
+                if message.tool_calls:
+                    tool_calls_made = await self._execute_tool_calls(message.tool_calls)
 
-                # Add tool call results to conversation if needed
-                # This would require continuing the conversation with tool results
+                # Format response
+                result = {
+                    "content": message.content or "",
+                    "role": message.role,
+                    "tool_calls": [
+                        tool_call.model_dump() for tool_call in message.tool_calls
+                    ]
+                    if message.tool_calls
+                    else None,
+                    "tool_calls_executed": tool_calls_made,
+                    "finish_reason": response.choices[0].finish_reason,
+                    "usage": {
+                        "prompt_tokens": response.usage.prompt_tokens,
+                        "completion_tokens": response.usage.completion_tokens,
+                        "total_tokens": response.usage.total_tokens,
+                    },
+                }
 
-            # Format response
-            result = {
-                "content": message.content or "",
-                "role": message.role,
-                "tool_calls": [
-                    tool_call.model_dump() for tool_call in message.tool_calls
-                ]
-                if message.tool_calls
-                else None,
-                "tool_calls_executed": tool_calls_made,
-                "finish_reason": response.choices[0].finish_reason,
-                "usage": {
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens,
-                    "total_tokens": response.usage.total_tokens,
-                },
-            }
+                return result
 
-            return result
+            except openai.RateLimitError as e:
+                last_exception = e
+                wait_time = 2 ** attempt
+                logger.warning(f"Rate limit hit (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(wait_time)
+                continue
+            except (openai.APIConnectionError, openai.APITimeoutError) as e:
+                last_exception = e
+                wait_time = 2 ** attempt
+                logger.warning(f"API connection error (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(wait_time)
+                continue
+            except openai.APIError as e:
+                # Don't retry for API errors like invalid requests
+                logger.error(f"OpenAI API error: {e}")
+                raise ExternalServiceError(f"OpenAI API error: {e}")
+            except Exception as e:
+                last_exception = e
+                logger.error(f"Chat completion failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)
+                continue
 
-        except Exception as e:
-            logger.error(f"Chat completion failed: {e}")
-            raise ExternalServiceError(f"Chat completion failed: {e}")
+        # If we get here, all retries failed
+        logger.error(f"Chat completion failed after {max_retries} attempts")
+        raise ExternalServiceError(f"Chat completion failed after {max_retries} attempts: {last_exception}")
 
     async def _execute_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
         """Execute tool calls using FastMCP."""
@@ -286,13 +314,15 @@ class OpenAIClient:
             return []
 
     async def create_embedding(
-        self, text: str, encoding_format: Optional[str] = "json"
+        self, text: str, encoding_format: Optional[str] = "json", max_retries: int = 3
     ) -> List[float]:
         """
-        Create embedding for text.
+        Create embedding for text with caching and retry logic.
 
         Args:
             text: Text to embed
+            encoding_format: Output encoding format
+            max_retries: Maximum number of retry attempts
 
         Returns:
             List[float]: Embedding vector
@@ -303,18 +333,55 @@ class OpenAIClient:
         if not text or not text.strip():
             raise ValueError("Text cannot be empty")
 
-        try:
-            response = await self.client.embeddings.create(
-                model=settings.openai_embedding_model,
-                input=text.strip(),
-                encoding_format="float",
-            )
+        # Check cache first
+        cache_key = make_cache_key("embedding", settings.openai_embedding_model, text.strip())
+        cached_embedding = await embedding_cache.get(cache_key)
+        if cached_embedding is not None:
+            logger.debug("Using cached embedding")
+            return cached_embedding
 
-            return response.data[0].embedding
+        last_exception = None
+        for attempt in range(max_retries):
+            try:
+                response = await self.client.embeddings.create(
+                    model=settings.openai_embedding_model,
+                    input=text.strip(),
+                    encoding_format="float",
+                )
 
-        except Exception as e:
-            logger.error(f"Embedding creation failed: {e}")
-            raise ExternalServiceError(f"Embedding creation failed: {e}")
+                embedding = response.data[0].embedding
+                
+                # Cache the result
+                await embedding_cache.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
+                
+                return embedding
+
+            except openai.RateLimitError as e:
+                last_exception = e
+                wait_time = 2 ** attempt
+                logger.warning(f"Rate limit hit (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(wait_time)
+                continue
+            except (openai.APIConnectionError, openai.APITimeoutError) as e:
+                last_exception = e
+                wait_time = 2 ** attempt
+                logger.warning(f"API connection error (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(wait_time)
+                continue
+            except openai.APIError as e:
+                logger.error(f"OpenAI API error: {e}")
+                raise ExternalServiceError(f"OpenAI API error: {e}")
+            except Exception as e:
+                last_exception = e
+                logger.error(f"Embedding creation failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)
+                continue
+
+        logger.error(f"Embedding creation failed after {max_retries} attempts")
+        raise ExternalServiceError(f"Embedding creation failed after {max_retries} attempts: {last_exception}")
 
     async def create_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         """

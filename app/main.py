@@ -30,9 +30,11 @@ from .api import (
 )
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
-from .database import close_db, init_db
+from .database import close_db, init_db, health_check_db
 from .utils.logging import setup_logging
 from .utils.timestamp import get_current_timestamp
+from .utils.caching import start_cache_cleanup_task
+from .utils.validation import validate_request_middleware
 
 
 # Setup logging
@@ -53,15 +55,19 @@ async def lifespan(app: FastAPI):
         await init_db()
         logger.info("Database initialized successfully")
 
-        # Initialize FastMCP (required)
+        # Start cache cleanup task
+        await start_cache_cleanup_task()
+        logger.info("Cache system initialized")
+
+        # Initialize FastMCP (optional)
         try:
             from .services.mcp_client import get_mcp_client
 
             mcp_client = await get_mcp_client()
             logger.info("FastMCP client initialized successfully")
         except Exception as e:
-            logger.error(f"FastMCP initialization failed (REQUIRED): {e}")
-            raise
+            logger.warning(f"FastMCP initialization failed (optional): {e}")
+            # Continue without MCP - it's not critical for basic operation
 
     except Exception as e:
         logger.error(f"Application initialization failed: {e}")
@@ -137,6 +143,12 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
+
+
+# Input validation middleware (add before other middleware)
+app.add_middleware(
+    lambda request, call_next: validate_request_middleware(request, call_next)
+)
 
 
 # Request timing middleware
