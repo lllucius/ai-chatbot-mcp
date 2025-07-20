@@ -54,40 +54,37 @@ class SearchService:
         Returns:
             List[DocumentChunkResponse]: Search results with similarity scores
         """
-        # try:
-        if request.algorithm == "vector":
-            return await self._vector_search(request, user_id)
-        elif request.algorithm == "text":
-            return await self._text_search(request, user_id)
-        elif request.algorithm == "hybrid":
-            return await self._hybrid_search(request, user_id)
-        elif request.algorithm == "mmr":
-            return await self._mmr_search(request, user_id)
-        else:
-            raise SearchError(f"Unknown search algorithm: {request.algorithm}")
+        try:
+            if request.algorithm == "vector":
+                return await self._vector_search(request, user_id)
+            elif request.algorithm == "text":
+                return await self._text_search(request, user_id)
+            elif request.algorithm == "hybrid":
+                return await self._hybrid_search(request, user_id)
+            elif request.algorithm == "mmr":
+                return await self._mmr_search(request, user_id)
+            else:
+                raise SearchError(f"Unknown search algorithm: {request.algorithm}")
 
-        # except Exception as e:
-        #    logger.error(f"Search failed: {e}")
-        #    raise SearchError(f"Search operation failed: {e}")
+        except Exception as e:
+            logger.error(f"Search failed: {e}")
+            raise SearchError(f"Search operation failed: {e}")
 
     async def _vector_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
         """Perform vector similarity search."""
-        print("VECTOR_SEARCH")
 
         # Generate query embedding
         embedding = await self.embedding_service.generate_embedding(request.query)
         if not embedding:
             raise SearchError("Failed to generate query embedding")
-        print("EMBEDDING", embedding)
-        print("TYPE", type(embedding))
-        print("LELN", len(embedding))
 
         distance_expr = DocumentChunk.embedding.op("<=>")(embedding).label("distance")
         similarity_threshold = 1.0 - request.threshold  # Convert similarity to distance
+        """
         query = text(
-            """
+            ""
             SELECT 
                 document_chunk.*,
                 (document_chunk.embedding <=> :embedding) AS distance
@@ -101,10 +98,10 @@ class SearchService:
                 AND distance <= :similarity_threshold
             ORDER BY 
                 distance
-        """
+        ""
         )
-        # Build base query
         """
+        # Build base query
         query = (
             select(
                 DocumentChunk,
@@ -124,9 +121,10 @@ class SearchService:
 
         if request.file_types:
             query = query.where(Document.file_type.in_(request.file_types))
-        """
-        print("QUERY", query)
+
+        result = await self.db.execute(query)
         # Execute query
+        """
         result = await self.db.execute(
             query,
             {
@@ -136,6 +134,7 @@ class SearchService:
                 "limit": request.limit,
             },
         )
+        """
         rows = result.fetchall()
 
         # Convert results
