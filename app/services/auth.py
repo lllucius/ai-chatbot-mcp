@@ -1,14 +1,29 @@
 """
 Authentication service for user management and JWT token handling.
 
-This service provides methods for user registration, authentication,
-password management, and JWT token creation/verification.
+This service provides comprehensive authentication functionality including
+user registration, login/logout, password management, and JWT token
+creation and verification. It implements secure authentication patterns
+with proper validation, logging, and error handling.
+
+Key Features:
+- Secure user registration with validation
+- Authentication with username/email support
+- JWT token generation and verification
+- Password validation and security checks
+- Comprehensive logging and error handling
+
+Security Features:
+- Password hashing using bcrypt
+- JWT token expiration and validation
+- Protection against common attacks
+- Audit logging for security events
 
 Generated on: 2025-07-14 03:08:19 UTC
-Current User: lllucius
+Updated on: 2025-01-20 19:50:00 UTC
+Current User: lllucius / assistant
 """
 
-import logging
 from datetime import timedelta
 from typing import Any, Dict, Optional
 from uuid import UUID
@@ -23,26 +38,42 @@ from ..models.user import User
 from ..schemas.auth import RegisterRequest, Token
 from ..utils.security import get_password_hash, verify_password
 from ..utils.timestamp import utcnow
+from .base import BaseService
 
-logger = logging.getLogger(__name__)
 
-
-class AuthService:
+class AuthService(BaseService):
     """
-    Authentication service for user management and JWT operations.
+    Authentication service for comprehensive user management and JWT operations.
 
-    This service handles user registration, authentication, password management,
-    and JWT token creation and verification.
+    This service extends BaseService to provide authentication-specific functionality
+    including user registration, login/logout, password management, and JWT token
+    lifecycle management with enhanced security and logging.
+    
+    Security Features:
+    - Secure password hashing with bcrypt
+    - JWT token generation with configurable expiration
+    - Username and email-based authentication
+    - Protection against timing attacks
+    - Comprehensive security event logging
+    
+    Responsibilities:
+    - User registration with validation and conflict detection
+    - User authentication with multiple identifier support
+    - JWT token creation, verification, and refresh
+    - User lookup operations by various identifiers
+    - Security event logging and monitoring
     """
 
     def __init__(self, db: AsyncSession):
         """
-        Initialize authentication service.
+        Initialize authentication service with database session.
 
         Args:
-            db: Database session for user operations
+            db: Database session for authentication operations
         """
-        self.db = db
+        super().__init__(db, "auth_service")
+        
+        # Authentication configuration from settings
         self.secret_key = settings.secret_key
         self.algorithm = settings.algorithm
         self.access_token_expire_minutes = settings.access_token_expire_minutes
