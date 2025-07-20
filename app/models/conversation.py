@@ -68,6 +68,7 @@ class Conversation(BaseModelDB):
     )
 
     def __repr__(self) -> str:
+        """Return string representation of Conversation model."""
         return f"<Conversation(title='{self.title}', user_id={self.user_id})>"
 
 
