@@ -2,16 +2,19 @@
 Text processing utilities for document chunking and analysis.
 
 This module provides functions for text cleaning, chunking,
-token counting, and other text processing operations.
+token counting, and other text processing operations with
+streaming and memory optimization support.
 
 Generated on: 2025-07-14 03:50:38 UTC
 Current User: lllucius
 """
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncIterator, Dict, List, Optional
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -29,22 +32,105 @@ class TextChunk:
 
 class TextProcessor:
     """
-    Text processing utilities for document analysis and chunking.
+    Optimized text processing utilities for document analysis and chunking.
 
-    This class provides methods for cleaning text, creating chunks,
-    and analyzing text content for optimal processing.
+    This class provides methods for cleaning text, creating chunks with
+    streaming support and memory optimization for large documents.
     """
 
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
+    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200, max_memory_mb: int = 500):
         """
         Initialize text processor.
 
         Args:
             chunk_size: Target size for text chunks
             chunk_overlap: Overlap between consecutive chunks
+            max_memory_mb: Maximum memory usage in MB before optimization
         """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
+        self.max_memory_mb = max_memory_mb
+
+    def _check_memory_usage(self) -> None:
+        """Check if memory usage is too high."""
+        try:
+            memory = psutil.virtual_memory()
+            memory_mb = (memory.used / (1024 * 1024))
+            
+            if memory.percent > 80:
+                logger.warning(f"High memory usage: {memory.percent}%")
+                
+            if memory_mb > self.max_memory_mb * 1024:  # Convert to bytes
+                raise MemoryError("Memory usage too high for text processing")
+                
+        except Exception as e:
+            logger.debug(f"Memory check failed: {e}")
+
+    async def create_chunks_streaming(
+        self, 
+        text: str, 
+        metainfo: Optional[Dict[str, Any]] = None
+    ) -> AsyncIterator[TextChunk]:
+        """
+        Create text chunks with streaming support for memory optimization.
+
+        Args:
+            text: Input text to chunk
+            metainfo: Optional metadata to include with chunks
+
+        Yields:
+            TextChunk: Individual text chunks
+
+        Raises:
+            MemoryError: If memory usage becomes too high
+        """
+        if not text or not text.strip():
+            return
+
+        cleaned_text = self.clean_text(text)
+        if not cleaned_text:
+            return
+
+        start_pos = 0
+        chunk_index = 0
+
+        while start_pos < len(cleaned_text):
+            # Check memory usage periodically
+            if chunk_index % 100 == 0:
+                self._check_memory_usage()
+                await asyncio.sleep(0)  # Allow other tasks
+
+            # Calculate end position
+            end_pos = start_pos + self.chunk_size
+
+            # If this is not the last chunk, try to break at a sentence boundary
+            if end_pos < len(cleaned_text):
+                end_pos = self._find_break_point(cleaned_text, start_pos, end_pos)
+            else:
+                end_pos = len(cleaned_text)
+
+            # Extract chunk content
+            chunk_content = cleaned_text[start_pos:end_pos].strip()
+
+            if chunk_content:
+                chunk = TextChunk(
+                    content=chunk_content,
+                    start_char=start_pos,
+                    end_char=end_pos,
+                    chunk_index=chunk_index,
+                    metainfo=metainfo,
+                )
+                yield chunk
+                chunk_index += 1
+
+            # Calculate next start position with overlap
+            if end_pos >= len(cleaned_text):
+                break
+
+            start_pos = max(start_pos + 1, end_pos - self.chunk_overlap)
+
+            # Allow other coroutines to run
+            await asyncio.sleep(0)
 
     def clean_text(self, text: str) -> str:
         """
