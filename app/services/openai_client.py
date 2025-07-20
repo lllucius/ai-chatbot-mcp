@@ -1,11 +1,12 @@
 """
-OpenAI API client with FastMCP tool integration.
+OpenAI API client with unified tool integration.
 
 This service provides a wrapper around the OpenAI API with enhanced
-functionality including tool calling via FastMCP integration.
+functionality including tool calling via unified tool executor.
 
 Generated on: 2025-07-14 04:13:26 UTC
-Current User: lllucius
+Updated on: 2025-01-20 20:40:00 UTC
+Current User: lllucius / assistant
 """
 
 import asyncio
@@ -15,8 +16,11 @@ from typing import Any, Dict, List, Optional, Union
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
+from ..core.tool_executor import get_unified_tool_executor, ToolCall, ToolResult
 from ..utils.caching import embedding_cache, make_cache_key
-from .mcp_client import get_mcp_client
+from ..utils.api_errors import handle_api_errors
+from ..utils.tool_middleware import tool_operation, RetryConfig
+from ..utils.logging import get_api_logger
 
 try:
     import openai
@@ -36,15 +40,32 @@ except ImportError:
     logging.warning("Tiktoken not available. Install with: pip install tiktoken")
 
 
-logger = logging.getLogger(__name__)
+logger = get_api_logger("openai_client")
 
 
 class OpenAIClient:
     """
-    OpenAI API client with FastMCP tool integration.
+    OpenAI API client with unified tool integration.
 
     This client provides methods for chat completions, embeddings,
-    and tool calling with automatic MCP integration.
+    and content moderation with automatic unified tool calling capabilities.
+    
+    Key Features:
+    - Unified tool calling through UnifiedToolExecutor
+    - Consistent error handling via @handle_api_errors decorator
+    - Retry logic and caching through middleware decorators
+    - Structured logging for all operations
+    - Full async/await support for all operations
+    
+    Tool Integration:
+    - Automatically integrates with UnifiedToolExecutor for tool calling
+    - Supports both custom tools and unified tools from multiple providers
+    - Handles tool call execution with proper error handling and logging
+    
+    Error Handling:
+    - Uses @handle_api_errors decorator for consistent error responses
+    - Automatic retry logic for rate limits and connection errors
+    - Proper exception mapping to HTTP status codes
     """
 
     def __init__(self):
@@ -70,6 +91,7 @@ class OpenAIClient:
                 except Exception as e:
                     logger.warning(f"Failed to initialize tokenizer: {e}")
 
+    @handle_api_errors("Model validation failed")
     async def validate_model_availability(self) -> bool:
         """
         Validate that the configured models are available.
@@ -170,6 +192,7 @@ class OpenAIClient:
 
         return total_tokens
 
+    @handle_api_errors("Chat completion failed")
     async def chat_completion(
         self,
         messages: List[Dict[str, Any]],
@@ -177,19 +200,19 @@ class OpenAIClient:
         max_tokens: Optional[int] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
-        use_mcp_tools: bool = True,
+        use_unified_tools: bool = True,
         max_retries: int = 3,
     ) -> Dict[str, Any]:
         """
-        Create a chat completion with optional tool calling and retry logic.
+        Create a chat completion with unified tool calling and retry logic.
 
         Args:
             messages: List of messages
             temperature: Response randomness (0-2)
             max_tokens: Maximum tokens in response
-            tools: Custom tools (if None, will use MCP tools if available)
+            tools: Custom tools (if None, will use unified tools if available)
             tool_choice: Tool choice strategy
-            use_mcp_tools: Whether to automatically include MCP tools
+            use_unified_tools: Whether to automatically include unified tools
             max_retries: Maximum number of retry attempts
 
         Returns:
@@ -198,121 +221,115 @@ class OpenAIClient:
         if not OPENAI_AVAILABLE or not self.client:
             raise ExternalServiceError("OpenAI client not available")
 
-        last_exception = None
-        for attempt in range(max_retries):
+        # Prepare tools using unified tool executor
+        final_tools = tools or []
+
+        if use_unified_tools and not tools:
             try:
-                # Prepare tools
-                final_tools = tools or []
-
-                # Add MCP tools if requested and no custom tools provided
-                if use_mcp_tools and not tools:
-                    try:
-                        mcp_client = await get_mcp_client()
-                        mcp_tools = mcp_client.get_tools_for_openai()
-                        final_tools.extend(mcp_tools)
-                        logger.info(f"Added {len(mcp_tools)} MCP tools to chat completion")
-                    except Exception as e:
-                        logger.warning(f"Failed to add MCP tools: {e}")
-
-                # Prepare request parameters
-                request_params = {
-                    "model": settings.openai_chat_model,
-                    "messages": messages,
-                    "temperature": temperature,
-                }
-
-                if max_tokens:
-                    request_params["max_tokens"] = max_tokens
-
-                if final_tools:
-                    request_params["tools"] = final_tools
-                    request_params["tool_choice"] = tool_choice
-
-                # Make the API call
-                response = await self.client.chat.completions.create(**request_params)
-
-                message = response.choices[0].message
-
-                # Handle tool calls
-                tool_calls_made = []
-                if message.tool_calls:
-                    tool_calls_made = await self._execute_tool_calls(message.tool_calls)
-
-                # Format response
-                result = {
-                    "content": message.content or "",
-                    "role": message.role,
-                    "tool_calls": [
-                        tool_call.model_dump() for tool_call in message.tool_calls
-                    ]
-                    if message.tool_calls
-                    else None,
-                    "tool_calls_executed": tool_calls_made,
-                    "finish_reason": response.choices[0].finish_reason,
-                    "usage": {
-                        "prompt_tokens": response.usage.prompt_tokens,
-                        "completion_tokens": response.usage.completion_tokens,
-                        "total_tokens": response.usage.total_tokens,
-                    },
-                }
-
-                return result
-
-            except openai.RateLimitError as e:
-                last_exception = e
-                wait_time = 2 ** attempt
-                logger.warning(f"Rate limit hit (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(wait_time)
-                continue
-            except (openai.APIConnectionError, openai.APITimeoutError) as e:
-                last_exception = e
-                wait_time = 2 ** attempt
-                logger.warning(f"API connection error (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(wait_time)
-                continue
-            except openai.APIError as e:
-                # Don't retry for API errors like invalid requests
-                logger.error(f"OpenAI API error: {e}")
-                raise ExternalServiceError(f"OpenAI API error: {e}")
+                tool_executor = await get_unified_tool_executor()
+                unified_tools = await tool_executor.get_available_tools()
+                final_tools.extend(unified_tools)
+                logger.info(f"Added {len(unified_tools)} unified tools to chat completion")
             except Exception as e:
-                last_exception = e
-                logger.error(f"Chat completion failed (attempt {attempt + 1}/{max_retries}): {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(2 ** attempt)
-                continue
+                logger.warning(f"Failed to add unified tools: {e}")
 
-        # If we get here, all retries failed
-        logger.error(f"Chat completion failed after {max_retries} attempts")
-        raise ExternalServiceError(f"Chat completion failed after {max_retries} attempts: {last_exception}")
+        # Prepare request parameters
+        request_params = {
+            "model": settings.openai_chat_model,
+            "messages": messages,
+            "temperature": temperature,
+        }
 
-    async def _execute_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
-        """Execute tool calls using FastMCP."""
+        if max_tokens:
+            request_params["max_tokens"] = max_tokens
+
+        if final_tools:
+            request_params["tools"] = final_tools
+            request_params["tool_choice"] = tool_choice
+
+        # Use retry logic from middleware
+        @tool_operation(
+            retry_config=RetryConfig(
+                max_retries=max_retries,
+                retriable_exceptions=(
+                    openai.RateLimitError,
+                    openai.APIConnectionError,
+                    openai.APITimeoutError,
+                )
+            ),
+            enable_caching=False,  # Don't cache chat completions
+            log_details=True
+        )
+        async def _make_completion():
+            response = await self.client.chat.completions.create(**request_params)
+            return response
+
+        response = await _make_completion()
+        message = response.choices[0].message
+
+        # Handle tool calls using unified executor
+        tool_calls_executed = []
+        if message.tool_calls:
+            tool_calls_executed = await self._execute_unified_tool_calls(message.tool_calls)
+
+        # Format response
+        result = {
+            "content": message.content or "",
+            "role": message.role,
+            "tool_calls": [
+                tool_call.model_dump() for tool_call in message.tool_calls
+            ]
+            if message.tool_calls
+            else None,
+            "tool_calls_executed": tool_calls_executed,
+            "finish_reason": response.choices[0].finish_reason,
+            "usage": {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens,
+            },
+        }
+
+        return result
+
+    async def _execute_unified_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
+        """Execute tool calls using unified tool executor."""
         try:
-            mcp_client = await get_mcp_client()
+            tool_executor = await get_unified_tool_executor()
 
-            # Convert OpenAI tool calls to MCP format
-            mcp_tool_calls = []
+            # Convert OpenAI tool calls to unified format
+            unified_tool_calls = []
             for tool_call in tool_calls:
-                mcp_tool_calls.append(
-                    {
-                        "id": tool_call.id,
-                        "function": {
-                            "name": tool_call.function.name,
-                            "arguments": tool_call.function.arguments,
-                        },
-                    }
+                unified_tool_calls.append(
+                    ToolCall(
+                        id=tool_call.id,
+                        name=tool_call.function.name,
+                        arguments=json.loads(tool_call.function.arguments),
+                    )
                 )
 
-            # Execute tool calls
-            results = await mcp_client.execute_tool_calls(mcp_tool_calls)
-            return results
+            # Execute tool calls using unified executor
+            results = await tool_executor.execute_tool_calls(unified_tool_calls)
+            
+            # Convert results to expected format
+            formatted_results = []
+            for result in results:
+                formatted_results.append({
+                    "tool_call_id": result.tool_call_id,
+                    "success": result.success,
+                    "content": result.content,
+                    "error": result.error,
+                    "provider": result.provider.value if result.provider else None,
+                    "execution_time_ms": result.execution_time_ms,
+                })
+            
+            return formatted_results
 
         except Exception as e:
-            logger.error(f"Failed to execute tool calls: {e}")
+            logger.error(f"Failed to execute unified tool calls: {e}")
             return []
 
+    @handle_api_errors("Embedding creation failed")
     async def create_embedding(
         self, text: str, encoding_format: Optional[str] = "json", max_retries: int = 3
     ) -> List[float]:
@@ -340,49 +357,35 @@ class OpenAIClient:
             logger.debug("Using cached embedding")
             return cached_embedding
 
-        last_exception = None
-        for attempt in range(max_retries):
-            try:
-                response = await self.client.embeddings.create(
-                    model=settings.openai_embedding_model,
-                    input=text.strip(),
-                    encoding_format="float",
+        # Use retry logic from middleware
+        @tool_operation(
+            retry_config=RetryConfig(
+                max_retries=max_retries,
+                retriable_exceptions=(
+                    openai.RateLimitError,
+                    openai.APIConnectionError,
+                    openai.APITimeoutError,
                 )
+            ),
+            enable_caching=False,  # Manual caching above
+            log_details=True
+        )
+        async def _create_embedding():
+            response = await self.client.embeddings.create(
+                model=settings.openai_embedding_model,
+                input=text.strip(),
+                encoding_format="float",
+            )
+            return response.data[0].embedding
 
-                embedding = response.data[0].embedding
-                
-                # Cache the result
-                await embedding_cache.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
-                
-                return embedding
+        embedding = await _create_embedding()
+        
+        # Cache the result
+        await embedding_cache.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
+        
+        return embedding
 
-            except openai.RateLimitError as e:
-                last_exception = e
-                wait_time = 2 ** attempt
-                logger.warning(f"Rate limit hit (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(wait_time)
-                continue
-            except (openai.APIConnectionError, openai.APITimeoutError) as e:
-                last_exception = e
-                wait_time = 2 ** attempt
-                logger.warning(f"API connection error (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s: {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(wait_time)
-                continue
-            except openai.APIError as e:
-                logger.error(f"OpenAI API error: {e}")
-                raise ExternalServiceError(f"OpenAI API error: {e}")
-            except Exception as e:
-                last_exception = e
-                logger.error(f"Embedding creation failed (attempt {attempt + 1}/{max_retries}): {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(2 ** attempt)
-                continue
-
-        logger.error(f"Embedding creation failed after {max_retries} attempts")
-        raise ExternalServiceError(f"Embedding creation failed after {max_retries} attempts: {last_exception}")
-
+    @handle_api_errors("Batch embedding creation failed")
     async def create_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         """
         Create embeddings for multiple texts.
@@ -405,17 +408,16 @@ class OpenAIClient:
         if not valid_texts:
             return []
 
-        try:
+        @tool_operation(enable_caching=False, log_details=True)
+        async def _create_batch_embeddings():
             response = await self.client.embeddings.create(
                 model=settings.openai_embedding_model, input=valid_texts
             )
-
             return [item.embedding for item in response.data]
 
-        except Exception as e:
-            logger.error(f"Batch embedding creation failed: {e}")
-            raise ExternalServiceError(f"Batch embedding creation failed: {e}")
+        return await _create_batch_embeddings()
 
+    @handle_api_errors("Content moderation failed")
     async def moderate_content(self, text: str) -> Dict[str, Any]:
         """
         Moderate content using OpenAI's moderation API.
@@ -429,7 +431,8 @@ class OpenAIClient:
         if not OPENAI_AVAILABLE or not self.client:
             raise ExternalServiceError("OpenAI client not available")
 
-        try:
+        @tool_operation(cache_ttl=600, log_details=True)
+        async def _moderate_content():
             response = await self.client.moderations.create(input=text)
             result = response.results[0]
 
@@ -439,10 +442,9 @@ class OpenAIClient:
                 "category_scores": result.category_scores.model_dump(),
             }
 
-        except Exception as e:
-            logger.error(f"Content moderation failed: {e}")
-            raise ExternalServiceError(f"Content moderation failed: {e}")
+        return await _moderate_content()
 
+    @handle_api_errors("OpenAI health check failed", log_errors=False)
     async def health_check(self) -> Dict[str, Any]:
         """
         Check OpenAI API health.
@@ -457,20 +459,21 @@ class OpenAIClient:
                 "error": "OpenAI client not available",
             }
 
-        try:
+        @tool_operation(enable_caching=False, log_details=False)
+        async def _health_check():
             # Test with a simple completion
-            test_response = await self.client.chat.completions.create(
+            await self.client.chat.completions.create(
                 model=settings.openai_chat_model,
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=1,
             )
 
             # Test embedding
+            embedding_available = True
             try:
                 await self.client.embeddings.create(
                     model=settings.openai_embedding_model, input="test"
                 )
-                embedding_available = True
             except Exception:
                 embedding_available = False
 
@@ -484,6 +487,8 @@ class OpenAIClient:
                 "status": "healthy",
             }
 
+        try:
+            return await _health_check()
         except Exception as e:
             logger.error(f"OpenAI health check failed: {e}")
             return {

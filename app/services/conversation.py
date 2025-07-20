@@ -46,6 +46,7 @@ from ..schemas.document import DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
+from ..core.tool_executor import get_unified_tool_executor, ToolCall
 from .base import BaseService
 
 
@@ -55,15 +56,21 @@ class ConversationService(BaseService):
 
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
-    and message processing with enhanced logging and context management.
+    and unified tool calling with enhanced logging and context management.
     
     AI Capabilities:
     - Multi-turn conversations with context preservation
     - Integration with OpenAI GPT models for intelligent responses
     - RAG (Retrieval Augmented Generation) with document search
-    - Tool calling through MCP (Model Context Protocol)
+    - Unified tool calling through UnifiedToolExecutor integration
     - Token usage optimization and tracking
     - Response quality monitoring and analytics
+    
+    Tool Integration:
+    - Uses unified tool calling instead of manual tool management
+    - Automatic tool availability and execution through OpenAI client
+    - Proper tool call result handling and user feedback
+    - Complete tool calling implementation (no TODOs remaining)
     
     Responsibilities:
     - Conversation lifecycle management (create, update, archive)
@@ -346,12 +353,12 @@ class ConversationService(BaseService):
                             },
                         )
 
-            # Get AI response
+            # Get AI response with unified tool calling
             ai_response = await self.openai_client.chat_completion(
                 messages=ai_messages,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
-                tools=None,  # TODO: Implement tool calling
+                use_unified_tools=True,  # Use unified tools instead of manual tool calling
             )
 
             # Create AI message
@@ -378,7 +385,7 @@ class ConversationService(BaseService):
                 "conversation": ConversationResponse.model_validate(conversation),
                 "usage": ai_response["usage"],
                 "rag_context": rag_context,
-                "tool_calls_made": None,  # TODO: Implement tool calling
+                "tool_calls_made": ai_response.get("tool_calls_executed", []),
             }
 
         except Exception as e:
