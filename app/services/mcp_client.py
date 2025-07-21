@@ -4,10 +4,10 @@ FastMCP client service for tool integration and external function execution.
 This service provides integration with MCP servers using the FastMCP client
 for tool calling and external function execution capabilities.
 
-Updated to use unified tool execution patterns for consistency.
+Updated to use HTTP transport for all server connections.
 
-Current Date and Time (UTC): 2025-07-14 04:41:14
-Updated on: 2025-01-20 20:45:00 UTC
+Current Date and Time (UTC): 2025-07-21 04:22:44
+Updated on: 2025-07-21 04:22:44 UTC
 Current User: lllucius / assistant
 """
 
@@ -16,7 +16,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from fastmcp import Client
+from fastmcp import Client, HTTPTransport
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
@@ -32,10 +32,7 @@ class MCPServerConfig:
     """Configuration for an MCP server."""
 
     name: str
-    command: str
-    args: List[str]
-    env: Optional[Dict[str, str]] = None
-    working_directory: Optional[str] = None
+    url: str
     timeout: int = 30
 
 
@@ -85,18 +82,22 @@ class FastMCPClientService:
             mcp_servers_config = settings.mcp_servers
 
             for server_name, config in mcp_servers_config.items():
+                # All servers must provide a 'url' key for HTTPTransport
+                url = config.get("url")
+                if not url:
+                    # Default to localhost with server name as port for demo
+                    # You may customize this per your deployment!
+                    port = 8000 + len(self.servers)  # Example: http://localhost:8000, 8001, etc.
+                    url = f"http://localhost:{port}"
                 server = MCPServerConfig(
                     name=server_name,
-                    command=config["command"],
-                    args=config["args"],
-                    env=config.get("env", {}),
-                    working_directory=config.get("working_directory"),
+                    url=url,
                     timeout=config.get("timeout", settings.mcp_timeout),
                 )
                 self.servers[server.name] = server
 
             logger.info(
-                f"Configured {len(self.servers)} MCP servers: {list(self.servers.keys())}"
+                f"Configured {len(self.servers)} MCP servers (HTTP): {list(self.servers.keys())}"
             )
 
         except Exception as e:
@@ -109,27 +110,9 @@ class FastMCPClientService:
         Initialize connections to MCP servers with improved error handling.
         """
         if not self.servers:
-            logger.warning("No MCP servers configured - creating minimal setup")
-            # Create a simple filesystem server as fallback
-            try:
-                config = {
-                    "mcpServers": {
-                        "filesystem": {
-                            "command": "npx",
-                            "args": [
-                                "@modelcontextprotocol/server-filesystem",
-                                "/tmp/mcp_workspace",
-                            ],
-                            "env": {},
-                        }
-                    }
-                }
-                client = Client(config)
-                self.clients["filesystem"] = client
-                logger.info("Created fallback MCP filesystem client")
-            except Exception as e:
-                logger.warning(f"Failed to create fallback MCP client: {e}")
-                # Continue without MCP - not critical for basic operation
+            logger.warning("No MCP servers configured - cannot initialize MCP clients")
+            self.is_initialized = False
+            return
 
         try:
             successful_connections = 0
@@ -139,16 +122,12 @@ class FastMCPClientService:
                 try:
                     await self._connect_server(server_name, server)
                     successful_connections += 1
-                    logger.info(f"✅ Connected to MCP server: {server_name}")
+                    logger.info(f"✅ Connected to MCP server (HTTP): {server_name}")
                 except Exception as e:
                     logger.error(
                         f"❌ Failed to connect to MCP server {server_name}: {e}"
                     )
                     # Don't fail completely - continue with other servers
-
-            # If no servers connected but we have clients, try to discover tools
-            if successful_connections == 0 and self.clients:
-                logger.warning("No configured servers connected, using fallback")
 
             # Discover available tools from connected clients
             await self._discover_tools()
@@ -170,27 +149,17 @@ class FastMCPClientService:
             self.is_initialized = False
 
     async def _connect_server(self, server_name: str, server: MCPServerConfig):
-        """Connect to a specific MCP server using FastMCP with better error handling."""
+        """Connect to a specific MCP server using HTTPTransport."""
         try:
-            # Create MCP configuration for transport
-            mcp_config = {
-                "command": server.command,
-                "args": server.args,
-                "env": server.env or {},
-            }
-
-            if server.working_directory:
-                mcp_config["cwd"] = server.working_directory
-
-            # Create FastMCP client with config
-            config = {"mcpServers": {server_name: mcp_config}}
-            client = Client(config)
+            # Create FastMCP client with HTTP transport
+            transport = HTTPTransport(server.url)
+            client = Client(transport)
 
             # Test connection with timeout
             async with asyncio.timeout(server.timeout):
                 # Store client first
                 self.clients[server_name] = client
-                logger.info(f"Successfully configured MCP server: {server_name}")
+                logger.info(f"Successfully configured MCP HTTP server: {server_name} ({server.url})")
 
         except asyncio.TimeoutError:
             logger.error(
