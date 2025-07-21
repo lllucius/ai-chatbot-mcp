@@ -1,3 +1,13 @@
+"""
+AI Chatbot Terminal Client - Interactive command-line interface for the AI Chatbot Platform.
+
+This module provides a terminal-based chat interface for interacting with the AI Chatbot
+Platform, supporting conversation management, authentication, and real-time chat.
+
+Generated on: 2025-07-14 03:47:30 UTC
+Current User: lllucius
+"""
+
 import sys
 import threading
 import time
@@ -13,6 +23,15 @@ PASSWORD = "Win32s.."  # Prompted if not set
 
 
 def input_prompt(prompt: str) -> str:
+    """
+    Get user input with graceful handling of EOF.
+    
+    Args:
+        prompt: The input prompt to display.
+        
+    Returns:
+        User input string.
+    """
     try:
         return input(prompt)
     except EOFError:
@@ -21,17 +40,33 @@ def input_prompt(prompt: str) -> str:
 
 
 def print_boxed(msg: str):
+    """
+    Print a message in a box format.
+    
+    Args:
+        msg: The message to print.
+    """
     print("=" * 60)
     print(msg)
     print("=" * 60)
 
 
 def spinner(label="Waiting..."):
+    """
+    Create a spinning loading indicator.
+    
+    Args:
+        label: The label to display next to the spinner.
+        
+    Returns:
+        Tuple of (thread, running_flag) for controlling the spinner.
+    """
     chars = "|/-\\"
     idx = [0]
     running = [True]
 
     def spin():
+        """Internal function to animate the spinner."""
         while running[0]:
             print(f"\r{label} {chars[idx[0] % len(chars)]}", end="", flush=True)
             idx[0] += 1
@@ -47,6 +82,16 @@ def spinner(label="Waiting..."):
 
 
 class AIChatbotTerminal:
+    """
+    Terminal-based chatbot interface.
+    
+    Provides a command-line interface for interacting with the AI Chatbot Platform,
+    including authentication, conversation management, and real-time chat.
+    
+    Args:
+        api_url: Base URL of the AI Chatbot API.
+    """
+    
     def __init__(self, api_url: str):
         self.sdk = AIChatbotSDK(base_url=api_url)
         self.conversation_id = None
@@ -55,6 +100,7 @@ class AIChatbotTerminal:
         self.username = None
 
     def authenticate(self):
+        """Authenticate user with the API and store token."""
         print_boxed("AI Chatbot Login")
         while True:
             username = USERNAME or input_prompt("Username: ")
@@ -75,6 +121,7 @@ class AIChatbotTerminal:
                     sys.exit(1)
 
     def new_conversation(self):
+        """Create a new conversation."""
         title = input_prompt("Start a new conversation (title): ").strip()
         if not title:
             title = f"Chat {time.strftime('%Y-%m-%d %H:%M:%S')}"
@@ -88,6 +135,7 @@ class AIChatbotTerminal:
         )
 
     def load_conversations(self):
+        """Load and display conversation history."""
         convos = self.sdk.conversations.list(page=1, size=10)
         if not convos.items:
             print("You have no previous conversations.")
@@ -115,6 +163,7 @@ class AIChatbotTerminal:
             return False
 
     def show_history(self):
+        """Show conversation history with selection option."""
         if not self.conversation_id:
             print("No conversation selected.")
             return
@@ -126,6 +175,7 @@ class AIChatbotTerminal:
             print(f"[{role}] {msg.content}\n")
 
     def chat_loop(self):
+        """Main chat loop for interactive conversation."""
         print_boxed(f"AI Chatbot - {self.conversation_title or 'Untitled'}")
         print("Type your message. /help for commands. /exit or Ctrl+D to quit.\n")
         self.show_history()
@@ -156,6 +206,7 @@ class AIChatbotTerminal:
             self.conversation_title = resp.conversation.title
 
     def handle_command(self, cmd: str):
+        """Handle special commands during chat."""
         cmd = cmd.strip().lower()
         if cmd == "/help":
             print(
@@ -185,6 +236,7 @@ class AIChatbotTerminal:
 
 
 def main():
+    """Main entry point for the chatbot terminal application."""
     bot = AIChatbotTerminal(API_BASE_URL)
     bot.authenticate()
     # Load or start conversation

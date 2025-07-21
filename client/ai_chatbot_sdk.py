@@ -1,3 +1,13 @@
+"""
+AI Chatbot SDK - Python client library for the AI Chatbot Platform.
+
+This module provides a comprehensive SDK for interacting with the AI Chatbot Platform,
+including authentication, document management, conversation handling, and search capabilities.
+
+Generated on: 2025-07-14 03:47:30 UTC
+Current User: lllucius
+"""
+
 from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import UUID
 from datetime import datetime
@@ -9,6 +19,16 @@ from pydantic import BaseModel
 
 
 class ApiError(Exception):
+    """
+    Exception raised when API requests fail.
+    
+    Args:
+        status: HTTP status code of the failed request.
+        reason: HTTP reason phrase.
+        url: The URL that was requested.
+        body: Response body content.
+    """
+    
     def __init__(self, status: int, reason: str, url: str, body: Any):
         super().__init__(f"HTTP {status} {reason}: {body}")
         self.status = status
@@ -23,18 +43,21 @@ T = TypeVar("T")
 
 
 class BaseResponse(BaseModel):
+    """Base response model for API responses."""
     success: bool
     message: str
     timestamp: Optional[str] = None
 
 
 class Token(BaseModel):
+    """Authentication token response model."""
     access_token: str
     expires_in: int
     token_type: Optional[str] = None
 
 
 class UserResponse(BaseModel):
+    """User profile response model."""
     username: str
     email: str
     id: str
@@ -46,6 +69,7 @@ class UserResponse(BaseModel):
 
 
 class RegisterRequest(BaseModel):
+    """User registration request model."""
     username: str
     email: str
     password: str
@@ -53,31 +77,37 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
+    """User login request model."""
     username: str
     password: str
 
 
 class PasswordResetRequest(BaseModel):
+    """Password reset request model."""
     email: str
 
 
 class PasswordResetConfirm(BaseModel):
+    """Password reset confirmation model."""
     token: str
     new_password: str
 
 
 class UserUpdate(BaseModel):
+    """User profile update request model."""
     email: Optional[str] = None
     full_name: Optional[str] = None
     is_active: Optional[bool] = None
 
 
 class UserPasswordUpdate(BaseModel):
+    """User password update request model."""
     current_password: str
     new_password: str
 
 
 class PaginationParams(BaseModel):
+    """Pagination parameters for list requests."""
     page: int
     per_page: int
     sort_by: Optional[str] = None
@@ -85,6 +115,7 @@ class PaginationParams(BaseModel):
 
 
 class PaginatedResponse(BaseModel, Generic[T]):
+    """Paginated response wrapper model."""
     success: bool
     message: str
     items: List[Any]
@@ -93,6 +124,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 
 class DocumentResponse(BaseModel):
+    """Document metadata response model."""
     id: int
     title: str
     filename: str
@@ -108,17 +140,20 @@ class DocumentResponse(BaseModel):
 
 
 class DocumentUploadResponse(BaseResponse):
+    """Document upload response model."""
     document: DocumentResponse
     processing_started: bool
     estimated_completion: Optional[str] = None
 
 
 class DocumentUpdate(BaseModel):
+    """Document update request model."""
     title: Optional[str] = None
     metainfo: Optional[Dict[str, Any]] = None
 
 
 class ConversationResponse(BaseModel):
+    """Conversation metadata response model."""
     title: str
     is_active: bool
     id: UUID
@@ -131,18 +166,21 @@ class ConversationResponse(BaseModel):
 
 
 class ConversationCreate(BaseModel):
+    """Conversation creation request model."""
     title: str
     is_active: Optional[bool] = True
     metainfo: Optional[Dict[str, Any]] = None
 
 
 class ConversationUpdate(BaseModel):
+    """Conversation update request model."""
     title: Optional[str] = None
     is_active: Optional[bool] = None
     metainfo: Optional[Dict[str, Any]] = None
 
 
 class MessageResponse(BaseModel):
+    """Chat message response model."""
     role: str
     content: str
     id: UUID
@@ -155,6 +193,7 @@ class MessageResponse(BaseModel):
 
 
 class ProcessingStatusResponse(BaseResponse):
+    """Document processing status response model."""
     document_id: UUID
     status: str
     progress: float
@@ -166,6 +205,7 @@ class ProcessingStatusResponse(BaseResponse):
 
 
 class DocumentSearchRequest(BaseModel):
+    """Document search request model."""
     page: Optional[int] = 1
     per_page: Optional[int] = 10
     sort_by: Optional[str] = None
@@ -177,6 +217,7 @@ class DocumentSearchRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    """Chat message request model."""
     user_message: str
     conversation_id: Optional[UUID] = None
     conversation_title: Optional[str] = None
@@ -188,6 +229,7 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseResponse):
+    """Chat response model with AI message."""
     ai_message: MessageResponse
     conversation: ConversationResponse
     response_time_ms: float
@@ -200,12 +242,27 @@ class ChatResponse(BaseResponse):
 
 
 def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Filter out None values from query parameters."""
     return {k: v for k, v in (query or {}).items() if v is not None}
 
 
 def handle_response(
     resp: requests.Response, url: str, cls: Optional[Type[T]] = None
 ) -> Any:
+    """
+    Handle API response and raise ApiError on failure.
+    
+    Args:
+        resp: The HTTP response object.
+        url: The URL that was requested.
+        cls: Optional type to deserialize response data into.
+        
+    Returns:
+        Parsed JSON response data, optionally deserialized to cls.
+        
+    Raises:
+        ApiError: If the response indicates an error.
+    """
     if not resp.ok:
         try:
             body = resp.json()
@@ -231,6 +288,16 @@ def handle_response(
 def build_headers(
     token: Optional[str] = None, content_type: Optional[str] = None
 ) -> Dict[str, str]:
+    """
+    Build HTTP headers for API requests.
+    
+    Args:
+        token: Optional authentication token.
+        content_type: Optional content type header value.
+        
+    Returns:
+        Dictionary of HTTP headers.
+    """
     headers = {}
     if content_type:
         headers["Content-Type"] = content_type
@@ -240,6 +307,17 @@ def build_headers(
 
 
 def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> str:
+    """
+    Construct a URL with optional query parameters.
+    
+    Args:
+        base: Base URL.
+        path: URL path to append.
+        query: Optional query parameters.
+        
+    Returns:
+        Complete URL string.
+    """
     url = base.rstrip("/") + path
     q = filter_query(query)
     if q:
@@ -252,6 +330,16 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
 def fetch_all_pages(
     fetch_page: Callable[[int, int], Any], per_page: int = 50
 ) -> List[Any]:
+    """
+    Fetch all pages of paginated results.
+    
+    Args:
+        fetch_page: Function that takes page and per_page parameters.
+        per_page: Number of items per page.
+        
+    Returns:
+        List of all items from all pages.
+    """
     items = []
     page = 1
     while True:
@@ -271,18 +359,23 @@ class HealthClient:
         self.sdk = sdk
 
     def basic(self) -> BaseResponse:
+        """Get basic health status."""
         return self.sdk._request("/api/v1/health/", BaseResponse)
 
     def detailed(self) -> Dict[str, Any]:
+        """Get detailed health status including system information."""
         return self.sdk._request("/api/v1/health/detailed")
 
     def database(self) -> Dict[str, Any]:
+        """Check database connectivity status."""
         return self.sdk._request("/api/v1/health/database")
 
     def services(self) -> Dict[str, Any]:
+        """Check external services status."""
         return self.sdk._request("/api/v1/health/services")
 
     def metrics(self) -> Dict[str, Any]:
+        """Get system metrics and performance data."""
         return self.sdk._request("/api/v1/health/metrics")
 
     def readiness(self) -> Dict[str, Any]:
