@@ -23,7 +23,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from app.config import settings
 from app.database import AsyncSessionLocal, init_db
 from app.models.conversation import Conversation
-from app.models.document import Document
+from app.models.document import Document, FileStatus
 from app.models.user import User
 from app.services.auth import AuthService
 from app.services.user import UserService
@@ -172,7 +172,7 @@ class ManagementCLI:
                 total_docs = await db.scalar(select(func.count(Document.id)))
                 completed_docs = await db.scalar(
                     select(func.count(Document.id)).where(
-                        Document.processing_status == "completed"
+                        Document.status == FileStatus.COMPLETED
                     )
                 )
 

@@ -19,7 +19,7 @@ from sqlalchemy import func, select
 from app.config import settings
 from app.database import AsyncSessionLocal
 from app.models.conversation import Conversation
-from app.models.document import Document
+from app.models.document import Document, FileStatus
 from app.models.user import User
 from app.services.auth import AuthService
 from app.services.user import UserService
@@ -223,7 +223,7 @@ def show_stats():
                 doc_count = await db.scalar(select(func.count(Document.id)))
                 completed_docs = await db.scalar(
                     select(func.count(Document.id)).where(
-                        Document.processing_status == "completed"
+                        Document.status == FileStatus.COMPLETED
                     )
                 )
 
