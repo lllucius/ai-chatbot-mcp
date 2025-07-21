@@ -147,30 +147,31 @@ class DocumentSearchRequest(SearchParams):
 
 
 class DocumentUploadResponse(BaseResponse):
-    """Schema for document upload response."""
+    """Schema for document upload response with enhanced features."""
 
     document: DocumentResponse = Field(..., description="Uploaded document information")
-    processing_started: bool = Field(
-        False, description="Whether processing has started"
-    )
-    estimated_completion: Optional[str] = Field(
-        None, description="Estimated processing completion time"
-    )
+    task_id: Optional[str] = Field(None, description="Background processing task ID")
+    auto_processing: bool = Field(False, description="Whether auto-processing was enabled")
 
 
 class ProcessingStatusResponse(BaseResponse):
-    """Schema for document processing status."""
+    """Enhanced schema for document processing status with background task information."""
 
     document_id: UUID = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")
-    progress: float = Field(0.0, description="Processing progress (0-1)")
-    chunks_processed: int = Field(0, description="Number of chunks processed")
-    total_chunks: int = Field(0, description="Total chunks to process")
+    chunk_count: int = Field(0, description="Number of chunks created")
+    processing_time: Optional[float] = Field(None, description="Processing time in seconds")
     error_message: Optional[str] = Field(None, description="Error message if failed")
-    started_at: Optional[datetime] = Field(None, description="Processing start time")
-    completed_at: Optional[datetime] = Field(
-        None, description="Processing completion time"
-    )
+    created_at: datetime = Field(..., description="Document creation time")
+    updated_at: datetime = Field(..., description="Document last update time")
+    
+    # Background task information
+    task_id: Optional[str] = Field(None, description="Background task ID")
+    task_status: Optional[str] = Field(None, description="Background task status")
+    progress: Optional[float] = Field(None, description="Processing progress (0-1)")
+    task_created_at: Optional[datetime] = Field(None, description="Task creation time")
+    task_started_at: Optional[datetime] = Field(None, description="Task start time")
+    task_error: Optional[str] = Field(None, description="Task error message")
 
     model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
@@ -190,3 +191,33 @@ class DocumentSearchResponse(BaseResponse):
     algorithm: str = Field(..., description="Search algorithm used")
     total_results: int = Field(0, description="Total number of results")
     search_time_ms: float = Field(0.0, description="Search time in milliseconds")
+
+
+class BackgroundTaskResponse(BaseModel):
+    """Response schema for background task operations."""
+    
+    message: str
+    task_id: str
+    document_id: str
+    status: str
+    priority: Optional[int] = None
+    created_at: Optional[datetime] = None
+
+
+class ProcessingConfigRequest(BaseModel):
+    """Request schema for processing configuration."""
+    
+    chunk_size: Optional[int] = Field(None, ge=100, le=4000)
+    chunk_overlap: Optional[int] = Field(None, ge=0, le=1000)
+    enable_metadata_embedding: Optional[bool] = None
+    enable_text_preprocessing: Optional[bool] = None
+    normalize_unicode: Optional[bool] = None
+    remove_extra_whitespace: Optional[bool] = None
+    language_detection: Optional[bool] = None
+
+
+class ProcessingConfigResponse(BaseModel):
+    """Response schema for processing configuration."""
+    
+    message: str
+    config: Dict[str, Any]

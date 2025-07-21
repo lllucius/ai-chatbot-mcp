@@ -11,10 +11,15 @@ Current User: lllucius
 import asyncio
 import logging
 import time
-from collections import defaultdict, deque
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import Dict, Any, Optional, List, Tuple
 import psutil
+from collections import deque, defaultdict
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from dataclasses import dataclass
+
+from ..models.document import Document, DocumentChunk, FileStatus
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +50,23 @@ class SystemMetrics:
 
 
 class PerformanceMonitor:
-    """
-    Performance monitoring and metrics collection system.
-    """
+    """Enhanced system performance monitoring with comprehensive metrics collection."""
+    
+    def __init__(self, history_size: int = 100):
+        """
+        Initialize performance monitor.
+        
+        Args:
+            history_size: Number of historical data points to keep
+        """
+        self.history_size = history_size
+        self.metrics_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=history_size))
+        self.request_metrics: Dict[str, List[float]] = defaultdict(list)
+        self.document_processing_metrics: Dict[str, Any] = defaultdict(lambda: {"count": 0, "total_time": 0, "errors": 0})
+        self.embedding_metrics: Dict[str, Any] = defaultdict(lambda: {"count": 0, "total_time": 0, "tokens": 0})
+        self.start_time = time.time()
+        
+        logger.info("Enhanced performance monitor initialized")
 
     def __init__(self, max_requests: int = 10000, max_system_metrics: int = 1440):
         """
