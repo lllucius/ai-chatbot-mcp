@@ -11,6 +11,7 @@ Current User: lllucius
 import argparse
 import asyncio
 import logging
+
 import sys
 from pathlib import Path
 
@@ -20,7 +21,7 @@ from sqlalchemy import func, select
 sys.path.append(str(Path(__file__).parent.parent))
 
 from app.config import settings
-from app.database import AsyncSessionLocal
+from app.database import AsyncSessionLocal, init_db
 from app.models.conversation import Conversation
 from app.models.document import Document
 from app.models.user import User
@@ -211,8 +212,6 @@ class ManagementCLI:
     async def init_db(self):
         """Initialize database."""
         try:
-            from app.database import init_db
-
             await init_db()
             print("✅ Database initialized successfully")
             return True
