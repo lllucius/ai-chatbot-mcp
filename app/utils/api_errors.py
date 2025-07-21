@@ -9,7 +9,6 @@ Current User: assistant
 """
 
 import functools
-import logging
 from typing import Any, Callable, Dict, Optional
 
 from fastapi import HTTPException, status

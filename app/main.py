@@ -30,7 +30,7 @@ from .api import (
 )
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
-from .database import close_db, init_db, health_check_db
+from .database import close_db, init_db
 from .utils.logging import setup_logging
 from .utils.timestamp import get_current_timestamp
 from .utils.caching import start_cache_cleanup_task

@@ -9,14 +9,13 @@ Updated on: 2025-01-20 20:40:00 UTC
 Current User: lllucius / assistant
 """
 
-import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional, Union
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
-from ..core.tool_executor import get_unified_tool_executor, ToolCall, ToolResult
+from ..core.tool_executor import get_unified_tool_executor, ToolCall
 from ..utils.caching import embedding_cache, make_cache_key
 from ..utils.api_errors import handle_api_errors
 from ..utils.tool_middleware import tool_operation, RetryConfig

@@ -22,11 +22,9 @@ Current User: assistant
 
 import argparse
 import ast
-import os
-import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List
 
 
 class CodeQualityChecker:

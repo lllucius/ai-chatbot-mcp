@@ -8,7 +8,6 @@ Generated on: 2025-01-20 19:30:00 UTC
 Current User: assistant
 """
 
-import logging
 from abc import ABC
 from typing import Optional
 

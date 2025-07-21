@@ -34,7 +34,6 @@ from ..schemas.document import (
     DocumentUpdate,
     DocumentUploadResponse,
     ProcessingStatusResponse,
-    ProcessingConfigRequest,
     ProcessingConfigResponse,
     BackgroundTaskResponse,
 )
@@ -86,7 +85,7 @@ async def upload_document(
         
     except (ValidationError, DocumentError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload failed")
 async def upload_document(
     file: UploadFile = File(...),

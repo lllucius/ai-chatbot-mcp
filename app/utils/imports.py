@@ -46,7 +46,7 @@ Current User: assistant
 """
 
 # Standard library imports
-from typing import List, Set
+from typing import List
 
 # Import organization rules and validation
 

@@ -14,7 +14,7 @@ import logging
 import mimetypes
 import os
 from pathlib import Path
-from typing import Any, Dict, AsyncIterator, Optional
+from typing import Any, Dict, AsyncIterator
 import psutil
 
 from ..core.exceptions import DocumentError, ValidationError
@@ -187,7 +187,7 @@ class FileProcessor:
                             
                         # For very large PDFs, limit memory usage
                         if len(text_content) > 1000:  # Limit to ~1000 pages of text in memory
-                            logger.warning(f"PDF too large, processing first 1000 pages")
+                            logger.warning("PDF too large, processing first 1000 pages")
                             break
                             
                     except Exception as e:
@@ -221,7 +221,7 @@ class FileProcessor:
                                 text_content.append(page_text)
                                 
                             if len(text_content) > 1000:
-                                logger.warning(f"PDF too large, processing first 1000 pages")
+                                logger.warning("PDF too large, processing first 1000 pages")
                                 break
                                 
                         except Exception as e:

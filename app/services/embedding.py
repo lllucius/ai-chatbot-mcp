@@ -14,7 +14,7 @@ Current User: lllucius
 
 import logging
 import math
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -406,7 +406,7 @@ class EmbeddingService:
             return []
         try:
             # PGVector expects a python list of floats, matching the column type.
-            sql = text(f"""
+            sql = text("""
                 SELECT * FROM document_chunks
                 WHERE embedding IS NOT NULL
                 ORDER BY embedding <-> :embedding

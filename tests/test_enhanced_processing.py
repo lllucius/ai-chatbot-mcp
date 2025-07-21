@@ -12,15 +12,14 @@ Current User: assistant
 Current Date: 2025-01-20
 """
 
-import asyncio
 import tempfile
 import pytest
 from pathlib import Path
 from uuid import uuid4
 
-from app.utils.enhanced_document_processor import DocumentProcessor, DocumentFormatError
+from app.utils.enhanced_document_processor import DocumentProcessor
 from app.services.background_processor import BackgroundProcessor, ProcessingTask, TaskStatus
-from app.utils.standard_logging import setup_logging, get_logger, set_correlation_id
+from app.utils.standard_logging import setup_logging, set_correlation_id
 
 
 class TestEnhancedDocumentProcessor:

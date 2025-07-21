@@ -10,8 +10,7 @@ Current User: assistant
 
 import asyncio
 import functools
-import logging
-from typing import Any, Callable, Optional, Type, Union, Tuple, List
+from typing import Any, Callable, Optional, Type, Tuple, List
 from dataclasses import dataclass
 
 from ..utils.caching import api_response_cache, make_cache_key

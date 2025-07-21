@@ -26,7 +26,7 @@ import time
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Callable
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -35,7 +35,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..services.embedding import EmbeddingService
 from ..utils.enhanced_document_processor import DocumentProcessor
-from ..utils.text_processing import TextProcessor, TextChunk
+from ..utils.text_processing import TextProcessor
 from .base import BaseService
 
 logger = logging.getLogger(__name__)

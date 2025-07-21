@@ -1,9 +1,9 @@
-from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import UUID
 from datetime import datetime
 
 import requests
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel
 
 # --- Exceptions ---
 

@@ -113,9 +113,10 @@ class DocumentProcessor:
         
         # Text normalization patterns
         self.normalization_patterns = [
-            # Smart quotes to regular quotes
-            (re.compile(r'["""]'), '"'),
-            (re.compile(r'[''']'), "'"),
+            # Smart double quotes: “ ” to "
+            (re.compile(r'[“”]'), '"'),
+            # Smart single quotes: ‘ ’ to '
+            (re.compile(r"[‘’]"), "'"),
             # Em/en dashes to hyphens
             (re.compile(r'[—–]'), '-'),
             # Ellipsis normalization

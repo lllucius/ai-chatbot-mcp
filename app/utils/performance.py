@@ -11,15 +11,11 @@ Current User: lllucius
 import asyncio
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List
 import psutil
 from collections import deque, defaultdict
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from dataclasses import dataclass
 
-from ..models.document import Document, DocumentChunk, FileStatus
 
 logger = logging.getLogger(__name__)
 

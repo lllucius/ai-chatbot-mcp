@@ -13,12 +13,10 @@ Current User: lllucius / assistant
 
 import asyncio
 import json
-import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from fastmcp import Client
-from fastmcp.client.transports import MCPConfigTransport
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError

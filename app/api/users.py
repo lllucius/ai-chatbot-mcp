@@ -30,7 +30,6 @@ from uuid import UUID
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 from ..services.user import UserService

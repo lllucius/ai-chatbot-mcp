@@ -46,7 +46,6 @@ from ..schemas.document import DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
-from ..core.tool_executor import get_unified_tool_executor, ToolCall
 from .base import BaseService
 
 

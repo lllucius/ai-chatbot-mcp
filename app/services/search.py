@@ -35,12 +35,11 @@ Updated on: 2025-01-20 20:15:00 UTC
 Current User: lllucius / assistant
 """
 
-import functools
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 from uuid import UUID
 from time import time
 
-from sqlalchemy import and_, func, select, text
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, SearchError

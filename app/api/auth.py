@@ -24,7 +24,7 @@ Updated on: 2025-01-20 20:30:00 UTC
 Current User: lllucius / assistant
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
