@@ -355,6 +355,8 @@ def fetch_all_pages(
 
 
 class HealthClient:
+    """Client for health check endpoints."""
+    
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
@@ -379,13 +381,17 @@ class HealthClient:
         return self.sdk._request("/api/v1/health/metrics")
 
     def readiness(self) -> Dict[str, Any]:
+        """Check if the service is ready to accept requests."""
         return self.sdk._request("/api/v1/health/readiness")
 
     def liveness(self) -> Dict[str, Any]:
+        """Check if the service is alive and responsive."""
         return self.sdk._request("/api/v1/health/liveness")
 
 
 class AuthClient:
+    """Client for authentication operations."""
+    
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
@@ -409,11 +415,13 @@ class AuthClient:
         return self.sdk._request("/api/v1/auth/auth/me", UserResponse)
 
     def logout(self) -> BaseResponse:
+        """Logout current user and invalidate token."""
         return self.sdk._request(
             "/api/v1/auth/auth/logout", BaseResponse, method="POST"
         )
 
     def refresh(self) -> Token:
+        """Refresh authentication token."""
         return self.sdk._request("/api/v1/auth/auth/refresh", Token, method="POST")
 
     def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
@@ -492,6 +500,7 @@ class DocumentsClient:
         self.sdk = sdk
 
     def upload(self, file, title: Optional[str] = None) -> DocumentUploadResponse:
+        """Upload a new document for processing."""
         files = {"file": file}
         data = {}
         if title:
@@ -615,6 +624,7 @@ class ConversationsClient:
         )
 
     def chat(self, data: ChatRequest) -> ChatResponse:
+        """Send a message and get AI response."""
         return self.sdk._request(
             "/api/v1/conversations/conversations/chat",
             ChatResponse,
@@ -631,6 +641,7 @@ class SearchClient:
         self.sdk = sdk
 
     def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
+        """Search across documents using various algorithms."""
         return self.sdk._request(
             "/api/v1/search/search/", dict, method="POST", json=data.dict()
         )
@@ -661,6 +672,19 @@ class SearchClient:
 
 
 class AIChatbotSDK:
+    """
+    Main SDK class for AI Chatbot Platform API interactions.
+    
+    Provides a comprehensive client for accessing all API endpoints including
+    authentication, document management, conversations, and search functionality.
+    
+    Args:
+        base_url: Base URL of the AI Chatbot API.
+        token: Optional authentication token.
+        on_error: Optional error handler callback.
+        session: Optional custom requests session.
+    """
+    
     def __init__(
         self,
         base_url: str,
@@ -681,12 +705,15 @@ class AIChatbotSDK:
         self.search = SearchClient(self)
 
     def set_token(self, token: Optional[str]) -> None:
+        """Set authentication token for API requests."""
         self.token = token
 
     def get_token(self) -> Optional[str]:
+        """Get current authentication token."""
         return self.token
 
     def clear_token(self) -> None:
+        """Clear stored authentication token."""
         self.token = None
 
     def _request(
