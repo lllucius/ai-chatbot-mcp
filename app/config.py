@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     # FastMCP Configuration
     mcp_enabled: bool = Field(default=True, description="Enable FastMCP integration")
     mcp_timeout: int = Field(default=30, description="MCP operation timeout in seconds")
+    brave_api_key: str = Field(
+        default="your-brave-api-key", description="Brave Search API key for web search"
+    )
 
     # CORS Configuration - Use Union to accept both string and list
     allowed_origins: Union[str, List[str]] = Field(
@@ -159,7 +162,7 @@ class Settings(BaseSettings):
     )
 
     vector_dimension: int = Field(
-        default=3072, description="Vector embedding dimension", gt=0
+        default=1536, description="Vector embedding dimension", gt=0
     )
 
     # Rate Limiting Configuration
@@ -260,7 +263,7 @@ class Settings(BaseSettings):
                 "command": "npx",
                 "args": ["@modelcontextprotocol/server-brave-search"],
                 "env": {
-                    "BRAVE_API_KEY": os.getenv("BRAVE_API_KEY", "your-brave-api-key")
+                    "BRAVE_API_KEY": self.brave_api_key
                 },
                 "working_directory": None,
                 "required": False,

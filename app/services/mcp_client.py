@@ -16,7 +16,8 @@ import json
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from fastmcp import Client, HTTPTransport
+from fastmcp import Client
+from fastmcp.client import SSETransport
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
@@ -82,7 +83,7 @@ class FastMCPClientService:
             mcp_servers_config = settings.mcp_servers
 
             for server_name, config in mcp_servers_config.items():
-                # All servers must provide a 'url' key for HTTPTransport
+                # All servers must provide a 'url' key for SSETransport
                 url = config.get("url")
                 if not url:
                     # Default to localhost with server name as port for demo
@@ -149,10 +150,10 @@ class FastMCPClientService:
             self.is_initialized = False
 
     async def _connect_server(self, server_name: str, server: MCPServerConfig):
-        """Connect to a specific MCP server using HTTPTransport."""
+        """Connect to a specific MCP server using SSETransport."""
         try:
             # Create FastMCP client with HTTP transport
-            transport = HTTPTransport(server.url)
+            transport = SSETransport(server.url)
             client = Client(transport)
 
             # Test connection with timeout
