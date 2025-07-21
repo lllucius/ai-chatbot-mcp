@@ -153,7 +153,7 @@ class UserService(BaseService):
                 total_messages=total_messages,
             )
 
-            return User.model_validate(profile_data)
+            return user
 
         except NotFoundError:
             raise
