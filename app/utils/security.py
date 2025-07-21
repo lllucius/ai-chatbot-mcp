@@ -4,47 +4,70 @@ Security utilities for password hashing and validation.
 This module provides functions for secure password handling,
 token generation, and other security-related operations.
 
-Generated on: 2025-07-14 03:10:09 UTC
+Generated on: 2025-07-21 03:36:44 UTC
 Current User: lllucius
 """
 
 import secrets
 import string
+import hashlib
+import base64
 
-import bcrypt
-
+# Scrypt configuration parameters (recommended for secure usage)
+SCRYPT_N = 2**14  # CPU/memory cost factor
+SCRYPT_R = 8      # Block size
+SCRYPT_P = 1      # Parallelization factor
+SCRYPT_DKLEN = 64 # Length of derived key
 
 def get_password_hash(password: str) -> str:
     """
-    Hash a password using bcrypt.
+    Hash a password using scrypt.
 
     Args:
         password: Plain text password to hash
 
     Returns:
-        str: Hashed password
+        str: Base64-encoded salt + hash for storage
     """
-    pwd_bytes = password.encode("utf-8")
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
-    return hashed_password.decode()
-
+    salt = secrets.token_bytes(16)
+    key = hashlib.scrypt(
+        password=password.encode('utf-8'),
+        salt=salt,
+        n=SCRYPT_N,
+        r=SCRYPT_R,
+        p=SCRYPT_P,
+        dklen=SCRYPT_DKLEN
+    )
+    # Store salt + hash together (salt first, then hash)
+    data = base64.b64encode(salt + key).decode('utf-8')
+    return data
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a password against its hash.
+    Verify a password against its scrypt hash.
 
     Args:
         plain_password: Plain text password to verify
-        hashed_password: Hashed password to verify against
+        hashed_password: Base64-encoded salt + hash to verify against
 
     Returns:
         bool: True if password matches hash
     """
-    plain_byte_enc = plain_password.encode("utf-8")
-    hashed_byte_enc = hashed_password.encode("utf-8")
-    return bcrypt.checkpw(password=plain_byte_enc, hashed_password=hashed_byte_enc)
-
+    try:
+        decoded = base64.b64decode(hashed_password.encode('utf-8'))
+        salt = decoded[:16]
+        key = decoded[16:]
+        new_key = hashlib.scrypt(
+            password=plain_password.encode('utf-8'),
+            salt=salt,
+            n=SCRYPT_N,
+            r=SCRYPT_R,
+            p=SCRYPT_P,
+            dklen=len(key)
+        )
+        return secrets.compare_digest(new_key, key)
+    except Exception:
+        return False
 
 def generate_random_password(length: int = 12) -> str:
     """
@@ -60,7 +83,6 @@ def generate_random_password(length: int = 12) -> str:
     password = "".join(secrets.choice(alphabet) for _ in range(length))
     return password
 
-
 def generate_secret_key(length: int = 32) -> str:
     """
     Generate a random secret key.
@@ -72,7 +94,6 @@ def generate_secret_key(length: int = 32) -> str:
         str: Random secret key as hex string
     """
     return secrets.token_hex(length)
-
 
 def generate_token(length: int = 32) -> str:
     """
