@@ -50,7 +50,8 @@ class UUIDMixin:
 class BaseModelDB(DeclarativeBase, UUIDMixin, TimestampMixin):
     """Base class for all database models."""
 
-    @declared_attr
+    @declared_attr.directive
+    @classmethod
     def __tablename__(cls) -> str:
         """Generate table name from class name."""
         # Convert CamelCase to snake_case

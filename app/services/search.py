@@ -230,16 +230,16 @@ class SearchService(BaseService):
             rank_expr = func.bm25("content_tsv", ts_query).label("rank")
             bm25_supported = True
         except Exception:
-            rank_expr = func.ts_rank_cd(DocumentChunk.content_tsv, ts_query).label(
-                "rank"
-            )
+            rank_expr = func.ts_rank_cd(
+                func.to_tsvector("english", DocumentChunk.content), ts_query
+            ).label("rank")
             bm25_supported = False
 
         query = (
             select(DocumentChunk, rank_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
             .where(Document.owner_id == user_id)
-            .where(DocumentChunk.content_tsv.op("@@")(ts_query))
+            .where(func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query))
         )
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))

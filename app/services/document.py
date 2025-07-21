@@ -91,7 +91,7 @@ class DocumentService(BaseService):
 
         # Initialize processing components
         self.file_processor = FileProcessor()
-        self.enhanced_processor = EnhancedDocumentProcessor()
+        self.enhanced_processor = EnhancedDocumentProcessor(config={})
         self.text_processor = TextProcessor(
             chunk_size=settings.default_chunk_size,
             chunk_overlap=settings.default_chunk_overlap,
@@ -165,10 +165,18 @@ class DocumentService(BaseService):
                 with open(temp_path, "wb") as temp_file:
                     temp_file.write(temp_content)
 
-                (
-                    file_extension,
-                    detected_mime_type,
-                ) = self.enhanced_processor.detect_file_format(temp_path)
+                # Simple file format detection using file extension and content
+                import filetype
+                import mimetypes
+                
+                kind = filetype.guess(temp_path)
+                if kind is not None:
+                    file_extension = f".{kind.extension}"
+                    detected_mime_type = kind.mime
+                else:
+                    # Fallback to filename extension
+                    file_extension = f".{file.filename.split('.')[-1].lower()}"
+                    detected_mime_type, _ = mimetypes.guess_type(file.filename)
                 os.unlink(temp_path)  # Clean up temp file
 
             except Exception as e:
@@ -176,7 +184,7 @@ class DocumentService(BaseService):
 
             # Additional validation against allowed types
             allowed_extensions = (
-                settings.allowed_file_types.split(",")
+                str(settings.allowed_file_types).split(",")
                 if isinstance(settings.allowed_file_types, str)
                 else settings.allowed_file_types
             )

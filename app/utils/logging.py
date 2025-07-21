@@ -107,7 +107,7 @@ def setup_logging() -> None:
     except Exception as e:
         # Fallback to basic configuration
         logging.basicConfig(
-            level=getattr(logging, settings.log_level.upper(), logging.INFO),
+            level=getattr(logging, str(settings.log_level).upper(), logging.INFO),
             format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )

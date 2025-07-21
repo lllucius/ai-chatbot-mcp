@@ -32,9 +32,11 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..config import settings
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..services.embedding import EmbeddingService
 from ..utils.enhanced_document_processor import DocumentProcessor
+from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
 
@@ -117,7 +119,8 @@ class BackgroundProcessor(BaseService):
         self.task_results: Dict[str, Dict[str, Any]] = {}
 
         # Processing components
-        self.document_processor = DocumentProcessor()
+        self.document_processor = DocumentProcessor(config={})
+        self.file_processor = FileProcessor()
         self.text_processor = TextProcessor(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
@@ -367,14 +370,14 @@ class BackgroundProcessor(BaseService):
             task.progress = 0.1
             logger.info(f"Extracting text from document {document.id}")
 
-            extracted_text = await self.document_processor.extract_text(
-                document.file_path
+            extracted_text = await self.file_processor.extract_text(
+                document.file_path, document.file_type.value
             )
 
             task.progress = 0.2
 
             # Step 2: Get text statistics (30% progress)
-            text_stats = self.document_processor.get_text_statistics(extracted_text)
+            text_stats = self.text_processor.get_text_statistics(extracted_text)
 
             task.progress = 0.3
 
@@ -414,7 +417,7 @@ class BackgroundProcessor(BaseService):
                         chunk.content.split()
                     ),  # Simple word count approximation
                     embedding=embedding,
-                    embedding_model=self.embedding_service.model_name,
+                    embedding_model=str(settings.openai_embedding_model),
                     language=text_stats.get("language"),
                     document_id=document.id,
                 )
@@ -450,7 +453,7 @@ class BackgroundProcessor(BaseService):
                         "processing_config": {
                             "chunk_size": self.text_processor.chunk_size,
                             "chunk_overlap": self.text_processor.chunk_overlap,
-                            "embedding_model": self.embedding_service.model_name,
+                            "embedding_model": str(settings.openai_embedding_model),
                         },
                     },
                 )
