@@ -161,10 +161,10 @@ class ManagementCLI:
                 # User stats
                 total_users = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active == True)
+                    select(func.count(User.id)).where(User.is_active is True)
                 )
                 superusers = await db.scalar(
-                    select(func.count(User.id)).where(User.is_superuser == True)
+                    select(func.count(User.id)).where(User.is_superuser is True)
                 )
 
                 # Document stats
@@ -179,7 +179,7 @@ class ManagementCLI:
                 total_convs = await db.scalar(select(func.count(Conversation.id)))
                 active_convs = await db.scalar(
                     select(func.count(Conversation.id)).where(
-                        Conversation.is_active == True
+                        Conversation.is_active is True
                     )
                 )
 

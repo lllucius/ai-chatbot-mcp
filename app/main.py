@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
         try:
             from .core.tool_executor import get_unified_tool_executor
             
-            tool_executor = await get_unified_tool_executor()
+            await get_unified_tool_executor()
             logger.info("UnifiedToolExecutor initialized successfully")
         except Exception as e:
             logger.warning(f"UnifiedToolExecutor initialization failed (optional): {e}")

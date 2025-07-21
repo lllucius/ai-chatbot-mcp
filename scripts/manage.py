@@ -95,7 +95,7 @@ def list_users_cmd(limit: int = 10, superusers_only: bool = False):
                 query = select(User)
 
                 if superusers_only:
-                    query = query.where(User.is_superuser == True)
+                    query = query.where(User.is_superuser is True)
 
                 query = query.limit(limit)
                 result = await db.execute(query)
@@ -214,10 +214,10 @@ def show_stats():
                 # User statistics
                 user_count = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active == True)
+                    select(func.count(User.id)).where(User.is_active is True)
                 )
                 superusers = await db.scalar(
-                    select(func.count(User.id)).where(User.is_superuser == True)
+                    select(func.count(User.id)).where(User.is_superuser is True)
                 )
 
                 # Document statistics
@@ -232,7 +232,7 @@ def show_stats():
                 conv_count = await db.scalar(select(func.count(Conversation.id)))
                 active_convs = await db.scalar(
                     select(func.count(Conversation.id)).where(
-                        Conversation.is_active == True
+                        Conversation.is_active is True
                     )
                 )
 

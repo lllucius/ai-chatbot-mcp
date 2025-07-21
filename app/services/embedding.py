@@ -130,8 +130,8 @@ class EmbeddingService:
         text_indices: List[int] = []
         result: List[Optional[List[float]]] = [None] * len(texts)
 
-        for i, text in enumerate(texts):
-            cleaned = self._clean_text(text)
+        for i, text_content in enumerate(texts):
+            cleaned = self._clean_text(text_content)
             if not cleaned:
                 continue
             cache_key = cleaned
@@ -360,11 +360,11 @@ class EmbeddingService:
         """
         try:
             total_embeddings = await self.db.scalar(
-                select(func.count()).where(DocumentChunk.embedding != None)
+                select(func.count()).where(DocumentChunk.embedding is not None)
             )
             documents_with_embeddings = await self.db.scalar(
                 select(func.count(func.distinct(DocumentChunk.document_id))).where(
-                    DocumentChunk.embedding != None
+                    DocumentChunk.embedding is not None
                 )
             )
             return {

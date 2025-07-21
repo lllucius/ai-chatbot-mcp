@@ -64,32 +64,6 @@ class PerformanceMonitor:
         
         logger.info("Enhanced performance monitor initialized")
 
-    def __init__(self, max_requests: int = 10000, max_system_metrics: int = 1440):
-        """
-        Initialize performance monitor.
-        
-        Args:
-            max_requests: Maximum number of request metrics to keep
-            max_system_metrics: Maximum number of system metrics to keep (24h @ 1min intervals)
-        """
-        self.max_requests = max_requests
-        self.max_system_metrics = max_system_metrics
-        
-        # Request metrics storage (using deque for efficient rotation)
-        self.request_metrics = deque(maxlen=max_requests)
-        self.request_counts = defaultdict(int)
-        self.error_counts = defaultdict(int)
-        
-        # System metrics storage
-        self.system_metrics = deque(maxlen=max_system_metrics)
-        
-        # Performance statistics
-        self.slow_requests = deque(maxlen=100)  # Track slowest requests
-        self.error_requests = deque(maxlen=100)  # Track recent errors
-        
-        # Start time for uptime calculation
-        self.start_time = time.time()
-
     def record_request(self, metric: RequestMetric) -> None:
         """Record a request metric."""
         self.request_metrics.append(metric)
