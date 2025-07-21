@@ -262,7 +262,7 @@ class TestStandardLogging:
     def test_correlation_id_setting(self):
         """Test correlation ID functionality."""
         # Set up logging
-        logger = setup_logging(log_format='development')
+        setup_logging(log_format='development')
         
         # Set correlation ID
         correlation_id = set_correlation_id("test-correlation-123")

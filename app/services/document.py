@@ -27,6 +27,7 @@ Updated on: 2025-01-20 20:00:00 UTC
 Current User: lllucius / assistant
 """
 
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -47,6 +48,8 @@ from ..utils.enhanced_document_processor import DocumentProcessor as EnhancedDoc
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentService(BaseService):

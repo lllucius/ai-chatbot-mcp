@@ -22,14 +22,12 @@ Current User: assistant
 Current Date: 2025-01-20
 """
 
-import asyncio
 import logging
 import mimetypes
-import os
 import re
 import unicodedata
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import filetype
 from langdetect import detect, LangDetectError

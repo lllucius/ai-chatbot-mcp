@@ -8,11 +8,47 @@ Generated on: 2025-07-14 03:06:28 UTC
 Current User: lllucius
 """
 
-from .auth import *
-from .common import *
-from .conversation import *
-from .document import *
-from .user import *
+from .auth import (
+    LoginRequest,
+    RegisterRequest,
+    Token,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+)
+from .common import (
+    BaseResponse,
+    ErrorResponse,
+    PaginationParams,
+    PaginatedResponse,
+    HealthCheckResponse as HealthResponse,
+    SearchParams,
+)
+from .conversation import (
+    ConversationResponse,
+    ConversationCreate,
+    ConversationUpdate,
+    MessageResponse,
+    MessageCreate,
+    ChatRequest,
+    ChatResponse,
+    ConversationListResponse,
+    MessageListResponse,
+    ConversationStats,
+)
+from .document import (
+    DocumentResponse,
+    DocumentUpdate,
+    DocumentChunkResponse,
+    DocumentSearchRequest,
+    DocumentUploadResponse,
+    ProcessingStatusResponse,
+)
+from .user import (
+    UserResponse,
+    UserUpdate,
+    UserPasswordUpdate,
+    UserStatsResponse,
+)
 
 __all__ = [
     # Common schemas
@@ -31,8 +67,8 @@ __all__ = [
     # User schemas
     "UserResponse",
     "UserUpdate",
-    "UserProfile",
-    "PasswordChangeRequest",
+    "UserPasswordUpdate",
+    "UserStatsResponse",
     # Document schemas
     "DocumentResponse",
     "DocumentUpdate",

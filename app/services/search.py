@@ -35,6 +35,7 @@ Updated on: 2025-01-20 20:15:00 UTC
 Current User: lllucius / assistant
 """
 
+import logging
 from typing import List, Dict, Tuple
 from uuid import UUID
 from time import time
@@ -47,6 +48,8 @@ from ..models.document import Document, DocumentChunk
 from ..schemas.document import DocumentChunkResponse, DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from .base import BaseService
+
+logger = logging.getLogger(__name__)
 
 # ----- In-memory LRU cache for embeddings -----
 class LRUCache:
@@ -189,7 +192,9 @@ class SearchService(BaseService):
         distances = [distance for _, distance in rows]
         max_distance = max(distances, default=1.0)
         min_distance = min(distances, default=0.0)
-        norm = lambda d: 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))  # [0,1], higher is better
+        
+        def norm(d):
+            return 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))  # [0,1], higher is better
 
         results = []
         for chunk, distance in rows:
@@ -242,7 +247,9 @@ class SearchService(BaseService):
         ranks = [float(rank) for _, rank in rows]
         max_rank = max(ranks, default=1.0)
         min_rank = min(ranks, default=0.0)
-        norm = lambda r: (r - min_rank) / (max_rank - min_rank + 1e-8)
+        
+        def norm(r):
+            return (r - min_rank) / (max_rank - min_rank + 1e-8)
 
         results = []
         for chunk, rank in rows:
@@ -417,7 +424,9 @@ class SearchService(BaseService):
             distances = [distance for _, distance in rows]
             max_distance = max(distances, default=1.0)
             min_distance = min(distances, default=0.0)
-            norm = lambda d: 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))
+            
+            def norm(d):
+                return 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))
 
             results = []
             for chunk, distance in rows:

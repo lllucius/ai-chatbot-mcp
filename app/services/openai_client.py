@@ -103,7 +103,7 @@ class OpenAIClient:
 
         try:
             # Test with a simple completion to validate model availability
-            test_response = await self.client.chat.completions.create(
+            await self.client.chat.completions.create(
                 model=settings.openai_chat_model,
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=1,

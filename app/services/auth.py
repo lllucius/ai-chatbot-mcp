@@ -25,6 +25,7 @@ Current User: lllucius / assistant
 """
 
 from datetime import timedelta
+import logging
 from typing import Any, Dict, Optional
 from uuid import UUID
 
@@ -39,6 +40,8 @@ from ..schemas.auth import RegisterRequest, Token
 from ..utils.security import get_password_hash, verify_password
 from ..utils.timestamp import utcnow
 from .base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService(BaseService):

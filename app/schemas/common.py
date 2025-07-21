@@ -233,7 +233,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
     def create(
         cls, items: List[Any], page: int, size: int, total: int, message: str
     ) -> "PaginatedResponse":
-        response = cls(
+        return cls(
             success=True,
             message=message,
             items=items,
