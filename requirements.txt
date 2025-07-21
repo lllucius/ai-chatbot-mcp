@@ -42,5 +42,19 @@ black
 isort
 mypy
 
+# Document Processing - Unstructured
+unstructured>=0.15.0
+filetype
+beautifulsoup4
+nltk
+
+# Background Tasks
+celery>=5.3.0
+redis>=4.5.0
+
+# Text Preprocessing
+regex
+langdetect
+
 # Current Date and Time (UTC): 2025-07-14 04:32:05
 # Current User: lllucius

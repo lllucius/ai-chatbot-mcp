@@ -110,8 +110,73 @@ class Settings(BaseSettings):
     default_chunk_overlap: int = Field(
         default=200, description="Default chunk overlap for text processing", ge=0
     )
+    
+    # Enhanced Document Processing Configuration
+    max_chunk_size: int = Field(
+        default=4000,
+        description="Maximum allowed chunk size",
+        ge=500,
+        le=8000
+    )
+    min_chunk_size: int = Field(
+        default=100,
+        description="Minimum allowed chunk size", 
+        ge=50,
+        le=500
+    )
+    max_chunk_overlap: int = Field(
+        default=1000,
+        description="Maximum allowed chunk overlap",
+        ge=0,
+        le=2000
+    )
+    
+    # Embedding Configuration
+    enable_metadata_embedding: bool = Field(
+        default=True,
+        description="Include metadata in embedding generation"
+    )
+    embedding_batch_size: int = Field(
+        default=10,
+        description="Batch size for embedding generation",
+        ge=1,
+        le=100
+    )
+    
+    # Document Preprocessing Configuration
+    enable_text_preprocessing: bool = Field(
+        default=True,
+        description="Enable advanced text preprocessing"
+    )
+    normalize_unicode: bool = Field(
+        default=True,
+        description="Normalize Unicode characters"
+    )
+    remove_extra_whitespace: bool = Field(
+        default=True,
+        description="Remove extra whitespace and normalize line endings"
+    )
+    language_detection: bool = Field(
+        default=True,
+        description="Enable language detection for chunks"
+    )
+    
+    # Background Processing Configuration
+    max_concurrent_processing: int = Field(
+        default=3,
+        description="Maximum concurrent document processing tasks",
+        ge=1,
+        le=10
+    )
+    processing_timeout: int = Field(
+        default=1800,  # 30 minutes
+        description="Processing timeout in seconds",
+        ge=300,
+        le=7200
+    )
+    
     vector_dimension: int = Field(
-        default=1536, description="Vector embedding dimension", gt=0
+        default=3072, description="Vector embedding dimension", gt=0
     )
 
     # Rate Limiting Configuration

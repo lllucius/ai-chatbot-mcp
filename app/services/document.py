@@ -42,6 +42,8 @@ from ..core.exceptions import DocumentError, NotFoundError, ValidationError
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..schemas.document import DocumentUpdate
 from ..services.embedding import EmbeddingService
+from ..services.background_processor import get_background_processor
+from ..utils.enhanced_document_processor import DocumentProcessor as EnhancedDocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
@@ -84,6 +86,7 @@ class DocumentService(BaseService):
         
         # Initialize processing components
         self.file_processor = FileProcessor()
+        self.enhanced_processor = EnhancedDocumentProcessor()
         self.text_processor = TextProcessor(
             chunk_size=settings.default_chunk_size,
             chunk_overlap=settings.default_chunk_overlap,
@@ -142,9 +145,28 @@ class DocumentService(BaseService):
             # Validate file before processing
             if not file.filename:
                 raise ValidationError("Filename is required")
+            
+            # Use enhanced processor for format detection and validation
+            try:
+                # Save file temporarily for format detection
+                temp_content = await file.read()
+                await file.seek(0)  # Reset file pointer
                 
-            file_extension = file.filename.split(".")[-1].lower()
-            if file_extension not in settings.allowed_file_types:
+                unique_filename = f"{uuid.uuid4()}.{file.filename.split('.')[-1].lower()}"
+                temp_path = os.path.join('/tmp', unique_filename)
+                
+                with open(temp_path, 'wb') as temp_file:
+                    temp_file.write(temp_content)
+                
+                file_extension, detected_mime_type = self.enhanced_processor.detect_file_format(temp_path)
+                os.unlink(temp_path)  # Clean up temp file
+                
+            except Exception as e:
+                raise ValidationError(f"Unsupported file format: {e}")
+                
+            # Additional validation against allowed types
+            allowed_extensions = settings.allowed_file_types.split(',') if isinstance(settings.allowed_file_types, str) else settings.allowed_file_types
+            if file_extension.lstrip('.') not in allowed_extensions:
                 raise ValidationError(f"File type '{file_extension}' not allowed")
 
             # Read file content for processing
@@ -153,7 +175,7 @@ class DocumentService(BaseService):
                 raise ValidationError(f"File size exceeds maximum allowed ({settings.max_file_size} bytes)")
 
             # Generate secure unique filename to prevent conflicts
-            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
             file_path = os.path.join(settings.upload_directory, unique_filename)
 
             # Ensure upload directory exists
@@ -180,17 +202,19 @@ class DocumentService(BaseService):
                 title=title,
                 filename=file.filename,
                 file_path=file_path,
-                file_type=file_extension,
+                file_type=file_extension.lstrip('.'),
                 file_size=len(content),
-                mime_type=file.content_type or file_info.get("mime_type"),
+                content_type=detected_mime_type or file.content_type or file_info.get("mime_type"),
                 status=FileStatus.PENDING,
                 owner_id=user_id,
                 metainfo={
                     "original_filename": file.filename,
+                    "detected_mime_type": detected_mime_type,
                     "upload_info": file_info,
                     "processing_config": {
                         "chunk_size": settings.default_chunk_size,
-                        "chunk_overlap": settings.default_chunk_overlap
+                        "chunk_overlap": settings.default_chunk_overlap,
+                        "enhanced_processor": True
                     }
                 },
             )
@@ -241,38 +265,110 @@ class DocumentService(BaseService):
                 os.remove(file_path)
             raise DocumentError(f"Document creation failed: {e}")
 
-    async def start_processing(self, document_id: UUID) -> bool:
+    async def start_processing(self, document_id: UUID, priority: int = 5) -> str:
         """
-        Start document processing (text extraction and chunking).
+        Start background document processing (text extraction and chunking).
 
         Args:
             document_id: Document ID to process
+            priority: Processing priority (lower = higher priority)
 
         Returns:
-            bool: True if processing started successfully
+            str: Task ID for tracking background processing
+            
+        Raises:
+            NotFoundError: If document not found
+            ValidationError: If document is already processing
         """
+        operation = "start_processing"
+        
         try:
+            await self._ensure_db_session()
+            
             # Get document
             document = await self.get_document_by_id(document_id)
             if not document:
                 raise NotFoundError("Document not found")
 
-            # Update status
-            document.status = FileStatus.PROCESSING
-            await self.db.commit()
+            if document.status == FileStatus.PROCESSING:
+                raise ValidationError("Document is already being processed")
+                
+            if document.status == FileStatus.COMPLETED:
+                raise ValidationError("Document has already been processed")
 
-            # Process in background (in production, use a task queue)
-            await self._process_document(document)
+            # Get background processor
+            background_processor = await get_background_processor(self.db)
+            
+            # Queue document for background processing
+            task_id = await background_processor.queue_document_processing(
+                document_id=document_id,
+                priority=priority
+            )
 
-            return True
+            self._log_operation_success(
+                operation,
+                document_id=str(document_id),
+                task_id=task_id,
+                priority=priority
+            )
 
+            return task_id
+
+        except (NotFoundError, ValidationError):
+            raise
         except Exception as e:
-            logger.error(f"Failed to start processing for document {document_id}: {e}")
-            # Update status to failed
-            if document:
-                document.status = FileStatus.FAILED
-                await self.db.commit()
-            return False
+            self._log_operation_error(operation, e, document_id=str(document_id))
+            raise
+            
+    async def get_processing_status(self, document_id: UUID, task_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get document processing status including background task information.
+        
+        Args:
+            document_id: Document ID
+            task_id: Optional task ID for background processing
+            
+        Returns:
+            Dict[str, Any]: Comprehensive processing status
+        """
+        try:
+            await self._ensure_db_session()
+            
+            # Get document
+            document = await self.get_document_by_id(document_id)
+            if not document:
+                raise NotFoundError("Document not found")
+            
+            # Get basic status
+            status_info = {
+                "document_id": str(document_id),
+                "status": document.status,
+                "chunk_count": document.chunk_count,
+                "processing_time": document.processing_time,
+                "error_message": document.error_message,
+                "created_at": document.created_at,
+                "updated_at": document.updated_at
+            }
+            
+            # Add background task information if available
+            if task_id:
+                background_processor = await get_background_processor(self.db)
+                task_status = await background_processor.get_task_status(task_id)
+                if task_status:
+                    status_info.update({
+                        "task_id": task_id,
+                        "task_status": task_status["status"],
+                        "progress": task_status["progress"],
+                        "task_created_at": task_status.get("created_at"),
+                        "task_started_at": task_status.get("started_at"),
+                        "task_error": task_status.get("error_message")
+                    })
+            
+            return status_info
+            
+        except Exception as e:
+            logger.error(f"Failed to get processing status for document {document_id}: {e}")
+            raise
 
     async def _process_document(self, document: Document):
         """Process document: extract text, create chunks, generate embeddings."""
