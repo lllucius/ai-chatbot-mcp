@@ -15,7 +15,7 @@ from typing import Union
 def utcnow() -> datetime:
     """
     Get current UTC datetime.
-    
+
     Returns:
         datetime: Current UTC datetime with timezone info
     """
@@ -25,7 +25,7 @@ def utcnow() -> datetime:
 def get_current_timestamp() -> str:
     """
     Get current timestamp as ISO 8601 string.
-    
+
     Returns:
         str: Current timestamp in ISO 8601 format
     """
@@ -35,20 +35,20 @@ def get_current_timestamp() -> str:
 def to_utc(dt: Union[datetime, str]) -> datetime:
     """
     Convert datetime or ISO string to UTC datetime.
-    
+
     Args:
         dt: Datetime object or ISO string to convert
-        
+
     Returns:
         datetime: UTC datetime object
-        
+
     Raises:
         ValueError: If string cannot be parsed
     """
     if isinstance(dt, str):
         # Parse ISO format string
-        if dt.endswith('Z'):
-            dt = dt[:-1] + '+00:00'  # Replace Z with +00:00
+        if dt.endswith("Z"):
+            dt = dt[:-1] + "+00:00"  # Replace Z with +00:00
         parsed = datetime.fromisoformat(dt)
         if parsed.tzinfo is None:
             # Assume UTC if no timezone info
@@ -66,11 +66,11 @@ def to_utc(dt: Union[datetime, str]) -> datetime:
 def format_timestamp(dt: datetime, include_microseconds: bool = False) -> str:
     """
     Format datetime as ISO 8601 string.
-    
+
     Args:
         dt: Datetime to format
         include_microseconds: Whether to include microseconds
-        
+
     Returns:
         str: Formatted timestamp string
     """
@@ -84,11 +84,11 @@ def format_timestamp(dt: datetime, include_microseconds: bool = False) -> str:
 def timestamp_diff_seconds(dt1: datetime, dt2: datetime) -> float:
     """
     Calculate difference between two timestamps in seconds.
-    
+
     Args:
         dt1: First datetime (later time)
         dt2: Second datetime (earlier time)
-        
+
     Returns:
         float: Difference in seconds (positive if dt1 > dt2)
     """
@@ -98,11 +98,11 @@ def timestamp_diff_seconds(dt1: datetime, dt2: datetime) -> float:
 def is_recent(dt: datetime, max_age_seconds: int = 300) -> bool:
     """
     Check if datetime is recent (within max_age_seconds from now).
-    
+
     Args:
         dt: Datetime to check
         max_age_seconds: Maximum age in seconds (default: 5 minutes)
-        
+
     Returns:
         bool: True if datetime is recent
     """

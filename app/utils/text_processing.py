@@ -38,7 +38,9 @@ class TextProcessor:
     streaming support and memory optimization for large documents.
     """
 
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200, max_memory_mb: int = 500):
+    def __init__(
+        self, chunk_size: int = 1000, chunk_overlap: int = 200, max_memory_mb: int = 500
+    ):
         """
         Initialize text processor.
 
@@ -55,21 +57,19 @@ class TextProcessor:
         """Check if memory usage is too high."""
         try:
             memory = psutil.virtual_memory()
-            memory_mb = (memory.used / (1024 * 1024))
-            
+            memory_mb = memory.used / (1024 * 1024)
+
             if memory.percent > 80:
                 logger.warning(f"High memory usage: {memory.percent}%")
-                
+
             if memory_mb > self.max_memory_mb * 1024:  # Convert to bytes
                 raise MemoryError("Memory usage too high for text processing")
-                
+
         except Exception as e:
             logger.debug(f"Memory check failed: {e}")
 
     async def create_chunks_streaming(
-        self, 
-        text: str, 
-        metainfo: Optional[Dict[str, Any]] = None
+        self, text: str, metainfo: Optional[Dict[str, Any]] = None
     ) -> AsyncIterator[TextChunk]:
         """
         Create text chunks with streaming support for memory optimization.

@@ -51,9 +51,11 @@ from .base import BaseService
 
 logger = logging.getLogger(__name__)
 
+
 # ----- In-memory LRU cache for embeddings -----
 class LRUCache:
     """A simple LRU cache for query embeddings."""
+
     def __init__(self, capacity=128):
         self.cache: Dict[str, Tuple[float, list]] = {}
         self.order: List[str] = []
@@ -75,7 +77,9 @@ class LRUCache:
         self.order.insert(0, key)
         self.cache[key] = (time(), value)
 
+
 embedding_cache = LRUCache(capacity=256)
+
 
 class SearchService(BaseService):
     """
@@ -85,19 +89,19 @@ class SearchService(BaseService):
     including vector similarity search, text search, hybrid algorithms, and
     Maximum Marginal Relevance (MMR) with enhanced caching, logging, and
     performance optimization.
-    
+
     Search Algorithms:
     - Vector Search: Pure semantic similarity using embeddings with PGVector
-    - Text Search: Traditional full-text search with PostgreSQL GIN indexing  
+    - Text Search: Traditional full-text search with PostgreSQL GIN indexing
     - Hybrid Search: Weighted combination of vector and text search results
     - MMR Search: Maximum Marginal Relevance for diverse result sets
-    
+
     Performance Features:
     - LRU caching for query embeddings to reduce API calls
     - Optimized database queries with proper indexing
     - Configurable similarity thresholds and result limits
     - User-based access control and security filtering
-    
+
     Responsibilities:
     - Query embedding generation with caching optimization
     - Multi-algorithm search execution with result ranking
@@ -192,9 +196,11 @@ class SearchService(BaseService):
         distances = [distance for _, distance in rows]
         max_distance = max(distances, default=1.0)
         min_distance = min(distances, default=0.0)
-        
+
         def norm(d):
-            return 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))  # [0,1], higher is better
+            return 1.0 - (
+                (d - min_distance) / (max_distance - min_distance + 1e-8)
+            )  # [0,1], higher is better
 
         results = []
         for chunk, distance in rows:
@@ -218,20 +224,22 @@ class SearchService(BaseService):
         - Uses BM25 ranking (if pg_bm25 is installed), else fallback to ts_rank_cd.
         - Returns search_meta for each result.
         """
-        ts_query = func.plainto_tsquery('english', request.query)
+        ts_query = func.plainto_tsquery("english", request.query)
         # Use BM25 if available, fallback to ts_rank_cd
         try:
-            rank_expr = func.bm25('content_tsv', ts_query).label("rank")
+            rank_expr = func.bm25("content_tsv", ts_query).label("rank")
             bm25_supported = True
         except Exception:
-            rank_expr = func.ts_rank_cd(DocumentChunk.content_tsv, ts_query).label("rank")
+            rank_expr = func.ts_rank_cd(DocumentChunk.content_tsv, ts_query).label(
+                "rank"
+            )
             bm25_supported = False
 
         query = (
             select(DocumentChunk, rank_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
             .where(Document.owner_id == user_id)
-            .where(DocumentChunk.content_tsv.op('@@')(ts_query))
+            .where(DocumentChunk.content_tsv.op("@@")(ts_query))
         )
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))
@@ -247,7 +255,7 @@ class SearchService(BaseService):
         ranks = [float(rank) for _, rank in rows]
         max_rank = max(ranks, default=1.0)
         min_rank = min(ranks, default=0.0)
-        
+
         def norm(r):
             return (r - min_rank) / (max_rank - min_rank + 1e-8)
 
@@ -282,8 +290,13 @@ class SearchService(BaseService):
         for result in vector_results:
             chunk_id = result.id
             combined_results[chunk_id] = result
-            combined_results[chunk_id].search_meta = {"methods": ["vector"], **result.search_meta}
-            combined_results[chunk_id].similarity_score = (result.similarity_score or 0) * 0.7
+            combined_results[chunk_id].search_meta = {
+                "methods": ["vector"],
+                **result.search_meta,
+            }
+            combined_results[chunk_id].similarity_score = (
+                result.similarity_score or 0
+            ) * 0.7
 
         for result in text_results:
             chunk_id = result.id
@@ -328,7 +341,9 @@ class SearchService(BaseService):
         remaining = candidates[1:]
 
         # Pre-fetch embeddings for all chunks for cosine calculation
-        def get_emb(chunk): return getattr(chunk, 'embedding', None)
+        def get_emb(chunk):
+            return getattr(chunk, "embedding", None)
+
         selected_embs = [get_emb(selected[0])]
 
         while len(selected) < request.limit and remaining:
@@ -424,7 +439,7 @@ class SearchService(BaseService):
             distances = [distance for _, distance in rows]
             max_distance = max(distances, default=1.0)
             min_distance = min(distances, default=0.0)
-            
+
             def norm(d):
                 return 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))
 

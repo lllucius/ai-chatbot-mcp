@@ -48,19 +48,19 @@ class OpenAIClient:
 
     This client provides methods for chat completions, embeddings,
     and content moderation with automatic unified tool calling capabilities.
-    
+
     Key Features:
     - Unified tool calling through UnifiedToolExecutor
     - Consistent error handling via @handle_api_errors decorator
     - Retry logic and caching through middleware decorators
     - Structured logging for all operations
     - Full async/await support for all operations
-    
+
     Tool Integration:
     - Automatically integrates with UnifiedToolExecutor for tool calling
     - Supports both custom tools and unified tools from multiple providers
     - Handles tool call execution with proper error handling and logging
-    
+
     Error Handling:
     - Uses @handle_api_errors decorator for consistent error responses
     - Automatic retry logic for rate limits and connection errors
@@ -228,7 +228,9 @@ class OpenAIClient:
                 tool_executor = await get_unified_tool_executor()
                 unified_tools = await tool_executor.get_available_tools()
                 final_tools.extend(unified_tools)
-                logger.info(f"Added {len(unified_tools)} unified tools to chat completion")
+                logger.info(
+                    f"Added {len(unified_tools)} unified tools to chat completion"
+                )
             except Exception as e:
                 logger.warning(f"Failed to add unified tools: {e}")
 
@@ -254,10 +256,10 @@ class OpenAIClient:
                     openai.RateLimitError,
                     openai.APIConnectionError,
                     openai.APITimeoutError,
-                )
+                ),
             ),
             enable_caching=False,  # Don't cache chat completions
-            log_details=True
+            log_details=True,
         )
         async def _make_completion():
             response = await self.client.chat.completions.create(**request_params)
@@ -269,15 +271,15 @@ class OpenAIClient:
         # Handle tool calls using unified executor
         tool_calls_executed = []
         if message.tool_calls:
-            tool_calls_executed = await self._execute_unified_tool_calls(message.tool_calls)
+            tool_calls_executed = await self._execute_unified_tool_calls(
+                message.tool_calls
+            )
 
         # Format response
         result = {
             "content": message.content or "",
             "role": message.role,
-            "tool_calls": [
-                tool_call.model_dump() for tool_call in message.tool_calls
-            ]
+            "tool_calls": [tool_call.model_dump() for tool_call in message.tool_calls]
             if message.tool_calls
             else None,
             "tool_calls_executed": tool_calls_executed,
@@ -309,19 +311,21 @@ class OpenAIClient:
 
             # Execute tool calls using unified executor
             results = await tool_executor.execute_tool_calls(unified_tool_calls)
-            
+
             # Convert results to expected format
             formatted_results = []
             for result in results:
-                formatted_results.append({
-                    "tool_call_id": result.tool_call_id,
-                    "success": result.success,
-                    "content": result.content,
-                    "error": result.error,
-                    "provider": result.provider.value if result.provider else None,
-                    "execution_time_ms": result.execution_time_ms,
-                })
-            
+                formatted_results.append(
+                    {
+                        "tool_call_id": result.tool_call_id,
+                        "success": result.success,
+                        "content": result.content,
+                        "error": result.error,
+                        "provider": result.provider.value if result.provider else None,
+                        "execution_time_ms": result.execution_time_ms,
+                    }
+                )
+
             return formatted_results
 
         except Exception as e:
@@ -350,7 +354,9 @@ class OpenAIClient:
             raise ValueError("Text cannot be empty")
 
         # Check cache first
-        cache_key = make_cache_key("embedding", settings.openai_embedding_model, text.strip())
+        cache_key = make_cache_key(
+            "embedding", settings.openai_embedding_model, text.strip()
+        )
         cached_embedding = await embedding_cache.get(cache_key)
         if cached_embedding is not None:
             logger.debug("Using cached embedding")
@@ -364,10 +370,10 @@ class OpenAIClient:
                     openai.RateLimitError,
                     openai.APIConnectionError,
                     openai.APITimeoutError,
-                )
+                ),
             ),
             enable_caching=False,  # Manual caching above
-            log_details=True
+            log_details=True,
         )
         async def _create_embedding():
             response = await self.client.embeddings.create(
@@ -378,10 +384,10 @@ class OpenAIClient:
             return response.data[0].embedding
 
         embedding = await _create_embedding()
-        
+
         # Cache the result
         await embedding_cache.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
-        
+
         return embedding
 
     @handle_api_errors("Batch embedding creation failed")

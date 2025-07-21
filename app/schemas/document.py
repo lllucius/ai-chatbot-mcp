@@ -151,7 +151,9 @@ class DocumentUploadResponse(BaseResponse):
 
     document: DocumentResponse = Field(..., description="Uploaded document information")
     task_id: Optional[str] = Field(None, description="Background processing task ID")
-    auto_processing: bool = Field(False, description="Whether auto-processing was enabled")
+    auto_processing: bool = Field(
+        False, description="Whether auto-processing was enabled"
+    )
 
 
 class ProcessingStatusResponse(BaseResponse):
@@ -160,11 +162,13 @@ class ProcessingStatusResponse(BaseResponse):
     document_id: UUID = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")
     chunk_count: int = Field(0, description="Number of chunks created")
-    processing_time: Optional[float] = Field(None, description="Processing time in seconds")
+    processing_time: Optional[float] = Field(
+        None, description="Processing time in seconds"
+    )
     error_message: Optional[str] = Field(None, description="Error message if failed")
     created_at: datetime = Field(..., description="Document creation time")
     updated_at: datetime = Field(..., description="Document last update time")
-    
+
     # Background task information
     task_id: Optional[str] = Field(None, description="Background task ID")
     task_status: Optional[str] = Field(None, description="Background task status")
@@ -195,7 +199,7 @@ class DocumentSearchResponse(BaseResponse):
 
 class BackgroundTaskResponse(BaseModel):
     """Response schema for background task operations."""
-    
+
     message: str
     task_id: str
     document_id: str
@@ -206,7 +210,7 @@ class BackgroundTaskResponse(BaseModel):
 
 class ProcessingConfigRequest(BaseModel):
     """Request schema for processing configuration."""
-    
+
     chunk_size: Optional[int] = Field(None, ge=100, le=4000)
     chunk_overlap: Optional[int] = Field(None, ge=0, le=1000)
     enable_metadata_embedding: Optional[bool] = None
@@ -218,6 +222,6 @@ class ProcessingConfigRequest(BaseModel):
 
 class ProcessingConfigResponse(BaseModel):
     """Response schema for processing configuration."""
-    
+
     message: str
     config: Dict[str, Any]

@@ -45,20 +45,20 @@ class FastMCPClientService:
 
     This service manages connections to MCP servers using FastMCP and provides
     an interface for tool discovery and execution with unified error handling.
-    
+
     Key Features:
     - Consistent error handling via @handle_api_errors decorator
-    - Retry logic and caching through middleware decorators  
+    - Retry logic and caching through middleware decorators
     - Structured logging for all tool operations
     - Integration with UnifiedToolExecutor for consistent tool calling patterns
     - Automatic server connection management and health monitoring
-    
+
     Architecture:
     - Uses decorators instead of manual try/catch blocks
     - Centralized retry and caching logic through middleware
     - Full async/await support throughout
     - Proper exception handling and logging
-    
+
     Tool Operations:
     - call_tool(): Execute individual tools with unified patterns
     - execute_tool_calls(): Batch tool execution for OpenAI integration
@@ -116,7 +116,10 @@ class FastMCPClientService:
                     "mcpServers": {
                         "filesystem": {
                             "command": "npx",
-                            "args": ["@modelcontextprotocol/server-filesystem", "/tmp/mcp_workspace"],
+                            "args": [
+                                "@modelcontextprotocol/server-filesystem",
+                                "/tmp/mcp_workspace",
+                            ],
                             "env": {},
                         }
                     }
@@ -130,7 +133,7 @@ class FastMCPClientService:
 
         try:
             successful_connections = 0
-            
+
             # Try to connect to configured servers
             for server_name, server in self.servers.items():
                 try:
@@ -138,13 +141,15 @@ class FastMCPClientService:
                     successful_connections += 1
                     logger.info(f"✅ Connected to MCP server: {server_name}")
                 except Exception as e:
-                    logger.error(f"❌ Failed to connect to MCP server {server_name}: {e}")
+                    logger.error(
+                        f"❌ Failed to connect to MCP server {server_name}: {e}"
+                    )
                     # Don't fail completely - continue with other servers
 
             # If no servers connected but we have clients, try to discover tools
             if successful_connections == 0 and self.clients:
                 logger.warning("No configured servers connected, using fallback")
-            
+
             # Discover available tools from connected clients
             await self._discover_tools()
 
@@ -188,7 +193,9 @@ class FastMCPClientService:
                 logger.info(f"Successfully configured MCP server: {server_name}")
 
         except asyncio.TimeoutError:
-            logger.error(f"Timeout connecting to MCP server {server_name} after {server.timeout}s")
+            logger.error(
+                f"Timeout connecting to MCP server {server_name} after {server.timeout}s"
+            )
             raise
         except Exception as e:
             logger.error(f"Failed to connect to MCP server {server_name}: {e}")
@@ -284,7 +291,7 @@ class FastMCPClientService:
         retry_config=RetryConfig(max_retries=3),
         cache_ttl=300,
         enable_caching=True,
-        log_details=True
+        log_details=True,
     )
     async def call_tool(
         self, tool_name: str, parameters: Dict[str, Any]

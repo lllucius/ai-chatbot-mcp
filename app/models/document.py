@@ -136,7 +136,7 @@ class Document(BaseModelDB):
         cascade="all, delete-orphan",
         doc="Text chunks from this document",
     )
-    
+
     # Table arguments for indexes
     __table_args__ = (
         # Performance indexes
@@ -145,13 +145,11 @@ class Document(BaseModelDB):
         Index("idx_documents_file_type", "file_type"),
         Index("idx_documents_created_at", "created_at"),
         Index("idx_documents_updated_at", "updated_at"),
-        
         # Composite indexes for common queries
         Index("idx_documents_owner_status", "owner_id", "status"),
         Index("idx_documents_owner_type", "owner_id", "file_type"),
         Index("idx_documents_owner_created", "owner_id", "created_at"),
         Index("idx_documents_status_created", "status", "created_at"),
-        
         # Search indexes
         Index("idx_documents_title", "title"),
         Index("idx_documents_filename", "filename"),
@@ -218,26 +216,23 @@ class DocumentChunk(BaseModelDB):
     document: Mapped["Document"] = relationship(
         "Document", back_populates="chunks", doc="Parent document for this chunk"
     )
-    
+
     # Table arguments for indexes
     __table_args__ = (
         # Performance indexes
         Index("idx_chunks_document_id", "document_id"),
         Index("idx_chunks_chunk_index", "chunk_index"),
         Index("idx_chunks_created_at", "created_at"),
-        
         # Composite indexes for common queries
         Index("idx_chunks_document_index", "document_id", "chunk_index"),
         Index("idx_chunks_document_created", "document_id", "created_at"),
-        
         # Search and filtering indexes
         Index("idx_chunks_token_count", "token_count"),
         Index("idx_chunks_language", "language"),
         Index("idx_chunks_embedding_model", "embedding_model"),
-        
         # Vector search optimization (if using pgvector extensions)
         # Note: Vector indexes should be created manually after table creation
-        # CREATE INDEX CONCURRENTLY idx_chunks_embedding_cosine ON document_chunks 
+        # CREATE INDEX CONCURRENTLY idx_chunks_embedding_cosine ON document_chunks
         # USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
     )
 

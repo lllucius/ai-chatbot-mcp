@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
         # Initialize FastMCP and UnifiedToolExecutor
         try:
             from .core.tool_executor import get_unified_tool_executor
-            
+
             await get_unified_tool_executor()
             logger.info("UnifiedToolExecutor initialized successfully")
         except Exception as e:
@@ -158,9 +158,7 @@ app.openapi = custom_openapi
 
 
 # Rate limiting middleware (add before other middleware)
-app.add_middleware(
-    lambda request, call_next: rate_limit_middleware(request, call_next)
-)
+app.add_middleware(lambda request, call_next: rate_limit_middleware(request, call_next))
 
 # Input validation middleware (add before other middleware)
 app.add_middleware(
@@ -173,20 +171,20 @@ app.add_middleware(
 async def add_process_time_header(request: Request, call_next):
     """Add processing time header to responses and record metrics."""
     start_time = time.time()
-    
+
     response = await call_next(request)
-    
+
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(f"{process_time:.4f}")
-    
+
     # Record performance metric
     record_request_metric(
         path=request.url.path,
         method=request.method,
         status_code=response.status_code,
-        duration=process_time
+        duration=process_time,
     )
-    
+
     return response
 
 

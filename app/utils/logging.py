@@ -164,31 +164,31 @@ class StructuredLogger:
     def debug(self, message: str, **kwargs):
         """Log debug message with structured data."""
         self._log_with_context("debug", message, **kwargs)
-    
+
     def _log_with_context(self, level: str, message: str, **kwargs):
         """
         Internal method to log with consistent formatting.
-        
+
         Args:
             level: Log level (info, warning, error, debug)
             message: Primary log message
             **kwargs: Additional structured data
         """
         log_method = getattr(self.logger, level)
-        
+
         if kwargs:
             # Create structured data string
             extra_data = " | ".join([f"{k}={v}" for k, v in kwargs.items()])
             formatted_message = f"{message} | {extra_data}"
         else:
             formatted_message = message
-            
+
         log_method(formatted_message)
-    
+
     def log_operation(self, operation: str, status: str = "started", **kwargs):
         """
         Log service operations with consistent format.
-        
+
         Args:
             operation: Name of the operation
             status: Status of operation (started, completed, failed)
@@ -196,18 +196,18 @@ class StructuredLogger:
         """
         level = "info" if status != "failed" else "error"
         self._log_with_context(
-            level, 
-            f"Operation {operation} {status}", 
+            level,
+            f"Operation {operation} {status}",
             operation=operation,
             status=status,
             service=self.name,
-            **kwargs
+            **kwargs,
         )
-    
+
     def log_performance(self, operation: str, duration_ms: float, **kwargs):
         """
         Log performance metrics for operations.
-        
+
         Args:
             operation: Name of the operation
             duration_ms: Duration in milliseconds
@@ -219,20 +219,20 @@ class StructuredLogger:
             duration_ms=duration_ms,
             performance_type="timing",
             service=self.name,
-            **kwargs
+            **kwargs,
         )
 
 
 def get_service_logger(service_name: str) -> StructuredLogger:
     """
     Get a standardized logger for service classes.
-    
+
     This is the recommended way to create loggers for service classes
     to ensure consistent logging patterns across the application.
-    
+
     Args:
         service_name: Name of the service (typically class name)
-        
+
     Returns:
         StructuredLogger: Configured logger instance
     """
@@ -242,10 +242,10 @@ def get_service_logger(service_name: str) -> StructuredLogger:
 def get_api_logger(endpoint_name: str) -> StructuredLogger:
     """
     Get a standardized logger for API endpoints.
-    
+
     Args:
         endpoint_name: Name of the API endpoint
-        
+
     Returns:
         StructuredLogger: Configured logger instance
     """
@@ -255,10 +255,10 @@ def get_api_logger(endpoint_name: str) -> StructuredLogger:
 def get_component_logger(component_name: str) -> StructuredLogger:
     """
     Get a standardized logger for application components.
-    
+
     Args:
         component_name: Name of the component
-        
+
     Returns:
         StructuredLogger: Configured logger instance
     """

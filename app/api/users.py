@@ -80,7 +80,7 @@ async def get_my_profile(
         }
     """
     log_api_call("get_my_profile", user_id=str(current_user.id))
-    
+
     profile = await user_service.get_user_profile(current_user.id)
     return profile
 

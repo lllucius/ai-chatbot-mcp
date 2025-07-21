@@ -38,24 +38,22 @@ async def test_db() -> AsyncGenerator[AsyncSession, None]:
         TEST_DATABASE_URL,
         echo=False,
         poolclass=StaticPool,
-        connect_args={"check_same_thread": False}
+        connect_args={"check_same_thread": False},
     )
-    
+
     # Create session maker
     async_session_maker = async_sessionmaker(
-        bind=engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        bind=engine, class_=AsyncSession, expire_on_commit=False
     )
-    
+
     # Create tables
     async with engine.begin() as conn:
         await conn.run_sync(BaseModelDB.metadata.create_all)
-    
+
     # Create session
     async with async_session_maker() as session:
         yield session
-    
+
     # Clean up
     await engine.dispose()
 
@@ -71,34 +69,31 @@ async def authenticated_client(test_db: AsyncSession) -> TestClient:
     """Create a test client with authenticated user."""
     # Override the database dependency
     app.dependency_overrides[get_db] = lambda: test_db
-    
+
     client = TestClient(app)
-    
+
     # Create a test user and authenticate
     user_data = {
         "username": "testuser",
         "email": "test@example.com",
         "password": "TestPass123!",
-        "full_name": "Test User"
+        "full_name": "Test User",
     }
-    
+
     # Register user
     response = client.post("/api/v1/auth/register", json=user_data)
     assert response.status_code == 201
-    
+
     # Login to get token
-    login_data = {
-        "username": "testuser",
-        "password": "TestPass123!"
-    }
+    login_data = {"username": "testuser", "password": "TestPass123!"}
     response = client.post("/api/v1/auth/login", json=login_data)
     assert response.status_code == 200
-    
+
     token = response.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
-    
+
     yield client
-    
+
     # Clean up
     app.dependency_overrides.clear()
 
@@ -110,7 +105,7 @@ def sample_user_data() -> dict:
         "username": "sampleuser",
         "email": "sample@example.com",
         "password": "SamplePass123!",
-        "full_name": "Sample User"
+        "full_name": "Sample User",
     }
 
 
@@ -121,7 +116,7 @@ def sample_document_data() -> dict:
         "title": "Sample Document",
         "content": "This is a sample document for testing purposes.",
         "file_type": "txt",
-        "file_size": 100
+        "file_size": 100,
     }
 
 
@@ -131,38 +126,37 @@ def sample_conversation_data() -> dict:
     return {
         "title": "Test Conversation",
         "user_message": "Hello, how are you?",
-        "use_rag": False
+        "use_rag": False,
     }
 
 
 class TestDataFactory:
     """Factory class for creating test data."""
-    
+
     @staticmethod
     def create_user_data(
         username: str = "testuser",
         email: str = "test@example.com",
-        password: str = "TestPass123!"
+        password: str = "TestPass123!",
     ) -> dict:
         """Create user data for testing."""
         return {
             "username": username,
             "email": email,
             "password": password,
-            "full_name": f"Test {username.title()}"
+            "full_name": f"Test {username.title()}",
         }
-    
+
     @staticmethod
     def create_document_data(
-        title: str = "Test Document",
-        content: str = "Test content"
+        title: str = "Test Document", content: str = "Test content"
     ) -> dict:
         """Create document data for testing."""
         return {
             "title": title,
             "content": content,
             "file_type": "txt",
-            "file_size": len(content)
+            "file_size": len(content),
         }
 
 

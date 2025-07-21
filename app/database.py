@@ -58,7 +58,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         session = AsyncSessionLocal()
         # Test connection health
         await session.execute(text("SELECT 1"))
-        
+
         yield session
         await session.commit()
     except (DisconnectionError, OperationalError) as e:
@@ -95,7 +95,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def health_check_db() -> bool:
     """
     Check database connectivity and health.
-    
+
     Returns:
         bool: True if database is healthy
     """
@@ -103,17 +103,17 @@ async def health_check_db() -> bool:
         async with AsyncSessionLocal() as session:
             # Test basic connectivity
             await session.execute(text("SELECT 1"))
-            
+
             # Test pgvector extension
             result = await session.execute(
                 text("SELECT extname FROM pg_extension WHERE extname = 'vector'")
             )
             vector_enabled = result.scalar() is not None
-            
+
             if not vector_enabled:
                 logger.warning("pgvector extension is not enabled")
                 return False
-                
+
             return True
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
@@ -135,18 +135,20 @@ async def init_db() -> None:
 
                 # Create all tables
                 await conn.run_sync(BaseModelDB.metadata.create_all)
-                
+
                 # Verify pgvector is working
                 await conn.execute(text("SELECT '[1,2,3]'::vector"))
-                
+
                 logger.info("Database initialized successfully")
                 return
 
         except Exception as e:
-            logger.error(f"Failed to initialize database (attempt {attempt + 1}/{max_retries}): {e}")
+            logger.error(
+                f"Failed to initialize database (attempt {attempt + 1}/{max_retries}): {e}"
+            )
             if attempt == max_retries - 1:
                 raise
-            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+            await asyncio.sleep(2**attempt)  # Exponential backoff
 
 
 async def close_db() -> None:

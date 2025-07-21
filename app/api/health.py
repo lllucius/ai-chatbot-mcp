@@ -127,12 +127,12 @@ async def _check_cache_health() -> Dict[str, Any]:
         # Test cache functionality
         test_key = "health_check_test"
         test_value = "test_data"
-        
+
         # Test set/get operations on each cache
         await embedding_cache.set(test_key, test_value, ttl=60)
         retrieved = await embedding_cache.get(test_key)
         await embedding_cache.delete(test_key)
-        
+
         if retrieved != test_value:
             return {
                 "status": "unhealthy",
@@ -143,7 +143,7 @@ async def _check_cache_health() -> Dict[str, Any]:
         # Calculate overall cache health
         total_hit_rate = 0
         total_requests = 0
-        
+
         for cache_name, stats in cache_stats.items():
             total_requests += stats["hits"] + stats["misses"]
             if stats["hits"] + stats["misses"] > 0:

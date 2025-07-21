@@ -101,7 +101,9 @@ class MessageBase(BaseSchema):
     role: constr(pattern="^(user|assistant|system)$") = Field(
         ..., description="Message role"
     )
-    content: constr(min_length=1, max_length=10000) = Field(..., description="Message content")
+    content: constr(min_length=1, max_length=10000) = Field(
+        ..., description="Message content"
+    )
 
 
 class MessageCreate(MessageBase):
@@ -200,7 +202,7 @@ class ChatRequest(BaseSchema):
                 "use_tools": True,
                 "rag_documents": [
                     "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-                    "5c50a4ea-1111-49ed-bd96-31c0b971e319"
+                    "5c50a4ea-1111-49ed-bd96-31c0b971e319",
                 ],
                 "max_tokens": 1000,
                 "temperature": 0.7,

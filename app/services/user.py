@@ -45,7 +45,7 @@ class UserService(BaseService):
     This service extends BaseService to provide user-specific functionality
     including CRUD operations, profile management, statistics generation,
     and user-related business logic with enhanced logging and error handling.
-    
+
     Responsibilities:
     - User profile retrieval with embedded statistics
     - User information updates with validation
@@ -79,7 +79,7 @@ class UserService(BaseService):
         Returns:
             User: Complete user profile with embedded statistics including:
                 - Basic profile information (username, email, full_name)
-                - Account status and permissions 
+                - Account status and permissions
                 - Timestamps (created_at, updated_at, last_login)
                 - Activity statistics (document_count, conversation_count, total_messages)
 
@@ -94,16 +94,18 @@ class UserService(BaseService):
         """
         operation = "get_user_profile"
         self._log_operation_start(operation, user_id=str(user_id))
-        
+
         try:
             await self._ensure_db_session()
-            
+
             # Get user basic information
             user_result = await self.db.execute(select(User).where(User.id == user_id))
             user = user_result.scalar_one_or_none()
 
             if not user:
-                self.logger.warning("User not found", user_id=str(user_id), operation=operation)
+                self.logger.warning(
+                    "User not found", user_id=str(user_id), operation=operation
+                )
                 raise NotFoundError(f"User not found with ID: {user_id}")
 
             # Get user activity statistics in parallel for better performance
@@ -113,7 +115,9 @@ class UserService(BaseService):
             document_count = doc_count_result.scalar() or 0
 
             conv_count_result = await self.db.execute(
-                select(func.count(Conversation.id)).where(Conversation.user_id == user_id)
+                select(func.count(Conversation.id)).where(
+                    Conversation.user_id == user_id
+                )
             )
             conversation_count = conv_count_result.scalar() or 0
 
@@ -141,16 +145,16 @@ class UserService(BaseService):
             }
 
             self._log_operation_success(
-                operation, 
+                operation,
                 user_id=str(user_id),
                 username=user.username,
                 document_count=document_count,
                 conversation_count=conversation_count,
-                total_messages=total_messages
+                total_messages=total_messages,
             )
-            
+
             return User.model_validate(profile_data)
-            
+
         except NotFoundError:
             raise
         except Exception as e:
@@ -183,17 +187,17 @@ class UserService(BaseService):
             >>> print(f"Updated user email to: {updated_user.email}")
         """
         operation = "update_user"
-        update_fields = {k: v for k, v in user_update.model_dump().items() if v is not None}
-        
+        update_fields = {
+            k: v for k, v in user_update.model_dump().items() if v is not None
+        }
+
         self._log_operation_start(
-            operation, 
-            user_id=str(user_id),
-            update_fields=list(update_fields.keys())
+            operation, user_id=str(user_id), update_fields=list(update_fields.keys())
         )
-        
+
         try:
             await self._ensure_db_session()
-            
+
             # Get existing user
             user_result = await self.db.execute(select(User).where(User.id == user_id))
             user = user_result.scalar_one_or_none()
@@ -211,22 +215,24 @@ class UserService(BaseService):
                 )
                 if existing_email.scalar_one_or_none():
                     self.logger.warning(
-                        "Email already in use", 
-                        email=user_update.email, 
-                        user_id=str(user_id)
+                        "Email already in use",
+                        email=user_update.email,
+                        user_id=str(user_id),
                     )
-                    raise ValidationError(f"Email {user_update.email} is already in use")
+                    raise ValidationError(
+                        f"Email {user_update.email} is already in use"
+                    )
 
             # Apply updates only for non-None fields
             original_values = {}
             if user_update.email is not None:
-                original_values['email'] = user.email
+                original_values["email"] = user.email
                 user.email = user_update.email
             if user_update.full_name is not None:
-                original_values['full_name'] = user.full_name
+                original_values["full_name"] = user.full_name
                 user.full_name = user_update.full_name
             if user_update.is_active is not None:
-                original_values['is_active'] = user.is_active
+                original_values["is_active"] = user.is_active
                 user.is_active = user_update.is_active
 
             await self.db.commit()
@@ -237,19 +243,19 @@ class UserService(BaseService):
                 user_id=str(user_id),
                 username=user.username,
                 updated_fields=list(update_fields.keys()),
-                original_values=original_values
+                original_values=original_values,
             )
-            
+
             return user
-            
+
         except (NotFoundError, ValidationError):
             raise
         except Exception as e:
             self._log_operation_error(
-                operation, 
-                e, 
+                operation,
+                e,
                 user_id=str(user_id),
-                update_fields=list(update_fields.keys())
+                update_fields=list(update_fields.keys()),
             )
             # Rollback transaction on error
             await self.db.rollback()
@@ -292,24 +298,26 @@ class UserService(BaseService):
         """
         operation = "change_password"
         self._log_operation_start(operation, user_id=str(user_id))
-        
+
         try:
             await self._ensure_db_session()
-            
+
             # Get user for password verification
             user_result = await self.db.execute(select(User).where(User.id == user_id))
             user = user_result.scalar_one_or_none()
 
             if not user:
-                self.logger.warning("User not found for password change", user_id=str(user_id))
+                self.logger.warning(
+                    "User not found for password change", user_id=str(user_id)
+                )
                 raise NotFoundError(f"User not found with ID: {user_id}")
 
             # Verify current password for security
             if not verify_password(current_password, user.hashed_password):
                 self.logger.warning(
-                    "Invalid current password provided", 
+                    "Invalid current password provided",
                     user_id=str(user_id),
-                    username=user.username
+                    username=user.username,
                 )
                 raise AuthenticationError("Current password is incorrect")
 
@@ -318,13 +326,11 @@ class UserService(BaseService):
             await self.db.commit()
 
             self._log_operation_success(
-                operation,
-                user_id=str(user_id),
-                username=user.username
+                operation, user_id=str(user_id), username=user.username
             )
-            
+
             return True
-            
+
         except (NotFoundError, AuthenticationError):
             raise
         except Exception as e:

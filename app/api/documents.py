@@ -61,32 +61,33 @@ async def upload_document(
 ) -> DocumentUploadResponse:
     """
     Upload a document for processing.
-    
+
     Enhanced with auto-processing option and priority control.
     """
     try:
         # Create document
         document = await service.create_document(file, title, user.id)
-        
+
         task_id = None
         if auto_process:
             # Start background processing
             task_id = await service.start_processing(
-                document.id, 
-                priority=processing_priority
+                document.id, priority=processing_priority
             )
-        
+
         return DocumentUploadResponse(
             message="Document uploaded successfully",
             document=DocumentResponse.model_validate(document),
             task_id=task_id,
-            auto_processing=auto_process
+            auto_processing=auto_process,
         )
-        
+
     except (ValidationError, DocumentError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload failed"
+        )
 
 
 @router.get("/", response_model=PaginatedResponse[DocumentResponse])
@@ -313,27 +314,31 @@ async def download_document(
 @handle_api_errors("Failed to start document processing", log_errors=True)
 async def start_document_processing(
     document_id: UUID,
-    priority: int = Query(default=5, ge=1, le=10, description="Processing priority (1=highest, 10=lowest)"),
+    priority: int = Query(
+        default=5, ge=1, le=10, description="Processing priority (1=highest, 10=lowest)"
+    ),
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> BackgroundTaskResponse:
     """
     Start background processing for a document.
-    
+
     Initiates text extraction, chunking, and embedding generation.
     """
     try:
         task_id = await service.start_processing(document_id, priority=priority)
-        
+
         return BackgroundTaskResponse(
             message="Document processing started",
             task_id=task_id,
             document_id=str(document_id),
-            status="queued"
+            status="queued",
         )
-        
+
     except NotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -342,32 +347,35 @@ async def start_document_processing(
 @handle_api_errors("Failed to get processing status", log_errors=True)
 async def get_enhanced_processing_status(
     document_id: UUID,
-    task_id: Optional[str] = Query(None, description="Optional task ID for background processing details"),
+    task_id: Optional[str] = Query(
+        None, description="Optional task ID for background processing details"
+    ),
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> ProcessingStatusResponse:
     """
     Get comprehensive document processing status with background task information.
-    
+
     Includes both document status and background task progress details.
     """
     try:
         status_info = await service.get_processing_status(document_id, task_id)
-        
+
         return ProcessingStatusResponse(
-            message="Enhanced processing status retrieved",
-            **status_info
+            message="Enhanced processing status retrieved", **status_info
         )
-        
+
     except NotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
 
 
 @router.get("/processing-config", response_model=ProcessingConfigResponse)
 async def get_processing_config() -> ProcessingConfigResponse:
     """
     Get current document processing configuration.
-    
+
     Returns the current settings for chunk sizes, overlaps, and other processing parameters.
     """
     return ProcessingConfigResponse(
@@ -386,8 +394,8 @@ async def get_processing_config() -> ProcessingConfigResponse:
             "language_detection": settings.language_detection,
             "max_concurrent_processing": settings.max_concurrent_processing,
             "processing_timeout": settings.processing_timeout,
-            "supported_formats": settings.allowed_file_types
-        }
+            "supported_formats": settings.allowed_file_types,
+        },
     )
 
 
@@ -399,13 +407,10 @@ async def get_queue_status(
 ):
     """
     Get background processing queue status.
-    
+
     Provides information about current queue size, active tasks, and processing capacity.
     """
     background_processor = await get_background_processor(db)
     queue_status = await background_processor.get_queue_status()
-    
-    return {
-        "message": "Queue status retrieved",
-        **queue_status
-    }
+
+    return {"message": "Queue status retrieved", **queue_status}

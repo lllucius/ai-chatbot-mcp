@@ -106,6 +106,7 @@ class DocumentResponse(BaseModel):
     mime_type: Optional[str] = None
     metainfo: Optional[Dict[str, Any]] = None
 
+
 class DocumentUploadResponse(BaseResponse):
     document: DocumentResponse
     processing_started: bool
@@ -374,9 +375,7 @@ class UsersClient:
                 "superuser_only": superuser_only,
             }
         )
-        return self.sdk._request(
-            "/api/v1/users/users/", UserResponse, params=params
-        )
+        return self.sdk._request("/api/v1/users/users/", UserResponse, params=params)
 
     def get(self, user_id: int) -> UserResponse:
         return self.sdk._request(f"/api/v1/users/users/{user_id}", UserResponse)
@@ -478,7 +477,7 @@ class ConversationsClient:
             "/api/v1/conversations/conversations/",
             ConversationResponse,
             method="POST",
-            json=data.model_dump(mode="json")
+            json=data.model_dump(mode="json"),
         )
 
     def list(

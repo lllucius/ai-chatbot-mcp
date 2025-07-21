@@ -28,7 +28,6 @@ from app.services.user import UserService
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-
 console = Console()
 
 # Create the main Typer app with minimal configuration

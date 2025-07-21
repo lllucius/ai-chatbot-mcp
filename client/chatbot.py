@@ -2,12 +2,7 @@ import sys
 import threading
 import time
 
-from ai_chatbot_sdk import (
-    AIChatbotSDK,
-    ApiError,
-    ChatRequest,
-    ConversationCreate
-)
+from ai_chatbot_sdk import AIChatbotSDK, ApiError, ChatRequest, ConversationCreate
 
 # --- CONFIGURE THESE ---
 API_BASE_URL = "http://localhost:8000"  # Change to your backend

@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RequestMetric:
     """Data class for request metrics."""
+
     path: str
     method: str
     status_code: int
@@ -35,6 +36,7 @@ class RequestMetric:
 @dataclass
 class SystemMetrics:
     """Data class for system metrics."""
+
     cpu_percent: float
     memory_percent: float
     memory_used_gb: float
@@ -47,35 +49,41 @@ class SystemMetrics:
 
 class PerformanceMonitor:
     """Enhanced system performance monitoring with comprehensive metrics collection."""
-    
+
     def __init__(self, history_size: int = 100):
         """
         Initialize performance monitor.
-        
+
         Args:
             history_size: Number of historical data points to keep
         """
         self.history_size = history_size
-        self.metrics_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=history_size))
+        self.metrics_history: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=history_size)
+        )
         self.request_metrics: Dict[str, List[float]] = defaultdict(list)
-        self.document_processing_metrics: Dict[str, Any] = defaultdict(lambda: {"count": 0, "total_time": 0, "errors": 0})
-        self.embedding_metrics: Dict[str, Any] = defaultdict(lambda: {"count": 0, "total_time": 0, "tokens": 0})
+        self.document_processing_metrics: Dict[str, Any] = defaultdict(
+            lambda: {"count": 0, "total_time": 0, "errors": 0}
+        )
+        self.embedding_metrics: Dict[str, Any] = defaultdict(
+            lambda: {"count": 0, "total_time": 0, "tokens": 0}
+        )
         self.start_time = time.time()
-        
+
         logger.info("Enhanced performance monitor initialized")
 
     def record_request(self, metric: RequestMetric) -> None:
         """Record a request metric."""
         self.request_metrics.append(metric)
-        
+
         # Update counts
         endpoint_key = f"{metric.method} {metric.path}"
         self.request_counts[endpoint_key] += 1
-        
+
         if metric.status_code >= 400:
             self.error_counts[endpoint_key] += 1
             self.error_requests.append(metric)
-        
+
         # Track slow requests (>1 second)
         if metric.duration > 1.0:
             self.slow_requests.append(metric)
@@ -86,7 +94,7 @@ class PerformanceMonitor:
             cpu_percent = psutil.cpu_percent(interval=None)
             memory = psutil.virtual_memory()
             disk = psutil.disk_usage("/")
-            
+
             metric = SystemMetrics(
                 cpu_percent=cpu_percent,
                 memory_percent=memory.percent,
@@ -95,11 +103,11 @@ class PerformanceMonitor:
                 disk_percent=(disk.used / disk.total) * 100,
                 disk_used_gb=disk.used / (1024**3),
                 disk_free_gb=disk.free / (1024**3),
-                timestamp=time.time()
+                timestamp=time.time(),
             )
-            
+
             self.system_metrics.append(metric)
-            
+
         except Exception as e:
             logger.error(f"Failed to record system metrics: {e}")
 
@@ -107,10 +115,9 @@ class PerformanceMonitor:
         """Get request statistics for the last N minutes."""
         cutoff_time = time.time() - (minutes * 60)
         recent_requests = [
-            metric for metric in self.request_metrics 
-            if metric.timestamp >= cutoff_time
+            metric for metric in self.request_metrics if metric.timestamp >= cutoff_time
         ]
-        
+
         if not recent_requests:
             return {
                 "total_requests": 0,
@@ -119,18 +126,18 @@ class PerformanceMonitor:
                 "slowest_duration": 0.0,
                 "requests_per_minute": 0.0,
             }
-        
+
         # Calculate statistics
         total_requests = len(recent_requests)
         error_requests = sum(1 for r in recent_requests if r.status_code >= 400)
         error_rate = error_requests / total_requests if total_requests > 0 else 0
-        
+
         durations = [r.duration for r in recent_requests]
         avg_duration = sum(durations) / len(durations)
         slowest_duration = max(durations)
-        
+
         requests_per_minute = total_requests / minutes if minutes > 0 else 0
-        
+
         return {
             "total_requests": total_requests,
             "error_requests": error_requests,
@@ -143,33 +150,33 @@ class PerformanceMonitor:
     def get_endpoint_stats(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get top endpoints by request count."""
         sorted_endpoints = sorted(
-            self.request_counts.items(), 
-            key=lambda x: x[1], 
-            reverse=True
+            self.request_counts.items(), key=lambda x: x[1], reverse=True
         )[:limit]
-        
+
         endpoint_stats = []
         for endpoint, count in sorted_endpoints:
             errors = self.error_counts.get(endpoint, 0)
             error_rate = errors / count if count > 0 else 0
-            
-            endpoint_stats.append({
-                "endpoint": endpoint,
-                "requests": count,
-                "errors": errors,
-                "error_rate": error_rate,
-            })
-        
+
+            endpoint_stats.append(
+                {
+                    "endpoint": endpoint,
+                    "requests": count,
+                    "errors": errors,
+                    "error_rate": error_rate,
+                }
+            )
+
         return endpoint_stats
 
     def get_system_stats(self) -> Dict[str, Any]:
         """Get current system statistics."""
         if not self.system_metrics:
             return {}
-        
+
         latest = self.system_metrics[-1]
         uptime = time.time() - self.start_time
-        
+
         return {
             "cpu_percent": latest.cpu_percent,
             "memory_percent": latest.memory_percent,
@@ -185,27 +192,27 @@ class PerformanceMonitor:
         """Get overall system health summary."""
         request_stats = self.get_request_stats(60)  # Last 60 minutes
         system_stats = self.get_system_stats()
-        
+
         # Determine health status
         health_issues = []
-        
+
         if request_stats.get("error_rate", 0) > 0.1:  # >10% error rate
             health_issues.append("High error rate")
-        
+
         if request_stats.get("avg_duration", 0) > 2.0:  # >2 second avg response
             health_issues.append("Slow response times")
-        
+
         if system_stats.get("cpu_percent", 0) > 80:
             health_issues.append("High CPU usage")
-        
+
         if system_stats.get("memory_percent", 0) > 85:
             health_issues.append("High memory usage")
-        
+
         if system_stats.get("disk_percent", 0) > 90:
             health_issues.append("Low disk space")
-        
+
         status = "unhealthy" if health_issues else "healthy"
-        
+
         return {
             "status": status,
             "issues": health_issues,
@@ -222,12 +229,13 @@ performance_monitor = PerformanceMonitor()
 
 async def start_system_monitoring():
     """Start background task for system monitoring."""
+
     async def monitoring_loop():
         while True:
             try:
                 await asyncio.sleep(60)  # Record every minute
                 performance_monitor.record_system_metrics()
-                
+
                 # Log health summary every 30 minutes
                 if int(time.time()) % 1800 == 0:  # Every 30 minutes
                     health = performance_monitor.get_health_summary()
@@ -235,10 +243,10 @@ async def start_system_monitoring():
                         logger.warning(f"Health issues detected: {health['issues']}")
                     else:
                         logger.info("System health check: All systems operational")
-                        
+
             except Exception as e:
                 logger.error(f"System monitoring failed: {e}")
-    
+
     asyncio.create_task(monitoring_loop())
     logger.info("System monitoring task started")
 
@@ -249,11 +257,11 @@ def record_request_metric(
     status_code: int,
     duration: float,
     memory_usage: Optional[float] = None,
-    cpu_usage: Optional[float] = None
+    cpu_usage: Optional[float] = None,
 ) -> None:
     """
     Record a request metric.
-    
+
     Args:
         path: Request path
         method: HTTP method
@@ -269,9 +277,9 @@ def record_request_metric(
         duration=duration,
         timestamp=time.time(),
         memory_usage=memory_usage,
-        cpu_usage=cpu_usage
+        cpu_usage=cpu_usage,
     )
-    
+
     performance_monitor.record_request(metric)
 
 

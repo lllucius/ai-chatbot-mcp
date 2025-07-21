@@ -59,7 +59,7 @@ class ConversationService(BaseService):
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
     and unified tool calling with enhanced logging and context management.
-    
+
     AI Capabilities:
     - Multi-turn conversations with context preservation
     - Integration with OpenAI GPT models for intelligent responses
@@ -67,17 +67,17 @@ class ConversationService(BaseService):
     - Unified tool calling through UnifiedToolExecutor integration
     - Token usage optimization and tracking
     - Response quality monitoring and analytics
-    
+
     Tool Integration:
     - Uses unified tool calling instead of manual tool management
     - Automatic tool availability and execution through OpenAI client
     - Proper tool call result handling and user feedback
     - Complete tool calling implementation (no TODOs remaining)
-    
+
     Responsibilities:
     - Conversation lifecycle management (create, update, archive)
     - Message processing and storage with metadata
-    - AI model orchestration and response generation  
+    - AI model orchestration and response generation
     - Document search integration for context enhancement
     - Usage analytics and performance monitoring
     - Error handling and recovery for AI operations
@@ -91,7 +91,7 @@ class ConversationService(BaseService):
             db: Database session for conversation operations
         """
         super().__init__(db, "conversation_service")
-        
+
         # Initialize AI and search services
         self.openai_client = OpenAIClient()
         self.search_service = SearchService(db)
@@ -300,10 +300,14 @@ class ConversationService(BaseService):
         try:
             # Get or create conversation
             if request.conversation_id:
-                conversation = await self.get_conversation(request.conversation_id, user_id)
+                conversation = await self.get_conversation(
+                    request.conversation_id, user_id
+                )
             else:
                 # Create new conversation
-                title = request.conversation_title or f"Chat {request.user_message[:50]}..."
+                title = (
+                    request.conversation_title or f"Chat {request.user_message[:50]}..."
+                )
                 conversation = await self.create_conversation(
                     ConversationCreate(title=title, is_active=True), user_id
                 )
@@ -455,7 +459,8 @@ class ConversationService(BaseService):
                 context.append(
                     {
                         "content": result.content,
-                        "source": result.document_title or f"Document {result.document_id}",
+                        "source": result.document_title
+                        or f"Document {result.document_id}",
                         "similarity": result.similarity_score,
                         "chunk_id": result.id,
                     }

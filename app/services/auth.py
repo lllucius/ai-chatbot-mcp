@@ -51,14 +51,14 @@ class AuthService(BaseService):
     This service extends BaseService to provide authentication-specific functionality
     including user registration, login/logout, password management, and JWT token
     lifecycle management with enhanced security and logging.
-    
+
     Security Features:
     - Secure password hashing with bcrypt
     - JWT token generation with configurable expiration
     - Username and email-based authentication
     - Protection against timing attacks
     - Comprehensive security event logging
-    
+
     Responsibilities:
     - User registration with validation and conflict detection
     - User authentication with multiple identifier support
@@ -75,7 +75,7 @@ class AuthService(BaseService):
             db: Database session for authentication operations
         """
         super().__init__(db, "auth_service")
-        
+
         # Authentication configuration from settings
         self.secret_key = settings.secret_key
         self.algorithm = settings.algorithm

@@ -53,8 +53,7 @@ async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
 @router.post("/register", response_model=UserResponse)
 @handle_api_errors("User registration failed")
 async def register(
-    request: RegisterRequest, 
-    auth_service: AuthService = Depends(get_auth_service)
+    request: RegisterRequest, auth_service: AuthService = Depends(get_auth_service)
 ):
     """
     Register a new user account with validation and conflict detection.
@@ -84,13 +83,13 @@ async def register(
         POST /api/v1/auth/register
         {
             "username": "johndoe",
-            "email": "john@example.com", 
+            "email": "john@example.com",
             "password": "SecurePassword123!",
             "full_name": "John Doe"
         }
     """
     log_api_call("register", username=request.username, email=request.email)
-    
+
     user = await auth_service.register_user(request)
     return UserResponse.model_validate(user)
 
@@ -98,8 +97,7 @@ async def register(
 @router.post("/login", response_model=Token)
 @handle_api_errors("User authentication failed")
 async def login(
-    request: LoginRequest, 
-    auth_service: AuthService = Depends(get_auth_service)
+    request: LoginRequest, auth_service: AuthService = Depends(get_auth_service)
 ):
     """
     Authenticate user and return JWT access token.
@@ -134,8 +132,10 @@ async def login(
         }
     """
     log_api_call("login", username=request.username)
-    
-    token_data = await auth_service.authenticate_user(request.username, request.password)
+
+    token_data = await auth_service.authenticate_user(
+        request.username, request.password
+    )
     return token_data
 
 
@@ -172,7 +172,7 @@ async def logout():
     """
     Logout current user (client-side token invalidation).
 
-    Since JWT tokens are stateless, this endpoint primarily serves as a 
+    Since JWT tokens are stateless, this endpoint primarily serves as a
     client-side logout indicator. Clients should discard their tokens
     after calling this endpoint.
 
@@ -228,7 +228,7 @@ async def refresh_token(
         Authorization: Bearer <current_jwt_token>
     """
     log_api_call("refresh_token", user_id=str(current_user.id))
-    
+
     token_data = auth_service.create_access_token({"sub": current_user.username})
     return token_data
 

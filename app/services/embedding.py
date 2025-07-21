@@ -57,8 +57,12 @@ class EmbeddingService:
             or getattr(DocumentChunk.__table__.c.embedding.type, "dim", None)
             or getattr(settings, "vector_dimension", 3072)
         )
-        self.batch_size: int = batch_size or getattr(settings, "embedding_batch_size", 100)
-        self.embedding_encoding: str = embedding_encoding or getattr(settings, "embedding_encoding", "base64")
+        self.batch_size: int = batch_size or getattr(
+            settings, "embedding_batch_size", 100
+        )
+        self.embedding_encoding: str = embedding_encoding or getattr(
+            settings, "embedding_encoding", "base64"
+        )
         self._embedding_cache: Dict[str, List[float]] = {}
 
     async def generate_embedding(self, text: str) -> Optional[List[float]]:
@@ -101,9 +105,7 @@ class EmbeddingService:
             return embedding
 
         except Exception as e:
-            logger.error(
-                f"Embedding generation failed for text: {e}", exc_info=True
-            )
+            logger.error(f"Embedding generation failed for text: {e}", exc_info=True)
             return None
 
     async def generate_embeddings_batch(
@@ -147,7 +149,9 @@ class EmbeddingService:
         try:
             for chunk_start in range(0, len(cleaned_texts), self.batch_size):
                 chunk = cleaned_texts[chunk_start : chunk_start + self.batch_size]
-                indices_chunk = text_indices[chunk_start : chunk_start + self.batch_size]
+                indices_chunk = text_indices[
+                    chunk_start : chunk_start + self.batch_size
+                ]
                 embeddings = await self.openai_client.generate_embeddings_batch(chunk)
                 for j, embedding in enumerate(embeddings):
                     idx = indices_chunk[j]
@@ -163,9 +167,7 @@ class EmbeddingService:
             return result
 
         except Exception as e:
-            logger.error(
-                f"Batch embedding generation failed: {e}", exc_info=True
-            )
+            logger.error(f"Batch embedding generation failed: {e}", exc_info=True)
             return [None] * len(texts)
 
     def compute_similarity(
@@ -197,9 +199,7 @@ class EmbeddingService:
             similarity = np.dot(vec1, vec2) / (norm1 * norm2)
             return float(np.clip(similarity, -1.0, 1.0))
         except Exception as e:
-            logger.error(
-                f"Similarity computation failed: {e}", exc_info=True
-            )
+            logger.error(f"Similarity computation failed: {e}", exc_info=True)
             return 0.0
 
     def compute_similarities_batch(
@@ -231,9 +231,13 @@ class EmbeddingService:
                 return [0.0] * len(embeddings)
 
             emb_matrix = np.array(
-                [emb if emb and len(emb) == len(query_embedding) else np.zeros_like(query_embedding)
-                 for emb in embeddings],
-                dtype=np.float32
+                [
+                    emb
+                    if emb and len(emb) == len(query_embedding)
+                    else np.zeros_like(query_embedding)
+                    for emb in embeddings
+                ],
+                dtype=np.float32,
             )
             query_vec = np.array(query_embedding, dtype=np.float32)
             query_norm = np.linalg.norm(query_vec)
@@ -241,14 +245,14 @@ class EmbeddingService:
             dot_products = np.dot(emb_matrix, query_vec)
             similarities = np.zeros(len(embeddings), dtype=np.float32)
             nonzero_mask = (emb_norms != 0) & (query_norm != 0)
-            similarities[nonzero_mask] = dot_products[nonzero_mask] / (emb_norms[nonzero_mask] * query_norm)
+            similarities[nonzero_mask] = dot_products[nonzero_mask] / (
+                emb_norms[nonzero_mask] * query_norm
+            )
             similarities = np.clip(similarities, -1.0, 1.0)
             similarities[~np.array(valid_mask)] = 0.0
             return similarities.tolist()
         except Exception as e:
-            logger.error(
-                f"Batch similarity computation failed: {e}", exc_info=True
-            )
+            logger.error(f"Batch similarity computation failed: {e}", exc_info=True)
             return [0.0] * len(embeddings)
 
     def _clean_text(self, text: str) -> str:
@@ -268,9 +272,7 @@ class EmbeddingService:
         if not text:
             return ""
         cleaned = " ".join(text.strip().split())
-        cleaned = "".join(
-            char for char in cleaned if ord(char) >= 32 or char in "\n\t"
-        )
+        cleaned = "".join(char for char in cleaned if ord(char) >= 32 or char in "\n\t")
         max_chars = 30000  # Conservative estimate for ~8000 tokens
         if len(cleaned) > max_chars:
             cleaned = cleaned[:max_chars]
@@ -297,9 +299,7 @@ class EmbeddingService:
             normalized = vec / norm
             return normalized.tolist()
         except Exception as e:
-            logger.error(
-                f"Embedding normalization failed: {e}", exc_info=True
-            )
+            logger.error(f"Embedding normalization failed: {e}", exc_info=True)
             return embedding
 
     def validate_embedding(self, embedding: Optional[List[float]]) -> bool:
@@ -330,7 +330,9 @@ class EmbeddingService:
         except Exception:
             return False
 
-    def _ensure_float32_and_shape(self, embedding: Optional[List[float]]) -> Optional[List[float]]:
+    def _ensure_float32_and_shape(
+        self, embedding: Optional[List[float]]
+    ) -> Optional[List[float]]:
         """
         Ensure the embedding is a float32 list of the correct shape.
 
@@ -374,9 +376,7 @@ class EmbeddingService:
                 "embedding_model": getattr(settings, "openai_embedding_model", None),
             }
         except Exception as e:
-            logger.error(
-                f"Failed to get embedding stats: {e}", exc_info=True
-            )
+            logger.error(f"Failed to get embedding stats: {e}", exc_info=True)
             return {
                 "total_embeddings": 0,
                 "documents_with_embeddings": 0,
@@ -402,21 +402,25 @@ class EmbeddingService:
             - Requires a suitable index (e.g., ivfflat/vector_cosine_ops) on document_chunks.embedding.
         """
         if not self.validate_embedding(query_embedding):
-            logger.warning("Query embedding is invalid or wrong dimension for search_similar_chunks")
+            logger.warning(
+                "Query embedding is invalid or wrong dimension for search_similar_chunks"
+            )
             return []
         try:
             # PGVector expects a python list of floats, matching the column type.
-            sql = text("""
+            sql = text(
+                """
                 SELECT * FROM document_chunks
                 WHERE embedding IS NOT NULL
                 ORDER BY embedding <-> :embedding
                 LIMIT :top_k
-            """)
-            result = await self.db.execute(sql, {"embedding": query_embedding, "top_k": top_k})
+            """
+            )
+            result = await self.db.execute(
+                sql, {"embedding": query_embedding, "top_k": top_k}
+            )
             # If using SQLAlchemy 2.x, use scalars().all(); adjust as per version
             return result.scalars().all()
         except Exception as e:
-            logger.error(
-                f"Similarity search in Postgres failed: {e}", exc_info=True
-            )
+            logger.error(f"Similarity search in Postgres failed: {e}", exc_info=True)
             return []
