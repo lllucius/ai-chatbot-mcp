@@ -61,7 +61,12 @@ class PerformanceMonitor:
         self.metrics_history: Dict[str, deque] = defaultdict(
             lambda: deque(maxlen=history_size)
         )
-        self.request_metrics: Dict[str, List[float]] = defaultdict(list)
+        self.request_metrics: List[RequestMetric] = []
+        self.request_counts: Dict[str, int] = defaultdict(int)
+        self.error_counts: Dict[str, int] = defaultdict(int)
+        self.error_requests: List[RequestMetric] = []
+        self.slow_requests: List[RequestMetric] = []
+        self.system_metrics: List[SystemMetrics] = []
         self.document_processing_metrics: Dict[str, Any] = defaultdict(
             lambda: {"count": 0, "total_time": 0, "errors": 0}
         )

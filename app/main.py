@@ -158,12 +158,16 @@ app.openapi = custom_openapi
 
 
 # Rate limiting middleware (add before other middleware)
-app.add_middleware(lambda request, call_next: rate_limit_middleware(request, call_next))
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    """Rate limiting middleware wrapper."""
+    return await rate_limit_middleware(request, call_next)
 
 # Input validation middleware (add before other middleware)
-app.add_middleware(
-    lambda request, call_next: validate_request_middleware(request, call_next)
-)
+@app.middleware("http")
+async def input_validation_middleware(request: Request, call_next):
+    """Input validation middleware wrapper."""
+    return await validate_request_middleware(request, call_next)
 
 
 # Request timing middleware with performance monitoring
@@ -365,6 +369,6 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=settings.debug,
-        log_level=settings.log_level.lower(),
+        log_level=str(settings.log_level).lower(),
         access_log=True,
     )
