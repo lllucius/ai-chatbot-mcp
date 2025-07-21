@@ -24,10 +24,11 @@ Updated on: 2025-01-20 20:40:00 UTC
 Current User: lllucius / assistant
 """
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
+from ..core.exceptions import ValidationError, NotFoundError
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..schemas.common import BaseResponse, PaginatedResponse

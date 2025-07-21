@@ -27,6 +27,7 @@ Updated on: 2025-01-20 20:10:00 UTC
 Current User: lllucius / assistant
 """
 
+import logging
 from uuid import UUID
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -47,6 +48,8 @@ from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
 from .base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class ConversationService(BaseService):

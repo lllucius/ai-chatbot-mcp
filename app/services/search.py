@@ -35,6 +35,7 @@ Updated on: 2025-01-20 20:15:00 UTC
 Current User: lllucius / assistant
 """
 
+import logging
 from typing import List, Dict, Tuple
 from uuid import UUID
 from time import time
@@ -47,6 +48,8 @@ from ..models.document import Document, DocumentChunk
 from ..schemas.document import DocumentChunkResponse, DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from .base import BaseService
+
+logger = logging.getLogger(__name__)
 
 # ----- In-memory LRU cache for embeddings -----
 class LRUCache:

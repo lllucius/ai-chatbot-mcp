@@ -10,7 +10,7 @@ Current User: lllucius
 
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from pgvector.sqlalchemy import Vector
 
@@ -20,6 +20,9 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import BaseModelDB
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class FileStatus(str, Enum):
