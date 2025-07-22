@@ -10,23 +10,21 @@ Provides comprehensive background task management functionality including:
 """
 
 import asyncio
-import subprocess
 import json
+import subprocess
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
-from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import typer
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import track
+from rich.table import Table
 
 from ..database import AsyncSessionLocal
 from ..models.document import Document, FileStatus
 from ..services.background_processor import BackgroundProcessor
-from .base import (
-    console, async_command, success_message, error_message, 
-    warning_message, info_message, format_timestamp
-)
+from .base import (async_command, console, error_message, format_timestamp,
+                   info_message, success_message, warning_message)
 
 # Create the background tasks app
 tasks_app = typer.Typer(help="Background task management commands")
@@ -82,8 +80,9 @@ def status():
             # Check Redis connection (if configured)
             try:
                 import redis
+
                 from ..config import settings
-                
+
                 # Try to connect to Redis
                 redis_client = redis.Redis.from_url("redis://localhost:6379/0")
                 redis_client.ping()
@@ -194,7 +193,7 @@ def queue():
     def _queue_info():
         try:
             import redis
-            
+
             # Connect to Redis
             redis_client = redis.Redis.from_url("redis://localhost:6379/0")
             
@@ -597,8 +596,8 @@ def stats():
     async def _task_stats():
         try:
             async with AsyncSessionLocal() as db:
-                from sqlalchemy import select, func
-                
+                from sqlalchemy import func, select
+
                 # Document processing statistics
                 total_docs = await db.scalar(select(func.count(Document.id)))
                 pending_docs = await db.scalar(

@@ -12,19 +12,21 @@ Provides comprehensive user management functionality including:
 import asyncio
 from datetime import datetime, timedelta
 from typing import List, Optional
+
 import typer
-from rich.table import Table
 from rich.prompt import Confirm, Prompt
-from sqlalchemy import func, select, and_, or_
+from rich.table import Table
+from sqlalchemy import and_, func, or_, select
 
 from ..database import AsyncSessionLocal
-from ..models.user import User
 from ..models.conversation import Conversation
 from ..models.document import Document
+from ..models.user import User
 from ..services.auth import AuthService
 from ..services.user import UserService
 from ..utils.security import get_password_hash
-from .base import console, async_command, success_message, error_message, warning_message, format_timestamp
+from .base import (async_command, console, error_message, format_timestamp,
+                   success_message, warning_message)
 
 # Create the user management app
 user_app = typer.Typer(help="User management commands")

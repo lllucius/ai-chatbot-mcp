@@ -3,10 +3,11 @@ Base CLI utilities and common functionality.
 """
 
 import asyncio
-from typing import Callable, Any
+from contextlib import asynccontextmanager
+from typing import Any, Callable
+
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from contextlib import asynccontextmanager
 
 console = Console()
 

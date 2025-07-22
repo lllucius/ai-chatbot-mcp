@@ -11,21 +11,22 @@ Provides comprehensive analytics functionality including:
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import typer
-from rich.table import Table
-from rich.panel import Panel
 from rich.columns import Columns
-from sqlalchemy import func, select, and_, or_, desc, text
+from rich.panel import Panel
+from rich.table import Table
+from sqlalchemy import and_, desc, func, or_, select, text
 
 from ..database import AsyncSessionLocal
-from ..models.user import User
-from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.conversation import Conversation, Message
-from .base import (
-    console, async_command, success_message, error_message, 
-    warning_message, info_message, format_timestamp, format_size
-)
+from ..models.document import Document, DocumentChunk, FileStatus
+from ..models.user import User
+from .base import (async_command, console, error_message, format_size,
+                   format_timestamp, info_message, success_message,
+                   warning_message)
 
 # Create the analytics app
 analytics_app = typer.Typer(help="Analytics and reporting commands")
@@ -59,7 +60,7 @@ def overview():
                 completed_docs = await db.scalar(
                     select(func.count(Document.id)).where(Document.status == FileStatus.COMPLETED)
                 )
-                total_storage = await db.scalar(select(func.sum(Document.size)))
+                total_storage = await db.scalar(select(func.sum(Document.file_size)))
                 docs_24h = await db.scalar(
                     select(func.count(Document.id)).where(Document.created_at >= last_24h)
                 )
@@ -332,7 +333,7 @@ def performance():
                 failure_rate = (failed_docs / max(total_docs, 1)) * 100 if total_docs else 0
                 
                 # Average document size and processing metrics
-                avg_doc_size = await db.scalar(select(func.avg(Document.size)))
+                avg_doc_size = await db.scalar(select(func.avg(Document.file_size)))
                 total_chunks = await db.scalar(select(func.count(DocumentChunk.id)))
                 avg_chunks_per_doc = total_chunks / max(completed_docs, 1) if completed_docs else 0
                 
@@ -380,7 +381,7 @@ def performance():
                 
                 # Storage efficiency
                 table.add_row("", "", "", "")  # Separator
-                total_storage = await db.scalar(select(func.sum(Document.size)))
+                total_storage = await db.scalar(select(func.sum(Document.file_size)))
                 storage_per_user = total_storage / max(await db.scalar(select(func.count(User.id))), 1) if total_storage else 0
                 table.add_row("Storage", "Total Storage", format_size(total_storage or 0), "")
                 table.add_row("", "Storage per User", format_size(storage_per_user), "")
@@ -468,7 +469,7 @@ def users(
                             User.username,
                             User.email,
                             func.count(Document.id).label("doc_count"),
-                            func.sum(Document.size).label("total_size")
+                            func.sum(Document.file_size).label("total_size")
                         )
                         .join(Document, User.id == Document.owner_id)
                         .group_by(User.id, User.username, User.email)
@@ -678,8 +679,8 @@ def trends(
 
 @analytics_app.command()
 def export_report(
-    output_file: str = typer.Option("analytics_report.json", "--output", "-o", help="Output file path"),
-    format: str = typer.Option("json", "--format", "-f", help="Export format: json, csv"),
+    output_file: str = typer.Option("analytics_report", "--output", "-o", help="Output file path"),
+    format: str = typer.Option("json", "--format", "-f", help="Export format: json, csv (appended to path)"),
     include_details: bool = typer.Option(False, "--details", "-d", help="Include detailed breakdowns"),
 ):
     """Export comprehensive analytics report."""
@@ -713,20 +714,21 @@ def export_report(
                     "total_conversations": total_convs or 0,
                     "active_conversations": await db.scalar(select(func.count(Conversation.id)).where(Conversation.is_active == True)) or 0,
                     "total_messages": total_messages or 0,
-                    "total_storage_bytes": await db.scalar(select(func.sum(Document.size))) or 0,
+                    "total_storage_bytes": await db.scalar(select(func.sum(Document.file_size))) or 0,
                     "total_tokens": await db.scalar(select(func.sum(Message.token_count))) or 0
                 }
                 
                 # Export based on format
-                output_path = Path(output_file)
                 
                 if format == "json":
                     import json
+                    output_path = Path(output_file + ".json")
                     with open(output_path, 'w', encoding='utf-8') as f:
                         json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
                 
                 elif format == "csv":
                     import csv
+                    output_path = Path(output_file + ".csv")
                     with open(output_path, 'w', newline='', encoding='utf-8') as f:
                         writer = csv.writer(f)
                         writer.writerow(["Metric", "Value"])

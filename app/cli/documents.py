@@ -9,33 +9,32 @@ Provides comprehensive document management functionality including:
 - Bulk operations
 """
 
-import os
 import asyncio
+import mimetypes
+import os
 from datetime import datetime, timedelta
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
+
 import typer
-from rich.table import Table
 from rich.progress import track
-from sqlalchemy import func, select, and_, or_, desc
+from rich.table import Table
+from sqlalchemy import and_, desc, func, or_, select
 
 from ..database import AsyncSessionLocal
-from ..models.user import User
 from ..models.document import Document, DocumentChunk, FileStatus
-from ..services.document import DocumentService
+from ..models.user import User
 from ..services.background_processor import BackgroundProcessor
-import mimetypes
+from ..services.document import DocumentService
 
 
 def get_content_type(filename: str) -> str:
     """Get MIME content type for a file based on its extension."""
     content_type, _ = mimetypes.guess_type(filename)
     return content_type or "application/octet-stream"
-from .base import (
-    console, async_command, success_message, error_message, 
-    warning_message, info_message, format_timestamp, format_size, 
-    progress_context
-)
+from .base import (async_command, console, error_message, format_size,
+                   format_timestamp, info_message, progress_context,
+                   success_message, warning_message)
 
 # Create the document management app
 document_app = typer.Typer(help="Document management commands")
@@ -87,7 +86,7 @@ def upload(
                     title=title_to_use,
                     filename=file_path_obj.name,
                     content_type=get_content_type(file_path_obj.name),
-                    size=file_size,
+                    file_size=file_size,
                     status=FileStatus.PENDING,
                     owner_id=user_id,
                     metainfo={"uploaded_via": "cli", "original_path": str(file_path)}
@@ -176,7 +175,7 @@ def list(
                 elif sort_by == "title":
                     query = query.order_by(Document.title)
                 elif sort_by == "size":
-                    query = query.order_by(desc(Document.size))
+                    query = query.order_by(desc(Document.file_size))
                 elif sort_by == "status":
                     query = query.order_by(Document.status)
                 elif sort_by == "created":
@@ -481,8 +480,8 @@ def stats():
                     status_counts[status] = count or 0
                 
                 # Size statistics
-                total_size = await db.scalar(select(func.sum(Document.size)))
-                avg_size = await db.scalar(select(func.avg(Document.size)))
+                total_size = await db.scalar(select(func.sum(Document.file_size)))
+                avg_size = await db.scalar(select(func.avg(Document.file_size)))
                 
                 # Recent uploads
                 last_7_days = datetime.now() - timedelta(days=7)

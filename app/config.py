@@ -82,21 +82,6 @@ class Settings(BaseSettings):
         description="Dictionary of MCP servers",
     )
 
-    @field_validator("mcp_servers", mode="before")
-    @classmethod
-    def parse_mcp_servers(cls, v):
-        """Parse MCP servers from string or dict."""
-        if isinstance(v, str):
-            import json
-            try:
-                return json.loads(v)
-            except json.JSONDecodeError:
-                logger.warning(f"Invalid JSON for mcp_servers: {v}")
-                return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
-        elif isinstance(v, dict):
-            return v
-        return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
-
     # CORS Configuration - Use Union to accept both string and list
     allowed_origins: Union[str, List[str]] = Field(
         default="http://localhost:3000,http://localhost:8080",
@@ -189,6 +174,21 @@ class Settings(BaseSettings):
     rate_limit_period: int = Field(
         default=60, description="Rate limit period in seconds", gt=0
     )
+
+    @field_validator("mcp_servers", mode="before")
+    @classmethod
+    def parse_mcp_servers(cls, v):
+        """Parse MCP servers from string or dict."""
+        if isinstance(v, str):
+            import json
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid JSON for mcp_servers: {v}")
+                return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
+        elif isinstance(v, dict):
+            return v
+        return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
 
     @field_validator("allowed_origins", mode="before")
     @classmethod

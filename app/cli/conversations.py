@@ -12,21 +12,20 @@ Provides comprehensive conversation management functionality including:
 import asyncio
 import json
 from datetime import datetime, timedelta
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
+
 import typer
-from rich.table import Table
 from rich.progress import track
-from sqlalchemy import func, select, and_, or_, desc
+from rich.table import Table
+from sqlalchemy import and_, desc, func, or_, select
 
 from ..database import AsyncSessionLocal
-from ..models.user import User
 from ..models.conversation import Conversation, Message
+from ..models.user import User
 from ..services.conversation import ConversationService
-from .base import (
-    console, async_command, success_message, error_message, 
-    warning_message, info_message, format_timestamp
-)
+from .base import (async_command, console, error_message, format_timestamp,
+                   info_message, success_message, warning_message)
 
 # Create the conversation management app  
 conversation_app = typer.Typer(help="Conversation management commands")
