@@ -15,7 +15,25 @@ console = Console()
 def async_command(func: Callable) -> Callable:
     """Decorator to run async functions in CLI commands."""
     def wrapper(*args, **kwargs):
-        return asyncio.run(func(*args, **kwargs))
+        try:
+            # Try to get the current event loop
+            loop = asyncio.get_running_loop()
+            # If there's already a running loop, we can't use asyncio.run()
+            # Instead, create a task
+            import concurrent.futures
+            import threading
+            
+            # Run in a separate thread to avoid nested loop issues
+            def run_in_thread():
+                return asyncio.run(func(*args, **kwargs))
+            
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(run_in_thread)
+                return future.result()
+                
+        except RuntimeError:
+            # No running loop, safe to use asyncio.run()
+            return asyncio.run(func(*args, **kwargs))
     return wrapper
 
 

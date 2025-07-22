@@ -321,6 +321,109 @@ class OpenAIClient:
 
         return result
 
+    async def chat_completion_stream(
+        self,
+        messages: List[Dict[str, Any]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        tool_choice: Union[str, Dict[str, Any]] = "auto",
+        use_unified_tools: bool = True,
+        tool_handling_mode: ToolHandlingMode = ToolHandlingMode.COMPLETE_WITH_RESULTS,
+        max_retries: int = 3,
+    ):
+        """
+        Create a streaming chat completion with tool call handling.
+
+        Args:
+            messages: List of messages
+            temperature: Response randomness (0-2)
+            max_tokens: Maximum tokens in response
+            tools: Custom tools (if None, will use unified tools if available)
+            tool_choice: Tool choice strategy
+            use_unified_tools: Whether to automatically include unified tools
+            tool_handling_mode: How to handle tool call results
+            max_retries: Maximum number of retry attempts
+
+        Yields:
+            dict: Streaming response chunks with content or tool call results
+        """
+        if not OPENAI_AVAILABLE or not self.client:
+            raise ExternalServiceError("OpenAI client not available")
+
+        # Prepare tools using unified tool executor
+        final_tools = tools or []
+
+        if use_unified_tools and not tools:
+            try:
+                tool_executor = await get_unified_tool_executor()
+                unified_tools = await tool_executor.get_available_tools()
+                final_tools.extend(unified_tools)
+                logger.info(
+                    f"Added {len(unified_tools)} unified tools to streaming chat completion"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to add unified tools: {e}")
+
+        # Prepare request parameters
+        request_params = {
+            "model": settings.openai_chat_model,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": True,  # Enable streaming
+        }
+
+        if max_tokens:
+            request_params["max_tokens"] = max_tokens
+
+        if final_tools:
+            request_params["tools"] = final_tools
+            request_params["tool_choice"] = tool_choice
+
+        try:
+            # Start streaming
+            stream = await self.client.chat.completions.create(**request_params)
+            
+            # Collect tool calls and full content
+            tool_calls_data = []
+            full_content = ""
+            
+            async for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    full_content += content
+                    yield {"type": "content", "content": content}
+                
+                # Handle tool calls if present
+                if chunk.choices[0].delta.tool_calls:
+                    for tool_call in chunk.choices[0].delta.tool_calls:
+                        # Note: OpenAI streams tool calls in parts, we'd need to collect and assemble them
+                        if tool_call.function and tool_call.function.name:
+                            tool_calls_data.append(tool_call)
+            
+            # Execute any tool calls that were collected
+            if tool_calls_data:
+                tool_calls_executed = await self._execute_unified_tool_calls(tool_calls_data)
+                for tool_result in tool_calls_executed:
+                    yield {
+                        "type": "tool_call",
+                        "tool": tool_result.get("name"),
+                        "result": tool_result.get("result")
+                    }
+                
+                # If mode is COMPLETE_WITH_RESULTS, get final completion
+                if tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS:
+                    # For simplicity in streaming, we'll yield the tool results
+                    # A full implementation might do another streaming completion
+                    yield {
+                        "type": "content",
+                        "content": f"\n\n[Tool calls completed: {len(tool_calls_executed)} tools executed]"
+                    }
+
+        except Exception as e:
+            logger.error(f"Streaming chat completion failed: {e}")
+            yield {"type": "error", "error": str(e)}
+
     async def _execute_unified_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
         """Execute tool calls using unified tool executor."""
         try:

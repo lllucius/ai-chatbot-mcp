@@ -37,24 +37,33 @@ def status():
     def _task_status():
         try:
             # Check if Celery is running
-            result = subprocess.run(
-                ["celery", "--version"], 
-                capture_output=True, 
-                text=True
-            )
-            
-            if result.returncode == 0:
-                success_message(f"Celery available: {result.stdout.strip()}")
-            else:
-                error_message("Celery not available")
+            try:
+                result = subprocess.run(
+                    ["celery", "--version"], 
+                    capture_output=True, 
+                    text=True
+                )
+                
+                if result.returncode == 0:
+                    success_message(f"Celery available: {result.stdout.strip()}")
+                else:
+                    warning_message("Celery not available - background processing may be limited")
+                    info_message("Install Celery with: pip install celery")
+                    return
+            except FileNotFoundError:
+                warning_message("Celery not found - background processing may be limited")
+                info_message("Install Celery with: pip install celery")
                 return
             
             # Check worker status
+            import os
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            
             worker_result = subprocess.run(
                 ["celery", "-A", "app.services.background_processor", "inspect", "active"], 
                 capture_output=True, 
                 text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if worker_result.returncode == 0:
