@@ -24,7 +24,25 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Verify token is still valid
+      
+      // Demo mode check
+      if (token.startsWith('demo-token-')) {
+        const username = token.includes('admin') ? 'admin' : 'demo';
+        const demoUser = {
+          id: 1,
+          username: username,
+          email: `${username}@example.com`,
+          full_name: username === 'admin' ? 'Administrator' : 'Demo User',
+          is_superuser: username === 'admin',
+          is_active: true,
+          created_at: new Date().toISOString(),
+        };
+        setUser(demoUser);
+        setLoading(false);
+        return;
+      }
+      
+      // Verify token is still valid with real API
       axios.get('/api/v1/auth/me')
         .then(response => {
           setUser(response.data);
@@ -43,6 +61,24 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      // Demo mode for showcase - remove in production
+      if ((username === 'admin' && password === 'admin') || (username === 'demo' && password === 'demo')) {
+        const demoUser = {
+          id: 1,
+          username: username,
+          email: `${username}@example.com`,
+          full_name: username === 'admin' ? 'Administrator' : 'Demo User',
+          is_superuser: username === 'admin',
+          is_active: true,
+          created_at: new Date().toISOString(),
+        };
+        
+        localStorage.setItem('token', 'demo-token-' + Date.now());
+        setUser(demoUser);
+        
+        return { success: true };
+      }
+
       // Send credentials as JSON instead of FormData
       const credentials = { username, password };
 
