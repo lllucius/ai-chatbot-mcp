@@ -12,7 +12,12 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from pgvector.sqlalchemy import Vector
+# Import pgvector only for PostgreSQL compatibility
+try:
+    from pgvector.sqlalchemy import Vector
+    HAS_PGVECTOR = True
+except ImportError:
+    HAS_PGVECTOR = False
 
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import Float, ForeignKey, Index, Integer, JSON, String, Text
@@ -187,9 +192,14 @@ class DocumentChunk(BaseModelDB):
     )
 
     # Vector embedding
-    embedding: Mapped[Optional[List[float]]] = mapped_column(
-        Vector(3072), nullable=True, doc="Vector embedding for semantic search"
-    )
+    if HAS_PGVECTOR:
+        embedding: Mapped[Optional[List[float]]] = mapped_column(
+            Vector(3072), nullable=True, doc="Vector embedding for semantic search"
+        )
+    else:
+        embedding: Mapped[Optional[str]] = mapped_column(
+            Text, nullable=True, doc="Vector embedding as JSON string for SQLite"
+        )
 
     embedding_model: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True, doc="Model used to generate embedding"
