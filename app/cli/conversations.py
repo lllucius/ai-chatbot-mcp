@@ -109,11 +109,11 @@ def list(
                 
                 # Create table
                 table = Table(title=f"Conversations ({len(conversations)} found)")
-                table.add_column("ID", style="cyan", width=8)
-                table.add_column("Title", style="green", width=30)
+                table.add_column("ID", style="cyan", width=36)  # Width for full UUID
+                table.add_column("Title", style="green", width=25)
                 table.add_column("User", style="blue", width=15)
-                table.add_column("Messages", width=10)
-                table.add_column("Status", width=10)
+                table.add_column("Messages", width=8)
+                table.add_column("Status", width=8)
                 table.add_column("Created", width=12)
                 table.add_column("Updated", width=12)
                 
@@ -122,7 +122,7 @@ def list(
                     message_count = message_counts.get(conv.id, 0)
                     status = "🟢 Active" if conv.is_active else "⚪ Inactive"
                     
-                    title_display = conv.title[:27] + "..." if len(conv.title) > 30 else conv.title
+                    title_display = conv.title[:22] + "..." if len(conv.title) > 25 else conv.title
                     
                     table.add_row(
                         str(conv.id),
@@ -144,7 +144,7 @@ def list(
 
 @conversation_app.command()
 def show(
-    conversation_id: int = typer.Argument(..., help="Conversation ID to show details for"),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to show details for"),
     show_messages: bool = typer.Option(False, "--messages", "-m", help="Show recent messages"),
     message_limit: int = typer.Option(10, "--message-limit", help="Number of recent messages to show"),
 ):
@@ -154,6 +154,14 @@ def show(
     async def _show_conversation():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(conversation_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {conversation_id}")
+                    return
+                
                 # Get conversation with user info
                 result = await db.execute(
                     select(Conversation, User)
@@ -252,7 +260,7 @@ def show(
 
 @conversation_app.command()
 def export(
-    conversation_id: int = typer.Argument(..., help="Conversation ID to export"),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to export"),
     output_file: str = typer.Option(None, "--output", "-o", help="Output file path (default: conversation_{id}.json)"),
     format: str = typer.Option("json", "--format", "-f", help="Export format: json, txt, csv"),
 ):
@@ -262,6 +270,14 @@ def export(
     async def _export_conversation():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(conversation_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {conversation_id}")
+                    return
+                
                 # Get conversation with messages
                 conversation = await db.scalar(
                     select(Conversation).where(Conversation.id == conversation_id)
@@ -356,7 +372,7 @@ def export(
 
 @conversation_app.command()
 def delete(
-    conversation_id: int = typer.Argument(..., help="Conversation ID to delete"),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to delete"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ):
     """Delete a conversation and all its messages."""
@@ -365,6 +381,14 @@ def delete(
     async def _delete_conversation():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(conversation_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {conversation_id}")
+                    return
+                
                 conversation = await db.scalar(
                     select(Conversation).where(Conversation.id == conversation_id)
                 )

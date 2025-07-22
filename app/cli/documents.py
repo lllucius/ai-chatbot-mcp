@@ -26,15 +26,15 @@ from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
 from ..services.background_processor import BackgroundProcessor
 from ..services.document import DocumentService
+from .base import (async_command, console, error_message, format_size,
+                   format_timestamp, info_message, progress_context,
+                   success_message, warning_message)
 
 
 def get_content_type(filename: str) -> str:
     """Get MIME content type for a file based on its extension."""
     content_type, _ = mimetypes.guess_type(filename)
     return content_type or "application/octet-stream"
-from .base import (async_command, console, error_message, format_size,
-                   format_timestamp, info_message, progress_context,
-                   success_message, warning_message)
 
 # Create the document management app
 document_app = typer.Typer(help="Document management commands")
@@ -64,7 +64,7 @@ def upload(
         
         async with AsyncSessionLocal() as db:
             try:
-                # Get user if specified
+                # Get or create system user if no username provided
                 user_id = None
                 if username:
                     user = await db.scalar(select(User).where(User.username == username))
@@ -72,6 +72,22 @@ def upload(
                         error_message(f"User '{username}' not found")
                         return
                     user_id = user.id
+                else:
+                    # Look for system user or create one
+                    system_user = await db.scalar(select(User).where(User.username == "system"))
+                    if not system_user:
+                        # Create a system user
+                        from ..services.user import UserService
+                        user_service = UserService(db)
+                        system_user = await user_service.create_user(
+                            username="system",
+                            email="system@localhost", 
+                            password="system",  # Will be hashed
+                            full_name="System User",
+                            is_superuser=True
+                        )
+                        info_message("Created system user for document ownership")
+                    user_id = system_user.id
                 
                 document_service = DocumentService(db)
                 
@@ -106,7 +122,7 @@ def upload(
                 table.add_row("ID", str(document.id))
                 table.add_row("Title", document.title)
                 table.add_row("Filename", document.filename)
-                table.add_row("Size", format_size(document.size))
+                table.add_row("Size", format_size(document.file_size))
                 table.add_row("Type", document.content_type)
                 table.add_row("Status", document.status.value)
                 table.add_row("Owner", username or "System")
@@ -191,12 +207,12 @@ def list(
                 
                 # Create table
                 table = Table(title=f"Documents ({len(documents)} found)")
-                table.add_column("ID", style="cyan", width=6)
-                table.add_column("Title", style="green", width=25)
-                table.add_column("Filename", style="blue", width=20)
-                table.add_column("Size", width=10)
-                table.add_column("Status", width=12)
-                table.add_column("Owner", width=12)
+                table.add_column("ID", style="cyan", width=36)  # Width for full UUID
+                table.add_column("Title", style="green", width=20)
+                table.add_column("Filename", style="blue", width=15)
+                table.add_column("Size", width=8)
+                table.add_column("Status", width=10)
+                table.add_column("Owner", width=10)
                 table.add_column("Created", width=12)
                 
                 # Get all user IDs for owner lookup
@@ -218,9 +234,9 @@ def list(
                     
                     table.add_row(
                         str(doc.id),
-                        doc.title[:23] + "..." if len(doc.title) > 25 else doc.title,
-                        doc.filename[:18] + "..." if len(doc.filename) > 20 else doc.filename,
-                        format_size(doc.size),
+                        doc.title[:18] + "..." if len(doc.title) > 20 else doc.title,
+                        doc.filename[:13] + "..." if len(doc.filename) > 15 else doc.filename,
+                        format_size(doc.file_size),
                         f"{status_icon} {doc.status.value.title()}",
                         owner_name,
                         doc.created_at.strftime("%Y-%m-%d")
@@ -236,7 +252,7 @@ def list(
 
 @document_app.command()
 def show(
-    document_id: int = typer.Argument(..., help="Document ID to show details for"),
+    document_id: str = typer.Argument(..., help="Document ID (UUID) to show details for"),
 ):
     """Show detailed information about a specific document."""
     
@@ -244,6 +260,14 @@ def show(
     async def _show_document():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(document_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {document_id}")
+                    return
+                
                 # Get document with owner info
                 result = await db.execute(
                     select(Document, User)
@@ -318,7 +342,7 @@ def show(
 
 @document_app.command()
 def delete(
-    document_id: int = typer.Argument(..., help="Document ID to delete"),
+    document_id: str = typer.Argument(..., help="Document ID (UUID) to delete"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ):
     """Delete a document and all its chunks."""
@@ -327,6 +351,14 @@ def delete(
     async def _delete_document():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(document_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {document_id}")
+                    return
+                
                 document = await db.scalar(select(Document).where(Document.id == document_id))
                 
                 if not document:
@@ -372,7 +404,7 @@ def delete(
 
 @document_app.command()
 def reprocess(
-    document_id: int = typer.Argument(..., help="Document ID to reprocess"),
+    document_id: str = typer.Argument(..., help="Document ID (UUID) to reprocess"),
 ):
     """Reprocess a document (re-extract text and create new chunks)."""
     
@@ -380,6 +412,14 @@ def reprocess(
     async def _reprocess_document():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(document_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {document_id}")
+                    return
+                
                 document = await db.scalar(select(Document).where(Document.id == document_id))
                 
                 if not document:
@@ -422,15 +462,38 @@ def search(
         async with AsyncSessionLocal() as db:
             try:
                 from ..services.search import SearchService
+                from ..schemas.document import DocumentSearchRequest
+                import uuid
                 
                 search_service = SearchService(db)
                 
+                # Create search request  
+                search_request = DocumentSearchRequest(
+                    query=query,
+                    algorithm="vector",
+                    limit=limit,
+                    threshold=threshold
+                )
+                
+                # Use system user ID for search (since CLI doesn't have user context)
+                system_user = await db.scalar(select(User).where(User.username == "system"))
+                if not system_user:
+                    # Create system user if not exists
+                    from ..services.user import UserService
+                    user_service = UserService(db)
+                    system_user = await user_service.create_user(
+                        username="system",
+                        email="system@localhost",
+                        password="system",
+                        full_name="System User",
+                        is_superuser=True
+                    )
+                
                 async with progress_context("Searching documents..."):
-                    # Perform vector search
-                    results = await search_service.vector_search(
-                        query=query,
-                        limit=limit,
-                        threshold=threshold
+                    # Perform search
+                    results = await search_service.search_documents(
+                        request=search_request,
+                        user_id=system_user.id
                     )
                 
                 if not results:
@@ -440,17 +503,24 @@ def search(
                 # Create results table
                 table = Table(title=f"Search Results for: '{query}'")
                 table.add_column("Score", style="cyan", width=8)
-                table.add_column("Document", style="green", width=25)
-                table.add_column("Chunk", style="blue", width=50)
-                table.add_column("Doc ID", width=8)
+                table.add_column("Document", style="green", width=30)
+                table.add_column("Chunk Preview", style="blue", width=60)
+                table.add_column("Doc ID", width=36)
                 
                 for result in results:
-                    score = f"{result.get('similarity', 0):.3f}"
-                    document_title = result.get('document_title', 'Unknown')
-                    chunk_preview = result.get('content', '')[:47] + "..." if len(result.get('content', '')) > 50 else result.get('content', '')
-                    doc_id = str(result.get('document_id', ''))
+                    # Truncate content for display
+                    content_preview = result.content[:57] + "..." if len(result.content) > 60 else result.content
+                    content_preview = content_preview.replace("\n", " ")
                     
-                    table.add_row(score, document_title, chunk_preview, doc_id)
+                    score = f"{result.similarity_score:.3f}" if result.similarity_score else "N/A"
+                    doc_title = result.document_title or "Unknown"
+                    
+                    table.add_row(
+                        score,
+                        doc_title[:27] + "..." if len(doc_title) > 30 else doc_title,
+                        content_preview,
+                        str(result.document_id)
+                    )
                 
                 console.print(table)
                 
@@ -539,9 +609,10 @@ def cleanup(
             try:
                 # Validate status
                 try:
-                    status_enum = FileStatus(status.upper())
+                    status_enum = FileStatus(status.lower())
                 except ValueError:
-                    error_message(f"Invalid status: {status}")
+                    valid_statuses = [s.value for s in FileStatus]
+                    error_message(f"Invalid status: {status}. Valid options: {', '.join(valid_statuses)}")
                     return
                 
                 # Find documents to clean up
