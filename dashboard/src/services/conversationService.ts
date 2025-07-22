@@ -117,12 +117,57 @@ export class ConversationService {
   /**
    * Stream chat response (for real-time messaging)
    */
-  static async streamChat(chatRequest: ChatRequest): Promise<ApiResponse<ChatResponse> | ApiError> {
+  static async streamChat(
+    chatRequest: ChatRequest,
+    onMessage: (chunk: any) => void,
+    onComplete: (response: any) => void,
+    onError: (error: string) => void
+  ): Promise<void> {
     try {
-      const response = await apiClient.post('/api/v1/conversations/chat/stream', chatRequest);
-      return handleApiResponse(response);
+      const response = await fetch('/api/v1/conversations/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(chatRequest),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Failed to get reader');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === 'complete') {
+                onComplete(data.response);
+              } else {
+                onMessage(data);
+              }
+            } catch (e) {
+              console.warn('Failed to parse SSE data:', line);
+            }
+          }
+        }
+      }
     } catch (error: any) {
-      return handleApiError(error);
+      onError(error.message || 'Streaming failed');
     }
   }
 

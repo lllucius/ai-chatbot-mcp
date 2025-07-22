@@ -16,12 +16,17 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Card,
+  CardContent,
+  Grid,
 } from '@mui/material';
 import {
   Send as SendIcon,
   Person as PersonIcon,
   SmartToy as BotIcon,
   Settings as SettingsIcon,
+  AccessTime as TimeIcon,
+  Memory as TokenIcon,
 } from '@mui/icons-material';
 import { ConversationService } from '../services';
 import { useAuth } from '../services/AuthContext';
@@ -35,11 +40,18 @@ const ChatInterface: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
   
   // Chat settings
   const [useRag, setUseRag] = useState(true);
   const [enableTools, setEnableTools] = useState(true);
   const [temperature, setTemperature] = useState(0.7);
+  
+  // Metrics
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
+  const [lastTokenCount, setLastTokenCount] = useState<number>(0);
+  const [lastResponseTime, setLastResponseTime] = useState<number>(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -113,11 +125,17 @@ const ChatInterface: React.FC = () => {
     if (!newMessage.trim()) return;
 
     setIsLoading(true);
+    setIsStreaming(true);
     setError(null);
+    setStreamingContent('');
+    
+    const startTime = Date.now();
+    const userMessage = newMessage;
+    setNewMessage('');
 
     try {
       const chatRequest: ChatRequest = {
-        message: newMessage,
+        message: userMessage,
         conversation_id: currentConversation?.id,
         conversation_title: currentConversation?.title || 'New Chat',
         use_rag: useRag,
@@ -126,34 +144,75 @@ const ChatInterface: React.FC = () => {
         tool_handling_mode: 'complete_with_results',
       };
 
-      const response = await ConversationService.chat(chatRequest);
-      
-      if (response.success && response.data) {
-        // Add both user and AI messages to the list
-        setMessages(prev => [...prev, response.data!.message, response.data!.ai_message]);
-        
-        // Update current conversation if needed
-        if (response.data.conversation) {
-          setCurrentConversation(response.data.conversation);
-          // Update conversation in the list
-          setConversations(prev => 
-            prev.map(conv => 
-              conv.id === response.data!.conversation.id 
-                ? response.data!.conversation 
-                : conv
-            )
-          );
+      // Add user message immediately
+      const tempUserMessage: Message = {
+        id: `temp-${Date.now()}`,
+        content: userMessage,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        token_count: 0,
+        response_time: 0,
+      };
+      setMessages(prev => [...prev, tempUserMessage]);
+
+      await ConversationService.streamChat(
+        chatRequest,
+        (chunk: any) => {
+          // Handle streaming chunks
+          if (chunk.type === 'content') {
+            setStreamingContent(prev => prev + chunk.content);
+          } else if (chunk.type === 'tool_call') {
+            console.log('Tool call:', chunk.tool, chunk.result);
+          }
+        },
+        (response: any) => {
+          // Handle completion
+          const endTime = Date.now();
+          const responseTime = endTime - startTime;
+          
+          setLastRequestTime(startTime);
+          setLastResponseTime(responseTime);
+          setLastTokenCount(response.ai_message?.token_count || 0);
+          
+          // Add AI message
+          if (response.ai_message) {
+            setMessages(prev => [...prev.slice(0, -1), response.message, response.ai_message]);
+          }
+          
+          // Update conversation
+          if (response.conversation) {
+            setCurrentConversation(response.conversation);
+            setConversations(prev => 
+              prev.map(conv => 
+                conv.id === response.conversation.id 
+                  ? response.conversation 
+                  : conv
+              )
+            );
+          }
+          
+          setStreamingContent('');
+          setIsStreaming(false);
+          setIsLoading(false);
+        },
+        (error: string) => {
+          setError(error);
+          setIsStreaming(false);
+          setIsLoading(false);
+          // Remove temporary user message on error
+          setMessages(prev => prev.slice(0, -1));
+          setNewMessage(userMessage); // Restore message
         }
-        
-        setNewMessage('');
-      } else {
-        setError('Failed to send message');
-      }
+      );
+
     } catch (error: any) {
       console.error('Chat error:', error);
-      setError(error.response?.data?.detail || 'Failed to send message');
-    } finally {
+      setError('Failed to send message');
+      setIsStreaming(false);
       setIsLoading(false);
+      setMessages(prev => prev.slice(0, -1));
+      setNewMessage(userMessage);
     }
   };
 
@@ -169,7 +228,16 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '80vh', display: 'flex', gap: 2 }}>
+    <>
+      <style>
+        {`
+          @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+          }
+        `}
+      </style>
+      <Box sx={{ height: '80vh', display: 'flex', gap: 2 }}>
       {/* Conversations Sidebar */}
       <Paper sx={{ width: 300, p: 2, display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -234,6 +302,35 @@ const ChatInterface: React.FC = () => {
             <MenuItem value={1.0}>1.0 (Very Creative)</MenuItem>
           </Select>
         </FormControl>
+        
+        {/* Metrics Display */}
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="subtitle2" gutterBottom>
+          Performance Metrics
+        </Typography>
+        
+        <Grid container spacing={1}>
+          <Grid item xs={12}>
+            <Card variant="outlined" sx={{ p: 1 }}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <TimeIcon fontSize="small" color="primary" />
+                <Typography variant="caption">
+                  Response Time: {lastResponseTime > 0 ? `${lastResponseTime}ms` : 'N/A'}
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+          <Grid item xs={12}>
+            <Card variant="outlined" sx={{ p: 1 }}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <TokenIcon fontSize="small" color="secondary" />
+                <Typography variant="caption">
+                  Tokens: {lastTokenCount > 0 ? lastTokenCount : 'N/A'}
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
       </Paper>
 
       {/* Chat Area */}
@@ -297,7 +394,33 @@ const ChatInterface: React.FC = () => {
             </Box>
           ))}
           
-          {isLoading && (
+          {/* Streaming Content */}
+          {isStreaming && streamingContent && (
+            <Box
+              sx={{
+                display: 'flex',
+                mb: 2,
+                alignItems: 'flex-start',
+                flexDirection: 'row',
+              }}
+            >
+              <Avatar sx={{ mx: 1, bgcolor: 'secondary.main' }}>
+                <BotIcon />
+              </Avatar>
+              
+              <Paper sx={{ p: 2, maxWidth: '70%', bgcolor: 'grey.50' }}>
+                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {streamingContent}
+                  <Box component="span" sx={{ animation: 'blink 1s infinite' }}>|</Box>
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Streaming...
+                </Typography>
+              </Paper>
+            </Box>
+          )}
+          
+          {isLoading && !isStreaming && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Avatar sx={{ bgcolor: 'secondary.main' }}>
                 <BotIcon />
@@ -338,6 +461,7 @@ const ChatInterface: React.FC = () => {
         </Box>
       </Paper>
     </Box>
+    </>
   );
 };
 

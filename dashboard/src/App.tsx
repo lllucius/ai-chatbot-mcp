@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
-import { Chat, AdminPanelSettings, Dashboard } from '@mui/icons-material';
+import { Box, AppBar, Toolbar, Typography, Button, Container, IconButton, Tooltip } from '@mui/material';
+import { Chat, AdminPanelSettings, Dashboard, Brightness4, Brightness7 } from '@mui/icons-material';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import ChatInterface from './pages/ChatInterface';
@@ -13,11 +13,13 @@ import SystemSettings from './pages/SystemSettings';
 import UserProfile from './pages/UserProfile';
 import UserDocuments from './pages/UserDocuments';
 import { AuthProvider, useAuth } from './services/AuthContext';
+import { useTheme } from './services/ThemeContext';
 import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent(): JSX.Element {
   const { user, logout } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [currentView, setCurrentView] = useState<string>('chat');
 
@@ -41,6 +43,11 @@ function AppContent(): JSX.Element {
           <Typography variant="body2" sx={{ mr: 2 }}>
             Administrator: {user.username}
           </Typography>
+          <Tooltip title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+            <IconButton color="inherit" onClick={toggleDarkMode} sx={{ mr: 1 }}>
+              {darkMode ? <Brightness7 /> : <Brightness4 />}
+            </IconButton>
+          </Tooltip>
           <Button color="inherit" onClick={logout}>
             Logout
           </Button>
