@@ -263,10 +263,10 @@ async def demonstrate_registration():
         # Register new user
         print("1. 📝 Registering new user...")
         reg_result = await client.register(
-            username="demo_user",
-            email="demo@example.com",
-            password="DemoPass123!",
-            full_name="Demo User",
+            username="test_user",
+            email="test@mycompany.com",
+            password="SecureTestPass123!",
+            full_name="Test User",
         )
 
         if reg_result.get("username"):
@@ -274,7 +274,7 @@ async def demonstrate_registration():
 
             # Login with new user
             print("\n2. 🔐 Logging in with new user...")
-            login_result = await client.login("demo_user", "DemoPass123!")
+            login_result = await client.login("test_user", "SecureTestPass123!")
             if "access_token" in login_result:
                 print("   ✅ Login successful")
 

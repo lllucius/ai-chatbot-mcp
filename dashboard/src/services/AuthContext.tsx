@@ -37,28 +37,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Demo mode check
-      if (token.startsWith('demo-token-')) {
-        const username = token.includes('admin') ? 'admin' : 'demo';
-        const demoUser: User = {
-          id: '1',
-          username: username,
-          email: `${username}@example.com`,
-          full_name: username === 'admin' ? 'Administrator' : 'Demo User',
-          is_superuser: username === 'admin',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setUser(demoUser);
-        setLoading(false);
-        return;
-      }
-      
       // Verify token is still valid with real API
       axios.get('/api/v1/auth/me')
         .then(response => {
-          setUser(response.data);
+          const userData = response.data;
+          // Only allow superusers (administrators) to access this dashboard
+          if (!userData.is_superuser) {
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
+            setUser(null);
+          } else {
+            setUser(userData);
+          }
         })
         .catch(() => {
           localStorage.removeItem('token');
@@ -74,26 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Demo mode for showcase - remove in production
-      if ((username === 'admin' && password === 'admin') || (username === 'demo' && password === 'demo')) {
-        const demoUser: User = {
-          id: '1',
-          username: username,
-          email: `${username}@example.com`,
-          full_name: username === 'admin' ? 'Administrator' : 'Demo User',
-          is_superuser: username === 'admin',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        
-        localStorage.setItem('token', 'demo-token-' + Date.now());
-        setUser(demoUser);
-        
-        return { success: true };
-      }
-
-      // Send credentials as JSON instead of FormData
+      // Send credentials as JSON
       const credentials = { username, password };
 
       const response = await axios.post<TokenResponse>('/api/v1/auth/login', credentials, {
@@ -103,6 +74,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const { access_token, user: userData } = response.data as any;
+      
+      // Only allow superusers (administrators) to access this dashboard
+      if (!userData.is_superuser) {
+        return { 
+          success: false, 
+          error: 'Access denied. This dashboard is only available to administrators.' 
+        };
+      }
       
       localStorage.setItem('token', access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;

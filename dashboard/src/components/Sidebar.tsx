@@ -14,7 +14,6 @@ import {
 import {
   Chat,
   Dashboard,
-  AdminPanelSettings,
   People,
   Description,
   Analytics,
@@ -43,19 +42,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentView, onViewCha
   const navigate = useNavigate();
   const location = useLocation();
 
-  const userMenuItems: MenuItem[] = [
-    { id: 'chat', label: 'Chat', icon: <Chat />, path: '/chat' },
-    { id: 'dashboard', label: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-    { id: 'documents', label: 'My Documents', icon: <Description />, path: '/documents' },
-    { id: 'profile', label: 'Profile & Settings', icon: <Settings />, path: '/profile' },
-  ];
-
   const adminMenuItems: MenuItem[] = [
-    { id: 'admin', label: 'Admin Dashboard', icon: <AdminPanelSettings />, path: '/admin' },
+    { id: 'admin', label: 'Overview', icon: <Dashboard />, path: '/admin' },
+    { id: 'chat', label: 'Chat Testing', icon: <Chat />, path: '/admin/chat' },
     { id: 'users', label: 'User Management', icon: <People />, path: '/admin/users' },
-    { id: 'documents', label: 'Documents', icon: <Description />, path: '/admin/documents' },
+    { id: 'documents', label: 'Document Management', icon: <Description />, path: '/admin/documents' },
     { id: 'analytics', label: 'Analytics', icon: <Analytics />, path: '/admin/analytics' },
-    { id: 'settings', label: 'Settings', icon: <Settings />, path: '/admin/settings' },
+    { id: 'settings', label: 'System Settings', icon: <Settings />, path: '/admin/settings' },
   ];
 
   const handleItemClick = (item: MenuItem): void => {
@@ -67,18 +60,18 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentView, onViewCha
     <div>
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
-          Menu
+          Admin Controls
         </Typography>
       </Toolbar>
       <Divider />
       
-      {/* User Section */}
+      {/* Admin Section */}
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-          USER
+          ADMINISTRATION
         </Typography>
         <List dense>
-          {userMenuItems.map((item) => (
+          {adminMenuItems.map((item) => (
             <ListItem key={item.id} disablePadding>
               <ListItemButton
                 selected={location.pathname === item.path}
@@ -107,47 +100,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentView, onViewCha
           ))}
         </List>
       </Box>
-
-      {/* Admin Section */}
-      {isAdmin && (
-        <>
-          <Divider />
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              ADMIN
-            </Typography>
-            <List dense>
-              {adminMenuItems.map((item) => (
-                <ListItem key={item.id} disablePadding>
-                  <ListItemButton
-                    selected={location.pathname === item.path}
-                    onClick={() => handleItemClick(item)}
-                    sx={{
-                      borderRadius: 1,
-                      mb: 0.5,
-                      '&.Mui-selected': {
-                        backgroundColor: 'secondary.light',
-                        color: 'secondary.contrastText',
-                        '& .MuiListItemIcon-root': {
-                          color: 'secondary.contrastText',
-                        },
-                      },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 40 }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={item.label}
-                      primaryTypographyProps={{ fontSize: '0.875rem' }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        </>
-      )}
     </div>
   );
 

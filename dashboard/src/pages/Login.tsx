@@ -68,10 +68,10 @@ const Login: React.FC = () => {
           >
             <Chat sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
             <Typography component="h1" variant="h4" gutterBottom>
-              AI Chatbot
+              AI Chatbot Admin
             </Typography>
             <Typography variant="body2" color="text.secondary" textAlign="center">
-              Sign in to access the dashboard
+              Administrator Dashboard - Sign in with your admin credentials
             </Typography>
           </Box>
 
@@ -122,13 +122,7 @@ const Login: React.FC = () => {
 
           <Box mt={3}>
             <Typography variant="body2" color="text.secondary" textAlign="center">
-              Demo credentials:
-            </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              User: demo / Password: demo
-            </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              Admin: admin / Password: admin
+              This dashboard is restricted to system administrators only.
             </Typography>
           </Box>
         </Paper>

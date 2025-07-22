@@ -34,12 +34,12 @@ function AppContent(): JSX.Element {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Chat sx={{ mr: 2 }} />
+          <AdminPanelSettings sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            AI Chatbot Platform
+            AI Chatbot Admin Dashboard
           </Typography>
           <Typography variant="body2" sx={{ mr: 2 }}>
-            Welcome, {user.username}
+            Administrator: {user.username}
           </Typography>
           <Button color="inherit" onClick={logout}>
             Logout
@@ -52,7 +52,7 @@ function AppContent(): JSX.Element {
         onClose={() => setSidebarOpen(false)}
         currentView={currentView}
         onViewChange={handleViewChange}
-        isAdmin={user.is_superuser}
+        isAdmin={true}
       />
 
       <Box
@@ -68,21 +68,14 @@ function AppContent(): JSX.Element {
         <Container maxWidth="xl">
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<Navigate to="/chat" />} />
-              <Route path="/chat" element={<ChatInterface />} />
-              <Route path="/dashboard" element={<UserDashboard />} />
-              <Route path="/documents" element={<UserDocuments />} />
-              <Route path="/profile" element={<UserProfile />} />
-              {user.is_superuser && (
-                <>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/users" element={<UserManagement />} />
-                  <Route path="/admin/documents" element={<DocumentManagement />} />
-                  <Route path="/admin/analytics" element={<Analytics />} />
-                  <Route path="/admin/settings" element={<SystemSettings />} />
-                </>
-              )}
-              <Route path="*" element={<Navigate to="/chat" />} />
+              <Route path="/" element={<Navigate to="/admin" />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/chat" element={<ChatInterface />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/documents" element={<DocumentManagement />} />
+              <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/settings" element={<SystemSettings />} />
+              <Route path="*" element={<Navigate to="/admin" />} />
             </Routes>
           </ErrorBoundary>
         </Container>
