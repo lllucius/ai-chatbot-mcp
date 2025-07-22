@@ -147,6 +147,7 @@ const ChatInterface: React.FC = () => {
       // Add user message immediately
       const tempUserMessage: Message = {
         id: `temp-${Date.now()}`,
+        conversation_id: currentConversation?.id || '',
         content: userMessage,
         role: 'user',
         created_at: new Date().toISOString(),

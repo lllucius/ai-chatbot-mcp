@@ -13,6 +13,7 @@ export { DocumentService } from './documentService';
 export { ConversationService } from './conversationService';
 export { HealthService } from './healthService';
 export { ToolsService } from './toolsService';
+export type { Tool, ToolServer, ToolsData } from './toolsService';
 
 // Re-export the auth context
 export { AuthProvider, useAuth } from './AuthContext';

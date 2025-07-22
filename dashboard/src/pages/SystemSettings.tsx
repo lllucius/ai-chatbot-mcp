@@ -233,7 +233,7 @@ const SystemSettings: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.entries(toolsData.tools).map(([toolName, tool]) => (
+                    {Object.entries(toolsData.tools).map(([toolName, tool]: [string, Tool]) => (
                       <TableRow key={toolName}>
                         <TableCell>{toolName}</TableCell>
                         <TableCell>{tool.server}</TableCell>
@@ -296,7 +296,7 @@ const SystemSettings: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.values(toolsData.servers).map((server) => (
+                  {Object.values(toolsData.servers).map((server: ToolServer) => (
                     <TableRow key={server.name}>
                       <TableCell>{server.name}</TableCell>
                       <TableCell>{server.url}</TableCell>
