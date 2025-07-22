@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Union
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
 from ..core.tool_executor import get_unified_tool_executor, ToolCall
+from ..schemas.tool_calling import ToolHandlingMode
 from ..utils.caching import embedding_cache, make_cache_key
 from ..utils.api_errors import handle_api_errors
 from ..utils.tool_middleware import tool_operation, RetryConfig
@@ -200,10 +201,11 @@ class OpenAIClient:
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
         use_unified_tools: bool = True,
+        tool_handling_mode: ToolHandlingMode = ToolHandlingMode.COMPLETE_WITH_RESULTS,
         max_retries: int = 3,
     ) -> Dict[str, Any]:
         """
-        Create a chat completion with unified tool calling and retry logic.
+        Create a chat completion with flexible tool call handling.
 
         Args:
             messages: List of messages
@@ -212,10 +214,13 @@ class OpenAIClient:
             tools: Custom tools (if None, will use unified tools if available)
             tool_choice: Tool choice strategy
             use_unified_tools: Whether to automatically include unified tools
+            tool_handling_mode: How to handle tool call results:
+                - RETURN_RESULTS: Return tool results as content without further processing
+                - COMPLETE_WITH_RESULTS: Execute tools and feed results back for final completion
             max_retries: Maximum number of retry attempts
 
         Returns:
-            dict: Chat completion response with usage information
+            dict: Chat completion response with usage information and tool results
         """
         if not OPENAI_AVAILABLE or not self.client:
             raise ExternalServiceError("OpenAI client not available")
@@ -268,27 +273,50 @@ class OpenAIClient:
         response = await _make_completion()
         message = response.choices[0].message
 
-        # Handle tool calls using unified executor
+        # Initialize tool call related variables
         tool_calls_executed = []
+        final_content = message.content or ""
+        final_usage = {
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens,
+        }
+
+        # Handle tool calls if present
         if message.tool_calls:
             tool_calls_executed = await self._execute_unified_tool_calls(
                 message.tool_calls
             )
 
+            # Handle based on tool handling mode
+            if tool_handling_mode == ToolHandlingMode.RETURN_RESULTS:
+                # Mode 1: Return tool results as content
+                final_content = self._format_tool_results_as_content(tool_calls_executed)
+                logger.info("Returning tool results as content without further completion")
+
+            elif tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS:
+                # Mode 2: Feed tool results back to OpenAI for final completion
+                final_completion = await self._complete_with_tool_results(
+                    messages, message.tool_calls, tool_calls_executed, temperature, max_tokens
+                )
+                final_content = final_completion["content"]
+                # Add the additional usage from the second completion
+                final_usage["prompt_tokens"] += final_completion["usage"]["prompt_tokens"]
+                final_usage["completion_tokens"] += final_completion["usage"]["completion_tokens"]
+                final_usage["total_tokens"] += final_completion["usage"]["total_tokens"]
+                logger.info("Completed with tool results fed back to OpenAI")
+
         # Format response
         result = {
-            "content": message.content or "",
+            "content": final_content,
             "role": message.role,
             "tool_calls": [tool_call.model_dump() for tool_call in message.tool_calls]
             if message.tool_calls
             else None,
             "tool_calls_executed": tool_calls_executed,
             "finish_reason": response.choices[0].finish_reason,
-            "usage": {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens,
-            },
+            "usage": final_usage,
+            "tool_handling_mode": tool_handling_mode.value,
         }
 
         return result
@@ -331,6 +359,163 @@ class OpenAIClient:
         except Exception as e:
             logger.error(f"Failed to execute unified tool calls: {e}")
             return []
+
+    def _format_tool_results_as_content(self, tool_results: List[Dict[str, Any]]) -> str:
+        """
+        Format tool call results as human-readable content.
+        
+        This method is used when tool_handling_mode is RETURN_RESULTS.
+        
+        Args:
+            tool_results: List of tool call results
+            
+        Returns:
+            str: Formatted content string
+        """
+        if not tool_results:
+            return "No tools were executed."
+        
+        content_parts = ["# Tool Execution Results\n"]
+        
+        for i, result in enumerate(tool_results, 1):
+            content_parts.append(f"## Tool Call {i}: {result.get('tool_call_id', 'Unknown')}\n")
+            
+            if result.get("success"):
+                content_parts.append("✅ **Status**: Success\n")
+                if result.get("content"):
+                    content_parts.append("**Result**:")
+                    for content_item in result["content"]:
+                        if isinstance(content_item, dict):
+                            if content_item.get("type") == "text":
+                                content_parts.append(f"```\n{content_item.get('text', '')}\n```\n")
+                            else:
+                                content_parts.append(f"```json\n{json.dumps(content_item, indent=2)}\n```\n")
+                        else:
+                            content_parts.append(f"```\n{str(content_item)}\n```\n")
+                else:
+                    content_parts.append("*No content returned*\n")
+            else:
+                content_parts.append("❌ **Status**: Failed\n")
+                if result.get("error"):
+                    content_parts.append(f"**Error**: {result['error']}\n")
+            
+            if result.get("execution_time_ms"):
+                content_parts.append(f"**Execution Time**: {result['execution_time_ms']:.2f}ms\n")
+            
+            content_parts.append("\n---\n\n")
+        
+        return "".join(content_parts)
+
+    async def _complete_with_tool_results(
+        self,
+        original_messages: List[Dict[str, Any]],
+        tool_calls,
+        tool_results: List[Dict[str, Any]],
+        temperature: float,
+        max_tokens: Optional[int]
+    ) -> Dict[str, Any]:
+        """
+        Send tool results back to OpenAI for final completion.
+        
+        This method is used when tool_handling_mode is COMPLETE_WITH_RESULTS.
+        
+        Args:
+            original_messages: Original message history
+            tool_calls: Original tool calls from OpenAI
+            tool_results: Results from tool execution
+            temperature: Response temperature
+            max_tokens: Maximum tokens for response
+            
+        Returns:
+            dict: Final completion response
+        """
+        # Build messages with tool results
+        completion_messages = original_messages.copy()
+        
+        # Add the assistant's tool call message
+        assistant_message = {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [tool_call.model_dump() for tool_call in tool_calls]
+        }
+        completion_messages.append(assistant_message)
+        
+        # Add tool results as tool messages
+        for tool_call, result in zip(tool_calls, tool_results):
+            tool_message = {
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": self._format_tool_result_for_ai(result)
+            }
+            completion_messages.append(tool_message)
+        
+        # Make final completion call
+        @tool_operation(
+            retry_config=RetryConfig(
+                max_retries=3,
+                retriable_exceptions=(
+                    openai.RateLimitError,
+                    openai.APIConnectionError,
+                    openai.APITimeoutError,
+                ),
+            ),
+            enable_caching=False,
+            log_details=True,
+        )
+        async def _make_final_completion():
+            request_params = {
+                "model": settings.openai_chat_model,
+                "messages": completion_messages,
+                "temperature": temperature,
+            }
+            if max_tokens:
+                request_params["max_tokens"] = max_tokens
+                
+            response = await self.client.chat.completions.create(**request_params)
+            return response
+
+        final_response = await _make_final_completion()
+        final_message = final_response.choices[0].message
+
+        return {
+            "content": final_message.content or "",
+            "role": final_message.role,
+            "finish_reason": final_response.choices[0].finish_reason,
+            "usage": {
+                "prompt_tokens": final_response.usage.prompt_tokens,
+                "completion_tokens": final_response.usage.completion_tokens,
+                "total_tokens": final_response.usage.total_tokens,
+            },
+        }
+
+    def _format_tool_result_for_ai(self, result: Dict[str, Any]) -> str:
+        """
+        Format a single tool result for AI consumption.
+        
+        Args:
+            result: Tool execution result
+            
+        Returns:
+            str: Formatted result for AI
+        """
+        if not result.get("success"):
+            return f"Tool execution failed: {result.get('error', 'Unknown error')}"
+        
+        if not result.get("content"):
+            return "Tool executed successfully but returned no content."
+        
+        # Format content for AI
+        content_parts = []
+        for content_item in result["content"]:
+            if isinstance(content_item, dict):
+                if content_item.get("type") == "text":
+                    content_parts.append(content_item.get("text", ""))
+                else:
+                    content_parts.append(json.dumps(content_item, indent=2))
+            else:
+                content_parts.append(str(content_item))
+        
+        return "\n\n".join(content_parts) if content_parts else "Tool executed successfully."
 
     @handle_api_errors("Embedding creation failed")
     async def create_embedding(

@@ -44,6 +44,7 @@ from ..schemas.conversation import (
     MessageResponse,
 )
 from ..schemas.document import DocumentSearchRequest
+from ..schemas.tool_calling import ToolCallSummary, ToolCallResult
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService
@@ -359,12 +360,13 @@ class ConversationService(BaseService):
                             },
                         )
 
-            # Get AI response with unified tool calling
+            # Get AI response with unified tool calling and flexible tool handling
             ai_response = await self.openai_client.chat_completion(
                 messages=ai_messages,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
-                use_unified_tools=True,  # Use unified tools instead of manual tool calling
+                use_unified_tools=request.use_tools,
+                tool_handling_mode=request.tool_handling_mode,
             )
 
             # Create AI message
@@ -386,12 +388,20 @@ class ConversationService(BaseService):
 
             logger.info(f"Chat processed for conversation {conversation.id}")
 
+            # Create tool call summary if tools were executed
+            tool_call_summary = None
+            tool_calls_executed = ai_response.get("tool_calls_executed", [])
+            if tool_calls_executed:
+                tool_call_summary = self._create_tool_call_summary(tool_calls_executed)
+
             return {
                 "ai_message": MessageResponse.model_validate(ai_message),
                 "conversation": ConversationResponse.model_validate(conversation),
                 "usage": ai_response["usage"],
                 "rag_context": rag_context,
-                "tool_calls_made": ai_response.get("tool_calls_executed", []),
+                "tool_calls_made": tool_calls_executed,  # Deprecated but maintained for compatibility
+                "tool_call_summary": tool_call_summary,
+                "tool_handling_mode": ai_response.get("tool_handling_mode"),
             }
 
         except Exception as e:
@@ -482,6 +492,50 @@ class ConversationService(BaseService):
             )
 
         return "\n".join(formatted_parts)
+
+    def _create_tool_call_summary(self, tool_calls_executed: List[Dict[str, Any]]) -> ToolCallSummary:
+        """
+        Create a tool call summary from executed tool calls.
+        
+        Args:
+            tool_calls_executed: List of executed tool call results
+            
+        Returns:
+            ToolCallSummary: Summary of tool call execution
+        """
+        if not tool_calls_executed:
+            return ToolCallSummary(
+                total_calls=0,
+                successful_calls=0,
+                failed_calls=0,
+                total_execution_time_ms=0.0,
+                results=[]
+            )
+        
+        successful_calls = sum(1 for call in tool_calls_executed if call.get("success", False))
+        failed_calls = len(tool_calls_executed) - successful_calls
+        total_execution_time = sum(call.get("execution_time_ms", 0) or 0 for call in tool_calls_executed)
+        
+        # Convert to ToolCallResult objects
+        results = []
+        for call in tool_calls_executed:
+            results.append(ToolCallResult(
+                tool_call_id=call.get("tool_call_id", ""),
+                tool_name=call.get("tool_name", "unknown"),
+                success=call.get("success", False),
+                content=call.get("content", []),
+                error=call.get("error"),
+                provider=call.get("provider"),
+                execution_time_ms=call.get("execution_time_ms")
+            ))
+        
+        return ToolCallSummary(
+            total_calls=len(tool_calls_executed),
+            successful_calls=successful_calls,
+            failed_calls=failed_calls,
+            total_execution_time_ms=total_execution_time,
+            results=results
+        )
 
     async def get_user_stats(self, user_id: UUID) -> Dict[str, Any]:
         """

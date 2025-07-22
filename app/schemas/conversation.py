@@ -16,6 +16,7 @@ from pydantic import Field, field_validator, constr
 
 from .base import BaseSchema
 from .common import BaseResponse
+from .tool_calling import ToolHandlingMode, ToolCallSummary
 
 
 class ConversationBase(BaseSchema):
@@ -176,6 +177,10 @@ class ChatRequest(BaseSchema):
     )
     use_rag: bool = Field(True, description="Whether to use RAG for context")
     use_tools: bool = Field(True, description="Whether to enable tool calling")
+    tool_handling_mode: ToolHandlingMode = Field(
+        default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
+        description="How to handle tool call results: return_results or complete_with_results"
+    )
     rag_documents: Optional[List[UUID]] = Field(
         None, description="Specific document IDs for RAG"
     )
@@ -200,6 +205,7 @@ class ChatRequest(BaseSchema):
                 "conversation_title": "ML Discussion",
                 "use_rag": True,
                 "use_tools": True,
+                "tool_handling_mode": "complete_with_results",
                 "rag_documents": [
                     "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                     "5c50a4ea-1111-49ed-bd96-31c0b971e319",
@@ -221,7 +227,10 @@ class ChatResponse(BaseResponse):
         None, description="RAG context used"
     )
     tool_calls_made: Optional[List[Dict[str, Any]]] = Field(
-        None, description="Tool calls executed"
+        None, description="Tool calls executed (deprecated - use tool_call_summary)"
+    )
+    tool_call_summary: Optional[ToolCallSummary] = Field(
+        None, description="Detailed summary of tool calls executed"
     )
     response_time_ms: float = Field(0.0, description="Response time in milliseconds")
 
