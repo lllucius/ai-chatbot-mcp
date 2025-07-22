@@ -16,12 +16,12 @@ import { AuthProvider, useAuth } from './services/AuthContext';
 import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
 
-function AppContent() {
+function AppContent(): JSX.Element {
   const { user, logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentView, setCurrentView] = useState('chat');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [currentView, setCurrentView] = useState<string>('chat');
 
-  const handleViewChange = (view) => {
+  const handleViewChange = (view: string): void => {
     setCurrentView(view);
     setSidebarOpen(false); // Close sidebar on mobile after selection
   };
@@ -91,7 +91,7 @@ function AppContent() {
   );
 }
 
-function App() {
+function App(): JSX.Element {
   return (
     <ErrorBoundary>
       <AuthProvider>

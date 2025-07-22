@@ -24,18 +24,33 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const DRAWER_WIDTH = 240;
 
-const Sidebar = ({ open, onClose, currentView, onViewChange, isAdmin }) => {
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ReactElement;
+  path: string;
+}
+
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+  currentView: string;
+  onViewChange: (view: string) => void;
+  isAdmin: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentView, onViewChange, isAdmin }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const userMenuItems = [
+  const userMenuItems: MenuItem[] = [
     { id: 'chat', label: 'Chat', icon: <Chat />, path: '/chat' },
     { id: 'dashboard', label: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
     { id: 'documents', label: 'My Documents', icon: <Description />, path: '/documents' },
     { id: 'profile', label: 'Profile & Settings', icon: <Settings />, path: '/profile' },
   ];
 
-  const adminMenuItems = [
+  const adminMenuItems: MenuItem[] = [
     { id: 'admin', label: 'Admin Dashboard', icon: <AdminPanelSettings />, path: '/admin' },
     { id: 'users', label: 'User Management', icon: <People />, path: '/admin/users' },
     { id: 'documents', label: 'Documents', icon: <Description />, path: '/admin/documents' },
@@ -43,7 +58,7 @@ const Sidebar = ({ open, onClose, currentView, onViewChange, isAdmin }) => {
     { id: 'settings', label: 'Settings', icon: <Settings />, path: '/admin/settings' },
   ];
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item: MenuItem): void => {
     navigate(item.path);
     onViewChange(item.id);
   };

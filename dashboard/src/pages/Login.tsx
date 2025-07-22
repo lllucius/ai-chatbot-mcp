@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 import {
   Container,
   Paper,
@@ -12,14 +12,14 @@ import {
 import { Chat } from '@mui/icons-material';
 import { useAuth } from '../services/AuthContext';
 
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+const Login: React.FC = () => {
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -33,10 +33,18 @@ const Login = () => {
     const result = await login(username, password);
     
     if (!result.success) {
-      setError(result.error);
+      setError(result.error || 'Login failed');
     }
     
     setLoading(false);
+  };
+
+  const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setUsername(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setPassword(e.target.value);
   };
 
   return (
@@ -84,7 +92,7 @@ const Login = () => {
               autoComplete="username"
               autoFocus
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={handleUsernameChange}
               disabled={loading}
             />
             <TextField
@@ -97,7 +105,7 @@ const Login = () => {
               id="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               disabled={loading}
             />
             <Button

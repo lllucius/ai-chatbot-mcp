@@ -2,7 +2,7 @@
   "name": "ai-chatbot-dashboard",
   "version": "1.0.0",
   "description": "React-based dashboard for AI Chatbot Platform with admin and user features",
-  "main": "src/index.js",
+  "main": "src/index.tsx",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
