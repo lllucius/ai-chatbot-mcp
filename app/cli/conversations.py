@@ -11,6 +11,7 @@ Provides comprehensive conversation management functionality including:
 
 import asyncio
 import json
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
@@ -109,11 +110,11 @@ def list(
                 
                 # Create table
                 table = Table(title=f"Conversations ({len(conversations)} found)")
-                table.add_column("ID", style="cyan", width=8)
-                table.add_column("Title", style="green", width=30)
+                table.add_column("ID", style="cyan", width=36)  # Width for full UUID
+                table.add_column("Title", style="green", width=25)
                 table.add_column("User", style="blue", width=15)
-                table.add_column("Messages", width=10)
-                table.add_column("Status", width=10)
+                table.add_column("Messages", width=8)
+                table.add_column("Status", width=8)
                 table.add_column("Created", width=12)
                 table.add_column("Updated", width=12)
                 
@@ -122,7 +123,7 @@ def list(
                     message_count = message_counts.get(conv.id, 0)
                     status = "🟢 Active" if conv.is_active else "⚪ Inactive"
                     
-                    title_display = conv.title[:27] + "..." if len(conv.title) > 30 else conv.title
+                    title_display = conv.title[:22] + "..." if len(conv.title) > 25 else conv.title
                     
                     table.add_row(
                         str(conv.id),
@@ -144,7 +145,7 @@ def list(
 
 @conversation_app.command()
 def show(
-    conversation_id: int = typer.Argument(..., help="Conversation ID to show details for"),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to show details for"),
     show_messages: bool = typer.Option(False, "--messages", "-m", help="Show recent messages"),
     message_limit: int = typer.Option(10, "--message-limit", help="Number of recent messages to show"),
 ):
@@ -154,6 +155,14 @@ def show(
     async def _show_conversation():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(conversation_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {conversation_id}")
+                    return
+                
                 # Get conversation with user info
                 result = await db.execute(
                     select(Conversation, User)
@@ -252,7 +261,7 @@ def show(
 
 @conversation_app.command()
 def export(
-    conversation_id: int = typer.Argument(..., help="Conversation ID to export"),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to export"),
     output_file: str = typer.Option(None, "--output", "-o", help="Output file path (default: conversation_{id}.json)"),
     format: str = typer.Option("json", "--format", "-f", help="Export format: json, txt, csv"),
 ):
@@ -262,6 +271,14 @@ def export(
     async def _export_conversation():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(conversation_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {conversation_id}")
+                    return
+                
                 # Get conversation with messages
                 conversation = await db.scalar(
                     select(Conversation).where(Conversation.id == conversation_id)
@@ -355,8 +372,122 @@ def export(
 
 
 @conversation_app.command()
+def import_conversation(
+    input_file: str = typer.Argument(..., help="Path to JSON file to import"),
+    user_id: str = typer.Option(None, "--user-id", help="User ID to associate imported conversation with"),
+):
+    """Import a conversation from a JSON file."""
+    
+    @async_command
+    async def _import_conversation():
+        async with AsyncSessionLocal() as db:
+            try:
+                # Check if file exists
+                if not os.path.exists(input_file):
+                    error_message(f"File not found: {input_file}")
+                    return
+                
+                # Load JSON data
+                with open(input_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                # Validate JSON structure
+                if "conversation" not in data or "messages" not in data:
+                    error_message("Invalid JSON format. Expected 'conversation' and 'messages' keys.")
+                    return
+                
+                conv_data = data["conversation"]
+                messages_data = data["messages"]
+                
+                # Get or validate user
+                target_user_id = None
+                if user_id:
+                    try:
+                        import uuid
+                        target_user_id = uuid.UUID(user_id)
+                        user = await db.scalar(select(User).where(User.id == target_user_id))
+                        if not user:
+                            error_message(f"User with ID {user_id} not found")
+                            return
+                    except ValueError:
+                        error_message(f"Invalid UUID format: {user_id}")
+                        return
+                else:
+                    # Try to find user by username from export data
+                    if conv_data.get("user"):
+                        user = await db.scalar(select(User).where(User.username == conv_data["user"]))
+                        if user:
+                            target_user_id = user.id
+                        else:
+                            # Create system user if none found
+                            from ..services.user import UserService
+                            user_service = UserService(db)
+                            system_user = await user_service.create_user(
+                                username="system",
+                                email="system@localhost",
+                                password="system",
+                                full_name="System User",
+                                is_superuser=True
+                            )
+                            target_user_id = system_user.id
+                
+                if not target_user_id:
+                    error_message("No valid user found for conversation import")
+                    return
+                
+                # Create new conversation
+                new_conversation = Conversation(
+                    title=conv_data.get("title", "Imported Conversation"),
+                    user_id=target_user_id,
+                    is_active=conv_data.get("is_active", True),
+                    message_count=len(messages_data)
+                )
+                
+                db.add(new_conversation)
+                await db.flush()  # Get the ID
+                
+                # Import messages
+                imported_messages = []
+                for msg_data in messages_data:
+                    message = Message(
+                        conversation_id=new_conversation.id,
+                        role=msg_data.get("role", "user"),
+                        content=msg_data.get("content", ""),
+                        token_count=msg_data.get("token_count", 0)
+                    )
+                    imported_messages.append(message)
+                
+                db.add_all(imported_messages)
+                await db.commit()
+                
+                success_message(f"Conversation imported successfully!")
+                info_message(f"New conversation ID: {new_conversation.id}")
+                info_message(f"Imported messages: {len(imported_messages)}")
+                
+                # Show summary table
+                table = Table(title="Import Summary")
+                table.add_column("Field", style="cyan")
+                table.add_column("Value", style="green")
+                
+                table.add_row("Conversation ID", str(new_conversation.id))
+                table.add_row("Title", new_conversation.title)
+                table.add_row("User ID", str(target_user_id))
+                table.add_row("Messages", str(len(imported_messages)))
+                table.add_row("Status", "Active" if new_conversation.is_active else "Inactive")
+                
+                console.print(table)
+                
+            except json.JSONDecodeError as e:
+                error_message(f"Invalid JSON file: {e}")
+            except Exception as e:
+                error_message(f"Failed to import conversation: {e}")
+    
+    _import_conversation()
+
+
+@conversation_app.command()
 def delete(
-    conversation_id: int = typer.Argument(..., help="Conversation ID to delete"),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to delete"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ):
     """Delete a conversation and all its messages."""
@@ -365,6 +496,14 @@ def delete(
     async def _delete_conversation():
         async with AsyncSessionLocal() as db:
             try:
+                # Validate UUID format
+                try:
+                    import uuid
+                    uuid.UUID(conversation_id)
+                except ValueError:
+                    error_message(f"Invalid UUID format: {conversation_id}")
+                    return
+                
                 conversation = await db.scalar(
                     select(Conversation).where(Conversation.id == conversation_id)
                 )

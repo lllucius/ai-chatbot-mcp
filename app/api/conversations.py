@@ -11,8 +11,10 @@ Current User: lllucius
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
+import json
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..database import get_db
@@ -271,6 +273,58 @@ async def chat(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Chat processing failed",
+        )
+
+
+@router.post("/chat/stream")
+async def chat_stream(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    conversation_service: ConversationService = Depends(get_conversation_service),
+):
+    """
+    Send a message and get a streaming AI response.
+
+    Returns a Server-Sent Events (SSE) stream of the AI response as it's generated,
+    providing real-time feedback to the user.
+    """
+    try:
+        async def generate_response():
+            # Send initial event
+            yield f"data: {json.dumps({'type': 'start', 'message': 'Generating response...'})}\n\n"
+            
+            # Process chat request with streaming
+            async for chunk in conversation_service.process_chat_stream(request, current_user.id):
+                if chunk.get("type") == "content":
+                    # Stream content chunks
+                    yield f"data: {json.dumps({'type': 'content', 'content': chunk.get('content', '')})}\n\n"
+                elif chunk.get("type") == "tool_call":
+                    # Stream tool call information
+                    yield f"data: {json.dumps({'type': 'tool_call', 'tool': chunk.get('tool'), 'result': chunk.get('result')})}\n\n"
+                elif chunk.get("type") == "complete":
+                    # Send completion event with full response
+                    yield f"data: {json.dumps({'type': 'complete', 'response': chunk.get('response')})}\n\n"
+                    break
+            
+            # Send end event
+            yield f"data: {json.dumps({'type': 'end'})}\n\n"
+        
+        return StreamingResponse(
+            generate_response(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+            }
+        )
+
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process streaming chat request: {str(e)}",
         )
 
 

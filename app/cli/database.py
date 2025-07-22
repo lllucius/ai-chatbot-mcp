@@ -206,12 +206,16 @@ def migrations():
     @async_command
     async def _migration_status():
         try:
+            # Get the project root directory dynamically
+            import os
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            
             # Check if alembic is available
             result = subprocess.run(
                 ["alembic", "--help"], 
                 capture_output=True, 
                 text=True, 
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if result.returncode != 0:
@@ -223,7 +227,7 @@ def migrations():
                 ["alembic", "current"], 
                 capture_output=True, 
                 text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if current_result.returncode == 0:
@@ -238,7 +242,7 @@ def migrations():
                 ["alembic", "history"], 
                 capture_output=True, 
                 text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if history_result.returncode == 0 and history_result.stdout.strip():
@@ -252,7 +256,7 @@ def migrations():
                 ["alembic", "heads"], 
                 capture_output=True, 
                 text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if heads_result.returncode == 0:
@@ -275,13 +279,17 @@ def upgrade(
     
     def _upgrade_database():
         try:
+            # Get the project root directory dynamically
+            import os
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            
             info_message(f"Running database migrations to {revision}...")
             
             result = subprocess.run(
                 ["alembic", "upgrade", revision], 
                 capture_output=True, 
                 text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if result.returncode == 0:
@@ -483,17 +491,21 @@ def vacuum():
         try:
             info_message("Running database VACUUM...")
             
-            async with AsyncSessionLocal() as db:
-                # Run VACUUM on main tables
-                tables_to_vacuum = [
-                    "users", "documents", "document_chunks", 
-                    "conversations", "messages"
-                ]
-                
+            # VACUUM cannot run inside a transaction, so we need a direct connection
+            from ..database import engine
+            
+            # Run VACUUM on main tables
+            tables_to_vacuum = [
+                "users", "documents", "document_chunks", 
+                "conversations", "messages"
+            ]
+            
+            async with engine.connect() as conn:
+                # Check which tables exist first
                 for table_name in tables_to_vacuum:
                     try:
                         # Check if table exists
-                        exists_result = await db.execute(text("""
+                        exists_result = await conn.execute(text("""
                             SELECT EXISTS (
                                 SELECT FROM information_schema.tables 
                                 WHERE table_name = :table_name
@@ -501,16 +513,17 @@ def vacuum():
                         """), {"table_name": table_name})
                         
                         if exists_result.scalar():
-                            await db.execute(text(f'VACUUM ANALYZE "{table_name}"'))
+                            # Execute VACUUM outside of transaction
+                            await conn.execute(text("COMMIT"))  # End any existing transaction
+                            await conn.execute(text(f'VACUUM ANALYZE "{table_name}"'))
                             info_message(f"Vacuumed table: {table_name}")
                         else:
                             warning_message(f"Table not found: {table_name}")
                             
                     except Exception as e:
                         warning_message(f"Failed to vacuum {table_name}: {e}")
-                
-                await db.commit()
-                success_message("Database VACUUM completed")
+            
+            success_message("Database VACUUM completed")
                 
         except Exception as e:
             error_message(f"Database VACUUM failed: {e}")
@@ -552,7 +565,7 @@ def analyze():
                 index_stats = await db.execute(text("""
                     SELECT 
                         schemaname,
-                        tablename,
+                        relname as tablename,
                         indexname,
                         idx_scan as scans,
                         pg_size_pretty(pg_relation_size(indexrelid)) as size
