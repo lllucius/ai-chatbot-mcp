@@ -1,9 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import { User, TokenResponse } from '../types';
 
-const AuthContext = createContext();
+interface AuthContextType {
+  user: User | null;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  loading: boolean;
+}
 
-export const useAuth = () => {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -16,9 +24,13 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -28,14 +40,15 @@ export const AuthProvider = ({ children }) => {
       // Demo mode check
       if (token.startsWith('demo-token-')) {
         const username = token.includes('admin') ? 'admin' : 'demo';
-        const demoUser = {
-          id: 1,
+        const demoUser: User = {
+          id: '1',
           username: username,
           email: `${username}@example.com`,
           full_name: username === 'admin' ? 'Administrator' : 'Demo User',
           is_superuser: username === 'admin',
           is_active: true,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
         setUser(demoUser);
         setLoading(false);
@@ -59,18 +72,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (username, password) => {
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       // Demo mode for showcase - remove in production
       if ((username === 'admin' && password === 'admin') || (username === 'demo' && password === 'demo')) {
-        const demoUser = {
-          id: 1,
+        const demoUser: User = {
+          id: '1',
           username: username,
           email: `${username}@example.com`,
           full_name: username === 'admin' ? 'Administrator' : 'Demo User',
           is_superuser: username === 'admin',
           is_active: true,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
         
         localStorage.setItem('token', 'demo-token-' + Date.now());
@@ -82,20 +96,20 @@ export const AuthProvider = ({ children }) => {
       // Send credentials as JSON instead of FormData
       const credentials = { username, password };
 
-      const response = await axios.post('/api/v1/auth/login', credentials, {
+      const response = await axios.post<TokenResponse>('/api/v1/auth/login', credentials, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      const { access_token, user: userData } = response.data;
+      const { access_token, user: userData } = response.data as any;
       
       localStorage.setItem('token', access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setUser(userData);
       
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       return { 
         success: false, 
         error: error.response?.data?.detail || 'Login failed' 
@@ -103,13 +117,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = (): void => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     login,
     logout,

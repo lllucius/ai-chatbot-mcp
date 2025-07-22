@@ -1,7 +1,16 @@
-import React from 'react';
-import { Component } from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { Box, Typography, Button, Alert } from '@mui/material';
 import { Refresh, BugReport } from '@mui/icons-material';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
 
 /**
  * ErrorBoundary Component
@@ -9,8 +18,8 @@ import { Refresh, BugReport } from '@mui/icons-material';
  * React error boundary to catch and handle JavaScript errors anywhere in the child component tree.
  * Provides a fallback UI and error reporting capabilities.
  */
-class ErrorBoundary extends Component {
-  constructor(props) {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
@@ -18,14 +27,14 @@ class ErrorBoundary extends Component {
   /**
    * Catch errors during rendering
    */
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true };
   }
 
   /**
    * Log error details
    */
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({
       error: error,
       errorInfo: errorInfo
@@ -43,18 +52,18 @@ class ErrorBoundary extends Component {
   /**
    * Reset error state
    */
-  handleReset = () => {
+  handleReset = (): void => {
     this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   /**
    * Reload the page
    */
-  handleReload = () => {
+  handleReload = (): void => {
     window.location.reload();
   };
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
         <Box
@@ -102,7 +111,7 @@ class ErrorBoundary extends Component {
               <Typography variant="body2" component="pre" sx={{ fontSize: '0.75rem', overflow: 'auto' }}>
                 {this.state.error && this.state.error.toString()}
                 <br />
-                {this.state.errorInfo.componentStack}
+                {this.state.errorInfo?.componentStack}
               </Typography>
             </Alert>
           )}

@@ -1,0 +1,4263 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Chatbot Platform",
+    "description": "Production-grade AI chatbot with RAG capabilities and REQUIRED FastMCP integration",
+    "version": "1.0.0",
+    "x-logo": {
+      "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
+    }
+  },
+  "paths": {
+    "/api/v1/health/": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Basic Health Check",
+        "description": "Basic health check endpoint.\n\nReturns:\n    dict: Basic application status",
+        "operationId": "basic_health_check_api_v1_health__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/detailed": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Detailed Health Check",
+        "description": "Detailed health check with all system components.\n\nArgs:\n    db: Database session for connectivity check\n\nReturns:\n    dict: Comprehensive system health status",
+        "operationId": "detailed_health_check_api_v1_health_detailed_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Detailed Health Check Api V1 Health Detailed Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/database": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Database Health Check",
+        "description": "Database connectivity health check.\n\nArgs:\n    db: Database session\n\nReturns:\n    dict: Database health status",
+        "operationId": "database_health_check_api_v1_health_database_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Database Health Check Api V1 Health Database Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/services": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Services Health Check",
+        "description": "External services health check.\n\nReturns:\n    dict: External services health status",
+        "operationId": "services_health_check_api_v1_health_services_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Services Health Check Api V1 Health Services Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/metrics": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Get System Metrics",
+        "description": "Get system performance metrics.\n\nReturns:\n    dict: System metrics and performance data",
+        "operationId": "get_system_metrics_api_v1_health_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get System Metrics Api V1 Health Metrics Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/readiness": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Readiness Check",
+        "description": "Kubernetes-style readiness probe.\n\nArgs:\n    db: Database session\n\nReturns:\n    dict: Readiness status",
+        "operationId": "readiness_check_api_v1_health_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Readiness Check Api V1 Health Readiness Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/performance": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Get Performance Metrics",
+        "description": "Get comprehensive performance metrics and statistics.\n\nReturns:\n    dict: Performance metrics and system health data",
+        "operationId": "get_performance_metrics_api_v1_health_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Performance Metrics Api V1 Health Performance Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/liveness": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Liveness Check",
+        "description": "Kubernetes-style liveness probe.\n\nReturns:\n    dict: Liveness status",
+        "operationId": "liveness_check_api_v1_health_liveness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Liveness Check Api V1 Health Liveness Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Register",
+        "description": "Register a new user account with validation and conflict detection.\n\nCreates a new user account with the provided credentials after validating\nthat username and email are unique. Implements comprehensive input validation\nand security checks to ensure account integrity.\n\nArgs:\n    request: User registration data including credentials and profile info\n    auth_service: Injected authentication service instance\n\nReturns:\n    UserResponse: Created user profile information (without sensitive data)\n\nRaises:\n    HTTP 400: If username/email already exists or validation fails\n    HTTP 500: If user creation process fails\n\nSecurity Notes:\n    - Passwords are securely hashed before storage\n    - Input validation prevents malicious data injection\n    - Duplicate detection ensures unique user identities\n    - Registration events are logged for security monitoring\n\nExample:\n    POST /api/v1/auth/register\n    {\n        \"username\": \"johndoe\",\n        \"email\": \"john@example.com\",\n        \"password\": \"SecurePassword123!\",\n        \"full_name\": \"John Doe\"\n    }",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Login",
+        "description": "Authenticate user and return JWT access token.\n\nValidates user credentials against stored information and returns a JWT token\nfor accessing protected endpoints. Supports authentication with either username\nor email address for user convenience.\n\nArgs:\n    request: Login credentials (username/email and password)\n    auth_service: Injected authentication service instance\n\nReturns:\n    Token: JWT access token with expiration information\n\nRaises:\n    HTTP 401: If credentials are invalid or account is inactive\n    HTTP 500: If authentication process fails\n\nSecurity Notes:\n    - Supports both username and email authentication\n    - Password verification uses secure hashing comparison\n    - Login attempts are logged for security monitoring\n    - Token expiration provides time-limited access\n    - Failed attempts can trigger rate limiting\n\nExample:\n    POST /api/v1/auth/login\n    {\n        \"username\": \"johndoe\",  # or email\n        \"password\": \"SecurePassword123!\"\n    }",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Get Current User Info",
+        "description": "Get current authenticated user information.\n\nReturns the profile information for the currently authenticated user\nbased on the JWT token provided in the Authorization header.\n\nArgs:\n    current_user: Automatically injected current user from JWT token\n\nReturns:\n    UserResponse: Current user profile information\n\nSecurity Notes:\n    - Requires valid JWT token in Authorization header\n    - User information is retrieved from token validation\n    - No sensitive information (password hash) is returned\n    - Endpoint can be used to verify token validity\n\nExample:\n    GET /api/v1/auth/me\n    Authorization: Bearer <jwt_token>",
+        "operationId": "get_current_user_info_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Logout",
+        "description": "Logout current user (client-side token invalidation).\n\nSince JWT tokens are stateless, this endpoint primarily serves as a\nclient-side logout indicator. Clients should discard their tokens\nafter calling this endpoint.\n\nReturns:\n    BaseResponse: Success message confirming logout\n\nNote:\n    For complete security in production, consider implementing:\n    - Token blacklisting on the server side\n    - Token refresh rotation\n    - Short-lived access tokens with refresh tokens\n\nExample:\n    POST /api/v1/auth/logout\n    Authorization: Bearer <jwt_token>",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Refresh Token",
+        "description": "Refresh JWT access token for continued access.\n\nGenerates a new JWT access token for the current user, extending their\nsession without requiring re-authentication. Requires a valid existing\ntoken to prevent unauthorized token generation.\n\nArgs:\n    current_user: Automatically injected current user from JWT token\n    auth_service: Injected authentication service instance\n\nReturns:\n    Token: New JWT access token with fresh expiration time\n\nRaises:\n    HTTP 401: If current token is invalid or expired\n    HTTP 500: If token generation fails\n\nSecurity Notes:\n    - Requires valid existing token for refresh\n    - New token has updated expiration time\n    - Original token should be discarded by client\n    - Refresh operations are logged for monitoring\n\nExample:\n    POST /api/v1/auth/refresh\n    Authorization: Bearer <current_jwt_token>",
+        "operationId": "refresh_token_api_v1_auth_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset": {
+      "post": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Request Password Reset",
+        "description": "Request password reset.\n\nInitiates password reset process for the given email address.\nNote: This is a placeholder implementation.",
+        "operationId": "request_password_reset_api_v1_auth_password_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password-reset/confirm": {
+      "post": {
+        "tags": [
+          "authentication",
+          "authentication"
+        ],
+        "summary": "Confirm Password Reset",
+        "description": "Confirm password reset.\n\nResets user password using the provided reset token.\nNote: This is a placeholder implementation.",
+        "operationId": "confirm_password_reset_api_v1_auth_password_reset_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "Get My Profile",
+        "description": "Get current user profile with comprehensive statistics.\n\nReturns detailed profile information for the authenticated user including\naccount details, activity statistics, and engagement metrics. This endpoint\nprovides a complete view of the user's interaction with the platform.\n\nArgs:\n    current_user: Automatically injected current user from JWT token\n    user_service: Injected user service instance\n\nReturns:\n    UserResponse: Complete user profile including:\n        - Basic profile (username, email, full_name, status)\n        - Account metadata (created_at, updated_at, last_login)\n        - Activity statistics (document_count, conversation_count, total_messages)\n\nExample Response:\n    {\n        \"id\": \"uuid-here\",\n        \"username\": \"johndoe\",\n        \"email\": \"john@example.com\",\n        \"full_name\": \"John Doe\",\n        \"is_active\": true,\n        \"document_count\": 15,\n        \"conversation_count\": 8,\n        \"total_messages\": 142\n    }",
+        "operationId": "get_my_profile_api_v1_users_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "Update My Profile",
+        "description": "Update current user profile.\n\nAllows users to update their own profile information\nsuch as email and full name.",
+        "operationId": "update_my_profile_api_v1_users_me_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/me/change-password": {
+      "post": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "Change Password",
+        "description": "Change current user password.\n\nRequires the current password for verification\nand the new password.",
+        "operationId": "change_password_api_v1_users_me_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPasswordUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/": {
+      "get": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "List Users",
+        "description": "List all users (admin only).\n\nReturns paginated list of users with optional filtering.\nRequires superuser privileges.",
+        "operationId": "list_users_api_v1_users__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Active Only"
+            }
+          },
+          {
+            "name": "superuser_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Superuser Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_UserResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}": {
+      "get": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "Get User",
+        "description": "Get user by ID (admin only).\n\nReturns detailed user information including statistics.\nRequires superuser privileges.",
+        "operationId": "get_user_api_v1_users__user_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "Update User",
+        "description": "Update user by ID (admin only).\n\nAllows administrators to update any user's profile.\nRequires superuser privileges.",
+        "operationId": "update_user_api_v1_users__user_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "users",
+          "users"
+        ],
+        "summary": "Delete User",
+        "description": "Delete user by ID (admin only).\n\nPermanently deletes a user and all associated data.\nRequires superuser privileges.",
+        "operationId": "delete_user_api_v1_users__user_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/upload": {
+      "post": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Upload Document",
+        "description": "Upload a document for processing.\n\nEnhanced with auto-processing option and priority control.",
+        "operationId": "upload_document_api_v1_documents_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_document_api_v1_documents_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/documents/": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "List Documents",
+        "description": "List user's documents with pagination and filtering.\n\nReturns paginated list of documents owned by the current user\nwith optional filtering by file type and processing status.",
+        "operationId": "list_documents_api_v1_documents__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "file_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "File Type"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_DocumentResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{document_id}": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Get Document",
+        "description": "Get document by ID.\n\nReturns detailed information about a specific document\nowned by the current user.",
+        "operationId": "get_document_api_v1_documents__document_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Update Document",
+        "description": "Update document metadata.\n\nAllows updating document title and metadata.\nCannot change the actual file content.",
+        "operationId": "update_document_api_v1_documents__document_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Delete Document",
+        "description": "Delete document and all associated data.\n\nPermanently deletes the document, its chunks, embeddings,\nand removes the file from storage.",
+        "operationId": "delete_document_api_v1_documents__document_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{document_id}/status": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Get Processing Status",
+        "description": "Get document processing status.\n\nReturns current processing status, progress, and any error information\nfor the specified document.",
+        "operationId": "get_processing_status_api_v1_documents__document_id__status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessingStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{document_id}/reprocess": {
+      "post": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Reprocess Document",
+        "description": "Reprocess document.\n\nTriggers reprocessing of the document, including text extraction,\nchunking, and embedding generation. Useful if processing failed\nor if you want to update with new processing parameters.",
+        "operationId": "reprocess_document_api_v1_documents__document_id__reprocess_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{document_id}/download": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Download Document",
+        "description": "Download original document file.\n\nReturns the original uploaded file for download.",
+        "operationId": "download_document_api_v1_documents__document_id__download_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{document_id}/process": {
+      "post": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Start Document Processing",
+        "description": "Start background processing for a document.\n\nInitiates text extraction, chunking, and embedding generation.",
+        "operationId": "start_document_processing_api_v1_documents__document_id__process_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10,
+              "minimum": 1,
+              "description": "Processing priority (1=highest, 10=lowest)",
+              "default": 5,
+              "title": "Priority"
+            },
+            "description": "Processing priority (1=highest, 10=lowest)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundTaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{document_id}/enhanced-status": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Get Enhanced Processing Status",
+        "description": "Get comprehensive document processing status with background task information.\n\nIncludes both document status and background task progress details.",
+        "operationId": "get_enhanced_processing_status_api_v1_documents__document_id__enhanced_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional task ID for background processing details",
+              "title": "Task Id"
+            },
+            "description": "Optional task ID for background processing details"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessingStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/processing-config": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Get Processing Config",
+        "description": "Get current document processing configuration.\n\nReturns the current settings for chunk sizes, overlaps, and other processing parameters.",
+        "operationId": "get_processing_config_api_v1_documents_processing_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessingConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/queue-status": {
+      "get": {
+        "tags": [
+          "documents",
+          "documents"
+        ],
+        "summary": "Get Queue Status",
+        "description": "Get background processing queue status.\n\nProvides information about current queue size, active tasks, and processing capacity.",
+        "operationId": "get_queue_status_api_v1_documents_queue_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/conversations/": {
+      "post": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Create Conversation",
+        "description": "Create a new conversation.\n\nCreates a new conversation thread for the current user.",
+        "operationId": "create_conversation_api_v1_conversations__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "List Conversations",
+        "description": "List user's conversations with pagination.\n\nReturns paginated list of conversations owned by the current user\nwith optional filtering by active status.",
+        "operationId": "list_conversations_api_v1_conversations__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Active Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ConversationResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversations/{conversation_id}": {
+      "get": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Get Conversation",
+        "description": "Get conversation by ID.\n\nReturns detailed information about a specific conversation\nowned by the current user.",
+        "operationId": "get_conversation_api_v1_conversations__conversation_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Update Conversation",
+        "description": "Update conversation metadata.\n\nAllows updating conversation title, active status, and metadata.",
+        "operationId": "update_conversation_api_v1_conversations__conversation_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Delete Conversation",
+        "description": "Delete conversation and all messages.\n\nPermanently deletes the conversation and all associated messages.",
+        "operationId": "delete_conversation_api_v1_conversations__conversation_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/messages": {
+      "get": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Get Messages",
+        "description": "Get messages in a conversation.\n\nReturns paginated list of messages in the specified conversation.",
+        "operationId": "get_messages_api_v1_conversations__conversation_id__messages_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_MessageResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversations/chat": {
+      "post": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Chat",
+        "description": "Send a message and get AI response.\n\nSends a user message to the AI assistant and returns the response.\nSupports RAG (Retrieval-Augmented Generation) for context-aware responses\nand tool calling for enhanced functionality.",
+        "operationId": "chat_api_v1_conversations_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/conversations/chat/stream": {
+      "post": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Chat Stream",
+        "description": "Send a message and get a streaming AI response.\n\nReturns a Server-Sent Events (SSE) stream of the AI response as it's generated,\nproviding real-time feedback to the user.",
+        "operationId": "chat_stream_api_v1_conversations_chat_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/conversations/stats": {
+      "get": {
+        "tags": [
+          "conversations",
+          "conversations"
+        ],
+        "summary": "Get Conversation Stats",
+        "description": "Get conversation statistics for the current user.\n\nReturns statistics about the user's conversations and messages.",
+        "operationId": "get_conversation_stats_api_v1_conversations_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationStats"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/search/": {
+      "post": {
+        "tags": [
+          "search",
+          "search"
+        ],
+        "summary": "Search Documents",
+        "description": "Search through documents using various algorithms.\n\nSupports multiple search algorithms:\n- vector: Semantic similarity using embeddings\n- text: Traditional full-text search\n- hybrid: Combines vector and text search\n- mmr: Maximum Marginal Relevance for diverse results",
+        "operationId": "search_documents_api_v1_search__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/search/similar/{chunk_id}": {
+      "get": {
+        "tags": [
+          "search",
+          "search"
+        ],
+        "summary": "Find Similar Chunks",
+        "description": "Find chunks similar to a given chunk.\n\nUses vector similarity to find document chunks that are\nsemantically similar to the specified chunk.",
+        "operationId": "find_similar_chunks_api_v1_search_similar__chunk_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chunk_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Chunk Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/suggestions": {
+      "get": {
+        "tags": [
+          "search",
+          "search"
+        ],
+        "summary": "Get Search Suggestions",
+        "description": "Get search query suggestions.\n\nReturns suggested search terms based on document content\nand previous search patterns.",
+        "operationId": "get_search_suggestions_api_v1_search_suggestions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Query"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/history": {
+      "get": {
+        "tags": [
+          "search",
+          "search"
+        ],
+        "summary": "Get Search History",
+        "description": "Get user's search history.\n\nReturns recent search queries performed by the current user.\nNote: This is a placeholder implementation.",
+        "operationId": "get_search_history_api_v1_search_history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "search",
+          "search"
+        ],
+        "summary": "Clear Search History",
+        "description": "Clear user's search history.\n\nRemoves all search history entries for the current user.\nNote: This is a placeholder implementation.",
+        "operationId": "clear_search_history_api_v1_search_history_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BackgroundTaskResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "task_id",
+          "document_id",
+          "status"
+        ],
+        "title": "BackgroundTaskResponse",
+        "description": "Response schema for background task operations."
+      },
+      "BaseResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "BaseResponse",
+        "description": "Base response schema for API endpoints."
+      },
+      "Body_upload_document_api_v1_documents_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "auto_process": {
+            "type": "boolean",
+            "title": "Auto Process",
+            "default": true
+          },
+          "processing_priority": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Processing Priority",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "title"
+        ],
+        "title": "Body_upload_document_api_v1_documents_upload_post"
+      },
+      "ChatRequest": {
+        "properties": {
+          "user_message": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "User Message",
+            "description": "User message"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id",
+            "description": "Existing conversation ID"
+          },
+          "conversation_title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Title",
+            "description": "New conversation title"
+          },
+          "use_rag": {
+            "type": "boolean",
+            "title": "Use Rag",
+            "description": "Whether to use RAG for context",
+            "default": true
+          },
+          "use_tools": {
+            "type": "boolean",
+            "title": "Use Tools",
+            "description": "Whether to enable tool calling",
+            "default": true
+          },
+          "tool_handling_mode": {
+            "$ref": "#/components/schemas/ToolHandlingMode",
+            "description": "How to handle tool call results: return_results or complete_with_results",
+            "default": "complete_with_results"
+          },
+          "rag_documents": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rag Documents",
+            "description": "Specific document IDs for RAG"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 4000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "Maximum response tokens"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "description": "Response temperature",
+            "default": 0.7
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_message"
+        ],
+        "title": "ChatRequest",
+        "description": "Schema for chat request.",
+        "example": {
+          "conversation_title": "ML Discussion",
+          "max_tokens": 1000,
+          "rag_documents": [
+            "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+            "5c50a4ea-1111-49ed-bd96-31c0b971e319"
+          ],
+          "temperature": 0.7,
+          "tool_handling_mode": "complete_with_results",
+          "use_rag": true,
+          "use_tools": true,
+          "user_message": "What is machine learning?"
+        }
+      },
+      "ChatResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "ai_message": {
+            "$ref": "#/components/schemas/MessageResponse",
+            "description": "AI response message"
+          },
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationResponse",
+            "description": "Updated conversation"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage",
+            "description": "Token usage information"
+          },
+          "rag_context": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rag Context",
+            "description": "RAG context used"
+          },
+          "tool_calls_made": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Calls Made",
+            "description": "Tool calls executed (deprecated - use tool_call_summary)"
+          },
+          "tool_call_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolCallSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Detailed summary of tool calls executed"
+          },
+          "response_time_ms": {
+            "type": "number",
+            "title": "Response Time Ms",
+            "description": "Response time in milliseconds",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "ai_message",
+          "conversation"
+        ],
+        "title": "ChatResponse",
+        "description": "Schema for chat response."
+      },
+      "ConversationCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Conversation title"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether conversation is active",
+            "default": true
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Additional metainfo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "ConversationCreate",
+        "description": "Schema for creating a new conversation.",
+        "example": {
+          "is_active": true,
+          "metainfo": {
+            "category": "technical",
+            "priority": "normal"
+          },
+          "title": "AI Discussion"
+        }
+      },
+      "ConversationResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Conversation title"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether conversation is active",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Conversation ID"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id",
+            "description": "Owner user ID"
+          },
+          "message_count": {
+            "type": "integer",
+            "title": "Message Count",
+            "description": "Number of messages",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At",
+            "description": "Last message timestamp"
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Additional metainfo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "id",
+          "user_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ConversationResponse",
+        "description": "Schema for conversation response data.",
+        "example": {
+          "created_at": "2025-07-14T03:47:30Z",
+          "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "is_active": true,
+          "last_message_at": "2025-07-14T03:47:30Z",
+          "message_count": 5,
+          "metainfo": {
+            "category": "technical"
+          },
+          "title": "AI Discussion",
+          "updated_at": "2025-07-14T03:47:30Z",
+          "user_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318"
+        }
+      },
+      "ConversationStats": {
+        "properties": {
+          "total_conversations": {
+            "type": "integer",
+            "title": "Total Conversations",
+            "description": "Total conversations",
+            "default": 0
+          },
+          "active_conversations": {
+            "type": "integer",
+            "title": "Active Conversations",
+            "description": "Active conversations",
+            "default": 0
+          },
+          "total_messages": {
+            "type": "integer",
+            "title": "Total Messages",
+            "description": "Total messages",
+            "default": 0
+          },
+          "avg_messages_per_conversation": {
+            "type": "number",
+            "title": "Avg Messages Per Conversation",
+            "description": "Average messages per conversation",
+            "default": 0.0
+          },
+          "most_recent_activity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Most Recent Activity",
+            "description": "Most recent activity"
+          }
+        },
+        "type": "object",
+        "title": "ConversationStats",
+        "description": "Schema for conversation statistics."
+      },
+      "ConversationUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "New active status"
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Updated metainfo"
+          }
+        },
+        "type": "object",
+        "title": "ConversationUpdate",
+        "description": "Schema for updating conversation information.",
+        "example": {
+          "is_active": true,
+          "metainfo": {
+            "category": "research"
+          },
+          "title": "Updated AI Discussion"
+        }
+      },
+      "DocumentChunkResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Chunk ID"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "Chunk text content"
+          },
+          "chunk_index": {
+            "type": "integer",
+            "title": "Chunk Index",
+            "description": "Chunk index in document"
+          },
+          "start_char": {
+            "type": "integer",
+            "title": "Start Char",
+            "description": "Start character position"
+          },
+          "end_char": {
+            "type": "integer",
+            "title": "End Char",
+            "description": "End character position"
+          },
+          "token_count": {
+            "type": "integer",
+            "title": "Token Count",
+            "description": "Number of tokens"
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id",
+            "description": "Parent document ID"
+          },
+          "document_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Title",
+            "description": "Document title"
+          },
+          "similarity_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity Score",
+            "description": "Similarity score (for search)"
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Additional metainfo"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "content",
+          "chunk_index",
+          "start_char",
+          "end_char",
+          "token_count",
+          "document_id",
+          "created_at"
+        ],
+        "title": "DocumentChunkResponse",
+        "description": "Schema for document chunk response data.",
+        "example": {
+          "chunk_index": 0,
+          "content": "Machine learning is a subset of artificial intelligence...",
+          "created_at": "2025-07-14T03:47:30Z",
+          "document_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "document_title": "Machine Learning Guide",
+          "end_char": 500,
+          "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "metainfo": {
+            "section": "introduction"
+          },
+          "similarity_score": 0.95,
+          "start_char": 0,
+          "token_count": 120
+        }
+      },
+      "DocumentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Document ID"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Document title"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "Original filename"
+          },
+          "file_type": {
+            "type": "string",
+            "title": "File Type",
+            "description": "File type/extension"
+          },
+          "file_size": {
+            "type": "integer",
+            "title": "File Size",
+            "description": "File size in bytes"
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime Type",
+            "description": "MIME type"
+          },
+          "processing_status": {
+            "type": "string",
+            "title": "Processing Status",
+            "description": "Processing status"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Id",
+            "description": "Owner user ID"
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Additional metainfo"
+          },
+          "chunk_count": {
+            "type": "integer",
+            "title": "Chunk Count",
+            "description": "Number of chunks",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Upload timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "filename",
+          "file_type",
+          "file_size",
+          "processing_status",
+          "owner_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DocumentResponse",
+        "description": "Schema for document response data.",
+        "example": {
+          "chunk_count": 25,
+          "created_at": "2025-07-14T03:47:30Z",
+          "file_size": 2048576,
+          "file_type": "pdf",
+          "filename": "ml_guide.pdf",
+          "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "metainfo": {
+            "language": "en",
+            "pages": 50
+          },
+          "mime_type": "application/pdf",
+          "owner_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "processing_status": "completed",
+          "title": "Machine Learning Guide",
+          "updated_at": "2025-07-14T03:47:30Z"
+        }
+      },
+      "DocumentSearchRequest": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Page number",
+            "default": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Per Page",
+            "description": "Items per page",
+            "default": 10
+          },
+          "sort_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort By",
+            "description": "Field to sort by"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(asc|desc)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order",
+            "description": "Sort order: asc or desc",
+            "default": "asc"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query",
+            "description": "Search query string"
+          },
+          "algorithm": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(vector|text|hybrid|mmr)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Algorithm",
+            "description": "Search algorithm to use",
+            "default": "hybrid"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit",
+            "description": "Number of results to return",
+            "default": 10
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold",
+            "description": "Threshold to use",
+            "default": 0.7
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filters",
+            "description": "Additional search filters"
+          },
+          "document_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Ids",
+            "description": "Specific document IDs to search"
+          },
+          "file_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Types",
+            "description": "File types to include"
+          }
+        },
+        "type": "object",
+        "title": "DocumentSearchRequest",
+        "description": "Schema for document search requests.",
+        "example": {
+          "algorithm": "hybrid",
+          "document_ids": [
+            "4b40c3d9-208c-49ed-bd96-31c0b971e318"
+          ],
+          "file_types": [
+            "pdf",
+            "docx"
+          ],
+          "limit": 10,
+          "query": "machine learning algorithms",
+          "threshold": 0.8
+        }
+      },
+      "DocumentSearchResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentChunkResponse"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "Search results",
+            "default": []
+          },
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "Original search query"
+          },
+          "algorithm": {
+            "type": "string",
+            "title": "Algorithm",
+            "description": "Search algorithm used"
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "Total number of results",
+            "default": 0
+          },
+          "search_time_ms": {
+            "type": "number",
+            "title": "Search Time Ms",
+            "description": "Search time in milliseconds",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "query",
+          "algorithm"
+        ],
+        "title": "DocumentSearchResponse",
+        "description": "Response schema for document search."
+      },
+      "DocumentUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Updated metainfo"
+          }
+        },
+        "type": "object",
+        "title": "DocumentUpdate",
+        "description": "Schema for document updates.",
+        "example": {
+          "metainfo": {
+            "category": "AI/ML",
+            "difficulty": "intermediate"
+          },
+          "title": "Updated ML Guide"
+        }
+      },
+      "DocumentUploadResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "document": {
+            "$ref": "#/components/schemas/DocumentResponse",
+            "description": "Uploaded document information"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id",
+            "description": "Background processing task ID"
+          },
+          "auto_processing": {
+            "type": "boolean",
+            "title": "Auto Processing",
+            "description": "Whether auto-processing was enabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "document"
+        ],
+        "title": "DocumentUploadResponse",
+        "description": "Schema for document upload response with enhanced features."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "Username or email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Password",
+            "description": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "description": "Schema for user login request.",
+        "example": {
+          "password": "SecurePass123",
+          "username": "johndoe"
+        }
+      },
+      "MessageResponse": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "pattern": "^(user|assistant|system)$",
+            "title": "Role",
+            "description": "Message role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Content",
+            "description": "Message content"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Message ID"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Conversation Id",
+            "description": "Parent conversation ID"
+          },
+          "token_count": {
+            "type": "integer",
+            "title": "Token Count",
+            "description": "Number of tokens",
+            "default": 0
+          },
+          "tool_calls": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Calls",
+            "description": "Tool calls made"
+          },
+          "tool_call_results": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Call Results",
+            "description": "Tool call results"
+          },
+          "metainfo": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metainfo",
+            "description": "Additional metainfo"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content",
+          "id",
+          "conversation_id",
+          "created_at"
+        ],
+        "title": "MessageResponse",
+        "description": "Schema for message response data.",
+        "example": {
+          "content": "Machine learning is a subset of artificial intelligence...",
+          "conversation_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "created_at": "2025-07-14T03:47:30Z",
+          "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+          "metainfo": {
+            "model": "gpt-4"
+          },
+          "role": "assistant",
+          "token_count": 150
+        }
+      },
+      "PaginatedResponse_ConversationResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationParams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[ConversationResponse]"
+      },
+      "PaginatedResponse_DocumentResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationParams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[DocumentResponse]"
+      },
+      "PaginatedResponse_MessageResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationParams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[MessageResponse]"
+      },
+      "PaginatedResponse_UserResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationParams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "pagination"
+        ],
+        "title": "PaginatedResponse[UserResponse]"
+      },
+      "PaginationParams": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Page number",
+            "default": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Per Page",
+            "description": "Items per page",
+            "default": 10
+          },
+          "sort_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort By",
+            "description": "Field to sort by"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(asc|desc)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order",
+            "description": "Sort order: asc or desc",
+            "default": "asc"
+          }
+        },
+        "type": "object",
+        "title": "PaginationParams",
+        "description": "Query parameters for pagination."
+      },
+      "PasswordResetConfirm": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Password reset token"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "New Password",
+            "description": "New password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "title": "PasswordResetConfirm",
+        "description": "Schema for password reset confirmation.",
+        "example": {
+          "new_password": "NewSecurePass123",
+          "token": "reset_token_here"
+        }
+      },
+      "PasswordResetRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Email address for password reset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "PasswordResetRequest",
+        "description": "Schema for password reset request.",
+        "example": {
+          "email": "john@example.com"
+        }
+      },
+      "ProcessingConfigResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "config"
+        ],
+        "title": "ProcessingConfigResponse",
+        "description": "Response schema for processing configuration."
+      },
+      "ProcessingStatusResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable message"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "When the response was generated"
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id",
+            "description": "Document ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current processing status"
+          },
+          "chunk_count": {
+            "type": "integer",
+            "title": "Chunk Count",
+            "description": "Number of chunks created",
+            "default": 0
+          },
+          "processing_time": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Time",
+            "description": "Processing time in seconds"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "Error message if failed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Document creation time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Document last update time"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id",
+            "description": "Background task ID"
+          },
+          "task_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Status",
+            "description": "Background task status"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress",
+            "description": "Processing progress (0-1)"
+          },
+          "task_created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Created At",
+            "description": "Task creation time"
+          },
+          "task_started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Started At",
+            "description": "Task start time"
+          },
+          "task_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Error",
+            "description": "Task error message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "document_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProcessingStatusResponse",
+        "description": "Enhanced schema for document processing status with background task information."
+      },
+      "RegisterRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "Unique username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Valid email address"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Password",
+            "description": "Strong password"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "Full display name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest",
+        "description": "Schema for user registration request.",
+        "example": {
+          "email": "john@example.com",
+          "full_name": "John Doe",
+          "password": "SecurePass123",
+          "username": "johndoe"
+        }
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "JWT access token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Token expiration in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "Token",
+        "description": "Schema for JWT token response.",
+        "example": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "expires_in": 1800,
+          "token_type": "bearer"
+        }
+      },
+      "ToolCallResult": {
+        "properties": {
+          "tool_call_id": {
+            "type": "string",
+            "title": "Tool Call Id",
+            "description": "ID of the tool call"
+          },
+          "tool_name": {
+            "type": "string",
+            "title": "Tool Name",
+            "description": "Name of the tool that was called"
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the tool call was successful"
+          },
+          "content": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Content",
+            "description": "Tool result content"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error message if tool call failed"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "Tool provider (fastmcp, openai, etc.)"
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms",
+            "description": "Execution time in milliseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool_call_id",
+          "tool_name",
+          "success"
+        ],
+        "title": "ToolCallResult",
+        "description": "Schema for individual tool call result."
+      },
+      "ToolCallSummary": {
+        "properties": {
+          "total_calls": {
+            "type": "integer",
+            "title": "Total Calls",
+            "description": "Total number of tool calls made"
+          },
+          "successful_calls": {
+            "type": "integer",
+            "title": "Successful Calls",
+            "description": "Number of successful tool calls"
+          },
+          "failed_calls": {
+            "type": "integer",
+            "title": "Failed Calls",
+            "description": "Number of failed tool calls"
+          },
+          "total_execution_time_ms": {
+            "type": "number",
+            "title": "Total Execution Time Ms",
+            "description": "Total execution time in milliseconds"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ToolCallResult"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "Individual tool call results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_calls",
+          "successful_calls",
+          "failed_calls",
+          "total_execution_time_ms"
+        ],
+        "title": "ToolCallSummary",
+        "description": "Schema for tool call execution summary."
+      },
+      "ToolHandlingMode": {
+        "type": "string",
+        "enum": [
+          "return_results",
+          "complete_with_results"
+        ],
+        "title": "ToolHandlingMode",
+        "description": "Enum for different tool call result handling modes.\n\n- RETURN_RESULTS: Return tool call results as content without further AI processing\n- COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion"
+      },
+      "UserPasswordUpdate": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password",
+            "description": "Current password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password",
+            "description": "New password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "UserPasswordUpdate",
+        "description": "Schema for updating user password."
+      },
+      "UserResponse": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Username",
+            "description": "Unique username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "User's full name"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique user identifier"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether the user account is active"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser",
+            "description": "Whether the user has admin privileges"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When the user account was created"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "When the user account was last updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "id",
+          "is_active",
+          "is_superuser",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserResponse",
+        "description": "Schema for user API responses."
+      },
+      "UserUpdate": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "New email address"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "Updated full name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Whether user is active"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate",
+        "description": "Schema for updating a user."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter JWT token"
+      }
+    }
+  }
+}
