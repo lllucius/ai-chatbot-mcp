@@ -43,13 +43,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
+      // Send credentials as JSON instead of FormData
+      const credentials = { username, password };
 
-      const response = await axios.post('/api/v1/auth/login', formData, {
+      const response = await axios.post('/api/v1/auth/login', credentials, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       });
 
