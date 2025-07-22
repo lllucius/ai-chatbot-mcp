@@ -261,6 +261,7 @@ async def chat(
             usage=result.get("usage"),
             rag_context=result.get("rag_context"),
             tool_calls_made=result.get("tool_calls_made"),
+            tool_call_summary=result.get("tool_call_summary"),
             response_time_ms=response_time_ms,
         )
 
