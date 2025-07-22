@@ -36,7 +36,7 @@ from ..schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(tags=["users"])
 
 
 async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:

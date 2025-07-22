@@ -122,8 +122,7 @@ def workers():
             stats_result = subprocess.run(
                 ["celery", "-A", "app.services.background_processor", "inspect", "stats"], 
                 capture_output=True, 
-                text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                text=True
             )
             
             if stats_result.returncode != 0:
@@ -166,8 +165,7 @@ def workers():
                 registered_result = subprocess.run(
                     ["celery", "-A", "app.services.background_processor", "inspect", "registered"], 
                     capture_output=True, 
-                    text=True,
-                    cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                    text=True
                 )
                 
                 if registered_result.returncode == 0:
@@ -270,8 +268,7 @@ def active():
             active_result = subprocess.run(
                 ["celery", "-A", "app.services.background_processor", "inspect", "active"], 
                 capture_output=True, 
-                text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                text=True
             )
             
             if active_result.returncode != 0:
@@ -472,8 +469,7 @@ def purge(
                 ["celery", "-A", "app.services.background_processor", "purge", "-Q", queue], 
                 capture_output=True, 
                 text=True,
-                input="y\n",  # Confirm the purge
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                input="y\n"  # Confirm the purge
             )
             
             if result.returncode == 0:
@@ -529,8 +525,7 @@ def monitor(
                             ["celery", "-A", "app.services.background_processor", "inspect", "active"], 
                             capture_output=True, 
                             text=True,
-                            timeout=3,
-                            cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                            timeout=3
                         )
                         
                         if worker_result.returncode == 0:
@@ -587,7 +582,7 @@ def flower():
                 "flower", 
                 "-A", "app.services.background_processor",
                 "--port=5555"
-            ], cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp")
+            ])
             
         except KeyboardInterrupt:
             info_message("Flower stopped")
@@ -605,7 +600,7 @@ def stats():
     async def _task_stats():
         try:
             async with AsyncSessionLocal() as db:
-                from sqlalchemy import func, select
+                from sqlalchemy import and_, func, select
 
                 # Document processing statistics
                 total_docs = await db.scalar(select(func.count(Document.id)))
