@@ -76,8 +76,9 @@ class Settings(BaseSettings):
     # FastMCP Configuration
     mcp_enabled: bool = Field(default=True, description="Enable FastMCP integration")
     mcp_timeout: int = Field(default=30, description="MCP operation timeout in seconds")
-    brave_api_key: str = Field(
-        default="your-brave-api-key", description="Brave Search API key for web search"
+    mcp_servers: dict = Field(
+        default='{"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}',
+        description="Dictionary of MCP servers",
     )
 
     # CORS Configuration - Use Union to accept both string and list
@@ -239,45 +240,6 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """Check if running in production mode."""
         return not self.debug
-
-    @property
-    def mcp_servers(self) -> Dict[str, Any]:
-        """
-        Get MCP server configurations for MCPConfigTransport.
-
-        Returns configurations compatible with MCPConfigTransport.
-        """
-        return {
-            "http": {
-                "command": "npx",
-                "args": [
-                    "@modelcontextprotocol/server-filesystem",
-                    "/tmp/mcp_workspace",
-                ],
-                "env": {},
-                "working_directory": None,
-                "required": True,
-                "description": "File system operations (read, write, list files)",
-            },
-            "brave_search": {
-                "command": "npx",
-                "args": ["@modelcontextprotocol/server-brave-search"],
-                "env": {
-                    "BRAVE_API_KEY": self.brave_api_key
-                },
-                "working_directory": None,
-                "required": False,
-                "description": "Web search capabilities via Brave Search API",
-            },
-            "memory": {
-                "command": "npx",
-                "args": ["@modelcontextprotocol/server-memory"],
-                "env": {},
-                "working_directory": None,
-                "required": True,
-                "description": "Persistent memory for conversations and context",
-            },
-        }
 
 
 # Global settings instance

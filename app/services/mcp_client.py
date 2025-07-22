@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from fastmcp import Client
-from fastmcp.client import SSETransport
+from fastmcp.client import StreamableHttpTransport
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
@@ -78,12 +78,17 @@ class FastMCPClientService:
 
     def _parse_server_configs(self):
         """Parse MCP server configurations from settings."""
+
+        # Do not attempt to parse the server list if MCP is not enabled
+        if not settings.mcp_enabled:
+            return
+
         try:
             # Get server configurations from settings
             mcp_servers_config = settings.mcp_servers
 
             for server_name, config in mcp_servers_config.items():
-                # All servers must provide a 'url' key for SSETransport
+                # All servers must provide a 'url' key for StreamableHttpTransport
                 url = config.get("url")
                 if not url:
                     # Default to localhost with server name as port for demo
@@ -150,10 +155,10 @@ class FastMCPClientService:
             self.is_initialized = False
 
     async def _connect_server(self, server_name: str, server: MCPServerConfig):
-        """Connect to a specific MCP server using SSETransport."""
+        """Connect to a specific MCP server using StreamableHttpTransport."""
         try:
             # Create FastMCP client with HTTP transport
-            transport = SSETransport(server.url)
+            transport = StreamableHttpTransport(server.url)
             client = Client(transport)
 
             # Test connection with timeout

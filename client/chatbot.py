@@ -17,7 +17,7 @@ from ai_chatbot_sdk import AIChatbotSDK, ApiError, ChatRequest, ConversationCrea
 # --- CONFIGURE THESE ---
 API_BASE_URL = "http://localhost:8000"  # Change to your backend
 USERNAME = "admin"  # Prompted if not set
-PASSWORD = "Win32s.."  # Prompted if not set
+PASSWORD = "adminpass"  # Prompted if not set
 
 # --- UTILITIES ---
 
