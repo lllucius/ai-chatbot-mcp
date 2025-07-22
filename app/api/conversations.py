@@ -32,7 +32,7 @@ from ..schemas.conversation import (
 )
 from ..services.conversation import ConversationService
 
-router = APIRouter(prefix="/conversations", tags=["conversations"])
+router = APIRouter(tags=["conversations"])
 
 
 async def get_conversation_service(

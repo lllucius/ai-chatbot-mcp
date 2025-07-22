@@ -397,7 +397,7 @@ class AuthClient:
 
     def register(self, data: RegisterRequest) -> UserResponse:
         return self.sdk._request(
-            "/api/v1/auth/auth/register",
+            "/api/v1/auth/register",
             UserResponse,
             method="POST",
             json=data.dict(),
@@ -406,27 +406,27 @@ class AuthClient:
     def login(self, username: str, password: str) -> Token:
         data = {"username": username, "password": password}
         token = self.sdk._request(
-            "/api/v1/auth/auth/login", Token, method="POST", json=data
+            "/api/v1/auth/login", Token, method="POST", json=data
         )
         self.sdk.set_token(token.access_token)
         return token
 
     def me(self) -> UserResponse:
-        return self.sdk._request("/api/v1/auth/auth/me", UserResponse)
+        return self.sdk._request("/api/v1/auth/me", UserResponse)
 
     def logout(self) -> BaseResponse:
         """Logout current user and invalidate token."""
         return self.sdk._request(
-            "/api/v1/auth/auth/logout", BaseResponse, method="POST"
+            "/api/v1/auth/logout", BaseResponse, method="POST"
         )
 
     def refresh(self) -> Token:
         """Refresh authentication token."""
-        return self.sdk._request("/api/v1/auth/auth/refresh", Token, method="POST")
+        return self.sdk._request("/api/v1/auth/refresh", Token, method="POST")
 
     def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
         return self.sdk._request(
-            "/api/v1/auth/auth/password-reset",
+            "/api/v1/auth/password-reset",
             BaseResponse,
             method="POST",
             json=data.dict(),
@@ -434,7 +434,7 @@ class AuthClient:
 
     def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
         return self.sdk._request(
-            "/api/v1/auth/auth/password-reset/confirm",
+            "/api/v1/auth/password-reset/confirm",
             BaseResponse,
             method="POST",
             json=data.dict(),
@@ -446,16 +446,16 @@ class UsersClient:
         self.sdk = sdk
 
     def me(self) -> UserResponse:
-        return self.sdk._request("/api/v1/users/users/me", UserResponse)
+        return self.sdk._request("/api/v1/users/me", UserResponse)
 
     def update_me(self, data: UserUpdate) -> UserResponse:
         return self.sdk._request(
-            "/api/v1/users/users/me", UserResponse, method="PUT", json=data.dict()
+            "/api/v1/users/me", UserResponse, method="PUT", json=data.dict()
         )
 
     def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
         return self.sdk._request(
-            "/api/v1/users/users/me/change-password",
+            "/api/v1/users/me/change-password",
             BaseResponse,
             method="POST",
             json=data.dict(),
@@ -476,14 +476,14 @@ class UsersClient:
                 "superuser_only": superuser_only,
             }
         )
-        return self.sdk._request("/api/v1/users/users/", UserResponse, params=params)
+        return self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
     def get(self, user_id: int) -> UserResponse:
-        return self.sdk._request(f"/api/v1/users/users/{user_id}", UserResponse)
+        return self.sdk._request(f"/api/v1/users/{user_id}", UserResponse)
 
     def update(self, user_id: int, data: UserUpdate) -> UserResponse:
         return self.sdk._request(
-            f"/api/v1/users/users/{user_id}",
+            f"/api/v1/users/{user_id}",
             UserResponse,
             method="PUT",
             json=data.dict(),
@@ -491,7 +491,7 @@ class UsersClient:
 
     def delete(self, user_id: int) -> BaseResponse:
         return self.sdk._request(
-            f"/api/v1/users/users/{user_id}", BaseResponse, method="DELETE"
+            f"/api/v1/users/{user_id}", BaseResponse, method="DELETE"
         )
 
 
@@ -506,7 +506,7 @@ class DocumentsClient:
         if title:
             data["title"] = title
         return self.sdk._request(
-            "/api/v1/documents/documents/upload",
+            "/api/v1/documents/upload",
             DocumentUploadResponse,
             method="POST",
             files=files,
@@ -524,17 +524,17 @@ class DocumentsClient:
             {"page": page, "size": size, "file_type": file_type, "status": status}
         )
         return self.sdk._request(
-            "/api/v1/documents/documents/", DocumentResponse, params=params
+            "/api/v1/documents/", DocumentResponse, params=params
         )
 
     def get(self, document_id: int) -> DocumentResponse:
         return self.sdk._request(
-            f"/api/v1/documents/documents/{document_id}", DocumentResponse
+            f"/api/v1/documents/{document_id}", DocumentResponse
         )
 
     def update(self, document_id: int, data: DocumentUpdate) -> DocumentResponse:
         return self.sdk._request(
-            f"/api/v1/documents/documents/{document_id}",
+            f"/api/v1/documents/{document_id}",
             DocumentResponse,
             method="PUT",
             json=data.dict(),
@@ -542,25 +542,25 @@ class DocumentsClient:
 
     def delete(self, document_id: int) -> BaseResponse:
         return self.sdk._request(
-            f"/api/v1/documents/documents/{document_id}", BaseResponse, method="DELETE"
+            f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE"
         )
 
     def status(self, document_id: int) -> ProcessingStatusResponse:
         return self.sdk._request(
-            f"/api/v1/documents/documents/{document_id}/status",
+            f"/api/v1/documents/{document_id}/status",
             ProcessingStatusResponse,
         )
 
     def reprocess(self, document_id: int) -> BaseResponse:
         return self.sdk._request(
-            f"/api/v1/documents/documents/{document_id}/reprocess",
+            f"/api/v1/documents/{document_id}/reprocess",
             BaseResponse,
             method="POST",
         )
 
     def download(self, document_id: int) -> bytes:
         url = make_url(
-            self.sdk.base_url, f"/api/v1/documents/documents/{document_id}/download"
+            self.sdk.base_url, f"/api/v1/documents/{document_id}/download"
         )
         resp = self.sdk._session.get(
             url, headers=build_headers(self.sdk.token), stream=True
@@ -576,7 +576,7 @@ class ConversationsClient:
 
     def create(self, data: ConversationCreate) -> ConversationResponse:
         return self.sdk._request(
-            "/api/v1/conversations/conversations/",
+            "/api/v1/conversations/",
             ConversationResponse,
             method="POST",
             json=data.model_dump(mode="json"),
@@ -587,12 +587,12 @@ class ConversationsClient:
     ) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size, "active_only": active_only})
         return self.sdk._request(
-            "/api/v1/conversations/conversations/", ConversationResponse, params=params
+            "/api/v1/conversations/", ConversationResponse, params=params
         )
 
     def get(self, conversation_id: int) -> ConversationResponse:
         return self.sdk._request(
-            f"/api/v1/conversations/conversations/{conversation_id}",
+            f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
         )
 
@@ -600,7 +600,7 @@ class ConversationsClient:
         self, conversation_id: int, data: ConversationUpdate
     ) -> ConversationResponse:
         return self.sdk._request(
-            f"/api/v1/conversations/conversations/{conversation_id}",
+            f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
             method="PUT",
             json=data.dict(),
@@ -608,7 +608,7 @@ class ConversationsClient:
 
     def delete(self, conversation_id: int) -> BaseResponse:
         return self.sdk._request(
-            f"/api/v1/conversations/conversations/{conversation_id}",
+            f"/api/v1/conversations/{conversation_id}",
             BaseResponse,
             method="DELETE",
         )
@@ -618,7 +618,7 @@ class ConversationsClient:
     ) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size})
         return self.sdk._request(
-            f"/api/v1/conversations/conversations/{conversation_id}/messages",
+            f"/api/v1/conversations/{conversation_id}/messages",
             MessageResponse,
             params=params,
         )
@@ -626,14 +626,14 @@ class ConversationsClient:
     def chat(self, data: ChatRequest) -> ChatResponse:
         """Send a message and get AI response."""
         return self.sdk._request(
-            "/api/v1/conversations/conversations/chat",
+            "/api/v1/conversations/chat",
             ChatResponse,
             method="POST",
             json=data.model_dump(mode="json"),
         )
 
     def stats(self) -> Dict[str, Any]:
-        return self.sdk._request("/api/v1/conversations/conversations/stats")
+        return self.sdk._request("/api/v1/conversations/stats")
 
 
 class SearchClient:
@@ -643,28 +643,28 @@ class SearchClient:
     def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
         """Search across documents using various algorithms."""
         return self.sdk._request(
-            "/api/v1/search/search/", dict, method="POST", json=data.dict()
+            "/api/v1/search/", dict, method="POST", json=data.dict()
         )
 
     def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
         params = {"limit": limit}
         return self.sdk._request(
-            f"/api/v1/search/search/similar/{chunk_id}", dict, params=params
+            f"/api/v1/search/similar/{chunk_id}", dict, params=params
         )
 
     def suggestions(self, query: str, limit: int = 5) -> List[Any]:
         params = {"query": query, "limit": limit}
         return self.sdk._request(
-            "/api/v1/search/search/suggestions", list, params=params
+            "/api/v1/search/suggestions", list, params=params
         )
 
     def history(self, limit: int = 10) -> List[Any]:
         params = {"limit": limit}
-        return self.sdk._request("/api/v1/search/search/history", list, params=params)
+        return self.sdk._request("/api/v1/search/history", list, params=params)
 
     def clear_history(self) -> BaseResponse:
         return self.sdk._request(
-            "/api/v1/search/search/history", BaseResponse, method="DELETE"
+            "/api/v1/search/history", BaseResponse, method="DELETE"
         )
 
 

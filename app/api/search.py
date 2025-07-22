@@ -21,7 +21,7 @@ from ..schemas.common import BaseResponse
 from ..schemas.document import DocumentSearchRequest, DocumentSearchResponse
 from ..services.search import SearchService
 
-router = APIRouter(prefix="/search", tags=["search"])
+router = APIRouter(tags=["search"])
 
 
 async def get_search_service(db: AsyncSession = Depends(get_db)) -> SearchService:

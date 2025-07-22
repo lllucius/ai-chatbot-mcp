@@ -41,7 +41,7 @@ from ..services.document import DocumentService
 from ..services.background_processor import get_background_processor
 from ..utils.api_errors import handle_api_errors
 
-router = APIRouter(prefix="/documents", tags=["documents"])
+router = APIRouter(tags=["documents"])
 
 
 async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentService:

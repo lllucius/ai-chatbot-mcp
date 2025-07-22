@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       // Verify token is still valid
-      axios.get('/auth/me')
+      axios.get('/api/v1/auth/me')
         .then(response => {
           setUser(response.data);
         })
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await axios.post('/auth/login', formData, {
+      const response = await axios.post('/api/v1/auth/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },

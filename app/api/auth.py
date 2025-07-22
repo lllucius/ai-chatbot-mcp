@@ -42,7 +42,7 @@ from ..schemas.user import UserResponse
 from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(tags=["authentication"])
 
 
 async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
