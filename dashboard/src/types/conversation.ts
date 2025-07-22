@@ -1,7 +1,7 @@
-import { BaseResponse } from './common';
+import { BaseResponse, PaginatedResponse } from './common';
 
 // Conversation and messaging types
-export type ToolHandlingMode = 'none' | 'auto' | 'manual';
+export type ToolHandlingMode = 'return_results' | 'complete_with_results';
 
 export interface ToolCall {
   id: string;
@@ -14,8 +14,20 @@ export interface ToolCall {
 
 export interface ToolCallResult {
   tool_call_id: string;
-  output: string;
+  tool_name: string;
+  success: boolean;
+  content: any[];
   error?: string;
+  provider?: string;
+  execution_time_ms?: number;
+}
+
+export interface ToolCallSummary {
+  total_calls: number;
+  successful_calls: number;
+  failed_calls: number;
+  total_execution_time_ms: number;
+  results?: ToolCallResult[];
 }
 
 export interface Message {
@@ -23,11 +35,11 @@ export interface Message {
   conversation_id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
-  metadata?: Record<string, any>;
-  tool_calls?: ToolCall[];
-  tool_call_results?: ToolCallResult[];
+  token_count: number;
+  tool_calls?: Record<string, any>;
+  tool_call_results?: Record<string, any>;
+  metainfo?: Record<string, any>;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Conversation {
@@ -35,8 +47,8 @@ export interface Conversation {
   title: string;
   user_id: string;
   is_active: boolean;
-  metainfo?: Record<string, any>;
   message_count: number;
+  metainfo?: Record<string, any>;
   created_at: string;
   updated_at: string;
   last_message_at?: string;
@@ -54,33 +66,27 @@ export interface ConversationUpdate {
   metainfo?: Record<string, any>;
 }
 
-export interface MessageCreate {
-  content: string;
-  role?: 'user';
-  metadata?: Record<string, any>;
+export interface ChatRequest {
+  message: string;
+  conversation_id?: string;
+  system_prompt?: string;
+  conversation_title?: string;
+  use_rag?: boolean;
+  rag_filters?: Record<string, any>;
   tool_handling_mode?: ToolHandlingMode;
+  enable_tools?: boolean;
+  max_tokens?: number;
+  temperature?: number;
 }
 
-export interface ConversationResponse extends Omit<BaseResponse, 'message'> {
-  data: Conversation;
-}
-
-export interface ConversationListResponse extends BaseResponse {
-  conversations: Conversation[];
-  total_count: number;
-}
-
-export interface MessageResponse extends Omit<BaseResponse, 'message'> {
-  data: Message;
-}
-
-export interface MessageListResponse extends BaseResponse {
-  messages: Message[];
-  total_count: number;
-}
-
-export interface ChatResponse extends Omit<BaseResponse, 'message'> {
+export interface ChatResponse {
+  success: boolean;
+  message: Message;
+  ai_message: Message;
   conversation: Conversation;
-  user_message: Message;
-  assistant_message?: Message;
+  rag_context?: any[];
+  tool_calls_made?: any[];
+  tool_call_summary?: ToolCallSummary;
+  response_time_ms: number;
+  timestamp?: string;
 }
