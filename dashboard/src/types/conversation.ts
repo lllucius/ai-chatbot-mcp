@@ -40,6 +40,8 @@ export interface Message {
   tool_call_results?: Record<string, any>;
   metainfo?: Record<string, any>;
   created_at: string;
+  updated_at: string;
+  response_time: number;
 }
 
 export interface Conversation {
