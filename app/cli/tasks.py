@@ -270,8 +270,7 @@ def active():
             active_result = subprocess.run(
                 ["celery", "-A", "app.services.background_processor", "inspect", "active"], 
                 capture_output=True, 
-                text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                text=True
             )
             
             if active_result.returncode != 0:
@@ -605,7 +604,7 @@ def stats():
     async def _task_stats():
         try:
             async with AsyncSessionLocal() as db:
-                from sqlalchemy import func, select
+                from sqlalchemy import and_, func, select
 
                 # Document processing statistics
                 total_docs = await db.scalar(select(func.count(Document.id)))

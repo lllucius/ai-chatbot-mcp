@@ -213,8 +213,8 @@ def show(
                 table.add_row("First Message", format_timestamp(first_message) if first_message else "N/A")
                 table.add_row("Last Message", format_timestamp(last_message) if last_message else "N/A")
                 
-                if conversation.context:
-                    table.add_row("Context", str(conversation.context)[:100] + "..." if len(str(conversation.context)) > 100 else str(conversation.context))
+                if conversation.metainfo:
+                    table.add_row("Metainfo", str(conversation.metainfo)[:100] + "..." if len(str(conversation.metainfo)) > 100 else str(conversation.metainfo))
                 
                 console.print(table)
                 
@@ -302,10 +302,8 @@ def export(
                 messages = messages_result.scalars().all()
                 
                 # Determine output file
-                if not output_file:
-                    output_file = f"conversation_{conversation_id}.{format}"
-                
-                output_path = Path(output_file)
+                current_output_file = output_file or f"conversation_{conversation_id}.{format}"
+                output_path = Path(current_output_file)
                 
                 # Export based on format
                 if format == "json":
@@ -317,7 +315,7 @@ def export(
                             "is_active": conversation.is_active,
                             "created_at": conversation.created_at.isoformat(),
                             "updated_at": conversation.updated_at.isoformat(),
-                            "context": conversation.context
+                            "metainfo": conversation.metainfo
                         },
                         "messages": [
                             {
@@ -611,7 +609,7 @@ def archive(
 
 @conversation_app.command()
 def search(
-    query: str = typer.Argument(..., help="Search query"),
+    search_query: str = typer.Argument(..., help="Search query"),
     limit: int = typer.Option(10, "--limit", "-l", help="Maximum number of results"),
     username: str = typer.Option(None, "--user", "-u", help="Filter by username"),
 ):
@@ -622,7 +620,7 @@ def search(
         async with AsyncSessionLocal() as db:
             try:
                 # Search in conversation titles and message content
-                search_pattern = f"%{query.lower()}%"
+                search_pattern = f"%{search_query.lower()}%"
                 
                 # Base query
                 base_query = select(Conversation, Message).join(Message, isouter=True)

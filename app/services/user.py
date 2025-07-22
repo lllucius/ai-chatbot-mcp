@@ -64,6 +64,82 @@ class UserService(BaseService):
         """
         super().__init__(db, "user_service")
 
+    async def create_user(
+        self, 
+        username: str, 
+        email: str, 
+        password: str, 
+        full_name: str = None,
+        is_superuser: bool = False
+    ) -> User:
+        """
+        Create a new user account.
+        
+        Args:
+            username: Unique username for the user
+            email: User's email address
+            password: Plain text password (will be hashed)
+            full_name: Optional full name
+            is_superuser: Whether the user should have superuser privileges
+            
+        Returns:
+            User: Created user object
+            
+        Raises:
+            ValidationError: If username or email already exists
+        """
+        operation = "create_user"
+        self._log_operation_start(operation, username=username, email=email)
+        
+        try:
+            await self._ensure_db_session()
+            
+            # Check if username already exists
+            existing_username = await self.db.execute(
+                select(User).where(User.username == username)
+            )
+            if existing_username.scalar_one_or_none():
+                raise ValidationError("Username already exists")
+
+            # Check if email already exists
+            existing_email = await self.db.execute(
+                select(User).where(User.email == email)
+            )
+            if existing_email.scalar_one_or_none():
+                raise ValidationError("Email already exists")
+
+            # Create new user
+            hashed_password = get_password_hash(password)
+            
+            user = User(
+                username=username,
+                email=email,
+                hashed_password=hashed_password,
+                full_name=full_name,
+                is_active=True,
+                is_superuser=is_superuser,
+            )
+
+            self.db.add(user)
+            await self.db.commit()
+            await self.db.refresh(user)
+
+            self._log_operation_success(
+                operation,
+                user_id=str(user.id),
+                username=user.username,
+                is_superuser=user.is_superuser,
+            )
+            
+            return user
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            self._log_operation_error(operation, e, username=username, email=email)
+            await self.db.rollback()
+            raise ValidationError(f"User creation failed: {e}")
+
     async def get_user_profile(self, user_id: UUID) -> User:
         """
         Get comprehensive user profile with embedded statistics.
