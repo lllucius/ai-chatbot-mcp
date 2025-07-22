@@ -231,36 +231,104 @@ response = httpx.post("http://localhost:8000/api/v1/conversations/chat",
 
 ## 🔧 Management Commands
 
+The platform now includes a comprehensive CLI management system that provides full administrative capabilities:
+
+### New Enhanced CLI (Recommended)
+```bash
+# Show all available commands
+python manage.py --help
+
+# Quick start guide
+python manage.py quickstart
+
+# System health check
+python manage.py health
+
+# System status overview
+python manage.py status
+```
+
 ### User Management
 ```bash
-# Create a regular user
+# Create users
+python manage.py users create username email@example.com --superuser
+python manage.py users create john john@example.com "SecurePass123"
+
+# List and manage users
+python manage.py users list --active-only --search "john"
+python manage.py users show john
+python manage.py users reset-password john
+python manage.py users stats
+```
+
+### Document Management
+```bash
+# Upload and manage documents
+python manage.py documents upload /path/to/file.pdf --user john --process
+python manage.py documents list --status completed --user john
+python manage.py documents search "machine learning" --limit 10
+python manage.py documents show 123
+python manage.py documents cleanup --status failed --older-than 30
+```
+
+### Conversation Management  
+```bash
+# Manage conversations
+python manage.py conversations list --user john --active-only
+python manage.py conversations show 456 --messages --message-limit 20
+python manage.py conversations export 456 --format json --output backup.json
+python manage.py conversations search "API documentation"
+python manage.py conversations archive --older-than 90
+```
+
+### Analytics & Reporting
+```bash
+# System analytics
+python manage.py analytics overview
+python manage.py analytics usage --period 7d --detailed
+python manage.py analytics performance
+python manage.py analytics users --top 10 --metric messages
+python manage.py analytics export-report --output report.json --details
+```
+
+### Database Management
+```bash
+# Database operations
+python manage.py database status
+python manage.py database init
+python manage.py database upgrade
+python manage.py database backup --output backup.sql
+python manage.py database tables
+python manage.py database vacuum
+```
+
+### Background Task Management
+```bash
+# Task monitoring
+python manage.py tasks status
+python manage.py tasks workers
+python manage.py tasks active
+python manage.py tasks retry-failed
+python manage.py tasks monitor --refresh 5 --duration 300
+```
+
+### Legacy CLI (Deprecated)
+The original simple management commands are still available but deprecated:
+```bash
+# Create a regular user (deprecated - use new CLI)
 python scripts/manage_simple.py create-user username email@example.com password
 
-# Create a superuser
+# Create a superuser (deprecated - use new CLI) 
 python scripts/manage_simple.py create-superuser admin admin@example.com password
 
-# List all users
+# List all users (deprecated - use new CLI)
 python scripts/manage_simple.py list-users
 
-# Reset user password
-python scripts/manage_simple.py reset-password username newpassword
-
-# Deactivate a user
-python scripts/manage_simple.py deactivate-user username
-```
-
-### System Operations
-```bash
-# Show system statistics
+# Show system statistics (deprecated - use new CLI)
 python scripts/manage_simple.py stats
-
-# Initialize database
-python scripts/manage_simple.py init-db
-
-# Run API usage examples
-python scripts/example_usage.py workflow
-python scripts/example_usage.py register
 ```
+
+**Migration Notice**: Please migrate to the new CLI system using `python manage.py`. The old scripts will show migration guidance when used.
 
 ## ⚙️ Configuration
 
