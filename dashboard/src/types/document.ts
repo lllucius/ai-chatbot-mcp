@@ -1,4 +1,4 @@
-import { BaseResponse } from './common';
+import { BaseResponse, PaginatedResponse } from './common';
 
 // Document related types
 export interface Document {
@@ -16,33 +16,65 @@ export interface Document {
   updated_at: string;
 }
 
-export interface DocumentResponse extends Omit<BaseResponse, 'message'> {
-  data: Document;
-}
-
-export interface DocumentListResponse extends BaseResponse {
-  documents: Document[];
-  total_count: number;
-}
-
-export interface DocumentUpload {
-  file: File;
+export interface DocumentUpdate {
   title?: string;
   metainfo?: Record<string, any>;
 }
 
+export interface DocumentUploadResponse extends BaseResponse {
+  document: Document;
+  task_id?: string;
+  auto_processing: boolean;
+}
+
 export interface DocumentChunk {
   id: string;
-  document_id: string;
   content: string;
   chunk_index: number;
-  metadata?: Record<string, any>;
-  embedding?: number[];
+  start_char: number;
+  end_char: number;
+  token_count: number;
+  document_id: string;
+  document_title?: string;
+  similarity_score?: number;
+  metainfo?: Record<string, any>;
   created_at: string;
 }
 
-export interface DocumentSearchResult {
-  document: Document;
-  chunks: DocumentChunk[];
-  relevance_score: number;
+export interface ProcessingStatusResponse extends BaseResponse {
+  document_id: string;
+  status: string;
+  chunk_count: number;
+  processing_time?: number;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+  task_id?: string;
+  task_status?: string;
+  progress?: number;
+  task_created_at?: string;
+  task_started_at?: string;
+  task_error?: string;
+}
+
+export interface DocumentSearchRequest {
+  page?: number;
+  per_page?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  query?: string;
+  algorithm?: 'vector' | 'text' | 'hybrid' | 'mmr';
+  limit?: number;
+  threshold?: number;
+  filters?: Record<string, any>;
+  document_ids?: string[];
+  file_types?: string[];
+}
+
+export interface DocumentSearchResponse extends BaseResponse {
+  results: DocumentChunk[];
+  query: string;
+  algorithm: string;
+  total_results: number;
+  search_time_ms: number;
 }

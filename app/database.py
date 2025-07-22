@@ -19,22 +19,31 @@ from .models.base import BaseModelDB
 logger = logging.getLogger(__name__)
 
 # Create async engine with optimized connection parameters
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    pool_pre_ping=True,
-    pool_size=20,  # Increased from 10 for better performance
-    max_overflow=30,  # Increased from 20
-    pool_recycle=1800,  # Recycle connections every 30 minutes (reduced from 1 hour)
-    pool_timeout=30,  # Connection timeout
-    pool_reset_on_return="commit",  # Reset connections on return
-    connect_args={
-        "server_settings": {
-            "jit": "off",  # Disable JIT for better connection performance
+if "sqlite" in settings.database_url:
+    # SQLite-specific configuration
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    # PostgreSQL-specific configuration
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        pool_pre_ping=True,
+        pool_size=20,  # Increased from 10 for better performance
+        max_overflow=30,  # Increased from 20
+        pool_recycle=1800,  # Recycle connections every 30 minutes (reduced from 1 hour)
+        pool_timeout=30,  # Connection timeout
+        pool_reset_on_return="commit",  # Reset connections on return
+        connect_args={
+            "server_settings": {
+                "jit": "off",  # Disable JIT for better connection performance
+            },
+            "command_timeout": 30,  # Command timeout in seconds
         },
-        "command_timeout": 30,  # Command timeout in seconds
-    },
-)
+    )
 
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -104,7 +113,11 @@ async def health_check_db() -> bool:
             # Test basic connectivity
             await session.execute(text("SELECT 1"))
 
-            # Test pgvector extension
+            # For SQLite, we don't need pgvector extension
+            if "sqlite" in str(engine.url):
+                return True
+
+            # Test pgvector extension for PostgreSQL
             result = await session.execute(
                 text("SELECT extname FROM pg_extension WHERE extname = 'vector'")
             )
@@ -124,20 +137,22 @@ async def init_db() -> None:
     """
     Initialize database and create all tables with retry logic.
 
-    This function creates all tables and enables pgvector extension.
+    This function creates all tables and enables pgvector extension for PostgreSQL.
     """
     max_retries = 3
     for attempt in range(max_retries):
         try:
             async with engine.begin() as conn:
-                # Enable pgvector extension
-                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                # Only enable pgvector for PostgreSQL
+                if "postgresql" in str(engine.url):
+                    # Enable pgvector extension
+                    await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+
+                    # Verify pgvector is working
+                    await conn.execute(text("SELECT '[1,2,3]'::vector"))
 
                 # Create all tables
                 await conn.run_sync(BaseModelDB.metadata.create_all)
-
-                # Verify pgvector is working
-                await conn.execute(text("SELECT '[1,2,3]'::vector"))
 
                 logger.info("Database initialized successfully")
                 return
