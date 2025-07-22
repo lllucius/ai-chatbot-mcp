@@ -35,6 +35,10 @@ fastmcp
 python-dotenv
 httpx
 
+# CLI Framework
+typer
+rich
+
 # Development
 pytest
 pytest-asyncio
@@ -56,5 +60,8 @@ redis>=4.5.0
 regex
 langdetect
 
-# Current Date and Time (UTC): 2025-07-14 04:32:05
-# Current User: lllucius
+# CLI Shell Integration  
+shellingham
+
+# Current Date and Time (UTC): 2025-07-22 02:22:32
+# Current User: runner

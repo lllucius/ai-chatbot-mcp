@@ -3,6 +3,9 @@ Management CLI for the AI Chatbot Platform.
 
 This script provides command-line utilities for user management,
 database operations, and system maintenance.
+
+DEPRECATED: This script is kept for backward compatibility.
+Please use the new comprehensive CLI: python manage.py
 """
 
 import asyncio
@@ -14,6 +17,7 @@ import typer
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.table import Table
+from rich.panel import Panel
 from sqlalchemy import func, select
 
 from app.config import settings
@@ -31,7 +35,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 console = Console()
 
 # Create the main Typer app with minimal configuration
-app = typer.Typer(help="AI Chatbot Platform Management CLI")
+app = typer.Typer(help="AI Chatbot Platform Management CLI (Legacy)")
 
 
 def create_user_cmd(
@@ -436,7 +440,35 @@ def config():
     show_config()
 
 
+@app.command()
+def migrate():
+    """Show migration notice to new CLI."""
+    migration_notice = Panel(
+        f"[bold red]⚠️ DEPRECATED CLI[/bold red]\n\n"
+        f"This CLI script is deprecated and kept only for backward compatibility.\n"
+        f"Please use the new comprehensive management CLI:\n\n"
+        f"[green]python manage.py --help[/green]\n\n"
+        f"The new CLI provides:\n"
+        f"• Enhanced user management\n"
+        f"• Document processing tools\n"
+        f"• Conversation management\n"
+        f"• Analytics and reporting\n"
+        f"• Database management\n"
+        f"• Background task monitoring\n\n"
+        f"[yellow]Quick start:[/yellow]\n"
+        f"[cyan]python manage.py quickstart[/cyan]",
+        title="🚀 Migration Notice",
+        border_style="bright_yellow",
+        padding=(1, 2)
+    )
+    console.print(migration_notice)
+
+
 if __name__ == "__main__":
+    # Show migration notice by default
+    console.print("[yellow]⚠️ You are using the deprecated CLI. Use 'python manage.py' instead.[/yellow]")
+    console.print("[dim]Run 'python scripts/manage.py migrate' for more information.[/dim]\n")
+    
     try:
         app()
     except Exception as e:
