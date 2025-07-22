@@ -6,8 +6,15 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import ChatInterface from './pages/ChatInterface';
 import Login from './pages/Login';
+import UserManagement from './pages/UserManagement';
+import DocumentManagement from './pages/DocumentManagement';
+import Analytics from './pages/Analytics';
+import SystemSettings from './pages/SystemSettings';
+import UserProfile from './pages/UserProfile';
+import UserDocuments from './pages/UserDocuments';
 import { AuthProvider, useAuth } from './services/AuthContext';
 import Sidebar from './components/Sidebar';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   const { user, logout } = useAuth();
@@ -59,15 +66,25 @@ function AppContent() {
         }}
       >
         <Container maxWidth="xl">
-          <Routes>
-            <Route path="/" element={<Navigate to="/chat" />} />
-            <Route path="/chat" element={<ChatInterface />} />
-            <Route path="/dashboard" element={<UserDashboard />} />
-            {user.is_superuser && (
-              <Route path="/admin" element={<AdminDashboard />} />
-            )}
-            <Route path="*" element={<Navigate to="/chat" />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Navigate to="/chat" />} />
+              <Route path="/chat" element={<ChatInterface />} />
+              <Route path="/dashboard" element={<UserDashboard />} />
+              <Route path="/documents" element={<UserDocuments />} />
+              <Route path="/profile" element={<UserProfile />} />
+              {user.is_superuser && (
+                <>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<UserManagement />} />
+                  <Route path="/admin/documents" element={<DocumentManagement />} />
+                  <Route path="/admin/analytics" element={<Analytics />} />
+                  <Route path="/admin/settings" element={<SystemSettings />} />
+                </>
+              )}
+              <Route path="*" element={<Navigate to="/chat" />} />
+            </Routes>
+          </ErrorBoundary>
         </Container>
       </Box>
     </Box>
@@ -76,9 +93,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

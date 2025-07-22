@@ -31,6 +31,8 @@ const Sidebar = ({ open, onClose, currentView, onViewChange, isAdmin }) => {
   const userMenuItems = [
     { id: 'chat', label: 'Chat', icon: <Chat />, path: '/chat' },
     { id: 'dashboard', label: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
+    { id: 'documents', label: 'My Documents', icon: <Description />, path: '/documents' },
+    { id: 'profile', label: 'Profile & Settings', icon: <Settings />, path: '/profile' },
   ];
 
   const adminMenuItems = [
