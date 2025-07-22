@@ -230,7 +230,7 @@ class ManagementCLI:
         print()
         print("Create a superuser:")
         print(
-            "  python scripts/manage_simple.py create-superuser admin admin@example.com AdminPass123"
+            "  python scripts/manage_simple.py create-superuser myadmin admin@mycompany.com SecurePass123"
         )
         print()
         print("List all users:")

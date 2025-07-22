@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
-import { Chat, AdminPanelSettings, Dashboard } from '@mui/icons-material';
+import { Box, AppBar, Toolbar, Typography, Button, Container, IconButton, Tooltip } from '@mui/material';
+import { Chat, AdminPanelSettings, Dashboard, Brightness4, Brightness7 } from '@mui/icons-material';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import ChatInterface from './pages/ChatInterface';
@@ -13,11 +13,13 @@ import SystemSettings from './pages/SystemSettings';
 import UserProfile from './pages/UserProfile';
 import UserDocuments from './pages/UserDocuments';
 import { AuthProvider, useAuth } from './services/AuthContext';
+import { useTheme } from './services/ThemeContext';
 import Sidebar from './components/Sidebar';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent(): JSX.Element {
   const { user, logout } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [currentView, setCurrentView] = useState<string>('chat');
 
@@ -34,13 +36,18 @@ function AppContent(): JSX.Element {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Chat sx={{ mr: 2 }} />
+          <AdminPanelSettings sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            AI Chatbot Platform
+            AI Chatbot Admin Dashboard
           </Typography>
           <Typography variant="body2" sx={{ mr: 2 }}>
-            Welcome, {user.username}
+            Administrator: {user.username}
           </Typography>
+          <Tooltip title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+            <IconButton color="inherit" onClick={toggleDarkMode} sx={{ mr: 1 }}>
+              {darkMode ? <Brightness7 /> : <Brightness4 />}
+            </IconButton>
+          </Tooltip>
           <Button color="inherit" onClick={logout}>
             Logout
           </Button>
@@ -52,7 +59,7 @@ function AppContent(): JSX.Element {
         onClose={() => setSidebarOpen(false)}
         currentView={currentView}
         onViewChange={handleViewChange}
-        isAdmin={user.is_superuser}
+        isAdmin={true}
       />
 
       <Box
@@ -68,21 +75,14 @@ function AppContent(): JSX.Element {
         <Container maxWidth="xl">
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<Navigate to="/chat" />} />
-              <Route path="/chat" element={<ChatInterface />} />
-              <Route path="/dashboard" element={<UserDashboard />} />
-              <Route path="/documents" element={<UserDocuments />} />
-              <Route path="/profile" element={<UserProfile />} />
-              {user.is_superuser && (
-                <>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/users" element={<UserManagement />} />
-                  <Route path="/admin/documents" element={<DocumentManagement />} />
-                  <Route path="/admin/analytics" element={<Analytics />} />
-                  <Route path="/admin/settings" element={<SystemSettings />} />
-                </>
-              )}
-              <Route path="*" element={<Navigate to="/chat" />} />
+              <Route path="/" element={<Navigate to="/admin" />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/chat" element={<ChatInterface />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/documents" element={<DocumentManagement />} />
+              <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/settings" element={<SystemSettings />} />
+              <Route path="*" element={<Navigate to="/admin" />} />
             </Routes>
           </ErrorBoundary>
         </Container>

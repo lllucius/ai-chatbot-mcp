@@ -12,6 +12,7 @@ export { UserService } from './userService';
 export { DocumentService } from './documentService';
 export { ConversationService } from './conversationService';
 export { HealthService } from './healthService';
+export { ToolsService } from './toolsService';
 
 // Re-export the auth context
 export { AuthProvider, useAuth } from './AuthContext';

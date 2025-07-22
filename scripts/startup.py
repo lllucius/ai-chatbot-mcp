@@ -27,24 +27,34 @@ logger = logging.getLogger(__name__)
 
 
 async def create_default_admin():
-    """Create default admin user if it doesn't exist."""
+    """Create default admin user if it doesn't exist, using environment variables."""
+    import os
+    
+    admin_username = os.getenv("ADMIN_USERNAME")
+    admin_email = os.getenv("ADMIN_EMAIL") 
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    
+    if not all([admin_username, admin_email, admin_password]):
+        logger.warning("⚠️  Admin user creation skipped - set ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD environment variables to create default admin")
+        return None
+        
     async with AsyncSessionLocal() as db:
         try:
             # Check if admin user already exists
             from sqlalchemy import select
 
-            result = await db.execute(select(User).where(User.username == "admin"))
+            result = await db.execute(select(User).where(User.username == admin_username))
             existing_admin = result.scalar_one_or_none()
 
             if existing_admin:
-                logger.info("Admin user already exists")
+                logger.info(f"Admin user '{admin_username}' already exists")
                 return existing_admin
 
             # Create admin user
             admin_user = User(
-                username="admin",
-                email="admin@example.com",
-                hashed_password=get_password_hash("Admin123!"),
+                username=admin_username,
+                email=admin_email,
+                hashed_password=get_password_hash(admin_password),
                 full_name="System Administrator",
                 is_active=True,
                 is_superuser=True,
@@ -55,11 +65,10 @@ async def create_default_admin():
             await db.refresh(admin_user)
 
             logger.info("Default admin user created successfully")
-            logger.info("Username: admin")
-            logger.info("Email: admin@example.com")
-            logger.info("Password: Admin123!")
+            logger.info(f"Username: {admin_username}")
+            logger.info(f"Email: {admin_email}")
             logger.warning(
-                "⚠️  IMPORTANT: Change the default password immediately in production!"
+                "⚠️  IMPORTANT: Secure your admin credentials and remove them from environment variables!"
             )
 
             return admin_user

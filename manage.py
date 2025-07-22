@@ -172,7 +172,7 @@ def quickstart():
 
 [yellow]1. First Time Setup:[/yellow]
    • Initialize database: [cyan]python manage.py database init[/cyan]
-   • Create admin user: [cyan]python manage.py users create admin admin@example.com --superuser[/cyan]
+   • Create admin user: [cyan]python manage.py users create myadmin admin@mycompany.com --superuser[/cyan]
    • Check system health: [cyan]python manage.py health[/cyan]
 
 [yellow]2. User Management:[/yellow]

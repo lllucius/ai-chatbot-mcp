@@ -539,76 +539,44 @@ def analyze():
     async def _analyze_database():
         try:
             async with AsyncSessionLocal() as db:
-                # Database size analysis (SQLite specific)
-                if settings.database_url.startswith("sqlite"):
-                    size_query = text("SELECT 'N/A' as total_size, 0 as size_bytes")
-                    size_result = await db.execute(size_query)
-                else:
-                    # PostgreSQL specific
-                    db_name = settings.database_url.split('/')[-1].split('?')[0]
-                    size_query = text("""
-                        SELECT 
-                            pg_size_pretty(pg_database_size(:db_name)) as total_size,
-                            pg_database_size(:db_name) as size_bytes
-                    """)
-                    size_result = await db.execute(size_query, {"db_name": db_name})
+                # Database size analysis (PostgreSQL specific)
+                db_name = settings.database_url.split('/')[-1].split('?')[0]
+                size_query = text("""
+                    SELECT 
+                        pg_size_pretty(pg_database_size(:db_name)) as total_size,
+                        pg_database_size(:db_name) as size_bytes
+                """)
+                size_result = await db.execute(size_query, {"db_name": db_name})
                 size_data = size_result.fetchone()
                 
-                # Table sizes (database agnostic)
-                if settings.database_url.startswith("sqlite"):
-                    table_sizes = await db.execute(text("""
-                        SELECT 
-                            'public' as schemaname,
-                            name as tablename,
-                            'N/A' as size,
-                            0 as size_bytes
-                        FROM sqlite_master 
-                        WHERE type='table' AND name NOT LIKE 'sqlite_%'
-                        ORDER BY name
-                    """))
-                else:
-                    # PostgreSQL specific
-                    table_sizes = await db.execute(text("""
-                        SELECT 
-                            schemaname,
-                            tablename,
-                            pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
-                            pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
-                        FROM pg_tables 
-                        WHERE schemaname = 'public'
-                        ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
-                    """))
+                # Table sizes (PostgreSQL specific)
+                # PostgreSQL specific
+                table_sizes = await db.execute(text("""
+                    SELECT 
+                        schemaname,
+                        tablename,
+                        pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
+                        pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
+                    FROM pg_tables 
+                    WHERE schemaname = 'public'
+                    ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
+                """))
                 
-                # Index usage statistics (database agnostic)
-                if settings.database_url.startswith("sqlite"):
-                    # SQLite doesn't have detailed index stats like PostgreSQL
-                    index_stats = await db.execute(text("""
-                        SELECT 
-                            'public' as schemaname,
-                            tbl_name as tablename,
-                            name as indexname,
-                            0 as scans,
-                            'N/A' as size
-                        FROM sqlite_master 
-                        WHERE type='index' AND name NOT LIKE 'sqlite_%'
-                        LIMIT 10
-                    """))
-                else:
-                    # PostgreSQL specific  
-                    index_stats = await db.execute(text("""
-                        SELECT 
-                            schemaname,
-                            relname as tablename,
-                            indexrelname as indexname,
-                            idx_scan as scans,
-                            pg_size_pretty(pg_relation_size(indexrelid)) as size
-                        FROM pg_stat_user_indexes 
-                        ORDER BY idx_scan DESC
-                        LIMIT 10
-                    """))
+                # Index usage statistics (PostgreSQL specific)  
+                index_stats = await db.execute(text("""
+                    SELECT 
+                        schemaname,
+                        relname as tablename,
+                        indexrelname as indexname,
+                        idx_scan as scans,
+                        pg_size_pretty(pg_relation_size(indexrelid)) as size
+                    FROM pg_stat_user_indexes 
+                    ORDER BY idx_scan DESC
+                    LIMIT 10
+                """))
                 
                 # Display results
-                db_name = settings.database_url.split('/')[-1].split('?')[0] if not settings.database_url.startswith("sqlite") else "SQLite Database"
+                db_name = settings.database_url.split('/')[-1].split('?')[0]
                 console.print(f"[bold]Database Analysis for: {db_name}[/bold]")
                 console.print(f"Total Size: {size_data[0] if size_data else 'Unknown'}")
                 

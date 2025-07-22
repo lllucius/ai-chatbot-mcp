@@ -11,15 +11,15 @@ import pytest_asyncio
 from typing import AsyncGenerator, Generator
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy import text
 
 from app.main import app
 from app.database import get_db
 from app.models.base import BaseModelDB
 
 
-# Test database URL - use in-memory SQLite for testing
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database URL - use test PostgreSQL database
+TEST_DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost:5432/ai_chatbot_test"
 
 
 @pytest.fixture(scope="session")
@@ -33,12 +33,10 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def test_db() -> AsyncGenerator[AsyncSession, None]:
     """Create a test database session."""
-    # Create test engine
+    # Create test engine for PostgreSQL
     engine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
-        poolclass=StaticPool,
-        connect_args={"check_same_thread": False},
     )
 
     # Create session maker
@@ -46,8 +44,10 @@ async def test_db() -> AsyncGenerator[AsyncSession, None]:
         bind=engine, class_=AsyncSession, expire_on_commit=False
     )
 
-    # Create tables
+    # Create tables and setup pgvector
     async with engine.begin() as conn:
+        # Enable pgvector extension for tests
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(BaseModelDB.metadata.create_all)
 
     # Create session

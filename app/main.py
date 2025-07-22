@@ -26,6 +26,7 @@ from .api import (
     documents_router,
     health_router,
     search_router,
+    tools_router,
     users_router,
 )
 from .config import settings
@@ -336,6 +337,8 @@ app.include_router(
 )
 
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
+
+app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
 
 
 # Root endpoint
