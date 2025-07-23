@@ -42,7 +42,7 @@ from ..schemas.conversation import (ChatRequest, ConversationCreate,
 from ..schemas.document import DocumentSearchRequest
 from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
-from ..services.enhanced_mcp_client import get_enhanced_mcp_client
+from ..services.mcp_client import get_mcp_client
 from ..services.llm_profile_service import LLMProfileService
 from ..services.openai_client import OpenAIClient
 from ..services.prompt_service import PromptService
@@ -387,11 +387,11 @@ class ConversationService(BaseService):
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:
                 try:
-                    enhanced_client = await get_enhanced_mcp_client()
+                    mcp_client = await get_mcp_client()
                     openai_params["use_unified_tools"] = True
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
-                    logger.warning(f"Failed to get enhanced MCP client: {e}")
+                    logger.warning(f"Failed to get MCP client: {e}")
                     openai_params["use_unified_tools"] = request.use_tools
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
             else:
@@ -544,11 +544,11 @@ class ConversationService(BaseService):
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:
                 try:
-                    enhanced_client = await get_enhanced_mcp_client()
+                    mcp_client = await get_mcp_client()
                     openai_params["use_unified_tools"] = True
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
-                    logger.warning(f"Failed to get enhanced MCP client: {e}")
+                    logger.warning(f"Failed to get MCP client: {e}")
                     openai_params["use_unified_tools"] = request.use_tools
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
             else:
@@ -839,7 +839,7 @@ class ConversationService(BaseService):
             profile_stats = await LLMProfileService.get_profile_stats()
 
             # Get tool stats from enhanced MCP client
-            enhanced_client = await get_enhanced_mcp_client()
+            mcp_client = await get_mcp_client()
             health = await enhanced_client.health_check()
 
             return {

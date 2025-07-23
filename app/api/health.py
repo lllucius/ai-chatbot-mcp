@@ -259,7 +259,7 @@ async def _check_openai_health() -> Dict[str, Any]:
 async def _check_fastmcp_health() -> Dict[str, Any]:
     """Check FastMCP services health with enhanced registry integration."""
     try:
-        from ..services.enhanced_mcp_client import get_enhanced_mcp_client
+        from ..services.mcp_client import get_mcp_client
 
         if not settings.mcp_enabled:
             return {
@@ -268,8 +268,8 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
                 "enabled": False,
             }
 
-        enhanced_client = await get_enhanced_mcp_client()
-        health_result = await enhanced_client.health_check()
+        mcp_client = await get_mcp_client()
+        health_result = await mcp_client.health_check()
 
         if not health_result.get("fastmcp_available"):
             return {

@@ -192,12 +192,11 @@ class ChatRequest(BaseSchema):
     profile_name: Optional[str] = Field(
         None, description="Name of LLM profile to use from profile registry"
     )
-    llm_profile: Optional[Any] = Field(
+    llm_profile: Optional[Dict[str, Any]] = Field(
         None, description="LLM profile object with parameter configuration"
     )
 
     model_config = {
-        "arbitrary_types_allowed": True,  # Allow SQLAlchemy models
         "json_schema_extra": {
             "example": {
                 "user_message": "What is machine learning?",

@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..dependencies import get_current_superuser
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..services.enhanced_mcp_client import get_enhanced_mcp_client
+from ..services.mcp_client import get_mcp_client
 from ..services.mcp_registry import MCPRegistryService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -42,13 +42,13 @@ async def list_tools(
 
     try:
         # Get enhanced MCP client with registry integration
-        enhanced_client = await get_enhanced_mcp_client()
+        mcp_client = await get_mcp_client()
 
         # Get available tools with registry filtering
-        available_tools = await enhanced_client.get_available_tools(enabled_only=False)
+        available_tools = await mcp_client.get_available_tools_enhanced(enabled_only=False)
 
         # Get OpenAI-formatted tools (enabled only)
-        openai_tools = await enhanced_client.get_tools_for_openai(enabled_only=True)
+        openai_tools = await mcp_client.get_tools_for_openai_enhanced(enabled_only=True)
 
         # Get registry servers and their status
         servers = await MCPRegistryService.list_servers()
@@ -126,8 +126,8 @@ async def get_tool_details(
             )
 
         # Get enhanced client
-        enhanced_client = await get_enhanced_mcp_client()
-        available_tools = await enhanced_client.get_available_tools(enabled_only=False)
+        mcp_client = await get_mcp_client()
+        available_tools = await mcp_client.get_available_tools_enhanced(enabled_only=False)
         tool_info = available_tools.get(tool_name, {})
 
         return {
@@ -183,7 +183,7 @@ async def test_tool(
     log_api_call("test_tool", user_id=current_user.id, tool_name=tool_name)
 
     try:
-        enhanced_client = await get_enhanced_mcp_client()
+        mcp_client = await get_mcp_client()
 
         # Check if tool exists and is enabled
         tool = await MCPRegistryService.get_tool(tool_name)
@@ -204,7 +204,7 @@ async def test_tool(
             test_params = {}
 
         # Execute the tool with usage tracking
-        result = await enhanced_client.call_tool(
+        result = await mcp_client.call_tool(
             tool_name, test_params, record_usage=True
         )
 
