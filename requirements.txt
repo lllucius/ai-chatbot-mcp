@@ -19,11 +19,6 @@ openai
 tiktoken
 numpy
 
-# Document Processing
-PyPDF2
-python-docx
-striprtf
-
 # Data Validation
 pydantic
 pydantic-settings
@@ -46,7 +41,7 @@ black
 isort
 mypy
 
-# Document Processing - Unstructured
+# Document Processing - Unstructured (replaces PyPDF2, python-docx, striprtf)
 unstructured>=0.15.0
 filetype
 beautifulsoup4

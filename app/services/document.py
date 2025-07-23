@@ -400,11 +400,20 @@ class DocumentService(BaseService):
             raise
 
     async def _process_document(self, document: Document):
-        """Process document: extract text, create chunks, generate embeddings."""
+        """Process document: extract text, create chunks, generate embeddings using unstructured."""
         try:
             logger.info(f"Starting processing for document {document.id}")
 
-            # Extract text from file
+            # Extract structured chunks directly using unstructured
+            chunks_data = await self.file_processor.extract_chunks(
+                document.file_path, 
+                document.file_type,
+                max_characters=settings.default_chunk_size
+            )
+
+            logger.info(f"Extracted {len(chunks_data)} chunks for document {document.id}")
+
+            # Also extract full text for backward compatibility and statistics
             text_content = await self.file_processor.extract_text(
                 document.file_path, document.file_type
             )
@@ -412,45 +421,42 @@ class DocumentService(BaseService):
             # Get text statistics
             text_stats = self.text_processor.get_text_statistics(text_content)
 
-            # Create text chunks
-            chunks = self.text_processor.create_chunks(
-                text_content,
-                metainfo={"document_id": document.id, "document_title": document.title},
-            )
-
-            logger.info(f"Created {len(chunks)} chunks for document {document.id}")
-
             # Process chunks and generate embeddings
             chunk_records = []
-            for chunk in chunks:
-                # Generate embedding
+            for i, chunk_data in enumerate(chunks_data):
+                # Generate embedding for the chunk text
                 embedding = await self.embedding_service.generate_embedding(
-                    chunk.content
+                    chunk_data['text']
                 )
 
-                # Create chunk record
+                # Create chunk record with unstructured metadata
                 chunk_record = DocumentChunk(
-                    content=chunk.content,
-                    chunk_index=chunk.chunk_index,
-                    start_char=chunk.start_char,
-                    end_char=chunk.end_char,
+                    content=chunk_data['text'],
+                    chunk_index=i,
+                    start_offset=None,  # Unstructured doesn't provide character offsets in same way
+                    end_offset=None,
                     token_count=self.embedding_service.openai_client.count_tokens(
-                        chunk.content
+                        chunk_data['text']
                     ),
                     embedding=embedding,
                     document_id=document.id,
-                    metainfo=chunk.metainfo,
+                    # Store unstructured metadata
+                    **({'language': chunk_data['metadata'].get('language')} if chunk_data.get('metadata', {}).get('language') else {})
                 )
 
                 chunk_records.append(chunk_record)
                 self.db.add(chunk_record)
 
-            # Update document metainfo and status
+            # Update document with full text content and metadata
+            document.content = text_content
+            document.chunk_count = len(chunks_data)
             document.metainfo = {
                 **(document.metainfo or {}),
                 "text_stats": text_stats,
                 "processing_completed": True,
-                "chunk_count": len(chunks),
+                "chunk_count": len(chunks_data),
+                "unstructured_processing": True,
+                "chunks_metadata": [chunk.get('metadata', {}) for chunk in chunks_data]
             }
             document.status = FileStatus.COMPLETED
 
@@ -461,9 +467,11 @@ class DocumentService(BaseService):
         except Exception as e:
             logger.error(f"Document processing failed for {document.id}: {e}")
             document.status = FileStatus.FAILED
+            document.error_message = str(e)
             document.metainfo = {
                 **(document.metainfo or {}),
                 "processing_error": str(e),
+                "unstructured_processing": False,
             }
             await self.db.commit()
             raise
