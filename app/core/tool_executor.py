@@ -431,14 +431,14 @@ async def get_unified_tool_executor() -> UnifiedToolExecutor:
     if _unified_tool_executor is None:
         _unified_tool_executor = UnifiedToolExecutor()
 
-        # Initialize with available MCP client
+        # Initialize with available enhanced MCP client
         try:
-            from ..services.mcp_client import get_mcp_client
+            from ..services.enhanced_mcp_client import get_enhanced_mcp_client
 
-            mcp_client = await get_mcp_client()
-            await _unified_tool_executor.initialize(mcp_client=mcp_client)
+            enhanced_mcp_client = await get_enhanced_mcp_client()
+            await _unified_tool_executor.initialize(mcp_client=enhanced_mcp_client)
         except Exception as e:
-            logger.warning(f"Failed to initialize with MCP client: {e}")
+            logger.warning(f"Failed to initialize with enhanced MCP client: {e}")
             await _unified_tool_executor.initialize()
 
     return _unified_tool_executor

@@ -71,54 +71,53 @@ class FastMCPClientService:
         self.tools: Dict[str, Dict[str, Any]] = {}
         self.is_initialized = False
 
-        # Parse server configurations
-        self._parse_server_configs()
-
         logger.info("FastMCP client service initialized")
 
-    def _parse_server_configs(self):
-        """Parse MCP server configurations from settings."""
+    async def _parse_server_configs(self):
+        """Parse MCP server configurations from registry instead of settings."""
+        from .mcp_registry import MCPRegistryService
 
         # Do not attempt to parse the server list if MCP is not enabled
         if not settings.mcp_enabled:
             return
 
         try:
-            # Get server configurations from settings
-            mcp_servers_config = settings.mcp_servers
+            # Get server configurations from registry instead of settings
+            registry_servers = await MCPRegistryService.list_servers(enabled_only=True)
 
-            for server_name, config in mcp_servers_config.items():
-                # All servers must provide a 'url' key for StreamableHttpTransport
-                url = config.get("url")
-                if not url:
-                    # Default to localhost with server name as port for demo
-                    # You may customize this per your deployment!
-                    port = 8000 + len(
-                        self.servers
-                    )  # Example: http://localhost:8000, 8001, etc.
-                    url = f"http://localhost:{port}"
-                server = MCPServerConfig(
-                    name=server_name,
-                    url=url,
-                    timeout=config.get("timeout", settings.mcp_timeout),
+            for server in registry_servers:
+                server_config = MCPServerConfig(
+                    name=server.name,
+                    url=server.url,
+                    timeout=server.timeout,
                 )
-                self.servers[server.name] = server
+                self.servers[server.name] = server_config
 
             logger.info(
-                f"Configured {len(self.servers)} MCP servers (HTTP): {list(self.servers.keys())}"
+                f"Loaded {len(self.servers)} MCP servers from registry: {list(self.servers.keys())}"
             )
 
+            # If no servers in registry but MCP is enabled, log a warning
+            if not self.servers:
+                logger.warning(
+                    "No enabled MCP servers found in registry. "
+                    "Use the registry API to register MCP servers."
+                )
+
         except Exception as e:
-            logger.error(f"Failed to parse MCP server configs: {e}")
-            raise ExternalServiceError(f"MCP configuration failed: {e}")
+            logger.error(f"Failed to load MCP server configs from registry: {e}")
+            raise ExternalServiceError(f"MCP registry configuration failed: {e}")
 
     @handle_api_errors("MCP initialization failed", log_errors=False)
     async def initialize(self):
         """
         Initialize connections to MCP servers with improved error handling.
         """
+        # Parse server configurations from registry
+        await self._parse_server_configs()
+
         if not self.servers:
-            logger.warning("No MCP servers configured - cannot initialize MCP clients")
+            logger.warning("No MCP servers found in registry - cannot initialize MCP clients")
             self.is_initialized = False
             return
 
@@ -158,6 +157,8 @@ class FastMCPClientService:
 
     async def _connect_server(self, server_name: str, server: MCPServerConfig):
         """Connect to a specific MCP server using StreamableHttpTransport."""
+        from .mcp_registry import MCPRegistryService
+
         try:
             # Create FastMCP client with HTTP transport
             transport = StreamableHttpTransport(server.url)
@@ -171,19 +172,32 @@ class FastMCPClientService:
                     f"Successfully configured MCP HTTP server: {server_name} ({server.url})"
                 )
 
+                # Update connection status in registry
+                await MCPRegistryService.update_connection_status(server_name, True)
+
         except asyncio.TimeoutError:
             logger.error(
                 f"Timeout connecting to MCP server {server_name} after {server.timeout}s"
+            )
+            # Update connection status in registry
+            await MCPRegistryService.update_connection_status(
+                server_name, False, increment_errors=True
             )
             raise
         except Exception as e:
             logger.error(f"Failed to connect to MCP server {server_name}: {e}")
             # Remove client if it was added
             self.clients.pop(server_name, None)
+            # Update connection status in registry
+            await MCPRegistryService.update_connection_status(
+                server_name, False, increment_errors=True
+            )
             raise
 
     async def _discover_tools(self):
         """Discover available tools from connected servers."""
+        from .mcp_registry import MCPRegistryService
+
         for server_name, client in self.clients.items():
             try:
                 async with client:
@@ -255,6 +269,19 @@ class FastMCPClientService:
                             "parameters": schema_dict,
                         }
                         server_tools.append(tool_name)
+
+                        # Register tool in registry
+                        try:
+                            await MCPRegistryService.register_tool(
+                                server_name=server_name,
+                                tool_name=tool_name,
+                                original_name=tool_name_attr,
+                                description=tool_desc,
+                                parameters=schema_dict,
+                                is_enabled=True,
+                            )
+                        except Exception as e:
+                            logger.debug(f"Tool {tool_name} already registered or registration failed: {e}")
 
                     logger.info(
                         f"Discovered {len(server_tools)} tools from {server_name}: {server_tools}"
