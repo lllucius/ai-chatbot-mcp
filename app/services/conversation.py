@@ -36,9 +36,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.conversation import Conversation, Message
-from ..schemas.conversation import (ChatRequest, ConversationCreate,
-                                    ConversationResponse, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..schemas.document import DocumentSearchRequest
 from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
@@ -481,7 +485,7 @@ class ConversationService(BaseService):
             # Stream AI response
             full_content = ""
             tool_calls_executed = []
-            
+
             async for chunk in self.openai_client.chat_completion_stream(
                 messages=ai_messages,
                 temperature=request.temperature,
@@ -494,7 +498,11 @@ class ConversationService(BaseService):
                     full_content += content
                     yield {"type": "content", "content": content}
                 elif chunk.get("type") == "tool_call":
-                    yield {"type": "tool_call", "tool": chunk.get("tool"), "result": chunk.get("result")}
+                    yield {
+                        "type": "tool_call",
+                        "tool": chunk.get("tool"),
+                        "result": chunk.get("result"),
+                    }
                     tool_calls_executed.append(chunk)
 
             # Create AI message with complete content
@@ -526,7 +534,7 @@ class ConversationService(BaseService):
                     "conversation": ConversationResponse.model_validate(conversation),
                     "rag_context": rag_context,
                     "tool_call_summary": tool_call_summary,
-                }
+                },
             }
 
         except Exception as e:
@@ -618,13 +626,15 @@ class ConversationService(BaseService):
 
         return "\n".join(formatted_parts)
 
-    def _create_tool_call_summary(self, tool_calls_executed: List[Dict[str, Any]]) -> ToolCallSummary:
+    def _create_tool_call_summary(
+        self, tool_calls_executed: List[Dict[str, Any]]
+    ) -> ToolCallSummary:
         """
         Create a tool call summary from executed tool calls.
-        
+
         Args:
             tool_calls_executed: List of executed tool call results
-            
+
         Returns:
             ToolCallSummary: Summary of tool call execution
         """
@@ -634,32 +644,38 @@ class ConversationService(BaseService):
                 successful_calls=0,
                 failed_calls=0,
                 total_execution_time_ms=0.0,
-                results=[]
+                results=[],
             )
-        
-        successful_calls = sum(1 for call in tool_calls_executed if call.get("success", False))
+
+        successful_calls = sum(
+            1 for call in tool_calls_executed if call.get("success", False)
+        )
         failed_calls = len(tool_calls_executed) - successful_calls
-        total_execution_time = sum(call.get("execution_time_ms", 0) or 0 for call in tool_calls_executed)
-        
+        total_execution_time = sum(
+            call.get("execution_time_ms", 0) or 0 for call in tool_calls_executed
+        )
+
         # Convert to ToolCallResult objects
         results = []
         for call in tool_calls_executed:
-            results.append(ToolCallResult(
-                tool_call_id=call.get("tool_call_id", ""),
-                tool_name=call.get("tool_name", "unknown"),
-                success=call.get("success", False),
-                content=call.get("content", []),
-                error=call.get("error"),
-                provider=call.get("provider"),
-                execution_time_ms=call.get("execution_time_ms")
-            ))
-        
+            results.append(
+                ToolCallResult(
+                    tool_call_id=call.get("tool_call_id", ""),
+                    tool_name=call.get("tool_name", "unknown"),
+                    success=call.get("success", False),
+                    content=call.get("content", []),
+                    error=call.get("error"),
+                    provider=call.get("provider"),
+                    execution_time_ms=call.get("execution_time_ms"),
+                )
+            )
+
         return ToolCallSummary(
             total_calls=len(tool_calls_executed),
             successful_calls=successful_calls,
             failed_calls=failed_calls,
             total_execution_time_ms=total_execution_time,
-            results=results
+            results=results,
         )
 
     async def get_user_stats(self, user_id: UUID) -> Dict[str, Any]:

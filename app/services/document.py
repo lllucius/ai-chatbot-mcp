@@ -44,8 +44,9 @@ from ..models.document import Document, DocumentChunk, FileStatus
 from ..schemas.document import DocumentUpdate
 from ..services.background_processor import get_background_processor
 from ..services.embedding import EmbeddingService
-from ..utils.enhanced_document_processor import \
-    DocumentProcessor as EnhancedDocumentProcessor
+from ..utils.enhanced_document_processor import (
+    DocumentProcessor as EnhancedDocumentProcessor,
+)
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
@@ -168,7 +169,7 @@ class DocumentService(BaseService):
                 import mimetypes
 
                 import filetype
-                
+
                 kind = filetype.guess(temp_path)
                 if kind is not None:
                     file_extension = f".{kind.extension}"
@@ -648,16 +649,16 @@ class DocumentService(BaseService):
             "status": document.status,
             "progress": progress,
             "chunks_processed": chunks_processed,
-            "total_chunks": estimated_chunks
-            if document.status != "completed"
-            else chunks_processed,
-            "error_message": document.metainfo.get("processing_error")
-            if document.metainfo
-            else None,
+            "total_chunks": (
+                estimated_chunks if document.status != "completed" else chunks_processed
+            ),
+            "error_message": (
+                document.metainfo.get("processing_error") if document.metainfo else None
+            ),
             "started_at": document.created_at,
-            "completed_at": document.updated_at
-            if document.status == FileStatus.COMPLETED
-            else None,
+            "completed_at": (
+                document.updated_at if document.status == FileStatus.COMPLETED else None
+            ),
         }
 
     async def reprocess_document(self, document_id: UUID, user_id: UUID) -> bool:

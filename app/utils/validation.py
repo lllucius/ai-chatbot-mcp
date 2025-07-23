@@ -151,6 +151,16 @@ class InputValidator:
         """
 
         def check_depth(obj, current_depth=0):
+            """
+            Recursively check the nesting depth of an object.
+            
+            Args:
+                obj: Object to check (dict, list, or primitive)
+                current_depth: Current nesting level (default: 0)
+            
+            Returns:
+                bool: True if depth is within limits, False otherwise
+            """
             if current_depth > max_depth:
                 return False
 

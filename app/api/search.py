@@ -172,26 +172,26 @@ async def get_search_history(
     try:
         # For admin dashboard, provide aggregated search analytics
         # In a full implementation, this would query a search_history table
-        
+
         mock_history = [
             {
                 "query": "machine learning",
                 "timestamp": "2024-01-22T15:30:00Z",
                 "results_count": 25,
-                "algorithm": "hybrid"
+                "algorithm": "hybrid",
             },
             {
                 "query": "neural networks",
                 "timestamp": "2024-01-22T14:15:00Z",
                 "results_count": 18,
-                "algorithm": "vector"
+                "algorithm": "vector",
             },
             {
                 "query": "data processing",
                 "timestamp": "2024-01-22T13:45:00Z",
                 "results_count": 32,
-                "algorithm": "text"
-            }
+                "algorithm": "text",
+            },
         ]
 
         return {
@@ -219,11 +219,8 @@ async def clear_search_history(current_user: User = Depends(get_current_user)):
     try:
         # For admin dashboard, this would clear system-wide search analytics
         # In a full implementation, this would delete from search_history table
-        
-        return BaseResponse(
-            success=True,
-            message="Search history cleared successfully"
-        )
+
+        return BaseResponse(success=True, message="Search history cleared successfully")
 
     except Exception:
         raise HTTPException(

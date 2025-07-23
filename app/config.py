@@ -77,7 +77,9 @@ class Settings(BaseSettings):
     mcp_enabled: bool = Field(default=True, description="Enable FastMCP integration")
     mcp_timeout: int = Field(default=30, description="MCP operation timeout in seconds")
     mcp_servers: dict = Field(
-        default_factory=lambda: {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}},
+        default_factory=lambda: {
+            "tools": {"url": "http://localhost:9000/mcp", "transport": "http"}
+        },
         description="Dictionary of MCP servers",
     )
 
@@ -180,11 +182,14 @@ class Settings(BaseSettings):
         """Parse MCP servers from string or dict."""
         if isinstance(v, str):
             import json
+
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
                 logger.warning(f"Invalid JSON for mcp_servers: {v}")
-                return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
+                return {
+                    "tools": {"url": "http://localhost:9000/mcp", "transport": "http"}
+                }
         elif isinstance(v, dict):
             return v
         return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}

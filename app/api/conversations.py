@@ -21,10 +21,15 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
-from ..schemas.conversation import (ChatRequest, ChatResponse,
-                                    ConversationCreate, ConversationResponse,
-                                    ConversationStats, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ChatResponse,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationStats,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..services.conversation import ConversationService
 
 router = APIRouter(tags=["conversations"])
@@ -284,12 +289,15 @@ async def chat_stream(
     providing real-time feedback to the user.
     """
     try:
+
         async def generate_response():
             # Send initial event
             yield f"data: {json.dumps({'type': 'start', 'message': 'Generating response...'})}\n\n"
-            
+
             # Process chat request with streaming
-            async for chunk in conversation_service.process_chat_stream(request, current_user.id):
+            async for chunk in conversation_service.process_chat_stream(
+                request, current_user.id
+            ):
                 if chunk.get("type") == "content":
                     # Stream content chunks
                     yield f"data: {json.dumps({'type': 'content', 'content': chunk.get('content', '')})}\n\n"
@@ -300,10 +308,10 @@ async def chat_stream(
                     # Send completion event with full response
                     yield f"data: {json.dumps({'type': 'complete', 'response': chunk.get('response')})}\n\n"
                     break
-            
+
             # Send end event
             yield f"data: {json.dumps({'type': 'end'})}\n\n"
-        
+
         return StreamingResponse(
             generate_response(),
             media_type="text/event-stream",
@@ -311,7 +319,7 @@ async def chat_stream(
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
                 "Access-Control-Allow-Origin": "*",
-            }
+            },
         )
 
     except ValidationError as e:

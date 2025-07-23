@@ -15,9 +15,10 @@ import string
 
 # Scrypt configuration parameters (recommended for secure usage)
 SCRYPT_N = 2**14  # CPU/memory cost factor
-SCRYPT_R = 8      # Block size
-SCRYPT_P = 1      # Parallelization factor
-SCRYPT_DKLEN = 64 # Length of derived key
+SCRYPT_R = 8  # Block size
+SCRYPT_P = 1  # Parallelization factor
+SCRYPT_DKLEN = 64  # Length of derived key
+
 
 def get_password_hash(password: str) -> str:
     """
@@ -31,16 +32,17 @@ def get_password_hash(password: str) -> str:
     """
     salt = secrets.token_bytes(16)
     key = hashlib.scrypt(
-        password=password.encode('utf-8'),
+        password=password.encode("utf-8"),
         salt=salt,
         n=SCRYPT_N,
         r=SCRYPT_R,
         p=SCRYPT_P,
-        dklen=SCRYPT_DKLEN
+        dklen=SCRYPT_DKLEN,
     )
     # Store salt + hash together (salt first, then hash)
-    data = base64.b64encode(salt + key).decode('utf-8')
+    data = base64.b64encode(salt + key).decode("utf-8")
     return data
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
@@ -54,20 +56,21 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         bool: True if password matches hash
     """
     try:
-        decoded = base64.b64decode(hashed_password.encode('utf-8'))
+        decoded = base64.b64decode(hashed_password.encode("utf-8"))
         salt = decoded[:16]
         key = decoded[16:]
         new_key = hashlib.scrypt(
-            password=plain_password.encode('utf-8'),
+            password=plain_password.encode("utf-8"),
             salt=salt,
             n=SCRYPT_N,
             r=SCRYPT_R,
             p=SCRYPT_P,
-            dklen=len(key)
+            dklen=len(key),
         )
         return secrets.compare_digest(new_key, key)
     except Exception:
         return False
+
 
 def generate_random_password(length: int = 12) -> str:
     """
@@ -83,6 +86,7 @@ def generate_random_password(length: int = 12) -> str:
     password = "".join(secrets.choice(alphabet) for _ in range(length))
     return password
 
+
 def generate_secret_key(length: int = 32) -> str:
     """
     Generate a random secret key.
@@ -94,6 +98,7 @@ def generate_secret_key(length: int = 32) -> str:
         str: Random secret key as hex string
     """
     return secrets.token_hex(length)
+
 
 def generate_token(length: int = 32) -> str:
     """

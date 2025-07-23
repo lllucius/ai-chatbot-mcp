@@ -167,9 +167,9 @@ def with_tool_caching(
                     f"Cache hit for {func.__name__}",
                     extra={
                         "function": func.__name__,
-                        "cache_key": cache_key[:50] + "..."
-                        if len(cache_key) > 50
-                        else cache_key,
+                        "cache_key": (
+                            cache_key[:50] + "..." if len(cache_key) > 50 else cache_key
+                        ),
                     },
                 )
 
@@ -192,9 +192,9 @@ def with_tool_caching(
                     f"Cache miss for {func.__name__}, result cached",
                     extra={
                         "function": func.__name__,
-                        "cache_key": cache_key[:50] + "..."
-                        if len(cache_key) > 50
-                        else cache_key,
+                        "cache_key": (
+                            cache_key[:50] + "..." if len(cache_key) > 50 else cache_key
+                        ),
                     },
                 )
 

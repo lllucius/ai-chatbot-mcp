@@ -17,7 +17,7 @@ Key Features:
 Search Algorithms:
 - Vector Search: Semantic similarity using embeddings with PGVector ivfflat index
 - Text Search: Traditional full-text search with PostgreSQL tsvector and BM25 ranking
-- Hybrid Search: Normalized and calibrated blending of vector and text scores  
+- Hybrid Search: Normalized and calibrated blending of vector and text scores
 - MMR Search: Maximum Marginal Relevance using embedding cosine distance for diversity
 
 Performance Features:
@@ -30,7 +30,7 @@ API Endpoints Integration:
 - search_documents: Main search interface with algorithm selection
 - get_similar_chunks: Direct similarity search for related content
 
-Generated on: 2025-07-14 04:00:00 UTC  
+Generated on: 2025-07-14 04:00:00 UTC
 Updated on: 2025-01-20 20:15:00 UTC
 Current User: lllucius / assistant
 """
@@ -239,7 +239,9 @@ class SearchService(BaseService):
             select(DocumentChunk, rank_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
             .where(Document.owner_id == user_id)
-            .where(func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query))
+            .where(
+                func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query)
+            )
         )
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))

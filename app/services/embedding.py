@@ -232,9 +232,11 @@ class EmbeddingService:
 
             emb_matrix = np.array(
                 [
-                    emb
-                    if emb and len(emb) == len(query_embedding)
-                    else np.zeros_like(query_embedding)
+                    (
+                        emb
+                        if emb and len(emb) == len(query_embedding)
+                        else np.zeros_like(query_embedding)
+                    )
                     for emb in embeddings
                 ],
                 dtype=np.float32,

@@ -179,7 +179,7 @@ class ChatRequest(BaseSchema):
     use_tools: bool = Field(True, description="Whether to enable tool calling")
     tool_handling_mode: ToolHandlingMode = Field(
         default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
-        description="How to handle tool call results: return_results or complete_with_results"
+        description="How to handle tool call results: return_results or complete_with_results",
     )
     rag_documents: Optional[List[UUID]] = Field(
         None, description="Specific document IDs for RAG"
