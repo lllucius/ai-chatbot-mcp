@@ -9,10 +9,11 @@ Revises:
 Create Date: 2025-07-23 03:40:00
 """
 
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 import uuid
+
+import sqlalchemy as sa
+from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '001_add_registry_models'

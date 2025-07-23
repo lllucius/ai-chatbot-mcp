@@ -8,10 +8,10 @@ Generated on: 2025-07-21 03:36:44 UTC
 Current User: lllucius
 """
 
+import base64
+import hashlib
 import secrets
 import string
-import hashlib
-import base64
 
 # Scrypt configuration parameters (recommended for secure usage)
 SCRYPT_N = 2**14  # CPU/memory cost factor

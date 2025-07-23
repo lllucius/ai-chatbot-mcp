@@ -18,15 +18,16 @@ Updated on: 2025-01-20 19:40:00 UTC
 Current User: lllucius / assistant
 """
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Any, Dict, List, Tuple
 from uuid import UUID
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
+from ..core.exceptions import (AuthenticationError, NotFoundError,
+                               ValidationError)
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User

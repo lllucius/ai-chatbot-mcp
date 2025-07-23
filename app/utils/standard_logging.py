@@ -23,10 +23,10 @@ import logging.handlers
 import sys
 import time
 import traceback
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import uuid
 
 from ..config import settings
 

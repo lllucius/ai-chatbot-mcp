@@ -11,7 +11,6 @@ Current User: lllucius
 import argparse
 import asyncio
 import logging
-
 import sys
 from pathlib import Path
 
@@ -29,7 +28,6 @@ from app.services.auth import AuthService
 from app.services.user import UserService
 from app.utils.logging import setup_logging
 from app.utils.security import get_password_hash
-
 
 logger = logging.getLogger(__name__)
 

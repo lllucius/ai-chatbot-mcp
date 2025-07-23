@@ -5,9 +5,10 @@ These tests cover MCP server and tool management including
 registration, enablement, and usage tracking.
 """
 
-import pytest
-import pytest_asyncio
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from app.services.mcp_registry import MCPRegistryService
 
 
@@ -139,8 +140,8 @@ class TestMCPToolUsageTracking:
 
     def test_tool_record_usage(self):
         """Test recording tool usage."""
+
         from app.models.mcp_tool import MCPTool
-        from datetime import datetime
         
         tool = MCPTool(
             name="test_tool",

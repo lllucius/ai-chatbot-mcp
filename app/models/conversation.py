@@ -9,7 +9,6 @@ Current User: lllucius
 """
 
 import uuid
-
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from sqlalchemy import JSON, Boolean, ForeignKey, Index, Integer, String, Text

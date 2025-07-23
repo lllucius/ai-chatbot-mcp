@@ -19,7 +19,8 @@ from sqlalchemy import text
 
 from ..config import settings
 from ..database import AsyncSessionLocal
-from .base import (async_command, console, error_message, info_message, success_message, warning_message)
+from .base import (async_command, console, error_message, info_message,
+                   success_message, warning_message)
 
 # Create the database management app
 database_app = typer.Typer(help="Database management commands")
@@ -487,7 +488,7 @@ def vacuum():
             
             # VACUUM cannot run inside a transaction, so we need a direct connection
             from ..database import engine
-            
+
             # Run VACUUM on main tables
             tables_to_vacuum = [
                 "users", "documents", "document_chunks", 

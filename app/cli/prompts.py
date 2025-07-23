@@ -9,16 +9,15 @@ Current User: lllucius / assistant
 """
 
 import asyncio
-from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
 import typer
-from rich.table import Table
-from rich.panel import Panel
 from rich import box
+from rich.panel import Panel
+from rich.table import Table
 
-from .base import console, success_message, error_message, info_message
 from ..services.prompt_service import PromptService
+from .base import console, error_message, info_message, success_message
 
 # Create the prompt management app
 prompt_app = typer.Typer(

@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 Enhanced Management CLI for the AI Chatbot Platform.
 
@@ -28,24 +29,25 @@ Features:
 
 import sys
 from pathlib import Path
+
 import typer
-from rich.panel import Panel
 from rich.columns import Columns
+from rich.panel import Panel
 
 # Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
+from app.cli.analytics import analytics_app
+from app.cli.base import console, info_message, success_message
+from app.cli.conversations import conversation_app
+from app.cli.database import database_app
+from app.cli.documents import document_app
+from app.cli.mcp import mcp_app
+from app.cli.profiles import profile_app
+from app.cli.prompts import prompt_app
+from app.cli.tasks import tasks_app
 # Import CLI modules
 from app.cli.users import user_app
-from app.cli.documents import document_app
-from app.cli.conversations import conversation_app
-from app.cli.analytics import analytics_app
-from app.cli.database import database_app
-from app.cli.tasks import tasks_app
-from app.cli.mcp import mcp_app
-from app.cli.prompts import prompt_app
-from app.cli.profiles import profile_app
-from app.cli.base import console, success_message, info_message
 
 # Create the main Typer app
 app = typer.Typer(
@@ -90,8 +92,10 @@ def health():
     """Perform comprehensive system health check."""
     
     import asyncio
+
+    from sqlalchemy import func, select, text
+
     from app.database import AsyncSessionLocal
-    from sqlalchemy import select, func, text
     from app.models.user import User
     
     async def _health_check():
@@ -421,11 +425,12 @@ def status():
         ))
         
         try:
+            from sqlalchemy import func, select
+
             from app.database import AsyncSessionLocal
-            from sqlalchemy import select, func
-            from app.models.user import User
-            from app.models.document import Document, FileStatus
             from app.models.conversation import Conversation
+            from app.models.document import Document, FileStatus
+            from app.models.user import User
             
             async with AsyncSessionLocal() as db:
                 # Quick stats

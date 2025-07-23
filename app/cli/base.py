@@ -21,7 +21,7 @@ def async_command(func: Callable) -> Callable:
             # If there's already a running loop, we can't use asyncio.run()
             # Instead, create a task
             import concurrent.futures
-            
+
             # Run in a separate thread to avoid nested loop issues
             def run_in_thread():
                 return asyncio.run(func(*args, **kwargs))

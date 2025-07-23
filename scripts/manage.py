@@ -15,9 +15,9 @@ from typing import Optional
 
 import typer
 from rich.console import Console
+from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.table import Table
-from rich.panel import Panel
 from sqlalchemy import func, select
 
 from app.config import settings
@@ -444,19 +444,19 @@ def config():
 def migrate():
     """Show migration notice to new CLI."""
     migration_notice = Panel(
-        f"[bold red]⚠️ DEPRECATED CLI[/bold red]\n\n"
-        f"This CLI script is deprecated and kept only for backward compatibility.\n"
-        f"Please use the new comprehensive management CLI:\n\n"
-        f"[green]python manage.py --help[/green]\n\n"
-        f"The new CLI provides:\n"
-        f"• Enhanced user management\n"
-        f"• Document processing tools\n"
-        f"• Conversation management\n"
-        f"• Analytics and reporting\n"
-        f"• Database management\n"
-        f"• Background task monitoring\n\n"
-        f"[yellow]Quick start:[/yellow]\n"
-        f"[cyan]python manage.py quickstart[/cyan]",
+        "[bold red]⚠️ DEPRECATED CLI[/bold red]\n\n"
+        "This CLI script is deprecated and kept only for backward compatibility.\n"
+        "Please use the new comprehensive management CLI:\n\n"
+        "[green]python manage.py --help[/green]\n\n"
+        "The new CLI provides:\n"
+        "• Enhanced user management\n"
+        "• Document processing tools\n"
+        "• Conversation management\n"
+        "• Analytics and reporting\n"
+        "• Database management\n"
+        "• Background task monitoring\n\n"
+        "[yellow]Quick start:[/yellow]\n"
+        "[cyan]python manage.py quickstart[/cyan]",
         title="🚀 Migration Notice",
         border_style="bright_yellow",
         padding=(1, 2)

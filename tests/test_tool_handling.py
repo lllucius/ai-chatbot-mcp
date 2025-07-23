@@ -7,8 +7,9 @@ Generated on: 2025-01-20 20:55:00 UTC
 Current User: assistant
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.schemas.conversation import ChatRequest
 from app.schemas.tool_calling import ToolHandlingMode

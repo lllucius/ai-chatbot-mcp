@@ -12,11 +12,11 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import Field, field_validator, constr
+from pydantic import Field, constr, field_validator
 
 from .base import BaseSchema
 from .common import BaseResponse
-from .tool_calling import ToolHandlingMode, ToolCallSummary
+from .tool_calling import ToolCallSummary, ToolHandlingMode
 
 
 class ConversationBase(BaseSchema):

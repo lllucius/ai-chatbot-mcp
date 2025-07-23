@@ -8,10 +8,10 @@ Generated on: 2025-07-14 03:47:30 UTC
 Current User: lllucius
 """
 
-import re
 import json
 import logging
-from typing import Dict, Any, Optional
+import re
+from typing import Any, Dict, Optional
 
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException

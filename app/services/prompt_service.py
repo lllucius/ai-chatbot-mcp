@@ -8,13 +8,12 @@ Current Date and Time (UTC): 2025-07-23 03:30:00
 Current User: lllucius / assistant
 """
 
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from sqlalchemy import select, update, and_, or_, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict, List, Optional
 
-from ..models.prompt import Prompt
+from sqlalchemy import and_, func, or_, select, update
+
 from ..database import AsyncSessionLocal
+from ..models.prompt import Prompt
 from ..utils.logging import get_api_logger
 
 logger = get_api_logger("prompt_service")

@@ -9,12 +9,8 @@ Current User: lllucius
 """
 
 from .logging import StructuredLogger, get_logger, setup_logging
-from .security import (
-    generate_secret_key,
-    generate_token,
-    get_password_hash,
-    verify_password,
-)
+from .security import (generate_secret_key, generate_token, get_password_hash,
+                       verify_password)
 from .text_processing import TextProcessor
 
 __all__ = [

@@ -13,17 +13,15 @@ Current Date: 2025-01-20
 """
 
 import tempfile
-import pytest
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+
+from app.services.background_processor import (BackgroundProcessor,
+                                               ProcessingTask, TaskStatus)
 from app.utils.enhanced_document_processor import DocumentProcessor
-from app.services.background_processor import (
-    BackgroundProcessor,
-    ProcessingTask,
-    TaskStatus,
-)
-from app.utils.standard_logging import setup_logging, set_correlation_id
+from app.utils.standard_logging import set_correlation_id, setup_logging
 
 
 class TestEnhancedDocumentProcessor:
@@ -219,8 +217,9 @@ class TestStandardLogging:
 
     def test_structured_formatter(self):
         """Test structured JSON formatter."""
-        from app.utils.standard_logging import StructuredFormatter
         import logging
+
+        from app.utils.standard_logging import StructuredFormatter
 
         formatter = StructuredFormatter()
         record = logging.LogRecord(
@@ -247,8 +246,9 @@ class TestStandardLogging:
 
     def test_development_formatter(self):
         """Test development formatter."""
-        from app.utils.standard_logging import DevelopmentFormatter
         import logging
+
+        from app.utils.standard_logging import DevelopmentFormatter
 
         formatter = DevelopmentFormatter()
         record = logging.LogRecord(

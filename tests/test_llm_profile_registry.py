@@ -5,9 +5,10 @@ These tests cover LLM parameter profile management including creation,
 parameter validation, and usage tracking.
 """
 
-import pytest
-import pytest_asyncio
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from app.services.llm_profile_service import LLMProfileService
 
 
@@ -182,8 +183,9 @@ class TestLLMProfileModel:
 
     def test_profile_to_dict(self):
         """Test converting profile to dictionary."""
-        from app.models.llm_profile import LLMProfile
         from datetime import datetime
+
+        from app.models.llm_profile import LLMProfile
         
         now = datetime.utcnow()
         profile = LLMProfile(
@@ -210,8 +212,9 @@ class TestLLMProfileModel:
 
     def test_profile_record_usage(self):
         """Test profile usage recording."""
-        from app.models.llm_profile import LLMProfile
         from datetime import datetime
+
+        from app.models.llm_profile import LLMProfile
         
         profile = LLMProfile(
             name="test",

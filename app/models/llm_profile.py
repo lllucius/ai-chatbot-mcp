@@ -11,7 +11,7 @@ Current User: lllucius / assistant
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, Integer, String, Text, Float, Index, JSON
+from sqlalchemy import JSON, Boolean, Float, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import BaseModelDB

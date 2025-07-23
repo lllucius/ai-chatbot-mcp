@@ -8,28 +8,23 @@ Generated on: 2025-07-14 03:15:29 UTC
 Current User: lllucius
 """
 
+import json
 import time
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
-import json
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
-from ..schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-)
+from ..schemas.conversation import (ChatRequest, ChatResponse,
+                                    ConversationCreate, ConversationResponse,
+                                    ConversationStats, ConversationUpdate,
+                                    MessageResponse)
 from ..services.conversation import ConversationService
 
 router = APIRouter(tags=["conversations"])

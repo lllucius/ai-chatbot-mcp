@@ -6,8 +6,8 @@ user queries, and user administration features.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 from fastapi import status
+from fastapi.testclient import TestClient
 
 
 class TestUserEndpoints:

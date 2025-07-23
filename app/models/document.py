@@ -10,7 +10,7 @@ Current User: lllucius
 
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 # Import pgvector only for PostgreSQL compatibility
 try:
@@ -19,8 +19,9 @@ try:
 except ImportError:
     HAS_PGVECTOR = False
 
+from sqlalchemy import JSON
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Float, ForeignKey, Index, Integer, JSON, String, Text
+from sqlalchemy import Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

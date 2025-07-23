@@ -9,10 +9,11 @@ Current Date and Time (UTC): 2025-07-23 03:55:00
 Current User: lllucius / assistant
 """
 
-from typing import Dict, Any, Optional
-from ..services.prompt_service import PromptService
-from ..services.llm_profile_service import LLMProfileService
+from typing import Any, Dict, Optional
+
 from ..services.enhanced_mcp_client import get_enhanced_mcp_client
+from ..services.llm_profile_service import LLMProfileService
+from ..services.prompt_service import PromptService
 from ..utils.logging import get_api_logger
 
 logger = get_api_logger("conversation_integration")

@@ -17,9 +17,9 @@ from pathlib import Path
 # Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from app.services.prompt_service import PromptService
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_registry import MCPRegistryService
+from app.services.prompt_service import PromptService
 
 
 async def create_default_prompt():

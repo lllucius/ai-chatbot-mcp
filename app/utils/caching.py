@@ -10,9 +10,9 @@ Current User: lllucius
 
 import asyncio
 import hashlib
+import logging
 import time
 from typing import Any, Dict, Optional
-import logging
 
 logger = logging.getLogger(__name__)
 

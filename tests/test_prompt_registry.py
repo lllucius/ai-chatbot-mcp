@@ -5,9 +5,10 @@ These tests cover prompt management including creation, activation,
 and usage tracking.
 """
 
-import pytest
-import pytest_asyncio
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from app.services.prompt_service import PromptService
 
 
@@ -137,8 +138,9 @@ class TestPromptModel:
 
     def test_prompt_record_usage(self):
         """Test prompt usage recording."""
-        from app.models.prompt import Prompt
         from datetime import datetime
+
+        from app.models.prompt import Prompt
         
         prompt = Prompt(
             name="test",

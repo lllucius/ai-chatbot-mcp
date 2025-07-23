@@ -42,11 +42,10 @@ from ..config import settings
 from ..core.exceptions import DocumentError, NotFoundError, ValidationError
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..schemas.document import DocumentUpdate
-from ..services.embedding import EmbeddingService
 from ..services.background_processor import get_background_processor
-from ..utils.enhanced_document_processor import (
-    DocumentProcessor as EnhancedDocumentProcessor,
-)
+from ..services.embedding import EmbeddingService
+from ..utils.enhanced_document_processor import \
+    DocumentProcessor as EnhancedDocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
@@ -166,8 +165,9 @@ class DocumentService(BaseService):
                     temp_file.write(temp_content)
 
                 # Simple file format detection using file extension and content
-                import filetype
                 import mimetypes
+
+                import filetype
                 
                 kind = filetype.guess(temp_path)
                 if kind is not None:

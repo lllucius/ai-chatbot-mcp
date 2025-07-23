@@ -9,16 +9,15 @@ Current User: lllucius / assistant
 """
 
 import asyncio
-from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional
 
 import typer
-from rich.table import Table
-from rich.panel import Panel
 from rich import box
+from rich.panel import Panel
+from rich.table import Table
 
-from .base import console, success_message, error_message, info_message
 from ..services.mcp_registry import MCPRegistryService
+from .base import console, error_message, info_message, success_message
 
 # Create the MCP management app
 mcp_app = typer.Typer(

@@ -458,8 +458,8 @@ def search(
     async def _search_documents():
         async with AsyncSessionLocal() as db:
             try:
-                from ..services.search import SearchService
                 from ..schemas.document import DocumentSearchRequest
+                from ..services.search import SearchService
                 
                 search_service = SearchService(db)
                 

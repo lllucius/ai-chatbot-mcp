@@ -13,16 +13,10 @@ from typing import Any, Callable, Dict, Optional
 
 from fastapi import HTTPException, status
 
-from ..core.exceptions import (
-    AuthenticationError,
-    AuthorizationError,
-    ChatbotPlatformException,
-    DocumentError,
-    ExternalServiceError,
-    NotFoundError,
-    SearchError,
-    ValidationError,
-)
+from ..core.exceptions import (AuthenticationError, AuthorizationError,
+                               ChatbotPlatformException, DocumentError,
+                               ExternalServiceError, NotFoundError,
+                               SearchError, ValidationError)
 from ..utils.logging import get_api_logger
 from ..utils.timestamp import get_current_timestamp
 

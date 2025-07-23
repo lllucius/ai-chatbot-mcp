@@ -8,13 +8,12 @@ Current Date and Time (UTC): 2025-07-23 03:50:00
 Current User: lllucius / assistant
 """
 
-import asyncio
 import time
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
+from ..utils.logging import get_api_logger
 from .mcp_client import get_mcp_client
 from .mcp_registry import MCPRegistryService
-from ..utils.logging import get_api_logger
 
 logger = get_api_logger("enhanced_mcp_client")
 
@@ -60,7 +59,7 @@ class EnhancedMCPClientService:
                     await MCPRegistryService.create_server(
                         name=server_name,
                         url=server_config.url,
-                        description=f"Auto-registered server from configuration",
+                        description="Auto-registered server from configuration",
                         transport="http",
                         timeout=server_config.timeout,
                         is_enabled=True
@@ -136,7 +135,7 @@ class EnhancedMCPClientService:
             success = True
             return result
             
-        except Exception as e:
+        except Exception:
             success = False
             raise
             

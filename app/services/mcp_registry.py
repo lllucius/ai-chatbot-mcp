@@ -8,16 +8,15 @@ Current Date and Time (UTC): 2025-07-23 03:30:00
 Current User: lllucius / assistant
 """
 
-import asyncio
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from sqlalchemy import select, update, and_, or_
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import and_, select, update
 from sqlalchemy.orm import selectinload
 
+from ..database import AsyncSessionLocal
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..database import AsyncSessionLocal
 from ..utils.logging import get_api_logger
 
 logger = get_api_logger("mcp_registry")

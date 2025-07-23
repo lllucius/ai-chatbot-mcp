@@ -28,23 +28,19 @@ Current User: lllucius / assistant
 """
 
 import logging
-from uuid import UUID
 from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.conversation import Conversation, Message
-from ..schemas.conversation import (
-    ChatRequest,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationUpdate,
-    MessageResponse,
-)
+from ..schemas.conversation import (ChatRequest, ConversationCreate,
+                                    ConversationResponse, ConversationUpdate,
+                                    MessageResponse)
 from ..schemas.document import DocumentSearchRequest
-from ..schemas.tool_calling import ToolCallSummary, ToolCallResult
+from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
 from ..services.openai_client import OpenAIClient
 from ..services.search import SearchService

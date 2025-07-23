@@ -17,12 +17,12 @@ import math
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, text
 
 from ..config import settings
-from ..services.openai_client import OpenAIClient
 from ..models.document import DocumentChunk
+from ..services.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 

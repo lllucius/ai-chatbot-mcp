@@ -5,17 +5,17 @@ Manual verification script for tool call handling modes.
 This script demonstrates the functionality without requiring a full server setup.
 """
 
-import os
 import json
-from unittest.mock import MagicMock
+import os
 
 # Set environment variables
 os.environ["DEBUG"] = "true"
 os.environ["SECRET_KEY"] = "test-secret-key-for-development-32chars-minimum-length"
 os.environ["OPENAI_API_KEY"] = "test-api-key"
 
-from app.services.openai_client import OpenAIClient
 from app.schemas.tool_calling import ToolHandlingMode
+from app.services.openai_client import OpenAIClient
+
 
 def test_format_functions():
     """Test the formatting functions."""
@@ -64,7 +64,7 @@ def test_enum_values():
     print(f"\nFrom string 'return_results': {mode1}")
     print(f"From string 'complete_with_results': {mode2}")
     
-    print(f"\nEnum equality test:")
+    print("\nEnum equality test:")
     print(f"mode1 == ToolHandlingMode.RETURN_RESULTS: {mode1 == ToolHandlingMode.RETURN_RESULTS}")
     print(f"mode2 == ToolHandlingMode.COMPLETE_WITH_RESULTS: {mode2 == ToolHandlingMode.COMPLETE_WITH_RESULTS}")
     
@@ -75,7 +75,7 @@ def test_chat_request():
     print("=== Testing ChatRequest ===\n")
     
     from app.schemas.conversation import ChatRequest
-    
+
     # Default mode
     request1 = ChatRequest(user_message="Test message")
     print(f"Default mode: {request1.tool_handling_mode}")
@@ -88,7 +88,7 @@ def test_chat_request():
     print(f"Explicit RETURN_RESULTS: {request2.tool_handling_mode}")
     
     # Test serialization
-    print(f"\nSerialized request:")
+    print("\nSerialized request:")
     print(json.dumps({
         "user_message": request2.user_message,
         "tool_handling_mode": request2.tool_handling_mode,
@@ -102,7 +102,7 @@ def test_tool_call_summary():
     """Test tool call summary creation."""
     print("=== Testing Tool Call Summary ===\n")
     
-    from app.schemas.tool_calling import ToolCallSummary, ToolCallResult
+    from app.schemas.tool_calling import ToolCallResult, ToolCallSummary
     
     results = [
         ToolCallResult(

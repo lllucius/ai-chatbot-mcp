@@ -11,11 +11,11 @@ Current User: lllucius
 import asyncio
 import logging
 import time
-from typing import Dict, Any, Optional, List
-import psutil
-from collections import deque, defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
+import psutil
 
 logger = logging.getLogger(__name__)
 

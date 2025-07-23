@@ -10,12 +10,11 @@ Current User: assistant
 
 import asyncio
 import functools
-from typing import Any, Callable, Optional, Type, Tuple, List
 from dataclasses import dataclass
+from typing import Any, Callable, List, Optional, Tuple, Type
 
 from ..utils.caching import api_response_cache, make_cache_key
 from ..utils.logging import get_api_logger
-
 
 logger = get_api_logger("tool_middleware")
 

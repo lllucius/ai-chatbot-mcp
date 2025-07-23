@@ -30,13 +30,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from ..schemas.auth import (
-    LoginRequest,
-    PasswordResetConfirm,
-    PasswordResetRequest,
-    RegisterRequest,
-    Token,
-)
+from ..schemas.auth import (LoginRequest, PasswordResetConfirm,
+                            PasswordResetRequest, RegisterRequest, Token)
 from ..schemas.common import BaseResponse
 from ..schemas.user import UserResponse
 from ..services.auth import AuthService

@@ -14,7 +14,8 @@ import logging
 import mimetypes
 import os
 from pathlib import Path
-from typing import Any, Dict, AsyncIterator
+from typing import Any, AsyncIterator, Dict
+
 import psutil
 
 from ..core.exceptions import DocumentError, ValidationError

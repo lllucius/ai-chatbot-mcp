@@ -36,9 +36,9 @@ Current User: lllucius / assistant
 """
 
 import logging
-from typing import List, Dict, Tuple
-from uuid import UUID
 from time import time
+from typing import Dict, List, Tuple
+from uuid import UUID
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
