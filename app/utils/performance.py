@@ -3,9 +3,6 @@ Performance monitoring and metrics collection utilities.
 
 This module provides comprehensive performance monitoring including
 request timing, resource usage, and system health metrics.
-
-Generated on: 2025-07-14 05:45:00 UTC
-Current User: lllucius
 """
 
 import asyncio
@@ -48,7 +45,7 @@ class SystemMetrics:
 
 
 class PerformanceMonitor:
-    """Enhanced system performance monitoring with comprehensive metrics collection."""
+    """System performance monitoring with comprehensive metrics collection."""
 
     def __init__(self, history_size: int = 100):
         """
@@ -75,7 +72,7 @@ class PerformanceMonitor:
         )
         self.start_time = time.time()
 
-        logger.info("Enhanced performance monitor initialized")
+        logger.info("Performance monitor initialized")
 
     def record_request(self, metric: RequestMetric) -> None:
         """Record a request metric."""

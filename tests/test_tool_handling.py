@@ -2,9 +2,6 @@
 Tests for tool call handling modes functionality.
 
 This module tests the new tool handling modes: RETURN_RESULTS and COMPLETE_WITH_RESULTS.
-
-Generated on: 2025-01-20 20:55:00 UTC
-Current User: assistant
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch

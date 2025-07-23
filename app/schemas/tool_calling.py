@@ -3,9 +3,6 @@ Tool calling related schemas and enums.
 
 This module provides schemas and enums for tool calling functionality,
 including different modes for handling tool call results.
-
-Generated on: 2025-01-20 20:50:00 UTC
-Current User: assistant
 """
 
 from enum import Enum

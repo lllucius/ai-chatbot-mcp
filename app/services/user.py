@@ -12,10 +12,6 @@ Key Features:
 - User listing with pagination and filtering
 - User deletion with cascading cleanup
 - System-wide user analytics and metrics
-
-Generated on: 2025-07-14 03:08:19 UTC
-Updated on: 2025-01-20 19:40:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging
@@ -45,7 +41,7 @@ class UserService(BaseService):
 
     This service extends BaseService to provide user-specific functionality
     including CRUD operations, profile management, statistics generation,
-    and user-related business logic with enhanced logging and error handling.
+    and user-related business logic with logging and error handling.
 
     Responsibilities:
     - User profile retrieval with embedded statistics

@@ -3,9 +3,6 @@ AI Chatbot Terminal Client - Interactive command-line interface for the AI Chatb
 
 This module provides a terminal-based chat interface for interacting with the AI Chatbot
 Platform, supporting conversation management, authentication, and real-time chat.
-
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
 """
 
 import sys

@@ -3,9 +3,6 @@ Example usage scripts demonstrating API functionality.
 
 This script shows how to interact with the AI Chatbot Platform API
 programmatically for common operations.
-
-Generated on: 2025-07-14 03:21:19 UTC
-Current User: lllucius
 """
 
 import asyncio

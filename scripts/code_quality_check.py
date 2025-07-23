@@ -15,9 +15,6 @@ Usage:
 Options:
     --fix: Automatically fix issues where possible
     --report: Generate detailed quality report
-
-Generated on: 2025-01-20 21:00:00 UTC
-Current User: assistant
 """
 
 import argparse

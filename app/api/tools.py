@@ -4,10 +4,6 @@ Tools API endpoints for MCP tools management with registry integration.
 This module provides endpoints for managing MCP (Model Context Protocol) tools
 including listing available tools, enabling/disabling tools, viewing tool configurations,
 and comprehensive registry-based management with usage tracking.
-
-Generated on: 2025-07-22 UTC
-Updated on: 2025-07-23 04:00:00 UTC - Enhanced with registry services
-Current User: lllucius
 """
 
 from typing import Any, Dict, Optional
@@ -41,14 +37,14 @@ async def list_tools(
     log_api_call("list_tools", user_id=current_user.id)
 
     try:
-        # Get enhanced MCP client with registry integration
+        # Get MCP client with registry integration
         mcp_client = await get_mcp_client()
 
         # Get available tools with registry filtering
-        available_tools = await mcp_client.get_available_tools_enhanced(enabled_only=False)
+        available_tools = await mcp_client.get_available_tools(enabled_only=False)
 
         # Get OpenAI-formatted tools (enabled only)
-        openai_tools = await mcp_client.get_tools_for_openai_enhanced(enabled_only=True)
+        openai_tools = await mcp_client.get_tools_for_openai(enabled_only=True)
 
         # Get registry servers and their status
         servers = await MCPRegistryService.list_servers()
@@ -125,9 +121,9 @@ async def get_tool_details(
                 detail=f"Tool '{tool_name}' not found in registry",
             )
 
-        # Get enhanced client
+        # Get client
         mcp_client = await get_mcp_client()
-        available_tools = await mcp_client.get_available_tools_enhanced(enabled_only=False)
+        available_tools = await mcp_client.get_available_tools(enabled_only=False)
         tool_info = available_tools.get(tool_name, {})
 
         return {
@@ -177,8 +173,7 @@ async def test_tool(
     Test a tool with optional parameters using registry integration.
 
     Executes the tool with provided test parameters to verify
-    it's working correctly. Uses the enhanced MCP client for
-    registry integration and usage tracking.
+    it's working correctly.
     """
     log_api_call("test_tool", user_id=current_user.id, tool_name=tool_name)
 

@@ -3,10 +3,6 @@ OpenAI API client with unified tool integration.
 
 This service provides a wrapper around the OpenAI API with enhanced
 functionality including tool calling via unified tool executor.
-
-Generated on: 2025-07-14 04:13:26 UTC
-Updated on: 2025-01-20 20:40:00 UTC
-Current User: lllucius / assistant
 """
 
 import json

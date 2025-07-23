@@ -3,12 +3,6 @@ FastMCP client service for tool integration and external function execution.
 
 This service provides integration with MCP servers using the FastMCP client
 for tool calling and external function execution capabilities.
-
-Updated to use HTTP transport for all server connections.
-
-Current Date and Time (UTC): 2025-07-21 04:22:44
-Updated on: 2025-07-21 04:22:44 UTC
-Current User: lllucius / assistant
 """
 
 import asyncio
@@ -417,7 +411,7 @@ class FastMCPClientService:
                     name=original_tool_name, arguments=parameters
                 )
             success = True
-        except Exception as e:
+        except Exception:
             success = False
             raise
         finally:
@@ -566,7 +560,7 @@ class FastMCPClientService:
 
         return openai_tools
 
-    async def get_available_tools_enhanced(
+    async def get_available_tools(
         self, enabled_only: bool = True
     ) -> Dict[str, Dict[str, Any]]:
         """
@@ -617,11 +611,11 @@ class FastMCPClientService:
 
             return available_tools
         except Exception as e:
-            logger.warning(f"Failed to get enhanced tools list: {e}")
+            logger.warning(f"Failed to get tools list: {e}")
             # Fall back to basic tools list
             return self.tools.copy()
 
-    async def get_tools_for_openai_enhanced(
+    async def get_tools_for_openai(
         self, enabled_only: bool = True
     ) -> List[Dict[str, Any]]:
         """
@@ -633,7 +627,7 @@ class FastMCPClientService:
         Returns:
             list: Tools in OpenAI format
         """
-        available_tools = await self.get_available_tools_enhanced(enabled_only=enabled_only)
+        available_tools = await self.get_available_tools(enabled_only=enabled_only)
 
         openai_tools = []
         for tool_name, tool in available_tools.items():

@@ -21,10 +21,6 @@ Processing Pipeline:
 4. Vector embedding generation for each chunk
 5. Database storage with search optimization
 6. Status tracking and error recovery
-
-Generated on: 2025-07-14 03:50:38 UTC
-Updated on: 2025-01-20 20:00:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging
@@ -44,8 +40,7 @@ from ..models.document import Document, DocumentChunk, FileStatus
 from ..schemas.document import DocumentUpdate
 from ..services.background_processor import get_background_processor
 from ..services.embedding import EmbeddingService
-from ..utils.enhanced_document_processor import \
-    DocumentProcessor as EnhancedDocumentProcessor
+from ..utils.document_processor import DocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
@@ -59,8 +54,8 @@ class DocumentService(BaseService):
 
     This service extends BaseService to provide document-specific functionality
     including file upload handling, content extraction, text processing, chunking,
-    embedding generation, and document lifecycle management with enhanced logging
-    and error recovery capabilities.
+    embedding generation, and document lifecycle management with logging and
+    error recovery capabilities.
 
     Processing Capabilities:
     - Multi-format file support (PDF, DOCX, TXT, MD, RTF)
@@ -90,7 +85,7 @@ class DocumentService(BaseService):
 
         # Initialize processing components
         self.file_processor = FileProcessor()
-        self.enhanced_processor = EnhancedDocumentProcessor(config={})
+        self.document_processor = DocumentProcessor(config={})
         self.text_processor = TextProcessor(
             chunk_size=settings.default_chunk_size,
             chunk_overlap=settings.default_chunk_overlap,
@@ -150,7 +145,7 @@ class DocumentService(BaseService):
             if not file.filename:
                 raise ValidationError("Filename is required")
 
-            # Use enhanced processor for format detection and validation
+            # Use document processor for format detection and validation
             try:
                 # Save file temporarily for format detection
                 temp_content = await file.read()
@@ -242,7 +237,6 @@ class DocumentService(BaseService):
                     "processing_config": {
                         "chunk_size": settings.default_chunk_size,
                         "chunk_overlap": settings.default_chunk_overlap,
-                        "enhanced_processor": True,
                     },
                 },
             )

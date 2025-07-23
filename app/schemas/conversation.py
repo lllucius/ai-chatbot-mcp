@@ -3,16 +3,13 @@ Conversation and message-related Pydantic schemas.
 
 This module provides schemas for chat conversations, messages,
 and related operations.
-
-Generated on: 2025-07-20 13:48:01 UTC
-Current User: lllucius
 """
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import Field, constr, field_validator
+from pydantic import Field, constr
 
 from .base import BaseSchema
 from .common import BaseResponse
@@ -164,7 +161,7 @@ class MessageResponse(MessageBase):
 
 
 class ChatRequest(BaseSchema):
-    """Schema for chat request with enhanced registry integration."""
+    """Schema for chat request."""
 
     user_message: constr(min_length=1, max_length=10000) = Field(
         ..., description="User message"

@@ -3,9 +3,6 @@ MCP Server registry model for managing MCP server configurations.
 
 This module defines the MCPServer model for tracking configured MCP servers,
 their status, and configuration details.
-
-Current Date and Time (UTC): 2025-07-23 03:25:00
-Current User: lllucius / assistant
 """
 
 from datetime import datetime

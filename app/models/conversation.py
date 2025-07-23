@@ -3,9 +3,6 @@ Conversation and message models for chat functionality.
 
 This module defines models for managing chat conversations and messages,
 including AI responses, tool calls, and conversation metainfo.
-
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
 """
 
 import uuid

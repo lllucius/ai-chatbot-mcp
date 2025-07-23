@@ -4,9 +4,6 @@ File processing utilities for document content extraction.
 This module provides functions for extracting text content from various
 file formats including PDF, DOCX, TXT, MD, and RTF files with
 streaming support and memory optimization.
-
-Generated on: 2025-07-14 03:18:45 UTC
-Current User: lllucius
 """
 
 import asyncio

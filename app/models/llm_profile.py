@@ -3,9 +3,6 @@ LLM Profile model for managing LLM tuning parameter configurations.
 
 This module defines the LLMProfile model for storing and managing
 different parameter profiles for language model interactions.
-
-Current Date and Time (UTC): 2025-07-23 03:25:00
-Current User: lllucius / assistant
 """
 
 from datetime import datetime

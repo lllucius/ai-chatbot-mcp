@@ -3,9 +3,6 @@ Health check API endpoints.
 
 This module provides health monitoring endpoints for the application,
 including database connectivity, external services, and system metrics.
-
-Generated on: 2025-07-14 04:24:47 UTC
-Current User: lllucius
 """
 
 import logging
@@ -257,7 +254,7 @@ async def _check_openai_health() -> Dict[str, Any]:
 
 
 async def _check_fastmcp_health() -> Dict[str, Any]:
-    """Check FastMCP services health with enhanced registry integration."""
+    """Check FastMCP services health."""
     try:
         from ..services.mcp_client import get_mcp_client
 

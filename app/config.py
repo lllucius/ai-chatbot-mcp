@@ -3,9 +3,6 @@ Configuration management using Pydantic Settings.
 
 This module provides centralized configuration management with environment
 variable support, type validation, and secure defaults.
-
-Current Date and Time (UTC): 2025-07-14 04:41:14
-Current User: lllucius
 """
 
 import logging
@@ -75,13 +72,6 @@ class Settings(BaseSettings):
 
     # FastMCP Configuration
     mcp_enabled: bool = Field(default=True, description="Enable FastMCP integration")
-    mcp_timeout: int = Field(default=30, description="MCP operation timeout in seconds")
-    mcp_servers: dict = Field(
-        default_factory=lambda: {
-            "tools": {"url": "http://localhost:9000/mcp", "transport": "http"}
-        },
-        description="Dictionary of MCP servers",
-    )
 
     # CORS Configuration - Use Union to accept both string and list
     allowed_origins: Union[str, List[str]] = Field(
@@ -117,7 +107,7 @@ class Settings(BaseSettings):
         default=200, description="Default chunk overlap for text processing", ge=0
     )
 
-    # Enhanced Document Processing Configuration
+    # Document Processing Configuration
     max_chunk_size: int = Field(
         default=4000, description="Maximum allowed chunk size", ge=500, le=8000
     )

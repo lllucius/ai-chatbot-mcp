@@ -3,10 +3,6 @@ Registry Models Migration
 
 This migration adds the new registry models for MCP servers, tools, prompts,
 and LLM parameter profiles.
-
-Revision ID: 001_add_registry_models
-Revises: 
-Create Date: 2025-07-23 03:40:00
 """
 
 import uuid

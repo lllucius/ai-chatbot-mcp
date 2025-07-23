@@ -3,9 +3,6 @@ Utility modules for the AI Chatbot Platform.
 
 This package provides utility functions and classes for logging,
 file processing, text processing, and other common operations.
-
-Generated on: 2025-07-14 03:10:09 UTC
-Current User: lllucius
 """
 
 from .logging import StructuredLogger, get_logger, setup_logging

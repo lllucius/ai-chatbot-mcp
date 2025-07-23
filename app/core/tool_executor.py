@@ -4,9 +4,6 @@ Unified tool execution system for centralizing tool calling logic.
 This module provides a centralized interface for executing tools from both
 FastMCP and OpenAI integrations, with consistent retry, fallback, error
 handling, and caching behavior.
-
-Generated on: 2025-01-20 20:30:00 UTC
-Current User: assistant
 """
 
 import asyncio

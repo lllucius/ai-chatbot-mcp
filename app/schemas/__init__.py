@@ -3,9 +3,6 @@ Pydantic schemas for the AI Chatbot Platform.
 
 This module provides request/response schemas for API endpoints,
 data validation, and serialization.
-
-Generated on: 2025-07-14 03:06:28 UTC
-Current User: lllucius
 """
 
 from .auth import (LoginRequest, PasswordResetConfirm, PasswordResetRequest,

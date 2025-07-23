@@ -1,8 +1,5 @@
 # AI Chatbot Platform
 
-**Generated on: 2025-07-14 03:52:46 UTC**  
-**Current User: lllucius**
-
 A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation) capabilities, document processing, vector search, and MCP (Model Context Protocol) tool integration.
 
 ## 🚀 Features
@@ -714,5 +711,3 @@ chmod 755 uploads/
 
 ---
 
-**Generated on: 2025-07-14 03:52:46 UTC**  
-Built with ❤️ using FastAPI, PostgreSQL, and OpenAI

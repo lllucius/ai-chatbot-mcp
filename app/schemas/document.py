@@ -3,9 +3,6 @@ Document-related Pydantic schemas.
 
 This module provides schemas for document management, file uploads,
 processing status, and document search operations.
-
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
 """
 
 from datetime import datetime
@@ -147,7 +144,7 @@ class DocumentSearchRequest(SearchParams):
 
 
 class DocumentUploadResponse(BaseResponse):
-    """Schema for document upload response with enhanced features."""
+    """Schema for document upload response."""
 
     document: DocumentResponse = Field(..., description="Uploaded document information")
     task_id: Optional[str] = Field(None, description="Background processing task ID")
@@ -157,7 +154,7 @@ class DocumentUploadResponse(BaseResponse):
 
 
 class ProcessingStatusResponse(BaseResponse):
-    """Enhanced schema for document processing status with background task information."""
+    """Document processing status with background task information."""
 
     document_id: UUID = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")

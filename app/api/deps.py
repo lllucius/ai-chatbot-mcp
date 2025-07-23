@@ -3,9 +3,6 @@ API dependencies and dependency injection utilities.
 
 This module provides reusable dependencies for FastAPI endpoints
 including authentication, pagination, and service injection.
-
-Generated on: 2025-07-14 03:21:19 UTC
-Current User: lllucius
 """
 
 from typing import Generator, Optional

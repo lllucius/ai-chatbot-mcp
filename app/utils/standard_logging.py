@@ -12,9 +12,6 @@ Key Features:
 - Log level configuration
 - File and console output options
 - Error tracking and monitoring
-
-Current User: assistant
-Current Date: 2025-01-20
 """
 
 import json

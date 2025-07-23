@@ -3,9 +3,6 @@ Services package for business logic components.
 
 This package provides services for authentication, user management,
 document processing, search, conversations, and external integrations.
-
-Generated on: 2025-07-14 04:11:25 UTC
-Current User: lllucius
 """
 
 from .auth import AuthService

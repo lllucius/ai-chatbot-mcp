@@ -18,10 +18,6 @@ Security Features:
 - Secure token handling and expiration
 - Audit logging for security events
 - Protection against common attacks (brute force, timing)
-
-Generated on: 2025-07-14 03:12:05 UTC
-Updated on: 2025-01-20 20:30:00 UTC
-Current User: lllucius / assistant
 """
 
 from fastapi import APIRouter, Depends

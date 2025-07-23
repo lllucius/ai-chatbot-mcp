@@ -3,10 +3,6 @@ API module for the AI Chatbot Platform.
 
 This module contains all FastAPI router definitions and endpoints
 for the application's REST API, including new registry-based APIs.
-
-Generated on: 2025-07-14 03:12:05 UTC
-Updated on: 2025-07-23 04:30:00 UTC - Added registry APIs
-Current User: lllucius
 """
 
 from .auth import router as auth_router

@@ -3,9 +3,6 @@ MCP Tool model for tracking individual tools and their usage statistics.
 
 This module defines the MCPTool model for managing tools provided by MCP servers,
 their configuration, and usage analytics.
-
-Current Date and Time (UTC): 2025-07-23 03:25:00
-Current User: lllucius / assistant
 """
 
 import uuid

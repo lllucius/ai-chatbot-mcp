@@ -29,10 +29,6 @@ Performance Features:
 API Endpoints Integration:
 - search_documents: Main search interface with algorithm selection
 - get_similar_chunks: Direct similarity search for related content
-
-Generated on: 2025-07-14 04:00:00 UTC
-Updated on: 2025-01-20 20:15:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging

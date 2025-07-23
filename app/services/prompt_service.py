@@ -3,9 +3,6 @@ Prompt service for managing prompts and their usage.
 
 This service provides functionality to manage prompts,
 track their usage, and support default prompt handling.
-
-Current Date and Time (UTC): 2025-07-23 03:30:00
-Current User: lllucius / assistant
 """
 
 from typing import Any, Dict, List, Optional

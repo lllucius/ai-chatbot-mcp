@@ -3,9 +3,6 @@ Document management API endpoints.
 
 This module provides endpoints for document upload, processing,
 management, and retrieval operations.
-
-Generated on: 2025-07-14 03:12:05 UTC
-Current User: lllucius
 """
 
 from typing import Optional
@@ -49,8 +46,6 @@ async def upload_document(
 ) -> DocumentUploadResponse:
     """
     Upload a document for processing.
-
-    Enhanced with auto-processing option and priority control.
     """
     try:
         # Create document
@@ -331,9 +326,9 @@ async def start_document_processing(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.get("/{document_id}/enhanced-status", response_model=ProcessingStatusResponse)
+@router.get("/{document_id}/status", response_model=ProcessingStatusResponse)
 @handle_api_errors("Failed to get processing status", log_errors=True)
-async def get_enhanced_processing_status(
+async def get_processing_status(
     document_id: UUID,
     task_id: Optional[str] = Query(
         None, description="Optional task ID for background processing details"
@@ -350,7 +345,7 @@ async def get_enhanced_processing_status(
         status_info = await service.get_processing_status(document_id, task_id)
 
         return ProcessingStatusResponse(
-            message="Enhanced processing status retrieved", **status_info
+            message="Processing status retrieved", **status_info
         )
 
     except NotFoundError:

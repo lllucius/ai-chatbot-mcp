@@ -3,9 +3,6 @@ Prompt registry model for managing prompts and tracking their usage.
 
 This module defines the Prompt model for storing and managing prompts
 with usage tracking and versioning capabilities.
-
-Current Date and Time (UTC): 2025-07-23 03:25:00
-Current User: lllucius / assistant
 """
 
 from datetime import datetime

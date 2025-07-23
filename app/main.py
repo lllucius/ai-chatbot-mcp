@@ -3,9 +3,6 @@ FastAPI application entry point with middleware and exception handling.
 
 This module creates and configures the FastAPI application with all necessary
 middleware, exception handlers, and API routes.
-
-Generated on: 2025-07-14 04:24:47 UTC
-Current User: lllucius
 """
 
 import logging

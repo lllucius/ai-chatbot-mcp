@@ -7,9 +7,6 @@ This test module covers:
 - Document preprocessing and normalization
 - API endpoints for enhanced functionality
 - Configuration management
-
-Current User: assistant
-Current Date: 2025-01-20
 """
 
 import tempfile

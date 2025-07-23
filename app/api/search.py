@@ -3,9 +3,6 @@ Search API endpoints for document retrieval and similarity search.
 
 This module provides endpoints for searching through documents using
 various algorithms including vector similarity, text search, and hybrid approaches.
-
-Generated on: 2025-07-14 03:15:29 UTC
-Current User: lllucius
 """
 
 import time

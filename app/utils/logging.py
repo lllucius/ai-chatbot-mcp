@@ -3,9 +3,6 @@ Logging configuration and utilities.
 
 This module provides centralized logging configuration with support
 for structured logging, file output, and different log levels.
-
-Generated on: 2025-07-14 03:10:09 UTC
-Current User: lllucius
 """
 
 import logging

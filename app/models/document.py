@@ -3,9 +3,6 @@ Document and document chunk database models.
 
 This module defines SQLAlchemy models for document storage and processing,
 including document metadata and text chunks for vector search.
-
-Current Date and Time (UTC): 2025-07-14 05:03:11
-Current User: lllucius
 """
 
 import uuid

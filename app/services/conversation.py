@@ -21,10 +21,6 @@ AI Integration:
 - Embedding services for semantic understanding
 - Tool calling capabilities through MCP integration
 - Token usage tracking and optimization
-
-Generated on: 2025-07-14 03:50:38 UTC
-Updated on: 2025-01-20 20:10:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging
@@ -58,7 +54,7 @@ class ConversationService(BaseService):
 
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
-    and unified tool calling with enhanced logging and context management.
+    and unified tool calling with logging and context management.
 
     AI Capabilities:
     - Multi-turn conversations with context preservation
@@ -384,10 +380,10 @@ class ConversationService(BaseService):
                 "llm_profile": llm_profile,
             }
 
-            # Get enhanced MCP tools if tools are enabled
+            # Get MCP tools if tools are enabled
             if request.use_tools:
                 try:
-                    mcp_client = await get_mcp_client()
+                    _ = await get_mcp_client()
                     openai_params["use_unified_tools"] = True
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
@@ -397,7 +393,7 @@ class ConversationService(BaseService):
             else:
                 openai_params["use_unified_tools"] = False
 
-            # Get AI response with enhanced registry integration
+            # Get AI response with registry integration
             ai_response = await self.openai_client.chat_completion(
                 messages=ai_messages,
                 **openai_params
@@ -541,10 +537,10 @@ class ConversationService(BaseService):
                 "llm_profile": llm_profile,
             }
 
-            # Get enhanced MCP tools if tools are enabled
+            # Get MCP tools if tools are enabled
             if request.use_tools:
                 try:
-                    mcp_client = await get_mcp_client()
+                    _ = await get_mcp_client()
                     openai_params["use_unified_tools"] = True
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
@@ -838,9 +834,9 @@ class ConversationService(BaseService):
             prompt_stats = await PromptService.get_prompt_stats()
             profile_stats = await LLMProfileService.get_profile_stats()
 
-            # Get tool stats from enhanced MCP client
+            # Get tool stats from MCP client
             mcp_client = await get_mcp_client()
-            health = await enhanced_client.health_check()
+            health = await mcp_client.health_check()
 
             return {
                 "prompts": {

@@ -2,12 +2,8 @@
 Conversation and chat API endpoints.
 
 This module provides endpoints for managing conversations, sending messages,
-and interacting with the AI assistant with RAG capabilities and enhanced
-registry integration for prompts, LLM profiles, and MCP tools.
-
-Generated on: 2025-07-14 03:15:29 UTC
-Updated on: 2025-07-23 04:00:00 UTC - Enhanced with registry services
-Current User: lllucius
+and interacting with the AI assistant with RAG capabilities and registry
+integration for prompts, LLM profiles, and MCP tools.
 """
 
 import json
@@ -238,21 +234,16 @@ async def chat(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Send a message and get AI response with enhanced registry integration.
+    Send a message and get AI response.
 
     Sends a user message to the AI assistant and returns the response.
     Supports RAG (Retrieval-Augmented Generation) for context-aware responses,
-    tool calling for enhanced functionality, and registry-based prompt/profile management.
-
-    Enhanced Features:
-    - Registry-based prompt management for consistent system prompts
-    - LLM profile management for parameter optimization
-    - Enhanced MCP tool integration with usage tracking
+    tool calling, and registry-based prompt/profile management.
     """
     try:
         start_time = time.time()
 
-        # Process chat request with enhanced registry integration
+        # Process chat request
         result = await conversation_service.process_chat(request, current_user.id)
 
         # Calculate response time

@@ -4,9 +4,6 @@ Text processing utilities for document chunking and analysis.
 This module provides functions for text cleaning, chunking,
 token counting, and other text processing operations with
 streaming and memory optimization support.
-
-Generated on: 2025-07-14 03:50:38 UTC
-Current User: lllucius
 """
 
 import asyncio

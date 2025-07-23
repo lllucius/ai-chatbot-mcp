@@ -3,9 +3,6 @@ Timestamp utilities for consistent date/time handling.
 
 This module provides standardized functions for generating timestamps
 and working with UTC datetime objects across the application.
-
-Generated on: 2025-01-20 19:18:00 UTC
-Current User: assistant
 """
 
 from datetime import datetime, timezone

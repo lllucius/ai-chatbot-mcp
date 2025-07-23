@@ -3,9 +3,6 @@ Security utilities for password hashing and validation.
 
 This module provides functions for secure password handling,
 token generation, and other security-related operations.
-
-Generated on: 2025-07-21 03:36:44 UTC
-Current User: lllucius
 """
 
 import base64

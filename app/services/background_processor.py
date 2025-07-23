@@ -15,9 +15,6 @@ Key Features:
 - Memory-efficient processing of large documents
 - Configurable processing parameters
 - Comprehensive logging and monitoring
-
-Current User: assistant
-Current Date: 2025-01-20
 """
 
 import asyncio
@@ -35,7 +32,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..services.embedding import EmbeddingService
-from ..utils.enhanced_document_processor import DocumentProcessor
+from ..utils.document_processor import DocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService

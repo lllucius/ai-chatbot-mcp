@@ -3,9 +3,6 @@ LLM Profile registry API endpoints.
 
 This module provides endpoints for managing LLM parameter profiles,
 including CRUD operations, statistics, and parameter validation.
-
-Generated on: 2025-07-23 04:30:00 UTC
-Current User: lllucius / assistant
 """
 
 from typing import Any, Dict, Optional

@@ -3,9 +3,6 @@ User model for authentication and user management.
 
 This module defines the User model with authentication fields,
 profile information, and relationships to other entities.
-
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
 """
 
 from datetime import datetime

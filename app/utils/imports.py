@@ -40,9 +40,6 @@ Example Import Organization:
 
     # Local imports - Schemas
     from ..schemas.user import UserResponse
-
-Generated on: 2025-01-20 20:50:00 UTC
-Current User: assistant
 """
 
 # Standard library imports

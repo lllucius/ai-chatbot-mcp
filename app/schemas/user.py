@@ -3,9 +3,6 @@ User-related Pydantic schemas for API requests and responses.
 
 This module defines schemas for user operations including creation,
 updates, authentication, and API responses using modern Pydantic V2.
-
-Current Date and Time (UTC): 2025-07-14 05:01:09
-Current User: lllucius
 """
 
 import uuid

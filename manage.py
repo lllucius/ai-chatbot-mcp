@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Enhanced Management CLI for the AI Chatbot Platform.
+Management CLI for the AI Chatbot Platform.
 
 This is a comprehensive command-line interface that provides full-featured
 management capabilities for all aspects of the AI chatbot platform including

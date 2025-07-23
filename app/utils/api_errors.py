@@ -3,9 +3,6 @@ Common error handling utilities and decorators for API endpoints.
 
 This module provides standardized error handling patterns to eliminate
 duplication across API endpoints and ensure consistent error responses.
-
-Generated on: 2025-01-20 20:20:00 UTC
-Current User: assistant
 """
 
 import functools
