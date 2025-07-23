@@ -206,25 +206,32 @@ async def delete_document(
 
 
 @router.get("/{document_id}/status", response_model=ProcessingStatusResponse)
+@handle_api_errors("Failed to get processing status", log_errors=True)
 async def get_processing_status(
     document_id: UUID,
-    current_user: User = Depends(get_current_user),
-    document_service: DocumentService = Depends(get_document_service),
-):
+    task_id: Optional[str] = Query(
+        None, description="Optional task ID for background processing details"
+    ),
+    user: User = Depends(get_current_user),
+    service: DocumentService = Depends(get_document_service),
+) -> ProcessingStatusResponse:
     """
-    Get document processing status.
+    Get document processing status with optional background task information.
 
     Returns current processing status, progress, and any error information
-    for the specified document.
+    for the specified document. Can include background task details if task_id is provided.
     """
     try:
-        status_info = await document_service.get_processing_status(
-            document_id, current_user.id
-        )
+        if task_id:
+            # Enhanced processing status with task details
+            status_info = await service.get_processing_status(document_id, task_id)
+            message = "Enhanced processing status retrieved"
+        else:
+            # Basic processing status
+            status_info = await service.get_processing_status(document_id, user.id)
+            message = "Processing status retrieved"
 
-        return ProcessingStatusResponse(
-            success=True, message="Processing status retrieved", **status_info
-        )
+        return ProcessingStatusResponse(success=True, message=message, **status_info)
 
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -329,34 +336,6 @@ async def start_document_processing(
         )
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-@router.get("/{document_id}/enhanced-status", response_model=ProcessingStatusResponse)
-@handle_api_errors("Failed to get processing status", log_errors=True)
-async def get_enhanced_processing_status(
-    document_id: UUID,
-    task_id: Optional[str] = Query(
-        None, description="Optional task ID for background processing details"
-    ),
-    user: User = Depends(get_current_user),
-    service: DocumentService = Depends(get_document_service),
-) -> ProcessingStatusResponse:
-    """
-    Get comprehensive document processing status with background task information.
-
-    Includes both document status and background task progress details.
-    """
-    try:
-        status_info = await service.get_processing_status(document_id, task_id)
-
-        return ProcessingStatusResponse(
-            message="Enhanced processing status retrieved", **status_info
-        )
-
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
-        )
 
 
 @router.get("/processing-config", response_model=ProcessingConfigResponse)

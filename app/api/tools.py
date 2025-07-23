@@ -45,10 +45,10 @@ async def list_tools(
         mcp_client = await get_mcp_client()
 
         # Get available tools with registry filtering
-        available_tools = await mcp_client.get_available_tools_enhanced(enabled_only=False)
+        available_tools = await mcp_client.get_available_tools(enabled_only=False)
 
         # Get OpenAI-formatted tools (enabled only)
-        openai_tools = await mcp_client.get_tools_for_openai_enhanced(enabled_only=True)
+        openai_tools = await mcp_client.get_tools_for_openai(enabled_only=True)
 
         # Get registry servers and their status
         servers = await MCPRegistryService.list_servers()
@@ -127,7 +127,7 @@ async def get_tool_details(
 
         # Get enhanced client
         mcp_client = await get_mcp_client()
-        available_tools = await mcp_client.get_available_tools_enhanced(enabled_only=False)
+        available_tools = await mcp_client.get_available_tools(enabled_only=False)
         tool_info = available_tools.get(tool_name, {})
 
         return {
@@ -145,7 +145,9 @@ async def get_tool_details(
                     "error_count": tool.error_count,
                     "success_rate": tool.success_rate,
                     "average_duration_ms": tool.average_duration_ms,
-                    "last_used_at": tool.last_used_at.isoformat() if tool.last_used_at else None,
+                    "last_used_at": (
+                        tool.last_used_at.isoformat() if tool.last_used_at else None
+                    ),
                 },
                 "server_info": {
                     "server_name": tool.server.name,
@@ -204,9 +206,7 @@ async def test_tool(
             test_params = {}
 
         # Execute the tool with usage tracking
-        result = await mcp_client.call_tool(
-            tool_name, test_params, record_usage=True
-        )
+        result = await mcp_client.call_tool(tool_name, test_params, record_usage=True)
 
         return {
             "success": True,
@@ -383,13 +383,17 @@ async def get_server_status(
         for server in servers:
             # Get tools for this server
             tools = await MCPRegistryService.list_tools(server_name=server.name)
-            
+
             server_status[server.name] = {
                 "name": server.name,
                 "url": server.url,
                 "status": "connected" if server.is_connected else "disconnected",
                 "enabled": server.is_enabled,
-                "last_connected": server.last_connected_at.isoformat() if server.last_connected_at else None,
+                "last_connected": (
+                    server.last_connected_at.isoformat()
+                    if server.last_connected_at
+                    else None
+                ),
                 "connection_errors": server.connection_errors,
                 "tool_count": len(tools),
                 "enabled_tools": len([t for t in tools if t.is_enabled]),
@@ -397,7 +401,7 @@ async def get_server_status(
                 "timeout": server.timeout,
                 "description": server.description,
             }
-            
+
             if server.is_connected:
                 connected_count += 1
             if server.is_enabled:

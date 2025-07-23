@@ -118,7 +118,9 @@ class FastMCPClientService:
         await self._parse_server_configs()
 
         if not self.servers:
-            logger.warning("No MCP servers found in registry - cannot initialize MCP clients")
+            logger.warning(
+                "No MCP servers found in registry - cannot initialize MCP clients"
+            )
             self.is_initialized = False
             return
 
@@ -163,7 +165,7 @@ class FastMCPClientService:
         try:
             # Create FastMCP client with HTTP transport
             transport = StreamableHttpTransport(server.url)
-            client = Client(transport, timeout=1) #server.timeout)
+            client = Client(transport, timeout=1)  # server.timeout)
 
             # Test connection with timeout
             async with client:
@@ -283,7 +285,9 @@ class FastMCPClientService:
                                 is_enabled=True,
                             )
                         except Exception as e:
-                            logger.debug(f"Tool {tool_name} already registered or registration failed: {e}")
+                            logger.debug(
+                                f"Tool {tool_name} already registered or registration failed: {e}"
+                            )
 
                     logger.info(
                         f"Discovered {len(server_tools)} tools from {server_name}: {server_tools}"
@@ -321,12 +325,16 @@ class FastMCPClientService:
                         )
                         logger.info(f"Auto-registered server: {server_name}")
                     except Exception as e:
-                        logger.warning(f"Failed to auto-register server {server_name}: {e}")
+                        logger.warning(
+                            f"Failed to auto-register server {server_name}: {e}"
+                        )
 
             # Update connection status for registered servers
             for server_name in self.servers.keys():
                 is_connected = server_name in self.clients
-                await MCPRegistryService.update_connection_status(server_name, is_connected)
+                await MCPRegistryService.update_connection_status(
+                    server_name, is_connected
+                )
 
         except Exception as e:
             logger.warning(f"Failed to sync servers with registry: {e}")
@@ -375,7 +383,7 @@ class FastMCPClientService:
 
         # Check if tool is enabled in registry
         from .mcp_registry import MCPRegistryService
-        
+
         tool_from_registry = None
         try:
             tool_from_registry = await MCPRegistryService.get_tool(tool_name)
@@ -384,9 +392,13 @@ class FastMCPClientService:
 
             # Check if server is enabled in registry
             if tool_from_registry:
-                server = await MCPRegistryService.get_server(tool_from_registry.server.name)
+                server = await MCPRegistryService.get_server(
+                    tool_from_registry.server.name
+                )
                 if server and not server.is_enabled:
-                    raise ExternalServiceError(f"Server '{tool_from_registry.server.name}' is disabled")
+                    raise ExternalServiceError(
+                        f"Server '{tool_from_registry.server.name}' is disabled"
+                    )
         except Exception as e:
             # If registry check fails, log but continue with basic check
             logger.warning(f"Registry check failed for tool {tool_name}: {e}")
@@ -513,61 +525,8 @@ class FastMCPClientService:
         except Exception:
             return str(result)
 
-    def get_available_tools(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Get list of available tools.
-
-        Returns:
-            dict: Available tools and their schemas
-        """
-        if not self.is_initialized:
-            logger.warning("MCP client not initialized - returning empty tools list")
-            return {}
-
-        return self.tools.copy()
-
-    def get_tool_schema(self, tool_name: str) -> Optional[Dict[str, Any]]:
-        """
-        Get schema for a specific tool.
-
-        Args:
-            tool_name: Name of the tool
-
-        Returns:
-            dict: Tool schema or None if not found
-        """
-        return self.tools.get(tool_name)
-
-    def get_tools_for_openai(self) -> List[Dict[str, Any]]:
-        """
-        Get tools formatted for OpenAI function calling.
-
-        Returns:
-            list: Tools in OpenAI format
-        """
-        if not self.is_initialized:
-            logger.warning(
-                "MCP client not initialized - returning empty tools list for OpenAI"
-            )
-            return []
-
-        openai_tools = []
-
-        for tool_name, tool in self.tools.items():
-            openai_tool = {
-                "type": "function",
-                "function": {
-                    "name": tool_name,
-                    "description": tool["description"],
-                    "parameters": tool["parameters"],
-                },
-            }
-            openai_tools.append(openai_tool)
-
-        return openai_tools
-
-    async def get_available_tools_enhanced(
-        self, enabled_only: bool = True
+    async def get_available_tools(
+        self, enabled_only: bool = False
     ) -> Dict[str, Dict[str, Any]]:
         """
         Get available tools, optionally filtering by enabled status from registry.
@@ -588,9 +547,11 @@ class FastMCPClientService:
 
         # Get tools from registry with filtering
         from .mcp_registry import MCPRegistryService
-        
+
         try:
-            registry_tools = await MCPRegistryService.list_tools(enabled_only=enabled_only)
+            registry_tools = await MCPRegistryService.list_tools(
+                enabled_only=enabled_only
+            )
 
             # Convert to the format expected by the client
             available_tools = {}
@@ -621,11 +582,23 @@ class FastMCPClientService:
             # Fall back to basic tools list
             return self.tools.copy()
 
-    async def get_tools_for_openai_enhanced(
-        self, enabled_only: bool = True
+    def get_tool_schema(self, tool_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Get schema for a specific tool.
+
+        Args:
+            tool_name: Name of the tool
+
+        Returns:
+            dict: Tool schema or None if not found
+        """
+        return self.tools.get(tool_name)
+
+    async def get_tools_for_openai(
+        self, enabled_only: bool = False
     ) -> List[Dict[str, Any]]:
         """
-        Get tools formatted for OpenAI function calling, with registry filtering.
+        Get tools formatted for OpenAI function calling, with optional registry filtering.
 
         Args:
             enabled_only: Whether to only return enabled tools
@@ -633,7 +606,7 @@ class FastMCPClientService:
         Returns:
             list: Tools in OpenAI format
         """
-        available_tools = await self.get_available_tools_enhanced(enabled_only=enabled_only)
+        available_tools = await self.get_available_tools(enabled_only=enabled_only)
 
         openai_tools = []
         for tool_name, tool in available_tools.items():
@@ -746,7 +719,7 @@ class FastMCPClientService:
         # Add registry statistics
         try:
             from .mcp_registry import MCPRegistryService
-            
+
             servers = await MCPRegistryService.list_servers()
             tools = await MCPRegistryService.list_tools()
 
