@@ -40,13 +40,13 @@ def overview():
                 # Get current timestamp
                 now = datetime.now()
                 last_24h = now - timedelta(hours=24)
-                last_7d = now - timedelta(days=7)
-                last_30d = now - timedelta(days=30)
+                now - timedelta(days=7)
+                now - timedelta(days=30)
 
                 # User metrics
                 total_users = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active == True)
+                    select(func.count(User.id)).where(User.is_active)
                 )
                 new_users_24h = await db.scalar(
                     select(func.count(User.id)).where(User.created_at >= last_24h)
@@ -69,9 +69,7 @@ def overview():
                 # Conversation metrics
                 total_convs = await db.scalar(select(func.count(Conversation.id)))
                 active_convs = await db.scalar(
-                    select(func.count(Conversation.id)).where(
-                        Conversation.is_active == True
-                    )
+                    select(func.count(Conversation.id)).where(Conversation.is_active)
                 )
                 total_messages = await db.scalar(select(func.count(Message.id)))
                 messages_24h = await db.scalar(
@@ -840,7 +838,7 @@ def export_report(
                 report_data["system_overview"] = {
                     "total_users": total_users or 0,
                     "active_users": await db.scalar(
-                        select(func.count(User.id)).where(User.is_active == True)
+                        select(func.count(User.id)).where(User.is_active)
                     )
                     or 0,
                     "total_documents": total_docs or 0,
@@ -853,7 +851,7 @@ def export_report(
                     "total_conversations": total_convs or 0,
                     "active_conversations": await db.scalar(
                         select(func.count(Conversation.id)).where(
-                            Conversation.is_active == True
+                            Conversation.is_active
                         )
                     )
                     or 0,

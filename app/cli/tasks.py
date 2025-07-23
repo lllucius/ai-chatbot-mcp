@@ -17,6 +17,7 @@ import typer
 from rich.panel import Panel
 from rich.progress import track
 from rich.table import Table
+from sqlalchemy import select
 
 from ..database import AsyncSessionLocal
 from ..models.document import Document, FileStatus
@@ -103,8 +104,6 @@ def status():
             # Check Redis connection (if configured)
             try:
                 import redis
-
-                from ..config import settings
 
                 # Try to connect to Redis
                 redis_client = redis.Redis.from_url("redis://localhost:6379/0")
@@ -365,7 +364,7 @@ def active():
 
                         # Format args
                         args = task.get("args", [])
-                        kwargs = task.get("kwargs", {})
+                        task.get("kwargs", {})
                         args_str = (
                             str(args)[:27] + "..." if len(str(args)) > 30 else str(args)
                         )

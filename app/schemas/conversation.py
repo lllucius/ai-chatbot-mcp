@@ -164,7 +164,7 @@ class MessageResponse(MessageBase):
 
 
 class ChatRequest(BaseSchema):
-    """Schema for chat request."""
+    """Schema for chat request with enhanced registry integration."""
 
     user_message: constr(min_length=1, max_length=10000) = Field(
         ..., description="User message"
@@ -189,6 +189,14 @@ class ChatRequest(BaseSchema):
     )
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Response temperature")
 
+    # Registry integration fields
+    prompt_name: Optional[str] = Field(
+        None, description="Name of prompt to use from prompt registry"
+    )
+    profile_name: Optional[str] = Field(
+        None, description="Name of LLM profile to use from profile registry"
+    )
+
     @field_validator("temperature")
     @classmethod
     def validate_temperature(cls, v):
@@ -212,6 +220,8 @@ class ChatRequest(BaseSchema):
                 ],
                 "max_tokens": 1000,
                 "temperature": 0.7,
+                "prompt_name": "technical_assistant",
+                "profile_name": "balanced",
             }
         }
     }

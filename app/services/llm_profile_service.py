@@ -86,9 +86,7 @@ class LLMProfileService:
     async def get_default_profile() -> Optional[LLMProfile]:
         """Get the default profile."""
         async with AsyncSessionLocal() as db:
-            result = await db.execute(
-                select(LLMProfile).where(LLMProfile.is_default == True)
-            )
+            result = await db.execute(select(LLMProfile).where(LLMProfile.is_default))
             return result.scalar_one_or_none()
 
     @staticmethod
@@ -101,7 +99,7 @@ class LLMProfileService:
 
             filters = []
             if active_only:
-                filters.append(LLMProfile.is_active == True)
+                filters.append(LLMProfile.is_active)
             if search:
                 # Search in name, title, and description
                 search_term = f"%{search}%"
@@ -305,7 +303,7 @@ class LLMProfileService:
             # Total counts
             total_profiles = await db.scalar(select(func.count(LLMProfile.id)))
             active_profiles = await db.scalar(
-                select(func.count(LLMProfile.id)).where(LLMProfile.is_active == True)
+                select(func.count(LLMProfile.id)).where(LLMProfile.is_active)
             )
 
             # Most used profiles
@@ -418,7 +416,7 @@ class LLMProfileService:
             # Check if there's any active default profile
             default_profile = await db.execute(
                 select(LLMProfile).where(
-                    and_(LLMProfile.is_default == True, LLMProfile.is_active == True)
+                    and_(LLMProfile.is_default, LLMProfile.is_active)
                 )
             )
             default_profile = default_profile.scalar_one_or_none()
@@ -429,7 +427,7 @@ class LLMProfileService:
             # Find the most recently used active profile to make default
             candidate = await db.execute(
                 select(LLMProfile)
-                .where(LLMProfile.is_active == True)
+                .where(LLMProfile.is_active)
                 .order_by(LLMProfile.usage_count.desc(), LLMProfile.created_at.desc())
                 .limit(1)
             )
