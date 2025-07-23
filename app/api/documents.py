@@ -11,8 +11,16 @@ Current User: lllucius
 from typing import Optional
 from uuid import UUID
 
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, Query,
-                     UploadFile, status)
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
@@ -21,10 +29,14 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.document import (BackgroundTaskResponse, DocumentResponse,
-                                DocumentUpdate, DocumentUploadResponse,
-                                ProcessingConfigResponse,
-                                ProcessingStatusResponse)
+from ..schemas.document import (
+    BackgroundTaskResponse,
+    DocumentResponse,
+    DocumentUpdate,
+    DocumentUploadResponse,
+    ProcessingConfigResponse,
+    ProcessingStatusResponse,
+)
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors
