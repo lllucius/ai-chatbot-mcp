@@ -1,9 +1,9 @@
 """
-File processing utilities for document content extraction.
+File processing utilities for document content extraction using unstructured.
 
 This module provides functions for extracting text content from various
-file formats including PDF, DOCX, TXT, MD, and RTF files with
-streaming support and memory optimization.
+file formats using the unstructured library for unified document processing
+with streaming support and memory optimization.
 
 Generated on: 2025-07-14 03:18:45 UTC
 Current User: lllucius
@@ -13,10 +13,14 @@ import asyncio
 import logging
 import mimetypes
 import os
+import tempfile
 from pathlib import Path
-from typing import Any, AsyncIterator, Dict
+from typing import Any, AsyncIterator, Dict, List
 
 import psutil
+from unstructured.partition.auto import partition
+from unstructured.chunking.title import chunk_by_title
+from unstructured.staging.base import convert_to_dict
 
 from ..core.exceptions import DocumentError, ValidationError
 
@@ -25,15 +29,16 @@ logger = logging.getLogger(__name__)
 
 class FileProcessor:
     """
-    Optimized file processor for extracting text content from various file formats.
+    Unified file processor using unstructured library for extracting text content 
+    from various file formats.
 
-    Supports PDF, DOCX, TXT, MD, RTF with streaming support and memory optimization
-    for large files.
+    Supports PDF, DOCX, TXT, MD, RTF, HTML and more through unstructured's 
+    auto-partitioning with optimized chunking and memory management.
     """
 
     def __init__(self, max_file_size: int = 50 * 1024 * 1024, chunk_size: int = 8192):
         """
-        Initialize file processor.
+        Initialize file processor with unstructured backend.
 
         Args:
             max_file_size: Maximum file size to process (50MB default)
@@ -41,13 +46,16 @@ class FileProcessor:
         """
         self.max_file_size = max_file_size
         self.chunk_size = chunk_size
+        # Unstructured supports many formats, but some have constraints
+        # Focus on the most commonly used and well-supported formats
         self.supported_types = {
-            "pdf": self._extract_pdf,
-            "docx": self._extract_docx,
-            "txt": self._extract_text,
-            "md": self._extract_text,
-            "rtf": self._extract_rtf,
+            "pdf", "docx", "doc", "txt", "md", "rtf", "html", "htm", 
+            "csv", "tsv", "xlsx", "xls", "pptx", "ppt", "odt", "epub",
+            "xml", "eml", "msg"
         }
+        
+        # Formats that may need special handling
+        self.text_formats = {"txt", "md", "csv", "tsv"}
 
     def _check_memory_usage(self) -> None:
         """Check if memory usage is too high and warn."""
@@ -81,7 +89,7 @@ class FileProcessor:
 
     async def extract_text(self, file_path: str, file_type: str) -> str:
         """
-        Extract text content from a file with memory optimization.
+        Extract text content from a file using unstructured library.
 
         Args:
             file_path: Path to the file
@@ -106,13 +114,42 @@ class FileProcessor:
         self._check_memory_usage()
 
         try:
-            extractor = self.supported_types[file_type]
-            content = await extractor(file_path)
+            # Use unstructured to partition the document
+            logger.info(f"Processing {file_type} file: {file_path}")
+            
+            # Run the potentially CPU-intensive operation in a thread pool
+            elements = await asyncio.get_event_loop().run_in_executor(
+                None, partition, file_path
+            )
+
+            if not elements:
+                raise DocumentError("No content found in file")
+
+            # Extract text from all elements
+            text_content = []
+            for element in elements:
+                if hasattr(element, 'text') and element.text:
+                    text_content.append(element.text.strip())
+
+            content = "\n\n".join(text_content)
 
             if not content.strip():
                 raise DocumentError("No text content found in file")
 
+            logger.info(f"Successfully extracted {len(content)} characters from {file_path}")
             return content.strip()
+
+        except Exception as partition_error:
+            # Fallback for simple text files when unstructured fails
+            if file_type in self.text_formats:
+                logger.warning(f"Unstructured partitioning failed for {file_path}, trying simple text extraction: {partition_error}")
+                try:
+                    return await self._extract_simple_text(file_path)
+                except Exception as text_error:
+                    logger.error(f"Simple text extraction also failed for {file_path}: {text_error}")
+                    raise DocumentError(f"Both unstructured and simple text extraction failed: {text_error}")
+            else:
+                raise DocumentError(f"Text extraction failed: {partition_error}")
 
         except MemoryError:
             logger.error(f"Out of memory processing {file_path}")
@@ -146,175 +183,44 @@ class FileProcessor:
         if file_type not in self.supported_types:
             raise ValidationError(f"Unsupported file type: {file_type}")
 
-        # For now, only plain text files support true streaming
-        if file_type in ["txt", "md"]:
-            async for chunk in self._extract_text_streaming(file_path):
-                yield chunk
-        else:
-            # For other formats, extract all and yield in chunks
-            content = await self.extract_text(file_path, file_type)
-            chunk_size = 4096  # 4KB chunks
-            for i in range(0, len(content), chunk_size):
-                yield content[i : i + chunk_size]
-                # Allow other tasks to run
-                await asyncio.sleep(0)
-
-    async def _extract_pdf(self, file_path: str) -> str:
-        """Extract text from PDF file with memory optimization."""
         try:
-            import PyPDF2
-
-            text_content = []
-
-            # Process PDF in async manner with memory checks
-            await asyncio.sleep(0)  # Yield control
-
-            with open(file_path, "rb") as file:
-                pdf_reader = PyPDF2.PdfReader(file)
-                total_pages = len(pdf_reader.pages)
-
-                logger.info(f"Processing PDF with {total_pages} pages")
-
-                for page_num in range(total_pages):
-                    # Check memory usage periodically
-                    if page_num % 10 == 0:
-                        self._check_memory_usage()
-                        await asyncio.sleep(0)  # Allow other tasks
-
-                    try:
-                        page = pdf_reader.pages[page_num]
-                        page_text = page.extract_text()
-
-                        if page_text.strip():
-                            text_content.append(page_text)
-
-                        # For very large PDFs, limit memory usage
-                        if (
-                            len(text_content) > 1000
-                        ):  # Limit to ~1000 pages of text in memory
-                            logger.warning("PDF too large, processing first 1000 pages")
-                            break
-
-                    except Exception as e:
-                        logger.warning(
-                            f"Failed to extract text from page {page_num}: {e}"
-                        )
-                        continue
-
-            return "\n\n".join(text_content)
-
-        except ImportError:
-            # Fallback to pypdf if PyPDF2 not available
-            try:
-                from pypdf import PdfReader
-
-                text_content = []
-                await asyncio.sleep(0)
-
-                with open(file_path, "rb") as file:
-                    pdf_reader = PdfReader(file)
-                    total_pages = len(pdf_reader.pages)
-
-                    logger.info(f"Processing PDF with {total_pages} pages using pypdf")
-
-                    for page_num, page in enumerate(pdf_reader.pages):
-                        if page_num % 10 == 0:
-                            self._check_memory_usage()
-                            await asyncio.sleep(0)
-
-                        try:
-                            page_text = page.extract_text()
-                            if page_text.strip():
-                                text_content.append(page_text)
-
-                            if len(text_content) > 1000:
-                                logger.warning(
-                                    "PDF too large, processing first 1000 pages"
-                                )
-                                break
-
-                        except Exception as e:
-                            logger.warning(
-                                f"Failed to extract text from page {page_num}: {e}"
-                            )
-                            continue
-
-                return "\n\n".join(text_content)
-
-            except ImportError:
-                raise DocumentError(
-                    "PDF processing library not available. Install PyPDF2 or pypdf."
-                )
-        except MemoryError:
-            raise DocumentError("PDF file too large to process - insufficient memory")
-        except Exception as e:
-            raise DocumentError(f"PDF extraction failed: {e}")
-
-    async def _extract_docx(self, file_path: str) -> str:
-        """Extract text from DOCX file with memory optimization."""
-        try:
-            from docx import Document
-
-            await asyncio.sleep(0)  # Yield control
-
-            doc = Document(file_path)
-            text_content = []
-            processed_items = 0
-
-            # Extract paragraphs with memory management
-            logger.info(f"Processing DOCX with {len(doc.paragraphs)} paragraphs")
-
-            for paragraph in doc.paragraphs:
-                if processed_items % 100 == 0:  # Check every 100 paragraphs
-                    self._check_memory_usage()
-                    await asyncio.sleep(0)
-
-                if paragraph.text.strip():
-                    text_content.append(paragraph.text)
-                    processed_items += 1
-
-                # Limit memory usage for very large documents
-                if processed_items > 10000:
-                    logger.warning("DOCX too large, limiting to first 10000 paragraphs")
-                    break
-
-            # Extract tables with memory management
-            logger.info(f"Processing {len(doc.tables)} tables")
-            table_count = 0
-
-            for table in doc.tables:
-                if table_count % 10 == 0:  # Check every 10 tables
-                    self._check_memory_usage()
-                    await asyncio.sleep(0)
-
-                for row in table.rows:
-                    row_text = []
-                    for cell in row.cells:
-                        if cell.text.strip():
-                            row_text.append(cell.text.strip())
-                    if row_text:
-                        text_content.append(" | ".join(row_text))
-
-                table_count += 1
-
-                # Limit table processing
-                if table_count > 100:
-                    logger.warning("Too many tables, limiting to first 100")
-                    break
-
-            return "\n\n".join(text_content)
-
-        except ImportError:
-            raise DocumentError(
-                "DOCX processing library not available. Install python-docx."
+            # For streaming, we'll partition and yield chunks incrementally
+            elements = await asyncio.get_event_loop().run_in_executor(
+                None, partition, file_path
             )
-        except MemoryError:
-            raise DocumentError("DOCX file too large to process - insufficient memory")
-        except Exception as e:
-            raise DocumentError(f"DOCX extraction failed: {e}")
 
-    async def _extract_text(self, file_path: str) -> str:
-        """Extract text from plain text files (TXT, MD, etc) with memory optimization."""
+            chunk_size = 4096  # 4KB chunks
+            current_chunk = ""
+
+            for element in elements:
+                if hasattr(element, 'text') and element.text:
+                    element_text = element.text.strip()
+                    if element_text:
+                        current_chunk += element_text + "\n\n"
+                        
+                        # Yield chunks when they reach the target size
+                        while len(current_chunk) >= chunk_size:
+                            yield current_chunk[:chunk_size]
+                            current_chunk = current_chunk[chunk_size:]
+                            await asyncio.sleep(0)  # Allow other tasks
+
+            # Yield any remaining content
+            if current_chunk.strip():
+                yield current_chunk.strip()
+
+        except Exception as e:
+            raise DocumentError(f"Streaming text extraction failed: {e}")
+
+    async def _extract_simple_text(self, file_path: str) -> str:
+        """
+        Simple text extraction fallback for basic text files.
+        
+        Args:
+            file_path: Path to the text file
+            
+        Returns:
+            str: Extracted text content
+        """
         try:
             # Check file size before loading
             file_size = os.path.getsize(file_path)
@@ -352,57 +258,81 @@ class FileProcessor:
                 raw_content = file.read()
                 return raw_content.decode("utf-8", errors="ignore")
 
-        except MemoryError:
-            raise DocumentError("Text file too large to process - insufficient memory")
         except Exception as e:
-            raise DocumentError(f"Text file extraction failed: {e}")
+            raise DocumentError(f"Simple text extraction failed: {e}")
 
-    async def _extract_text_streaming(self, file_path: str) -> AsyncIterator[str]:
-        """Stream text content from plain text files."""
+    async def extract_chunks(
+        self, file_path: str, file_type: str, max_characters: int = 1000
+    ) -> List[Dict[str, Any]]:
+        """
+        Extract structured chunks from a document using unstructured's chunking.
+
+        Args:
+            file_path: Path to the file
+            file_type: File extension/type
+            max_characters: Maximum characters per chunk
+
+        Returns:
+            List[Dict[str, Any]]: List of chunk dictionaries with metadata
+
+        Raises:
+            DocumentError: If extraction fails
+            ValidationError: If file type not supported
+        """
+        # Validate file
+        self._validate_file(file_path)
+
+        file_type = file_type.lower().lstrip(".")
+
+        if file_type not in self.supported_types:
+            raise ValidationError(f"Unsupported file type: {file_type}")
+
         try:
-            encodings = ["utf-8", "utf-8-sig", "latin-1", "cp1252"]
-
-            for encoding in encodings:
-                try:
-                    with open(file_path, "r", encoding=encoding) as file:
-                        while True:
-                            chunk = file.read(self.chunk_size)
-                            if not chunk:
-                                break
-                            yield chunk
-                            await asyncio.sleep(0)  # Allow other tasks
-                    return  # Successfully processed
-                except UnicodeDecodeError:
-                    continue
-
-            # Fallback to binary mode with error handling
-            with open(file_path, "rb") as file:
-                while True:
-                    chunk = file.read(self.chunk_size)
-                    if not chunk:
-                        break
-                    yield chunk.decode("utf-8", errors="ignore")
-                    await asyncio.sleep(0)
-
-        except Exception as e:
-            raise DocumentError(f"Text streaming failed: {e}")
-
-    async def _extract_rtf(self, file_path: str) -> str:
-        """Extract text from RTF file."""
-        try:
-            from striprtf.striprtf import rtf_to_text
-
-            with open(file_path, "r", encoding="utf-8") as file:
-                rtf_content = file.read()
-
-            return rtf_to_text(rtf_content)
-
-        except ImportError:
-            raise DocumentError(
-                "RTF processing library not available. Install striprtf."
+            # Use unstructured to partition the document
+            logger.info(f"Extracting chunks from {file_type} file: {file_path}")
+            
+            # Run partitioning in thread pool
+            elements = await asyncio.get_event_loop().run_in_executor(
+                None, partition, file_path
             )
+
+            if not elements:
+                raise DocumentError("No content found in file")
+
+            # Use unstructured's chunking functionality
+            def chunk_elements():
+                return chunk_by_title(elements, max_characters=max_characters)
+            
+            chunked_elements = await asyncio.get_event_loop().run_in_executor(
+                None, chunk_elements
+            )
+
+            # Convert to structured format
+            chunks = []
+            for i, element in enumerate(chunked_elements):
+                if hasattr(element, 'text') and element.text:
+                    # Get metadata from element
+                    metadata = {}
+                    if hasattr(element, 'metadata') and element.metadata:
+                        element_metadata = element.metadata
+                        if hasattr(element_metadata, 'to_dict'):
+                            metadata.update(element_metadata.to_dict())
+                        elif isinstance(element_metadata, dict):
+                            metadata.update(element_metadata)
+
+                    chunks.append({
+                        'text': element.text,
+                        'chunk_index': i,
+                        'character_count': len(element.text),
+                        'metadata': metadata
+                    })
+
+            logger.info(f"Successfully extracted {len(chunks)} chunks from {file_path}")
+            return chunks
+
         except Exception as e:
-            raise DocumentError(f"RTF extraction failed: {e}")
+            logger.error(f"Chunk extraction failed for {file_path}: {e}")
+            raise DocumentError(f"Chunk extraction failed: {e}")
 
     def get_file_info(self, file_path: str) -> Dict[str, Any]:
         """
@@ -421,15 +351,17 @@ class FileProcessor:
             stat = file_path_obj.stat()
             mime_type, _ = mimetypes.guess_type(str(file_path_obj))
 
+            file_extension = file_path_obj.suffix.lower().lstrip(".")
+
             return {
                 "filename": file_path_obj.name,
                 "size": stat.st_size,
-                "extension": file_path_obj.suffix.lower().lstrip("."),
+                "extension": file_extension,
                 "mime_type": mime_type,
                 "created": stat.st_ctime,
                 "modified": stat.st_mtime,
-                "is_supported": file_path_obj.suffix.lower().lstrip(".")
-                in self.supported_types,
+                "is_supported": file_extension in self.supported_types,
+                "supported_formats": list(self.supported_types)
             }
 
         except Exception as e:
