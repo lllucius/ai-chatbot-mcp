@@ -499,4 +499,3 @@ class MCPRegistryService:
             return await MCPRegistryService.discover_tools_from_server(server_name)
         
         return None
-            return stats
