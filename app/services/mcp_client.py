@@ -162,18 +162,19 @@ class FastMCPClientService:
         try:
             # Create FastMCP client with HTTP transport
             transport = StreamableHttpTransport(server.url)
-            client = Client(transport)
+            client = Client(transport, timeout=1) #server.timeout)
 
             # Test connection with timeout
-            async with asyncio.timeout(server.timeout):
+            async with client:
                 # Store client first
                 self.clients[server_name] = client
-                logger.info(
-                    f"Successfully configured MCP HTTP server: {server_name} ({server.url})"
-                )
 
                 # Update connection status in registry
                 await MCPRegistryService.update_connection_status(server_name, True)
+
+                logger.info(
+                    f"Successfully configured MCP HTTP server: {server_name} ({server.url})"
+                )
 
         except asyncio.TimeoutError:
             logger.error(
