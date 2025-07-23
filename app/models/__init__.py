@@ -16,6 +16,12 @@ from .document import Document, DocumentChunk
 # Import database models (SQLAlchemy)
 from .user import User
 
+# Import new registry models
+from .mcp_server import MCPServer
+from .mcp_tool import MCPTool
+from .prompt import Prompt
+from .llm_profile import LLMProfile
+
 __all__ = [
     # Base classes
     "BaseModelDB",
@@ -27,4 +33,9 @@ __all__ = [
     "DocumentChunk",
     "Conversation",
     "Message",
+    # Registry models
+    "MCPServer",
+    "MCPTool",
+    "Prompt",
+    "LLMProfile",
 ]

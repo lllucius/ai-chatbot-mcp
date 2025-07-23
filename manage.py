@@ -42,6 +42,9 @@ from app.cli.conversations import conversation_app
 from app.cli.analytics import analytics_app
 from app.cli.database import database_app
 from app.cli.tasks import tasks_app
+from app.cli.mcp import mcp_app
+from app.cli.prompts import prompt_app
+from app.cli.profiles import profile_app
 from app.cli.base import console, success_message, info_message
 
 # Create the main Typer app
@@ -58,6 +61,9 @@ app.add_typer(conversation_app, name="conversations", help="💬 Conversation ma
 app.add_typer(analytics_app, name="analytics", help="📊 Analytics and reporting commands")
 app.add_typer(database_app, name="database", help="🗄️ Database management commands")
 app.add_typer(tasks_app, name="tasks", help="⚙️ Background task management commands")
+app.add_typer(mcp_app, name="mcp", help="🔌 MCP server and tool management commands")
+app.add_typer(prompt_app, name="prompts", help="📝 Prompt management commands")
+app.add_typer(profile_app, name="profiles", help="🎛️ LLM parameter profile management commands")
 
 
 @app.command()
@@ -173,6 +179,7 @@ def quickstart():
    • Initialize database: [cyan]python manage.py database init[/cyan]
    • Create admin user: [cyan]python manage.py users create myadmin admin@mycompany.com --superuser[/cyan]
    • Check system health: [cyan]python manage.py health[/cyan]
+   • Set up default data: [cyan]python scripts/setup_registry_data.py[/cyan]
 
 [yellow]2. User Management:[/yellow]
    • List users: [cyan]python manage.py users list[/cyan]
@@ -191,19 +198,38 @@ def quickstart():
    • Show conversation: [cyan]python manage.py conversations show 456 --messages[/cyan]
    • Export chat: [cyan]python manage.py conversations export 456 --format json[/cyan]
 
-[yellow]5. Analytics & Monitoring:[/yellow]
+[yellow]5. MCP Server & Tool Management:[/yellow]
+   • List servers: [cyan]python manage.py mcp list-servers --detailed[/cyan]
+   • Add server: [cyan]python manage.py mcp add-server myserver http://localhost:9000/mcp[/cyan]
+   • Enable/disable server: [cyan]python manage.py mcp enable-server myserver[/cyan]
+   • List tools: [cyan]python manage.py mcp list-tools --enabled-only[/cyan]
+   • Tool statistics: [cyan]python manage.py mcp stats[/cyan]
+
+[yellow]6. Prompt Management:[/yellow]
+   • List prompts: [cyan]python manage.py prompts list[/cyan]
+   • Add prompt: [cyan]python manage.py prompts add myprompt --title "My Prompt" --content "You are..."[/cyan]
+   • Set default: [cyan]python manage.py prompts set-default myprompt[/cyan]
+   • Show statistics: [cyan]python manage.py prompts stats[/cyan]
+
+[yellow]7. LLM Profile Management:[/yellow]
+   • List profiles: [cyan]python manage.py profiles list[/cyan]
+   • Create profile: [cyan]python manage.py profiles add creative --title "Creative" --temperature 1.0[/cyan]
+   • Set default: [cyan]python manage.py profiles set-default balanced[/cyan]
+   • Clone profile: [cyan]python manage.py profiles clone creative creative-v2[/cyan]
+
+[yellow]8. Analytics & Monitoring:[/yellow]
    • System overview: [cyan]python manage.py analytics overview[/cyan]
    • Usage statistics: [cyan]python manage.py analytics usage --period 7d[/cyan]
    • Performance metrics: [cyan]python manage.py analytics performance[/cyan]
    • User analytics: [cyan]python manage.py analytics users --metric messages[/cyan]
 
-[yellow]6. Database Management:[/yellow]
+[yellow]9. Database Management:[/yellow]
    • Check status: [cyan]python manage.py database status[/cyan]
    • Run migrations: [cyan]python manage.py database upgrade[/cyan]
    • Create backup: [cyan]python manage.py database backup[/cyan]
    • List tables: [cyan]python manage.py database tables[/cyan]
 
-[yellow]7. Background Tasks:[/yellow]
+[yellow]10. Background Tasks:[/yellow]
    • Check status: [cyan]python manage.py tasks status[/cyan]
    • View workers: [cyan]python manage.py tasks workers[/cyan]
    • Monitor queues: [cyan]python manage.py tasks queue[/cyan]
@@ -214,6 +240,8 @@ def quickstart():
    • Most commands support filtering and search options
    • Use [cyan]python manage.py [command] [subcommand] --help[/cyan] for specific help
    • Check system health regularly with [cyan]python manage.py health[/cyan]
+   • Monitor tool usage with [cyan]python manage.py mcp stats[/cyan]
+   • Customize prompts and profiles for different use cases
 
 [blue]📚 Need more help?[/blue]
    • Run [cyan]python manage.py --help[/cyan] for all available commands

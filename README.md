@@ -34,11 +34,17 @@ A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation)
 - **Conversation Management**: Persistent chat history
 - **Context Retention**: Maintains conversation context
 - **Usage Tracking**: Token usage monitoring and optimization
+- **Prompt Registry**: Centralized prompt management with categories and tags
+- **LLM Profile System**: Parameter profiles for different use cases (creative, precise, etc.)
+- **Default Configurations**: Easy switching between conversation modes
 
 ### 🛠️ Tool Integration (MCP)
 - **MCP Protocol**: Model Context Protocol client
+- **Server Registry**: Centralized management of MCP servers
+- **Tool Management**: Enable/disable individual tools with usage tracking
 - **External Tools**: File system, web search, and custom tools
 - **Function Calling**: AI can execute external functions
+- **Usage Analytics**: Comprehensive tool usage statistics and performance metrics
 - **Extensible Architecture**: Easy plugin development
 
 ### 📊 Monitoring & Analytics
@@ -56,6 +62,9 @@ A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation)
 - **Authentication**: JWT with python-jose
 - **Document Processing**: PyPDF2, python-docx, striprtf
 - **Vector Search**: pgvector with multiple algorithms
+- **MCP Integration**: FastMCP for tool integration
+- **Registry Systems**: Comprehensive management for servers, tools, prompts, and LLM profiles
+- **CLI Framework**: Typer with Rich for beautiful terminal interfaces
 
 ### Project Structure
 ```
@@ -310,6 +319,55 @@ python manage.py tasks workers
 python manage.py tasks active
 python manage.py tasks retry-failed
 python manage.py tasks monitor --refresh 5 --duration 300
+```
+
+### MCP Server & Tool Management
+```bash
+# Server management
+python manage.py mcp list-servers --detailed
+python manage.py mcp add-server myserver http://localhost:9000/mcp --description "My MCP Server"
+python manage.py mcp enable-server myserver
+python manage.py mcp disable-server myserver
+python manage.py mcp remove-server myserver --confirm
+
+# Tool management
+python manage.py mcp list-tools --enabled-only
+python manage.py mcp enable-tool myserver_tool
+python manage.py mcp disable-tool myserver_tool
+python manage.py mcp stats --limit 20
+```
+
+### Prompt Management
+```bash
+# Prompt management
+python manage.py prompts list --category general
+python manage.py prompts add myprompt --title "My Prompt" --content "You are a helpful assistant..."
+python manage.py prompts update myprompt --description "Updated description"
+python manage.py prompts set-default myprompt
+python manage.py prompts activate myprompt
+python manage.py prompts deactivate myprompt
+python manage.py prompts remove myprompt --confirm
+
+# Organization and discovery
+python manage.py prompts categories
+python manage.py prompts tags
+python manage.py prompts stats
+```
+
+### LLM Parameter Profile Management
+```bash
+# Profile management
+python manage.py profiles list --detailed
+python manage.py profiles add creative --title "Creative Writing" --temperature 1.0 --top-p 0.95
+python manage.py profiles update creative --max-tokens 3000
+python manage.py profiles set-default balanced
+python manage.py profiles clone creative creative-v2 --title "Creative v2"
+python manage.py profiles activate creative
+python manage.py profiles deactivate creative
+python manage.py profiles remove creative --confirm
+
+# Statistics and monitoring
+python manage.py profiles stats
 ```
 
 ### Legacy CLI (Deprecated)
