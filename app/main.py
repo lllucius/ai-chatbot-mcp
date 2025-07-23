@@ -85,13 +85,13 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down AI Chatbot Platform...")
     try:
-        # Cleanup UnifiedToolExecutor and Enhanced MCP
+        # Cleanup UnifiedToolExecutor and MCP
         try:
             from .core.tool_executor import cleanup_unified_tool_executor
-            from .services.enhanced_mcp_client import cleanup_enhanced_mcp_client
+            from .services.mcp_client import cleanup_mcp_client
 
             await cleanup_unified_tool_executor()
-            await cleanup_enhanced_mcp_client()
+            await cleanup_mcp_client()
             logger.info("Tool execution system cleaned up")
         except Exception as e:
             logger.warning(f"Tool execution cleanup failed: {e}")

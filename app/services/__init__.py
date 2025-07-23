@@ -12,8 +12,6 @@ from .auth import AuthService
 from .conversation import ConversationService
 from .document import DocumentService
 from .embedding import EmbeddingService
-from .enhanced_mcp_client import (EnhancedMCPClientService, get_enhanced_mcp_client,
-                                 cleanup_enhanced_mcp_client)
 from .llm_profile_service import LLMProfileService
 from .mcp_client import (FastMCPClientService, get_mcp_client, cleanup_mcp_client)
 from .mcp_registry import MCPRegistryService
@@ -33,9 +31,6 @@ __all__ = [
     "FastMCPClientService",
     "get_mcp_client",
     "cleanup_mcp_client",
-    "EnhancedMCPClientService",
-    "get_enhanced_mcp_client",
-    "cleanup_enhanced_mcp_client",
     "MCPRegistryService",
     "PromptService",
     "LLMProfileService",
