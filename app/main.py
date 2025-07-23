@@ -20,22 +20,16 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (
-    auth_router,
-    conversations_router,
-    documents_router,
-    health_router,
-    search_router,
-    tools_router,
-    users_router,
-)
+from .api import (auth_router, conversations_router, documents_router,
+                  health_router, search_router, tools_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .database import close_db, init_db
 from .utils.caching import start_cache_cleanup_task
 from .utils.logging import setup_logging
 from .utils.performance import record_request_metric, start_system_monitoring
-from .utils.rate_limiting import rate_limit_middleware, start_rate_limiter_cleanup
+from .utils.rate_limiting import (rate_limit_middleware,
+                                  start_rate_limiter_cleanup)
 from .utils.timestamp import get_current_timestamp
 from .utils.validation import validate_request_middleware
 

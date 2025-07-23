@@ -21,15 +21,10 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
-from ..schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-)
+from ..schemas.conversation import (ChatRequest, ChatResponse,
+                                    ConversationCreate, ConversationResponse,
+                                    ConversationStats, ConversationUpdate,
+                                    MessageResponse)
 from ..services.conversation import ConversationService
 
 router = APIRouter(tags=["conversations"])

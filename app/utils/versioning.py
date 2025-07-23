@@ -146,10 +146,10 @@ def version(min_version: APIVersion, max_version: Optional[APIVersion] = None):
     def decorator(func):
         """
         Decorator function that adds version metadata to the wrapped function.
-        
+
         Args:
             func: Function to decorate with version requirements
-            
+
         Returns:
             function: The same function with version metadata attached
         """

@@ -23,14 +23,8 @@ from ..models.user import User
 from ..services.auth import AuthService
 from ..services.user import UserService
 from ..utils.security import get_password_hash
-from .base import (
-    async_command,
-    console,
-    error_message,
-    format_timestamp,
-    success_message,
-    warning_message,
-)
+from .base import (async_command, console, error_message, format_timestamp,
+                   success_message, warning_message)
 
 # Create the user management app
 user_app = typer.Typer(help="User management commands")
@@ -51,7 +45,36 @@ def create(
     ),
     active: bool = typer.Option(True, "--active/--inactive", help="User active status"),
 ):
-    """Create a new user account."""
+    """
+    Create a new user account with comprehensive validation and setup.
+
+    This command handles the complete user creation workflow including:
+    - Input validation and sanitization
+    - Password strength requirements and secure prompting
+    - Email format validation and uniqueness checking
+    - Username availability verification
+    - Automatic role assignment (regular user or superuser)
+    - Database transaction management with rollback on errors
+    - Success confirmation with user details display
+
+    Args:
+        username: Unique username (3-50 chars, alphanumeric + underscore/hyphen)
+        email: Valid email address that will be checked for uniqueness
+        password: Optional password (prompted securely if not provided)
+        full_name: Optional display name for the user
+        superuser: Whether to grant superuser privileges (admin access)
+        active: Whether the account should be active immediately
+
+    Examples:
+        # Create regular user with prompt for password
+        python manage.py users create johndoe john@example.com
+
+        # Create superuser with all details
+        python manage.py users create admin admin@company.com --password secret --superuser --full-name "Administrator"
+
+        # Create inactive user account
+        python manage.py users create temp temp@example.com --inactive
+    """
 
     @async_command
     async def _create_user():

@@ -44,9 +44,8 @@ from ..models.document import Document, DocumentChunk, FileStatus
 from ..schemas.document import DocumentUpdate
 from ..services.background_processor import get_background_processor
 from ..services.embedding import EmbeddingService
-from ..utils.enhanced_document_processor import (
-    DocumentProcessor as EnhancedDocumentProcessor,
-)
+from ..utils.enhanced_document_processor import \
+    DocumentProcessor as EnhancedDocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService

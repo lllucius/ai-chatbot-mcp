@@ -221,7 +221,29 @@ class Settings(BaseSettings):
     @field_validator("allowed_headers", mode="before")
     @classmethod
     def parse_cors_headers(cls, v):
-        """Parse CORS headers from string or list."""
+        """
+        Parse CORS headers from string or list format.
+
+        Handles multiple input formats for CORS headers configuration:
+        - String with comma-separated values: "Content-Type,Authorization"
+        - Single asterisk for all headers: "*"
+        - Empty string defaults to wildcard: ""
+        - List format passes through unchanged: ["Content-Type", "Authorization"]
+
+        Args:
+            v: Input value (string or list) representing CORS headers
+
+        Returns:
+            list: Parsed list of header names, or ["*"] for wildcard
+
+        Examples:
+            >>> parse_cors_headers("Content-Type,Authorization")
+            ["Content-Type", "Authorization"]
+            >>> parse_cors_headers("*")
+            ["*"]
+            >>> parse_cors_headers("")
+            ["*"]
+        """
         if isinstance(v, str):
             if not v.strip():
                 return ["*"]

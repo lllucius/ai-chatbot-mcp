@@ -26,7 +26,8 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
+from ..core.exceptions import (AuthenticationError, NotFoundError,
+                               ValidationError)
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User

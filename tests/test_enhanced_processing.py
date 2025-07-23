@@ -18,11 +18,8 @@ from uuid import uuid4
 
 import pytest
 
-from app.services.background_processor import (
-    BackgroundProcessor,
-    ProcessingTask,
-    TaskStatus,
-)
+from app.services.background_processor import (BackgroundProcessor,
+                                               ProcessingTask, TaskStatus)
 from app.utils.enhanced_document_processor import DocumentProcessor
 from app.utils.standard_logging import set_correlation_id, setup_logging
 

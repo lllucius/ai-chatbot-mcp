@@ -18,7 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..database import get_db
 from ..schemas.common import BaseResponse
-from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
+from ..utils.caching import (api_response_cache, embedding_cache,
+                             search_result_cache)
 from ..utils.performance import get_performance_stats
 from ..utils.timestamp import utcnow
 

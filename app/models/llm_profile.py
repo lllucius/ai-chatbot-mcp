@@ -134,7 +134,28 @@ class LLMProfile(BaseModelDB):
         self.last_used_at = datetime.utcnow()
 
     def to_openai_params(self) -> dict:
-        """Convert profile to OpenAI API parameters."""
+        """
+        Convert LLM profile to OpenAI API parameters dictionary.
+
+        Transforms the profile settings into a format compatible with OpenAI's
+        chat completion API. Only includes parameters that are not None to allow
+        OpenAI's defaults to take effect for unspecified parameters.
+
+        Returns:
+            dict: Dictionary of OpenAI API parameters with the following possible keys:
+                - temperature: Controls randomness (0.0-2.0)
+                - top_p: Controls nucleus sampling (0.0-1.0)
+                - max_tokens: Maximum tokens to generate
+                - presence_penalty: Penalty for token presence (-2.0-2.0)
+                - frequency_penalty: Penalty for token frequency (-2.0-2.0)
+                - stop: List of stop sequences
+
+        Example:
+            >>> profile = LLMProfile(temperature=0.7, max_tokens=1000)
+            >>> params = profile.to_openai_params()
+            >>> params
+            {"temperature": 0.7, "max_tokens": 1000}
+        """
         params = {}
 
         if self.temperature is not None:
@@ -159,7 +180,30 @@ class LLMProfile(BaseModelDB):
         return params
 
     def to_dict(self) -> dict:
-        """Convert profile to dictionary with all parameters."""
+        """
+        Convert profile to complete dictionary representation.
+
+        Creates a comprehensive dictionary containing all profile parameters,
+        metadata, and usage statistics. Useful for JSON serialization,
+        API responses, and profile export/import operations.
+
+        Returns:
+            dict: Complete profile data including:
+                - Basic info: name, title, description
+                - Status flags: is_default, is_active
+                - LLM parameters: temperature, top_p, max_tokens, etc.
+                - Penalties: presence_penalty, frequency_penalty
+                - Metadata: created_at, updated_at, usage stats
+                - Additional custom parameters from other_params
+
+        Example:
+            >>> profile = LLMProfile(name="creative", temperature=0.8)
+            >>> data = profile.to_dict()
+            >>> data["name"]
+            "creative"
+            >>> data["temperature"]
+            0.8
+        """
         return {
             "name": self.name,
             "title": self.title,

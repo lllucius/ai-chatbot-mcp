@@ -22,14 +22,8 @@ from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation, Message
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
-from .base import (
-    async_command,
-    console,
-    error_message,
-    format_size,
-    info_message,
-    success_message,
-)
+from .base import (async_command, console, error_message, format_size,
+                   info_message, success_message)
 
 # Create the analytics app
 analytics_app = typer.Typer(help="Analytics and reporting commands")

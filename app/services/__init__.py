@@ -12,7 +12,8 @@ from .auth import AuthService
 from .conversation import ConversationService
 from .document import DocumentService
 from .embedding import EmbeddingService
-from .mcp_client import FastMCPClientService, cleanup_mcp_client, get_mcp_client
+from .mcp_client import (FastMCPClientService, cleanup_mcp_client,
+                         get_mcp_client)
 from .openai_client import OpenAIClient
 from .search import SearchService
 from .user import UserService
