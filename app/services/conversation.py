@@ -42,7 +42,10 @@ from ..schemas.conversation import (ChatRequest, ConversationCreate,
 from ..schemas.document import DocumentSearchRequest
 from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
+from ..services.enhanced_mcp_client import get_enhanced_mcp_client
+from ..services.llm_profile_service import LLMProfileService
 from ..services.openai_client import OpenAIClient
+from ..services.prompt_service import PromptService
 from ..services.search import SearchService
 from .base import BaseService
 
@@ -325,7 +328,7 @@ class ConversationService(BaseService):
             ai_messages = []
 
             # Add system message if needed
-            system_prompt = self._build_system_prompt(request)
+            system_prompt = await self._build_system_prompt(request)
             if system_prompt:
                 ai_messages.append({"role": "system", "content": system_prompt})
 
@@ -356,13 +359,45 @@ class ConversationService(BaseService):
                             },
                         )
 
-            # Get AI response with unified tool calling and flexible tool handling
+            # Get LLM parameters from profile registry
+            openai_params = {}
+            try:
+                if request.profile_name:
+                    profile_params = await LLMProfileService.get_profile_for_openai(request.profile_name)
+                else:
+                    profile_params = await LLMProfileService.get_profile_for_openai()
+                
+                # Use profile parameters but allow request to override
+                openai_params.update(profile_params)
+                if request.temperature is not None:
+                    openai_params["temperature"] = request.temperature
+                if request.max_tokens is not None:
+                    openai_params["max_tokens"] = request.max_tokens
+            except Exception as e:
+                logger.warning(f"Failed to get LLM profile parameters: {e}")
+                # Fallback to request parameters
+                openai_params = {
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                }
+
+            # Get enhanced MCP tools if tools are enabled
+            if request.use_tools:
+                try:
+                    enhanced_client = await get_enhanced_mcp_client()
+                    openai_params["use_unified_tools"] = True
+                    openai_params["tool_handling_mode"] = request.tool_handling_mode
+                except Exception as e:
+                    logger.warning(f"Failed to get enhanced MCP client: {e}")
+                    openai_params["use_unified_tools"] = request.use_tools
+                    openai_params["tool_handling_mode"] = request.tool_handling_mode
+            else:
+                openai_params["use_unified_tools"] = False
+
+            # Get AI response with enhanced registry integration
             ai_response = await self.openai_client.chat_completion(
                 messages=ai_messages,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                use_unified_tools=request.use_tools,
-                tool_handling_mode=request.tool_handling_mode,
+                **openai_params
             )
 
             # Create AI message
@@ -447,7 +482,7 @@ class ConversationService(BaseService):
             ai_messages = []
 
             # Add system message if needed
-            system_prompt = self._build_system_prompt(request)
+            system_prompt = await self._build_system_prompt(request)
             if system_prompt:
                 ai_messages.append({"role": "system", "content": system_prompt})
 
@@ -478,16 +513,48 @@ class ConversationService(BaseService):
                             },
                         )
 
+            # Get LLM parameters from profile registry
+            openai_params = {}
+            try:
+                if request.profile_name:
+                    profile_params = await LLMProfileService.get_profile_for_openai(request.profile_name)
+                else:
+                    profile_params = await LLMProfileService.get_profile_for_openai()
+                
+                # Use profile parameters but allow request to override
+                openai_params.update(profile_params)
+                if request.temperature is not None:
+                    openai_params["temperature"] = request.temperature
+                if request.max_tokens is not None:
+                    openai_params["max_tokens"] = request.max_tokens
+            except Exception as e:
+                logger.warning(f"Failed to get LLM profile parameters: {e}")
+                # Fallback to request parameters
+                openai_params = {
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                }
+
+            # Get enhanced MCP tools if tools are enabled
+            if request.use_tools:
+                try:
+                    enhanced_client = await get_enhanced_mcp_client()
+                    openai_params["use_unified_tools"] = True
+                    openai_params["tool_handling_mode"] = request.tool_handling_mode
+                except Exception as e:
+                    logger.warning(f"Failed to get enhanced MCP client: {e}")
+                    openai_params["use_unified_tools"] = request.use_tools
+                    openai_params["tool_handling_mode"] = request.tool_handling_mode
+            else:
+                openai_params["use_unified_tools"] = False
+
             # Stream AI response
             full_content = ""
             tool_calls_executed = []
 
             async for chunk in self.openai_client.chat_completion_stream(
                 messages=ai_messages,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                use_unified_tools=request.use_tools,
-                tool_handling_mode=request.tool_handling_mode,
+                **openai_params
             ):
                 if chunk.get("type") == "content":
                     content = chunk.get("content", "")
@@ -554,8 +621,31 @@ class ConversationService(BaseService):
         # Return in chronological order
         return list(reversed(messages))
 
-    def _build_system_prompt(self, request: ChatRequest) -> str:
-        """Build system prompt based on request parameters."""
+    async def _build_system_prompt(self, request: ChatRequest) -> str:
+        """Build system prompt based on request parameters and registry."""
+        # Try to get prompt from registry if specified
+        if request.prompt_name:
+            try:
+                prompt = await PromptService.get_prompt(request.prompt_name)
+                if prompt:
+                    # Record prompt usage
+                    await PromptService.record_prompt_usage(prompt.name)
+                    return prompt.content
+                else:
+                    logger.warning(f"Prompt '{request.prompt_name}' not found, using default")
+            except Exception as e:
+                logger.warning(f"Failed to get prompt '{request.prompt_name}': {e}")
+
+        # Get default prompt if no specific prompt requested or if specific prompt failed
+        try:
+            default_prompt = await PromptService.get_default_prompt()
+            if default_prompt:
+                await PromptService.record_prompt_usage(default_prompt.name)
+                return default_prompt.content
+        except Exception as e:
+            logger.warning(f"Failed to get default prompt: {e}")
+
+        # Fallback to hardcoded prompt
         prompt_parts = [
             "You are a helpful AI assistant with access to a knowledge base.",
             "Provide accurate, helpful, and well-structured responses.",
@@ -676,14 +766,15 @@ class ConversationService(BaseService):
 
     async def get_user_stats(self, user_id: UUID) -> Dict[str, Any]:
         """
-        Get conversation statistics for a user.
+        Get conversation statistics for a user with registry insights.
 
         Args:
             user_id: User ID
 
         Returns:
-            dict: User conversation statistics
+            dict: User conversation statistics with registry information
         """
+        # Get basic conversation stats
         # Total conversations
         total_result = await self.db.execute(
             select(func.count(Conversation.id)).where(Conversation.user_id == user_id)
@@ -719,10 +810,47 @@ class ConversationService(BaseService):
         )
         most_recent_activity = recent_result.scalar()
 
+        # Get registry statistics
+        registry_stats = {}
+        try:
+            registry_stats = await self._get_registry_stats()
+        except Exception as e:
+            logger.warning(f"Failed to get registry stats: {e}")
+
         return {
             "total_conversations": total_conversations,
             "active_conversations": active_conversations,
             "total_messages": total_messages,
             "avg_messages_per_conversation": round(avg_messages, 1),
             "most_recent_activity": most_recent_activity,
+            "registry": registry_stats,
         }
+
+    async def _get_registry_stats(self) -> Dict[str, Any]:
+        """Get statistics from the prompt, profile, and tool registries."""
+        try:
+            prompt_stats = await PromptService.get_prompt_stats()
+            profile_stats = await LLMProfileService.get_profile_stats()
+
+            # Get tool stats from enhanced MCP client
+            enhanced_client = await get_enhanced_mcp_client()
+            health = await enhanced_client.health_check()
+
+            return {
+                "prompts": {
+                    "total": prompt_stats.get("total_prompts", 0),
+                    "active": prompt_stats.get("active_prompts", 0),
+                    "default": prompt_stats.get("default_prompt"),
+                    "most_used": prompt_stats.get("most_used", [])[:3],  # Top 3
+                },
+                "profiles": {
+                    "total": profile_stats.get("total_profiles", 0),
+                    "active": profile_stats.get("active_profiles", 0),
+                    "default": profile_stats.get("default_profile"),
+                    "most_used": profile_stats.get("most_used", [])[:3],  # Top 3
+                },
+                "tools": health.get("registry", {}),
+            }
+        except Exception as e:
+            logger.error(f"Failed to get registry stats: {e}")
+            return {}

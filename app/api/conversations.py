@@ -29,7 +29,6 @@ from ..schemas.conversation import (ChatRequest, ChatResponse,
                                     ConversationStats, ConversationUpdate,
                                     MessageResponse)
 from ..services.conversation import ConversationService
-from ..services.conversation_integration import EnhancedConversationService
 
 router = APIRouter(tags=["conversations"])
 
@@ -253,29 +252,7 @@ async def chat(
     try:
         start_time = time.time()
 
-        # If registry integration is requested, prepare enhanced request
-        if request.prompt_name or request.profile_name:
-            # Prepare request using enhanced conversation service
-            # This demonstrates the integration capability
-            # In future iterations, this could fully replace the service call
-            try:
-                _ = await EnhancedConversationService.prepare_chat_request(
-                    user_message=request.user_message,
-                    prompt_name=request.prompt_name,
-                    profile_name=request.profile_name,
-                    use_tools=request.use_tools,
-                    # Override with any request-specific parameters
-                    temperature=request.temperature,
-                    max_tokens=request.max_tokens,
-                )
-                # Note: Enhanced request is prepared but we're using existing service
-                # for compatibility. Future versions will use enhanced_request directly.
-            except Exception:
-                # Log the error but continue with standard processing
-                pass
-
-        # Process chat request with the existing service
-        # TODO: In future iterations, this could be fully replaced with enhanced service
+        # Process chat request with enhanced registry integration
         result = await conversation_service.process_chat(request, current_user.id)
 
         # Calculate response time
@@ -382,6 +359,7 @@ async def get_conversation_stats(
 @router.get("/registry-stats", response_model=Dict[str, Any])
 async def get_registry_stats(
     current_user: User = Depends(get_current_user),
+    conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
     Get registry statistics showing prompt, profile, and tool usage.
@@ -392,7 +370,7 @@ async def get_registry_stats(
     - MCP tools and server status
     """
     try:
-        registry_stats = await EnhancedConversationService.get_conversation_stats()
+        registry_stats = await conversation_service._get_registry_stats()
 
         return {
             "success": True,
