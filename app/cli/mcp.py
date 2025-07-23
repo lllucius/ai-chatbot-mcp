@@ -105,7 +105,8 @@ def add_server(
     description: Optional[str] = typer.Option(None, "--description", "-d", help="Server description"),
     transport: str = typer.Option("http", "--transport", "-t", help="Transport type"),
     timeout: int = typer.Option(30, "--timeout", help="Connection timeout in seconds"),
-    disabled: bool = typer.Option(False, "--disabled", help="Create server in disabled state")
+    disabled: bool = typer.Option(False, "--disabled", help="Create server in disabled state"),
+    skip_discovery: bool = typer.Option(False, "--skip-discovery", help="Skip automatic tool discovery")
 ):
     """Add a new MCP server registration."""
     
@@ -117,10 +118,14 @@ def add_server(
                 description=description,
                 transport=transport,
                 timeout=timeout,
-                is_enabled=not disabled
+                is_enabled=not disabled,
+                auto_discover=not skip_discovery
             )
             
             success_message(f"Added MCP server: {server.name}")
+            
+            if not disabled and not skip_discovery:
+                info_message("Automatic tool discovery will be attempted")
             
         except Exception as e:
             error_message(f"Failed to add server: {e}")
@@ -194,14 +199,19 @@ def remove_server(
 
 
 @mcp_app.command("enable-server")
-def enable_server(name: str = typer.Argument(..., help="Server name")):
+def enable_server(
+    name: str = typer.Argument(..., help="Server name"),
+    skip_discovery: bool = typer.Option(False, "--skip-discovery", help="Skip automatic tool discovery")
+):
     """Enable an MCP server."""
     
     async def _enable_server():
         try:
-            success = await MCPRegistryService.enable_server(name)
+            success = await MCPRegistryService.enable_server(name, auto_discover=not skip_discovery)
             if success:
                 success_message(f"Enabled MCP server: {name}")
+                if not skip_discovery:
+                    info_message("Automatic tool discovery will be attempted")
             else:
                 error_message(f"Server not found: {name}")
                 
@@ -387,3 +397,91 @@ def show_stats(
             error_message(f"Failed to get statistics: {e}")
     
     asyncio.run(_show_stats())
+
+
+@mcp_app.command("discover")
+def discover_tools(
+    server: Optional[str] = typer.Option(None, "--server", "-s", help="Discover tools from a specific server only"),
+    all_servers: bool = typer.Option(False, "--all", help="Discover tools from all enabled servers"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force discovery even if server is disabled")
+):
+    """Discover tools from MCP servers and update the registry."""
+    
+    async def _discover_tools():
+        try:
+            if server and all_servers:
+                error_message("Cannot specify both --server and --all options")
+                return
+                
+            if not server and not all_servers:
+                error_message("Must specify either --server <name> or --all")
+                return
+            
+            if all_servers:
+                info_message("Discovering tools from all enabled servers...")
+                results = await MCPRegistryService.discover_tools_all_servers()
+                
+                if not results:
+                    warning_message("No enabled servers found for tool discovery")
+                    return
+                
+                # Summary table
+                table = Table(title="Tool Discovery Results", box=box.ROUNDED)
+                table.add_column("Server", style="bold")
+                table.add_column("Status")
+                table.add_column("New Tools")
+                table.add_column("Updated Tools") 
+                table.add_column("Total Found")
+                table.add_column("Errors")
+                
+                total_new = 0
+                total_updated = 0
+                total_found = 0
+                success_count = 0
+                
+                for result in results:
+                    status = "✅ Success" if result["success"] else "❌ Failed"
+                    new_tools = result.get("new_tools", 0)
+                    updated_tools = result.get("updated_tools", 0)
+                    total_discovered = result.get("total_discovered", 0)
+                    errors = len(result.get("errors", []))
+                    
+                    if result["success"]:
+                        success_count += 1
+                        total_new += new_tools
+                        total_updated += updated_tools
+                        total_found += total_discovered
+                    
+                    table.add_row(
+                        result["server"],
+                        status,
+                        str(new_tools),
+                        str(updated_tools),
+                        str(total_discovered),
+                        str(errors) if errors > 0 else "None"
+                    )
+                
+                console.print(table)
+                success_message(f"Discovery completed: {success_count}/{len(results)} servers succeeded")
+                info_message(f"Total: {total_new} new tools, {total_updated} updated tools, {total_found} discovered")
+                
+            else:
+                # Single server discovery
+                info_message(f"Discovering tools from server: {server}")
+                result = await MCPRegistryService.discover_tools_from_server(server)
+                
+                if result["success"]:
+                    success_message(f"Tool discovery completed for {server}")
+                    info_message(f"Results: {result['new_tools']} new tools, {result['updated_tools']} updated tools")
+                    
+                    if result.get("errors"):
+                        warning_message(f"Encountered {len(result['errors'])} errors during discovery")
+                        for error in result["errors"]:
+                            console.print(f"  • {error}")
+                else:
+                    error_message(f"Tool discovery failed for {server}: {result.get('error', 'Unknown error')}")
+                    
+        except Exception as e:
+            error_message(f"Failed to discover tools: {e}")
+    
+    asyncio.run(_discover_tools())

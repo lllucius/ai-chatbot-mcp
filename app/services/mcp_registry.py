@@ -8,6 +8,7 @@ Current Date and Time (UTC): 2025-07-23 03:30:00
 Current User: lllucius / assistant
 """
 
+import asyncio
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -33,9 +34,10 @@ class MCPRegistryService:
         transport: str = "http",
         timeout: int = 30,
         config: Optional[dict] = None,
-        is_enabled: bool = True
+        is_enabled: bool = True,
+        auto_discover: bool = True
     ) -> MCPServer:
-        """Create a new MCP server registration."""
+        """Create a new MCP server registration and optionally discover tools."""
         async with AsyncSessionLocal() as db:
             server = MCPServer(
                 name=name,
@@ -54,6 +56,15 @@ class MCPRegistryService:
             await db.refresh(server)
             
             logger.info(f"Created MCP server registration: {name}")
+            
+            # Trigger tool discovery for new enabled servers
+            if is_enabled and auto_discover:
+                try:
+                    discovery_result = await MCPRegistryService.discover_tools_from_server(name)
+                    logger.info(f"Automatic tool discovery for new server {name}: {discovery_result}")
+                except Exception as e:
+                    logger.warning(f"Failed to auto-discover tools for new server {name}: {e}")
+            
             return server
 
     @staticmethod
@@ -130,9 +141,29 @@ class MCPRegistryService:
             return True
 
     @staticmethod
-    async def enable_server(name: str) -> bool:
-        """Enable an MCP server."""
-        return await MCPRegistryService.update_server(name, is_enabled=True) is not None
+    async def enable_server(name: str, auto_discover: bool = True) -> bool:
+        """Enable an MCP server and optionally discover tools."""
+        # Get current state
+        server = await MCPRegistryService.get_server(name)
+        if not server:
+            return False
+            
+        was_enabled = server.is_enabled
+        
+        # Update server
+        updated_server = await MCPRegistryService.update_server(name, is_enabled=True)
+        if not updated_server:
+            return False
+            
+        # Trigger automatic discovery if requested
+        if auto_discover:
+            discovery_result = await MCPRegistryService.auto_discover_on_server_change(
+                name, was_enabled, True
+            )
+            if discovery_result:
+                logger.info(f"Automatic tool discovery triggered for {name}: {discovery_result}")
+        
+        return True
 
     @staticmethod
     async def disable_server(name: str) -> bool:
@@ -333,3 +364,138 @@ class MCPRegistryService:
                 })
                 
             return stats
+
+    @staticmethod
+    async def discover_tools_from_server(server_name: str) -> Dict[str, Any]:
+        """Discover tools from an MCP server and update the registry."""
+        async with AsyncSessionLocal() as db:
+            # Get the server
+            server_result = await db.execute(
+                select(MCPServer).where(MCPServer.name == server_name)
+            )
+            server = server_result.scalar_one_or_none()
+            
+            if not server:
+                logger.error(f"Server not found: {server_name}")
+                return {"success": False, "error": "Server not found"}
+                
+            if not server.is_enabled:
+                logger.info(f"Server {server_name} is disabled, skipping discovery")
+                return {"success": False, "error": "Server is disabled"}
+
+            try:
+                # Import the MCP client service
+                from .mcp_client import FastMCPClientService
+                
+                # Create a temporary client to discover tools
+                client_service = FastMCPClientService()
+                discovered_tools = await client_service.discover_tools(server.url, server.timeout)
+                
+                new_tools = 0
+                updated_tools = 0
+                errors = []
+                
+                for tool_info in discovered_tools:
+                    try:
+                        tool_name = f"{server_name}_{tool_info.get('name', 'unknown')}"
+                        original_name = tool_info.get('name', 'unknown')
+                        
+                        # Check if tool already exists
+                        existing_tool = await db.execute(
+                            select(MCPTool).where(MCPTool.name == tool_name)
+                        )
+                        existing_tool = existing_tool.scalar_one_or_none()
+                        
+                        if existing_tool:
+                            # Update existing tool (preserve enabled/disabled status)
+                            existing_tool.description = tool_info.get('description')
+                            existing_tool.parameters = tool_info.get('parameters', {})
+                            updated_tools += 1
+                            logger.info(f"Updated existing tool: {tool_name}")
+                        else:
+                            # Create new tool
+                            new_tool = MCPTool(
+                                name=tool_name,
+                                original_name=original_name,
+                                server_id=server.id,
+                                description=tool_info.get('description'),
+                                parameters=tool_info.get('parameters', {}),
+                                is_enabled=True  # New tools are enabled by default
+                            )
+                            db.add(new_tool)
+                            new_tools += 1
+                            logger.info(f"Discovered new tool: {tool_name}")
+                            
+                    except Exception as e:
+                        error_msg = f"Failed to process tool {tool_info.get('name', 'unknown')}: {e}"
+                        errors.append(error_msg)
+                        logger.error(error_msg)
+                
+                # Update server connection status
+                await MCPRegistryService.update_connection_status(server_name, True, False)
+                
+                await db.commit()
+                
+                result = {
+                    "success": True,
+                    "server": server_name,
+                    "new_tools": new_tools,
+                    "updated_tools": updated_tools,
+                    "total_discovered": len(discovered_tools),
+                    "errors": errors
+                }
+                
+                logger.info(f"Tool discovery completed for {server_name}: {new_tools} new, {updated_tools} updated")
+                return result
+                
+            except Exception as e:
+                error_msg = f"Failed to discover tools from server {server_name}: {e}"
+                logger.error(error_msg)
+                
+                # Update server connection status
+                await MCPRegistryService.update_connection_status(server_name, False, True)
+                
+                return {
+                    "success": False,
+                    "server": server_name,
+                    "error": str(e),
+                    "new_tools": 0,
+                    "updated_tools": 0,
+                    "total_discovered": 0
+                }
+
+    @staticmethod
+    async def discover_tools_all_servers() -> List[Dict[str, Any]]:
+        """Discover tools from all enabled MCP servers."""
+        async with AsyncSessionLocal() as db:
+            # Get all enabled servers
+            result = await db.execute(
+                select(MCPServer).where(MCPServer.is_enabled == True)
+            )
+            servers = result.scalars().all()
+            
+            if not servers:
+                logger.info("No enabled MCP servers found for tool discovery")
+                return []
+            
+            logger.info(f"Starting tool discovery for {len(servers)} servers")
+            discovery_results = []
+            
+            for server in servers:
+                result = await MCPRegistryService.discover_tools_from_server(server.name)
+                discovery_results.append(result)
+                
+                # Small delay between discoveries to avoid overwhelming servers
+                await asyncio.sleep(0.5)
+            
+            return discovery_results
+
+    @staticmethod
+    async def auto_discover_on_server_change(server_name: str, was_enabled: bool, is_enabled: bool) -> Optional[Dict[str, Any]]:
+        """Automatically discover tools when a server is enabled or re-enabled."""
+        if not was_enabled and is_enabled:
+            # Server was just enabled - discover tools
+            logger.info(f"Server {server_name} was enabled, starting automatic tool discovery")
+            return await MCPRegistryService.discover_tools_from_server(server_name)
+        
+        return None

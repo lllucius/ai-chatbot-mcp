@@ -151,7 +151,7 @@ class LLMProfileService:
 
     @staticmethod
     async def delete_profile(name: str) -> bool:
-        """Delete a profile."""
+        """Delete a profile and ensure a default remains."""
         async with AsyncSessionLocal() as db:
             profile = await db.execute(
                 select(LLMProfile).where(LLMProfile.name == name)
@@ -161,8 +161,14 @@ class LLMProfileService:
             if not profile:
                 return False
                 
+            was_default = profile.is_default
+            
             await db.delete(profile)
             await db.commit()
+            
+            # If we deleted the default profile, assign a new default
+            if was_default:
+                await LLMProfileService._ensure_default_profile()
             
             logger.info(f"Deleted LLM profile: {name}")
             return True
@@ -207,8 +213,19 @@ class LLMProfileService:
 
     @staticmethod
     async def deactivate_profile(name: str) -> bool:
-        """Deactivate a profile."""
+        """Deactivate a profile and ensure a default remains."""
         async with AsyncSessionLocal() as db:
+            # Get the profile to check if it's the default
+            profile = await db.execute(
+                select(LLMProfile).where(LLMProfile.name == name)
+            )
+            profile = profile.scalar_one_or_none()
+            
+            if not profile:
+                return False
+                
+            was_default = profile.is_default
+            
             result = await db.execute(
                 update(LLMProfile)
                 .where(LLMProfile.name == name)
@@ -217,6 +234,10 @@ class LLMProfileService:
             await db.commit()
             
             if result.rowcount > 0:
+                # If we deactivated the default profile, assign a new default
+                if was_default:
+                    await LLMProfileService._ensure_default_profile()
+                    
                 logger.info(f"Deactivated LLM profile: {name}")
                 return True
             return False
@@ -392,3 +413,34 @@ class LLMProfileService:
                 errors["frequency_penalty"] = "frequency_penalty must be between -2.0 and 2.0"
                 
         return errors
+
+    @staticmethod
+    async def _ensure_default_profile() -> bool:
+        """Ensure there is at least one default LLM profile active."""
+        async with AsyncSessionLocal() as db:
+            # Check if there's any active default profile
+            default_profile = await db.execute(
+                select(LLMProfile).where(and_(LLMProfile.is_default == True, LLMProfile.is_active == True))
+            )
+            default_profile = default_profile.scalar_one_or_none()
+            
+            if default_profile:
+                return True  # Already have a default
+            
+            # Find the most recently used active profile to make default
+            candidate = await db.execute(
+                select(LLMProfile)
+                .where(LLMProfile.is_active == True)
+                .order_by(LLMProfile.usage_count.desc(), LLMProfile.created_at.desc())
+                .limit(1)
+            )
+            candidate = candidate.scalar_one_or_none()
+            
+            if candidate:
+                candidate.is_default = True
+                await db.commit()
+                logger.info(f"Automatically assigned new default LLM profile: {candidate.name}")
+                return True
+            else:
+                logger.warning("No active LLM profiles available to set as default")
+                return False

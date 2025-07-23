@@ -148,7 +148,7 @@ class PromptService:
 
     @staticmethod
     async def delete_prompt(name: str) -> bool:
-        """Delete a prompt."""
+        """Delete a prompt and ensure a default remains."""
         async with AsyncSessionLocal() as db:
             prompt = await db.execute(
                 select(Prompt).where(Prompt.name == name)
@@ -157,9 +157,15 @@ class PromptService:
             
             if not prompt:
                 return False
-                
+            
+            was_default = prompt.is_default
+            
             await db.delete(prompt)
             await db.commit()
+            
+            # If we deleted the default prompt, assign a new default
+            if was_default:
+                await PromptService._ensure_default_prompt()
             
             logger.info(f"Deleted prompt: {name}")
             return True
@@ -204,8 +210,19 @@ class PromptService:
 
     @staticmethod
     async def deactivate_prompt(name: str) -> bool:
-        """Deactivate a prompt."""
+        """Deactivate a prompt and ensure a default remains."""
         async with AsyncSessionLocal() as db:
+            # Get the prompt to check if it's the default
+            prompt = await db.execute(
+                select(Prompt).where(Prompt.name == name)
+            )
+            prompt = prompt.scalar_one_or_none()
+            
+            if not prompt:
+                return False
+                
+            was_default = prompt.is_default
+            
             result = await db.execute(
                 update(Prompt)
                 .where(Prompt.name == name)
@@ -214,6 +231,10 @@ class PromptService:
             await db.commit()
             
             if result.rowcount > 0:
+                # If we deactivated the default prompt, assign a new default
+                if was_default:
+                    await PromptService._ensure_default_prompt()
+                    
                 logger.info(f"Deactivated prompt: {name}")
                 return True
             return False
@@ -318,3 +339,34 @@ class PromptService:
                 "categories": await PromptService.get_categories(),
                 "total_tags": len(await PromptService.get_all_tags())
             }
+
+    @staticmethod
+    async def _ensure_default_prompt() -> bool:
+        """Ensure there is at least one default prompt active."""
+        async with AsyncSessionLocal() as db:
+            # Check if there's any active default prompt
+            default_prompt = await db.execute(
+                select(Prompt).where(and_(Prompt.is_default == True, Prompt.is_active == True))
+            )
+            default_prompt = default_prompt.scalar_one_or_none()
+            
+            if default_prompt:
+                return True  # Already have a default
+            
+            # Find the most recently used active prompt to make default
+            candidate = await db.execute(
+                select(Prompt)
+                .where(Prompt.is_active == True)
+                .order_by(Prompt.usage_count.desc(), Prompt.created_at.desc())
+                .limit(1)
+            )
+            candidate = candidate.scalar_one_or_none()
+            
+            if candidate:
+                candidate.is_default = True
+                await db.commit()
+                logger.info(f"Automatically assigned new default prompt: {candidate.name}")
+                return True
+            else:
+                logger.warning("No active prompts available to set as default")
+                return False
