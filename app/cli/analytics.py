@@ -46,7 +46,7 @@ def overview():
                 # User metrics
                 total_users = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active == True)
+                    select(func.count(User.id)).where(User.is_active)
                 )
                 new_users_24h = await db.scalar(
                     select(func.count(User.id)).where(User.created_at >= last_24h)
@@ -70,7 +70,7 @@ def overview():
                 total_convs = await db.scalar(select(func.count(Conversation.id)))
                 active_convs = await db.scalar(
                     select(func.count(Conversation.id)).where(
-                        Conversation.is_active == True
+                        Conversation.is_active
                     )
                 )
                 total_messages = await db.scalar(select(func.count(Message.id)))
