@@ -9,24 +9,21 @@ Provides comprehensive analytics functionality including:
 - System health monitoring
 """
 
-import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 import typer
 from rich.columns import Columns
 from rich.panel import Panel
 from rich.table import Table
-from sqlalchemy import and_, desc, func, or_, select, text
+from sqlalchemy import and_, desc, func, select
 
 from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation, Message
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
 from .base import (async_command, console, error_message, format_size,
-                   format_timestamp, info_message, success_message,
-                   warning_message)
+                   info_message, success_message)
 
 # Create the analytics app
 analytics_app = typer.Typer(help="Analytics and reporting commands")

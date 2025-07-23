@@ -9,23 +9,17 @@ Provides comprehensive database management functionality including:
 - Health checks and diagnostics
 """
 
-import asyncio
-import json
 import os
 import subprocess
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional
 
 import typer
-from rich.progress import track
 from rich.table import Table
-from sqlalchemy import inspect, text
+from sqlalchemy import text
 
 from ..config import settings
-from ..database import AsyncSessionLocal, engine
-from .base import (async_command, console, error_message, format_timestamp,
-                   info_message, success_message, warning_message)
+from ..database import AsyncSessionLocal
+from .base import (async_command, console, error_message, info_message, success_message, warning_message)
 
 # Create the database management app
 database_app = typer.Typer(help="Database management commands")

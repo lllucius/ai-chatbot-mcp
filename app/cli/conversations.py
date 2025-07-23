@@ -9,22 +9,19 @@ Provides comprehensive conversation management functionality including:
 - Cleanup and archiving
 """
 
-import asyncio
 import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional
 
 import typer
 from rich.progress import track
 from rich.table import Table
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import desc, func, or_, select
 
 from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation, Message
 from ..models.user import User
-from ..services.conversation import ConversationService
 from .base import (async_command, console, error_message, format_timestamp,
                    info_message, success_message, warning_message)
 
@@ -458,7 +455,7 @@ def import_conversation(
                 db.add_all(imported_messages)
                 await db.commit()
                 
-                success_message(f"Conversation imported successfully!")
+                success_message("Conversation imported successfully!")
                 info_message(f"New conversation ID: {new_conversation.id}")
                 info_message(f"Imported messages: {len(imported_messages)}")
                 
@@ -516,7 +513,7 @@ def delete(
                     .where(Message.conversation_id == conversation_id)
                 )
                 
-                console.print(f"\n[bold red]This will permanently delete:[/bold red]")
+                console.print("\n[bold red]This will permanently delete:[/bold red]")
                 console.print(f"  • Conversation: {conversation.title}")
                 console.print(f"  • Messages: {message_count or 0}")
                 console.print()

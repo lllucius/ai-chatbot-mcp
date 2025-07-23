@@ -9,11 +9,9 @@ Provides comprehensive background task management functionality including:
 - Failed task recovery
 """
 
-import asyncio
 import json
 import subprocess
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 import typer
 from rich.panel import Panel
@@ -22,9 +20,7 @@ from rich.table import Table
 
 from ..database import AsyncSessionLocal
 from ..models.document import Document, FileStatus
-from ..services.background_processor import BackgroundProcessor
-from .base import (async_command, console, error_message, format_timestamp,
-                   info_message, success_message, warning_message)
+from .base import (async_command, console, error_message, info_message, success_message, warning_message)
 
 # Create the background tasks app
 tasks_app = typer.Typer(help="Background task management commands")
@@ -235,7 +231,7 @@ def queue():
                             str(failed_length)
                         )
                 
-                except Exception as e:
+                except Exception:
                     queue_table.add_row(queue_name, "Error", "Error", "Error")
             
             console.print(queue_table)

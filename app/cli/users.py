@@ -9,14 +9,12 @@ Provides comprehensive user management functionality including:
 - Bulk operations
 """
 
-import asyncio
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 import typer
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, or_, select
 
 from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation
@@ -272,7 +270,7 @@ def delete(
                     select(func.count(Conversation.id)).where(Conversation.user_id == user.id)
                 )
                 
-                console.print(f"\n[bold red]This will permanently delete:[/bold red]")
+                console.print("\n[bold red]This will permanently delete:[/bold red]")
                 console.print(f"  • User: {user.username} ({user.email})")
                 console.print(f"  • Documents: {doc_count or 0}")
                 console.print(f"  • Conversations: {conv_count or 0}")

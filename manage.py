@@ -29,7 +29,6 @@ Features:
 import sys
 from pathlib import Path
 import typer
-from rich.console import Console
 from rich.panel import Panel
 from rich.columns import Columns
 
@@ -167,7 +166,7 @@ def health():
 def quickstart():
     """Show quick start guide and common commands."""
     
-    quickstart_guide = f"""
+    quickstart_guide = """
 [bold]🚀 AI Chatbot Platform Management CLI - Quick Start[/bold]
 
 [yellow]1. First Time Setup:[/yellow]
@@ -234,7 +233,7 @@ def quickstart():
 def examples():
     """Show practical usage examples for common tasks."""
     
-    examples_text = f"""
+    examples_text = """
 [bold]📚 Practical Usage Examples[/bold]
 
 [yellow]👤 User Management Examples:[/yellow]

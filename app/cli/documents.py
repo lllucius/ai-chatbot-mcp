@@ -9,12 +9,10 @@ Provides comprehensive document management functionality including:
 - Bulk operations
 """
 
-import asyncio
 import mimetypes
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional
 
 import typer
 from rich.progress import track
@@ -24,7 +22,6 @@ from sqlalchemy import and_, desc, func, or_, select
 from ..database import AsyncSessionLocal
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
-from ..services.background_processor import BackgroundProcessor
 from ..services.document import DocumentService
 from .base import (async_command, console, error_message, format_size,
                    format_timestamp, info_message, progress_context,
@@ -371,7 +368,7 @@ def delete(
                     .where(DocumentChunk.document_id == document_id)
                 )
                 
-                console.print(f"\n[bold red]This will permanently delete:[/bold red]")
+                console.print("\n[bold red]This will permanently delete:[/bold red]")
                 console.print(f"  • Document: {document.title}")
                 console.print(f"  • File: {document.filename}")
                 console.print(f"  • Chunks: {chunk_count or 0}")
@@ -463,7 +460,6 @@ def search(
             try:
                 from ..services.search import SearchService
                 from ..schemas.document import DocumentSearchRequest
-                import uuid
                 
                 search_service = SearchService(db)
                 

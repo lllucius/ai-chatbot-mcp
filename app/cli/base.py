@@ -4,7 +4,7 @@ Base CLI utilities and common functionality.
 
 import asyncio
 from contextlib import asynccontextmanager
-from typing import Any, Callable
+from typing import Callable
 
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -21,7 +21,6 @@ def async_command(func: Callable) -> Callable:
             # If there's already a running loop, we can't use asyncio.run()
             # Instead, create a task
             import concurrent.futures
-            import threading
             
             # Run in a separate thread to avoid nested loop issues
             def run_in_thread():

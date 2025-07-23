@@ -9,10 +9,8 @@ Current User: lllucius
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 
-from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
 from ..schemas.common import BaseResponse
