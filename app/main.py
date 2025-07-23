@@ -21,7 +21,8 @@ from fastapi.responses import JSONResponse
 
 # Import API routers
 from .api import (auth_router, conversations_router, documents_router,
-                  health_router, search_router, tools_router, users_router)
+                  health_router, profiles_router, prompts_router, search_router,
+                  tools_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .database import close_db, init_db
@@ -333,6 +334,11 @@ app.include_router(
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 
 app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
+
+# Registry-based API routes
+app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
+
+app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"])
 
 
 # Root endpoint

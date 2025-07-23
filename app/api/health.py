@@ -257,9 +257,9 @@ async def _check_openai_health() -> Dict[str, Any]:
 
 
 async def _check_fastmcp_health() -> Dict[str, Any]:
-    """Check FastMCP services health (optional service)."""
+    """Check FastMCP services health with enhanced registry integration."""
     try:
-        from ..services.mcp_client import get_mcp_client
+        from ..services.enhanced_mcp_client import get_enhanced_mcp_client
 
         if not settings.mcp_enabled:
             return {
@@ -268,8 +268,8 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
                 "enabled": False,
             }
 
-        mcp_client = await get_mcp_client()
-        health_result = await mcp_client.health_check()
+        enhanced_client = await get_enhanced_mcp_client()
+        health_result = await enhanced_client.health_check()
 
         if not health_result.get("fastmcp_available"):
             return {
@@ -279,37 +279,40 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
                 "available": False,
             }
 
-        healthy_servers = health_result.get("healthy_servers", 0)
-        total_servers = health_result.get("total_servers", 0)
-
-        if healthy_servers == 0:
-            status = "warning"  # Changed from "unhealthy"
-            message = "No MCP servers are healthy (optional service)"
-        elif healthy_servers < total_servers:
+        # Get registry-specific information
+        registry_info = health_result.get("registry", {})
+        total_servers = registry_info.get("total_servers", 0)
+        enabled_servers = registry_info.get("enabled_servers", 0)
+        connected_servers = health_result.get("connected_servers", 0)
+        
+        if connected_servers == 0:
             status = "warning"
-            message = (
-                f"Some MCP servers are unhealthy ({healthy_servers}/{total_servers})"
-            )
+            message = "No MCP servers are connected (optional service)"
+        elif connected_servers < enabled_servers:
+            status = "warning"
+            message = f"Some MCP servers are disconnected ({connected_servers}/{enabled_servers})"
         else:
             status = "healthy"
-            message = f"All MCP servers are healthy ({healthy_servers}/{total_servers})"
+            message = f"All enabled MCP servers are connected ({connected_servers}/{enabled_servers})"
 
         return {
             "status": status,
             "message": message,
             "enabled": settings.mcp_enabled,
             "available": True,
-            "healthy_servers": healthy_servers,
+            "registry": registry_info,
+            "connected_servers": connected_servers,
+            "enabled_servers": enabled_servers,
             "total_servers": total_servers,
             "initialized": health_result.get("initialized", False),
             "server_status": health_result.get("server_status", {}),
-            "tools_count": health_result.get("tools_count", 0),
+            "tools_count": registry_info.get("enabled_tools", 0),
         }
 
     except Exception as e:
-        logger.warning(f"FastMCP health check failed: {e}")  # Changed from error
+        logger.warning(f"FastMCP health check failed: {e}")
         return {
-            "status": "warning",  # Changed from "unhealthy"
+            "status": "warning",
             "message": f"FastMCP check failed: {str(e)} (optional service)",
             "enabled": settings.mcp_enabled,
             "available": False,

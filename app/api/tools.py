@@ -108,46 +108,52 @@ async def get_tool_details(
     current_user: User = Depends(get_current_superuser),
 ):
     """
-    Get detailed information about a specific tool.
+    Get detailed information about a specific tool with registry integration.
 
-    Returns the complete schema, configuration, and status
-    information for the specified tool.
+    Returns the complete schema, configuration, status information,
+    and usage statistics for the specified tool.
     """
     log_api_call("get_tool_details", user_id=current_user.id, tool_name=tool_name)
 
     try:
-        mcp_client = await get_mcp_client()
+        # Get tool from registry
+        tool = await MCPRegistryService.get_tool(tool_name)
 
-        if not mcp_client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="MCP client not available",
-            )
-
-        # Get tool schema
-        tool_schema = mcp_client.get_tool_schema(tool_name)
-
-        if not tool_schema:
+        if not tool:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tool '{tool_name}' not found",
+                detail=f"Tool '{tool_name}' not found in registry",
             )
 
-        # Get additional tool information
-        available_tools = mcp_client.get_available_tools()
+        # Get enhanced client
+        enhanced_client = await get_enhanced_mcp_client()
+        available_tools = await enhanced_client.get_available_tools(enabled_only=False)
         tool_info = available_tools.get(tool_name, {})
 
         return {
             "success": True,
             "data": {
-                "name": tool_name,
-                "schema": tool_schema,
-                "enabled": tool_info.get("enabled", True),
-                "server": tool_info.get("server", "unknown"),
-                "description": tool_schema.get("description", ""),
-                "parameters": tool_schema.get("parameters", {}),
-                "last_used": tool_info.get("last_used"),
-                "usage_count": tool_info.get("usage_count", 0),
+                "name": tool.name,
+                "original_name": tool.original_name,
+                "server": tool.server.name,
+                "description": tool.description,
+                "parameters": tool.parameters,
+                "is_enabled": tool.is_enabled,
+                "usage_statistics": {
+                    "usage_count": tool.usage_count,
+                    "success_count": tool.success_count,
+                    "error_count": tool.error_count,
+                    "success_rate": tool.success_rate,
+                    "average_duration_ms": tool.average_duration_ms,
+                    "last_used_at": tool.last_used_at.isoformat() if tool.last_used_at else None,
+                },
+                "server_info": {
+                    "server_name": tool.server.name,
+                    "server_url": tool.server.url,
+                    "server_enabled": tool.server.is_enabled,
+                    "server_connected": tool.server.is_connected,
+                },
+                "registry_info": tool_info,
             },
         }
 
@@ -347,67 +353,63 @@ async def get_server_status(
     current_user: User = Depends(get_current_superuser),
 ):
     """
-    Get status of all configured MCP servers.
+    Get status of all configured MCP servers with registry integration.
 
     Returns connection status, tool counts, and health information
-    for all configured MCP servers.
+    for all configured MCP servers from the registry.
     """
     log_api_call("get_server_status", user_id=current_user.id)
 
     try:
-        mcp_client = await get_mcp_client()
+        # Get servers from registry
+        servers = await MCPRegistryService.list_servers()
 
-        if not mcp_client:
+        if not servers:
             return {
                 "success": True,
                 "data": {
                     "servers": {},
                     "total_servers": 0,
                     "connected_servers": 0,
-                    "mcp_enabled": False,
+                    "enabled_servers": 0,
+                    "mcp_enabled": True,
                 },
             }
 
         server_status = {}
         connected_count = 0
+        enabled_count = 0
 
-        for server_name, server_config in mcp_client.servers.items():
-            try:
-                # Check server health
-                # In a real implementation, you might ping the server or check last successful call
-                server_status[server_name] = {
-                    "name": server_name,
-                    "url": getattr(server_config, "url", "unknown"),
-                    "status": "connected",
-                    "last_check": "2024-01-22T20:59:27Z",
-                    "response_time": "150ms",
-                    "tool_count": len(
-                        [
-                            t
-                            for t in mcp_client.get_available_tools().keys()
-                            if t.startswith(f"{server_name}:")
-                        ]
-                    ),
-                    "error": None,
-                }
+        for server in servers:
+            # Get tools for this server
+            tools = await MCPRegistryService.list_tools(server_name=server.name)
+            
+            server_status[server.name] = {
+                "name": server.name,
+                "url": server.url,
+                "status": "connected" if server.is_connected else "disconnected",
+                "enabled": server.is_enabled,
+                "last_connected": server.last_connected_at.isoformat() if server.last_connected_at else None,
+                "connection_errors": server.connection_errors,
+                "tool_count": len(tools),
+                "enabled_tools": len([t for t in tools if t.is_enabled]),
+                "transport": server.transport,
+                "timeout": server.timeout,
+                "description": server.description,
+            }
+            
+            if server.is_connected:
                 connected_count += 1
-            except Exception as e:
-                server_status[server_name] = {
-                    "name": server_name,
-                    "url": getattr(server_config, "url", "unknown"),
-                    "status": "error",
-                    "last_check": "2024-01-22T20:59:27Z",
-                    "response_time": None,
-                    "tool_count": 0,
-                    "error": str(e),
-                }
+            if server.is_enabled:
+                enabled_count += 1
 
         return {
             "success": True,
             "data": {
                 "servers": server_status,
-                "total_servers": len(server_status),
+                "total_servers": len(servers),
                 "connected_servers": connected_count,
+                "enabled_servers": enabled_count,
                 "mcp_enabled": True,
             },
         }

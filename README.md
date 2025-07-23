@@ -238,6 +238,68 @@ response = httpx.post("http://localhost:8000/api/v1/conversations/chat",
 )
 ```
 
+### Registry-Based Management APIs
+
+The platform includes comprehensive registry APIs for managing prompts, LLM profiles, and MCP tools:
+
+#### Prompt Management
+```python
+# List available prompts
+response = httpx.get("http://localhost:8000/api/v1/prompts/", headers=headers)
+prompts = response.json()["data"]["prompts"]
+
+# Get specific prompt
+response = httpx.get("http://localhost:8000/api/v1/prompts/technical_assistant", headers=headers)
+prompt_details = response.json()["data"]
+
+# Use specific prompt in chat
+response = httpx.post("http://localhost:8000/api/v1/conversations/chat",
+    json={
+        "user_message": "Explain quantum computing",
+        "prompt_name": "technical_assistant",
+        "use_rag": True
+    },
+    headers=headers
+)
+```
+
+#### LLM Profile Management
+```python
+# List available LLM profiles
+response = httpx.get("http://localhost:8000/api/v1/profiles/", headers=headers)
+profiles = response.json()["data"]["profiles"]
+
+# Get specific profile parameters
+response = httpx.get("http://localhost:8000/api/v1/profiles/creative", headers=headers)
+profile_params = response.json()["data"]["parameters"]
+
+# Use specific profile in chat
+response = httpx.post("http://localhost:8000/api/v1/conversations/chat",
+    json={
+        "user_message": "Write a short story",
+        "profile_name": "creative",
+        "temperature": 1.0  # Override profile parameter
+    },
+    headers=headers
+)
+```
+
+#### Enhanced Tool Management
+```python
+# List available MCP tools with registry information
+response = httpx.get("http://localhost:8000/api/v1/tools/", headers=headers)
+tools_data = response.json()["data"]
+print(f"Total tools: {tools_data['total_tools']}")
+print(f"Enabled tools: {tools_data['enabled_tools']}")
+
+# Enable/disable specific tools
+response = httpx.post("http://localhost:8000/api/v1/tools/weather_tool/enable", headers=headers)
+
+# Get tool usage statistics
+stats = tools_data["tool_statistics"]
+```
+```
+
 ## 🔧 Management Commands
 
 The platform now includes a comprehensive CLI management system that provides full administrative capabilities:
