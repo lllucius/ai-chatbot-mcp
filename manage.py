@@ -42,6 +42,9 @@ from app.cli.conversations import conversation_app
 from app.cli.analytics import analytics_app
 from app.cli.database import database_app
 from app.cli.tasks import tasks_app
+from app.cli.mcp import mcp_app
+from app.cli.prompts import prompt_app
+from app.cli.profiles import profile_app
 from app.cli.base import console, success_message, info_message
 
 # Create the main Typer app
@@ -58,6 +61,9 @@ app.add_typer(conversation_app, name="conversations", help="💬 Conversation ma
 app.add_typer(analytics_app, name="analytics", help="📊 Analytics and reporting commands")
 app.add_typer(database_app, name="database", help="🗄️ Database management commands")
 app.add_typer(tasks_app, name="tasks", help="⚙️ Background task management commands")
+app.add_typer(mcp_app, name="mcp", help="🔌 MCP server and tool management commands")
+app.add_typer(prompt_app, name="prompts", help="📝 Prompt management commands")
+app.add_typer(profile_app, name="profiles", help="🎛️ LLM parameter profile management commands")
 
 
 @app.command()
