@@ -40,7 +40,7 @@ def async_command(func: Callable) -> Callable:
         """
         try:
             # Try to get the current event loop
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # If there's already a running loop, we can't use asyncio.run()
             # Instead, create a task
             import concurrent.futures

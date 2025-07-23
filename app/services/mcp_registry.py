@@ -90,9 +90,9 @@ class MCPRegistryService:
 
             filters = []
             if enabled_only:
-                filters.append(MCPServer.is_enabled == True)
+                filters.append(MCPServer.is_enabled)
             if connected_only:
-                filters.append(MCPServer.is_connected == True)
+                filters.append(MCPServer.is_connected)
 
             if filters:
                 query = query.where(and_(*filters))
@@ -268,7 +268,7 @@ class MCPRegistryService:
                 query = query.join(MCPServer)
                 filters.append(MCPServer.name == server_name)
             if enabled_only:
-                filters.append(MCPTool.is_enabled == True)
+                filters.append(MCPTool.is_enabled)
 
             if filters:
                 query = query.where(and_(*filters))
@@ -469,9 +469,7 @@ class MCPRegistryService:
         """Discover tools from all enabled MCP servers."""
         async with AsyncSessionLocal() as db:
             # Get all enabled servers
-            result = await db.execute(
-                select(MCPServer).where(MCPServer.is_enabled == True)
-            )
+            result = await db.execute(select(MCPServer).where(MCPServer.is_enabled))
             servers = result.scalars().all()
 
             if not servers:

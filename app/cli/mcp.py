@@ -17,7 +17,8 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..services.mcp_registry import MCPRegistryService
-from .base import console, error_message, info_message, success_message, warning_message
+from .base import (console, error_message, info_message, success_message,
+                   warning_message)
 
 # Create the MCP management app
 mcp_app = typer.Typer(

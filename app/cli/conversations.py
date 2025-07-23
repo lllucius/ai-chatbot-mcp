@@ -64,7 +64,7 @@ def list(
                     query = query.where(Conversation.user_id == user.id)
 
                 if active_only:
-                    query = query.where(Conversation.is_active == True)
+                    query = query.where(Conversation.is_active)
 
                 if search:
                     search_pattern = f"%{search.lower()}%"
@@ -655,10 +655,10 @@ def archive(
 
                 if inactive_only:
                     # Only archive already inactive conversations, just update their status
-                    query = query.where(Conversation.is_active == False)
+                    query = query.where(not Conversation.is_active)
                 else:
                     # Archive active conversations by making them inactive
-                    query = query.where(Conversation.is_active == True)
+                    query = query.where(Conversation.is_active)
 
                 result = await db.execute(query)
                 conversations = result.scalars().all()
@@ -709,7 +709,7 @@ def archive(
 
 @conversation_app.command()
 def search(
-    search_query: str = typer.Argument(..., help="Search query"),
+    query: str = typer.Argument(..., help="Search query"),
     limit: int = typer.Option(10, "--limit", "-l", help="Maximum number of results"),
     username: str = typer.Option(None, "--user", "-u", help="Filter by username"),
 ):
@@ -720,7 +720,7 @@ def search(
         async with AsyncSessionLocal() as db:
             try:
                 # Search in conversation titles and message content
-                search_pattern = f"%{search_query.lower()}%"
+                search_pattern = f"%{query.lower()}%"
 
                 # Base query
                 base_query = select(Conversation, Message).join(Message, isouter=True)
@@ -818,9 +818,7 @@ def stats():
                 # Basic conversation counts
                 total_convs = await db.scalar(select(func.count(Conversation.id)))
                 active_convs = await db.scalar(
-                    select(func.count(Conversation.id)).where(
-                        Conversation.is_active == True
-                    )
+                    select(func.count(Conversation.id)).where(Conversation.is_active)
                 )
                 inactive_convs = total_convs - active_convs
 

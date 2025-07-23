@@ -206,20 +206,6 @@ class UserService(BaseService):
             total_messages = msg_count_result.scalar() or 0
 
             # Create comprehensive profile data
-            profile_data = {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name,
-                "is_active": user.is_active,
-                "is_superuser": user.is_superuser,
-                "last_login": user.last_login,
-                "created_at": user.created_at,
-                "updated_at": user.updated_at,
-                "document_count": document_count,
-                "conversation_count": conversation_count,
-                "total_messages": total_messages,
-            }
 
             self._log_operation_success(
                 operation,

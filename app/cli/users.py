@@ -171,10 +171,10 @@ def list(
 
                 # Apply filters
                 if active_only:
-                    query = query.where(User.is_active == True)
+                    query = query.where(User.is_active)
 
                 if superusers_only:
-                    query = query.where(User.is_superuser == True)
+                    query = query.where(User.is_superuser)
 
                 if search:
                     search_pattern = f"%{search.lower()}%"
@@ -535,11 +535,11 @@ def stats():
                 # Basic user counts
                 total_users = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active == True)
+                    select(func.count(User.id)).where(User.is_active)
                 )
                 inactive_users = total_users - active_users
                 superusers = await db.scalar(
-                    select(func.count(User.id)).where(User.is_superuser == True)
+                    select(func.count(User.id)).where(User.is_superuser)
                 )
 
                 # Recent registrations

@@ -68,7 +68,7 @@ class PromptService:
     async def get_default_prompt() -> Optional[Prompt]:
         """Get the default prompt."""
         async with AsyncSessionLocal() as db:
-            result = await db.execute(select(Prompt).where(Prompt.is_default == True))
+            result = await db.execute(select(Prompt).where(Prompt.is_default))
             return result.scalar_one_or_none()
 
     @staticmethod
@@ -83,7 +83,7 @@ class PromptService:
 
             filters = []
             if active_only:
-                filters.append(Prompt.is_active == True)
+                filters.append(Prompt.is_active)
             if category:
                 filters.append(Prompt.category == category)
             if search:
@@ -262,7 +262,7 @@ class PromptService:
             # Total counts
             total_prompts = await db.scalar(select(func.count(Prompt.id)))
             active_prompts = await db.scalar(
-                select(func.count(Prompt.id)).where(Prompt.is_active == True)
+                select(func.count(Prompt.id)).where(Prompt.is_active)
             )
 
             # Most used prompts
@@ -316,9 +316,7 @@ class PromptService:
         async with AsyncSessionLocal() as db:
             # Check if there's any active default prompt
             default_prompt = await db.execute(
-                select(Prompt).where(
-                    and_(Prompt.is_default == True, Prompt.is_active == True)
-                )
+                select(Prompt).where(and_(Prompt.is_default, Prompt.is_active))
             )
             default_prompt = default_prompt.scalar_one_or_none()
 
@@ -328,7 +326,7 @@ class PromptService:
             # Find the most recently used active prompt to make default
             candidate = await db.execute(
                 select(Prompt)
-                .where(Prompt.is_active == True)
+                .where(Prompt.is_active)
                 .order_by(Prompt.usage_count.desc(), Prompt.created_at.desc())
                 .limit(1)
             )

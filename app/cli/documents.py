@@ -98,7 +98,7 @@ def upload(
                         info_message("Created system user for document ownership")
                     user_id = system_user.id
 
-                document_service = DocumentService(db)
+                DocumentService(db)
 
                 # Read file content
                 with open(file_path, "rb") as f:

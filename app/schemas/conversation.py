@@ -188,7 +188,7 @@ class ChatRequest(BaseSchema):
         None, ge=1, le=4000, description="Maximum response tokens"
     )
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Response temperature")
-    
+
     # Registry integration fields
     prompt_name: Optional[str] = Field(
         None, description="Name of prompt to use from prompt registry"

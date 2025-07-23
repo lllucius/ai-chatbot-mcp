@@ -18,7 +18,6 @@ from ..dependencies import get_current_superuser
 from ..models.user import User
 from ..schemas.common import BaseResponse
 from ..services.enhanced_mcp_client import get_enhanced_mcp_client
-from ..services.mcp_client import get_mcp_client
 from ..services.mcp_registry import MCPRegistryService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -54,14 +53,24 @@ async def list_tools(
         # Get registry servers and their status
         servers = await MCPRegistryService.list_servers()
         server_status = {}
-        
+
         for server in servers:
             server_status[server.name] = {
                 "status": "connected" if server.is_connected else "disconnected",
                 "enabled": server.is_enabled,
                 "url": server.url,
-                "tool_count": len([t for t in available_tools.keys() if t.startswith(f"{server.name}_")]),
-                "last_connected": server.last_connected_at.isoformat() if server.last_connected_at else None,
+                "tool_count": len(
+                    [
+                        t
+                        for t in available_tools.keys()
+                        if t.startswith(f"{server.name}_")
+                    ]
+                ),
+                "last_connected": (
+                    server.last_connected_at.isoformat()
+                    if server.last_connected_at
+                    else None
+                ),
                 "connection_errors": server.connection_errors,
             }
 
@@ -76,7 +85,9 @@ async def list_tools(
                 "servers": server_status,
                 "tool_statistics": tool_stats,
                 "total_tools": len(available_tools),
-                "enabled_tools": len([t for t in available_tools.values() if t.get("is_enabled", True)]),
+                "enabled_tools": len(
+                    [t for t in available_tools.values() if t.get("is_enabled", True)]
+                ),
                 "total_servers": len(servers),
                 "enabled_servers": len([s for s in servers if s.is_enabled]),
                 "connected_servers": len([s for s in servers if s.is_connected]),
@@ -232,19 +243,22 @@ async def refresh_tools(
     try:
         # Discover tools from all servers using registry service
         results = await MCPRegistryService.discover_tools_all_servers()
-        
+
         if not results:
             return BaseResponse(
-                success=True, 
-                message="No enabled servers found for tool discovery"
+                success=True, message="No enabled servers found for tool discovery"
             )
 
         # Summarize results
         total_new = sum(r.get("new_tools", 0) for r in results if r.get("success"))
-        total_updated = sum(r.get("updated_tools", 0) for r in results if r.get("success"))
+        total_updated = sum(
+            r.get("updated_tools", 0) for r in results if r.get("success")
+        )
         failed_servers = [r.get("server") for r in results if not r.get("success")]
 
-        message = f"Tools refreshed successfully: {total_new} new, {total_updated} updated"
+        message = (
+            f"Tools refreshed successfully: {total_new} new, {total_updated} updated"
+        )
         if failed_servers:
             message += f". Failed servers: {', '.join(failed_servers)}"
 
@@ -265,18 +279,17 @@ async def enable_tool(
 ):
     """
     Enable a specific tool in the registry.
-    
+
     Enables the tool for use in conversations and tool calling.
     """
     log_api_call("enable_tool", user_id=current_user.id, tool_name=tool_name)
 
     try:
         success = await MCPRegistryService.enable_tool(tool_name)
-        
+
         if success:
             return BaseResponse(
-                success=True, 
-                message=f"Tool '{tool_name}' enabled successfully"
+                success=True, message=f"Tool '{tool_name}' enabled successfully"
             )
         else:
             raise HTTPException(
@@ -301,18 +314,17 @@ async def disable_tool(
 ):
     """
     Disable a specific tool in the registry.
-    
+
     Disables the tool from being used in conversations and tool calling.
     """
     log_api_call("disable_tool", user_id=current_user.id, tool_name=tool_name)
 
     try:
         success = await MCPRegistryService.disable_tool(tool_name)
-        
+
         if success:
             return BaseResponse(
-                success=True, 
-                message=f"Tool '{tool_name}' disabled successfully"
+                success=True, message=f"Tool '{tool_name}' disabled successfully"
             )
         else:
             raise HTTPException(

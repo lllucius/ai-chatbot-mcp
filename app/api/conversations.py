@@ -244,7 +244,7 @@ async def chat(
     Sends a user message to the AI assistant and returns the response.
     Supports RAG (Retrieval-Augmented Generation) for context-aware responses,
     tool calling for enhanced functionality, and registry-based prompt/profile management.
-    
+
     Enhanced Features:
     - Registry-based prompt management for consistent system prompts
     - LLM profile management for parameter optimization
@@ -259,7 +259,7 @@ async def chat(
             # This demonstrates the integration capability
             # In future iterations, this could fully replace the service call
             try:
-                enhanced_request = await EnhancedConversationService.prepare_chat_request(
+                _ = await EnhancedConversationService.prepare_chat_request(
                     user_message=request.user_message,
                     prompt_name=request.prompt_name,
                     profile_name=request.profile_name,
@@ -270,7 +270,7 @@ async def chat(
                 )
                 # Note: Enhanced request is prepared but we're using existing service
                 # for compatibility. Future versions will use enhanced_request directly.
-            except Exception as e:
+            except Exception:
                 # Log the error but continue with standard processing
                 pass
 
@@ -385,7 +385,7 @@ async def get_registry_stats(
 ):
     """
     Get registry statistics showing prompt, profile, and tool usage.
-    
+
     Returns comprehensive statistics about registry usage including:
     - Active prompts and most used prompts
     - Active LLM profiles and usage patterns
@@ -393,7 +393,7 @@ async def get_registry_stats(
     """
     try:
         registry_stats = await EnhancedConversationService.get_conversation_stats()
-        
+
         return {
             "success": True,
             "message": "Registry statistics retrieved successfully",
