@@ -196,8 +196,7 @@ class OpenAIClient:
     async def chat_completion(
         self,
         messages: List[Dict[str, Any]],
-        temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        llm_profile: Optional[Any] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
         use_unified_tools: bool = True,
@@ -209,8 +208,7 @@ class OpenAIClient:
 
         Args:
             messages: List of messages
-            temperature: Response randomness (0-2)
-            max_tokens: Maximum tokens in response
+            llm_profile: LLM profile object containing model parameters (temperature, max_tokens, etc.)
             tools: Custom tools (if None, will use unified tools if available)
             tool_choice: Tool choice strategy
             use_unified_tools: Whether to automatically include unified tools
@@ -243,11 +241,15 @@ class OpenAIClient:
         request_params = {
             "model": settings.openai_chat_model,
             "messages": messages,
-            "temperature": temperature,
         }
 
-        if max_tokens:
-            request_params["max_tokens"] = max_tokens
+        # Add LLM profile parameters if provided
+        if llm_profile:
+            profile_params = llm_profile.to_openai_params()
+            request_params.update(profile_params)
+        else:
+            # Default parameters when no profile provided
+            request_params["temperature"] = 0.7
 
         if final_tools:
             request_params["tools"] = final_tools
@@ -304,8 +306,7 @@ class OpenAIClient:
                     messages,
                     message.tool_calls,
                     tool_calls_executed,
-                    temperature,
-                    max_tokens,
+                    llm_profile,
                 )
                 final_content = final_completion["content"]
                 # Add the additional usage from the second completion
@@ -338,8 +339,7 @@ class OpenAIClient:
     async def chat_completion_stream(
         self,
         messages: List[Dict[str, Any]],
-        temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        llm_profile: Optional[Any] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
         use_unified_tools: bool = True,
@@ -351,8 +351,7 @@ class OpenAIClient:
 
         Args:
             messages: List of messages
-            temperature: Response randomness (0-2)
-            max_tokens: Maximum tokens in response
+            llm_profile: LLM profile object containing model parameters (temperature, max_tokens, etc.)
             tools: Custom tools (if None, will use unified tools if available)
             tool_choice: Tool choice strategy
             use_unified_tools: Whether to automatically include unified tools
@@ -383,12 +382,16 @@ class OpenAIClient:
         request_params = {
             "model": settings.openai_chat_model,
             "messages": messages,
-            "temperature": temperature,
             "stream": True,  # Enable streaming
         }
 
-        if max_tokens:
-            request_params["max_tokens"] = max_tokens
+        # Add LLM profile parameters if provided
+        if llm_profile:
+            profile_params = llm_profile.to_openai_params()
+            request_params.update(profile_params)
+        else:
+            # Default parameters when no profile provided
+            request_params["temperature"] = 0.7
 
         if final_tools:
             request_params["tools"] = final_tools
@@ -540,8 +543,7 @@ class OpenAIClient:
         original_messages: List[Dict[str, Any]],
         tool_calls,
         tool_results: List[Dict[str, Any]],
-        temperature: float,
-        max_tokens: Optional[int],
+        llm_profile: Optional[Any],
     ) -> Dict[str, Any]:
         """
         Send tool results back to OpenAI for final completion.
@@ -552,8 +554,7 @@ class OpenAIClient:
             original_messages: Original message history
             tool_calls: Original tool calls from OpenAI
             tool_results: Results from tool execution
-            temperature: Response temperature
-            max_tokens: Maximum tokens for response
+            llm_profile: LLM profile with model parameters
 
         Returns:
             dict: Final completion response
@@ -595,10 +596,15 @@ class OpenAIClient:
             request_params = {
                 "model": settings.openai_chat_model,
                 "messages": completion_messages,
-                "temperature": temperature,
             }
-            if max_tokens:
-                request_params["max_tokens"] = max_tokens
+            
+            # Add LLM profile parameters if provided
+            if llm_profile:
+                profile_params = llm_profile.to_openai_params()
+                request_params.update(profile_params)
+            else:
+                # Default parameters when no profile provided
+                request_params["temperature"] = 0.7
 
             response = await self.client.chat.completions.create(**request_params)
             return response

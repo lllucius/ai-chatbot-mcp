@@ -359,27 +359,30 @@ class ConversationService(BaseService):
                             },
                         )
 
-            # Get LLM parameters from profile registry
-            openai_params = {}
+            # Get LLM profile object for process_chat
+            llm_profile = None
             try:
-                if request.profile_name:
-                    profile_params = await LLMProfileService.get_profile_for_openai(request.profile_name)
+                if request.llm_profile:
+                    # Use provided LLM profile object
+                    llm_profile = request.llm_profile
+                elif request.profile_name:
+                    # Load profile by name
+                    llm_profile = await LLMProfileService.get_profile(request.profile_name)
                 else:
-                    profile_params = await LLMProfileService.get_profile_for_openai()
+                    # Get default profile
+                    llm_profile = await LLMProfileService.get_default_profile()
                 
-                # Use profile parameters but allow request to override
-                openai_params.update(profile_params)
-                if request.temperature is not None:
-                    openai_params["temperature"] = request.temperature
-                if request.max_tokens is not None:
-                    openai_params["max_tokens"] = request.max_tokens
+                # Record profile usage if we have a profile
+                if llm_profile:
+                    await LLMProfileService.record_profile_usage(llm_profile.name)
             except Exception as e:
-                logger.warning(f"Failed to get LLM profile parameters: {e}")
-                # Fallback to request parameters
-                openai_params = {
-                    "temperature": request.temperature,
-                    "max_tokens": request.max_tokens,
-                }
+                logger.warning(f"Failed to get LLM profile: {e}")
+                llm_profile = None
+
+            # Prepare parameters for OpenAI client
+            openai_params = {
+                "llm_profile": llm_profile,
+            }
 
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:
@@ -513,27 +516,30 @@ class ConversationService(BaseService):
                             },
                         )
 
-            # Get LLM parameters from profile registry
-            openai_params = {}
+            # Get LLM profile object for process_chat_stream
+            llm_profile = None
             try:
-                if request.profile_name:
-                    profile_params = await LLMProfileService.get_profile_for_openai(request.profile_name)
+                if request.llm_profile:
+                    # Use provided LLM profile object
+                    llm_profile = request.llm_profile
+                elif request.profile_name:
+                    # Load profile by name
+                    llm_profile = await LLMProfileService.get_profile(request.profile_name)
                 else:
-                    profile_params = await LLMProfileService.get_profile_for_openai()
+                    # Get default profile
+                    llm_profile = await LLMProfileService.get_default_profile()
                 
-                # Use profile parameters but allow request to override
-                openai_params.update(profile_params)
-                if request.temperature is not None:
-                    openai_params["temperature"] = request.temperature
-                if request.max_tokens is not None:
-                    openai_params["max_tokens"] = request.max_tokens
+                # Record profile usage if we have a profile
+                if llm_profile:
+                    await LLMProfileService.record_profile_usage(llm_profile.name)
             except Exception as e:
-                logger.warning(f"Failed to get LLM profile parameters: {e}")
-                # Fallback to request parameters
-                openai_params = {
-                    "temperature": request.temperature,
-                    "max_tokens": request.max_tokens,
-                }
+                logger.warning(f"Failed to get LLM profile: {e}")
+                llm_profile = None
+
+            # Prepare parameters for OpenAI client
+            openai_params = {
+                "llm_profile": llm_profile,
+            }
 
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:

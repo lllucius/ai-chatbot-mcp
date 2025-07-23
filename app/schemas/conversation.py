@@ -184,10 +184,6 @@ class ChatRequest(BaseSchema):
     rag_documents: Optional[List[UUID]] = Field(
         None, description="Specific document IDs for RAG"
     )
-    max_tokens: Optional[int] = Field(
-        None, ge=1, le=4000, description="Maximum response tokens"
-    )
-    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Response temperature")
 
     # Registry integration fields
     prompt_name: Optional[str] = Field(
@@ -196,16 +192,12 @@ class ChatRequest(BaseSchema):
     profile_name: Optional[str] = Field(
         None, description="Name of LLM profile to use from profile registry"
     )
-
-    @field_validator("temperature")
-    @classmethod
-    def validate_temperature(cls, v):
-        """Validate temperature is within acceptable range."""
-        if not 0.0 <= v <= 2.0:
-            raise ValueError("Temperature must be between 0.0 and 2.0")
-        return v
+    llm_profile: Optional[Any] = Field(
+        None, description="LLM profile object with parameter configuration"
+    )
 
     model_config = {
+        "arbitrary_types_allowed": True,  # Allow SQLAlchemy models
         "json_schema_extra": {
             "example": {
                 "user_message": "What is machine learning?",
@@ -218,8 +210,6 @@ class ChatRequest(BaseSchema):
                     "4b40c3d9-208c-49ed-bd96-31c0b971e318",
                     "5c50a4ea-1111-49ed-bd96-31c0b971e319",
                 ],
-                "max_tokens": 1000,
-                "temperature": 0.7,
                 "prompt_name": "technical_assistant",
                 "profile_name": "balanced",
             }
