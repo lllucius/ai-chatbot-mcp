@@ -291,18 +291,30 @@ class OpenAIClient:
             # Handle based on tool handling mode
             if tool_handling_mode == ToolHandlingMode.RETURN_RESULTS:
                 # Mode 1: Return tool results as content
-                final_content = self._format_tool_results_as_content(tool_calls_executed)
-                logger.info("Returning tool results as content without further completion")
+                final_content = self._format_tool_results_as_content(
+                    tool_calls_executed
+                )
+                logger.info(
+                    "Returning tool results as content without further completion"
+                )
 
             elif tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS:
                 # Mode 2: Feed tool results back to OpenAI for final completion
                 final_completion = await self._complete_with_tool_results(
-                    messages, message.tool_calls, tool_calls_executed, temperature, max_tokens
+                    messages,
+                    message.tool_calls,
+                    tool_calls_executed,
+                    temperature,
+                    max_tokens,
                 )
                 final_content = final_completion["content"]
                 # Add the additional usage from the second completion
-                final_usage["prompt_tokens"] += final_completion["usage"]["prompt_tokens"]
-                final_usage["completion_tokens"] += final_completion["usage"]["completion_tokens"]
+                final_usage["prompt_tokens"] += final_completion["usage"][
+                    "prompt_tokens"
+                ]
+                final_usage["completion_tokens"] += final_completion["usage"][
+                    "completion_tokens"
+                ]
                 final_usage["total_tokens"] += final_completion["usage"]["total_tokens"]
                 logger.info("Completed with tool results fed back to OpenAI")
 
@@ -310,9 +322,11 @@ class OpenAIClient:
         result = {
             "content": final_content,
             "role": message.role,
-            "tool_calls": [tool_call.model_dump() for tool_call in message.tool_calls]
-            if message.tool_calls
-            else None,
+            "tool_calls": (
+                [tool_call.model_dump() for tool_call in message.tool_calls]
+                if message.tool_calls
+                else None
+            ),
             "tool_calls_executed": tool_calls_executed,
             "finish_reason": response.choices[0].finish_reason,
             "usage": final_usage,
@@ -383,41 +397,43 @@ class OpenAIClient:
         try:
             # Start streaming
             stream = await self.client.chat.completions.create(**request_params)
-            
+
             # Collect tool calls and full content
             tool_calls_data = []
             full_content = ""
-            
+
             async for chunk in stream:
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     full_content += content
                     yield {"type": "content", "content": content}
-                
+
                 # Handle tool calls if present
                 if chunk.choices[0].delta.tool_calls:
                     for tool_call in chunk.choices[0].delta.tool_calls:
                         # Note: OpenAI streams tool calls in parts, we'd need to collect and assemble them
                         if tool_call.function and tool_call.function.name:
                             tool_calls_data.append(tool_call)
-            
+
             # Execute any tool calls that were collected
             if tool_calls_data:
-                tool_calls_executed = await self._execute_unified_tool_calls(tool_calls_data)
+                tool_calls_executed = await self._execute_unified_tool_calls(
+                    tool_calls_data
+                )
                 for tool_result in tool_calls_executed:
                     yield {
                         "type": "tool_call",
                         "tool": tool_result.get("name"),
-                        "result": tool_result.get("result")
+                        "result": tool_result.get("result"),
                     }
-                
+
                 # If mode is COMPLETE_WITH_RESULTS, get final completion
                 if tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS:
                     # For simplicity in streaming, we'll yield the tool results
                     # A full implementation might do another streaming completion
                     yield {
                         "type": "content",
-                        "content": f"\n\n[Tool calls completed: {len(tool_calls_executed)} tools executed]"
+                        "content": f"\n\n[Tool calls completed: {len(tool_calls_executed)} tools executed]",
                     }
 
         except Exception as e:
@@ -463,26 +479,30 @@ class OpenAIClient:
             logger.error(f"Failed to execute unified tool calls: {e}")
             return []
 
-    def _format_tool_results_as_content(self, tool_results: List[Dict[str, Any]]) -> str:
+    def _format_tool_results_as_content(
+        self, tool_results: List[Dict[str, Any]]
+    ) -> str:
         """
         Format tool call results as human-readable content.
-        
+
         This method is used when tool_handling_mode is RETURN_RESULTS.
-        
+
         Args:
             tool_results: List of tool call results
-            
+
         Returns:
             str: Formatted content string
         """
         if not tool_results:
             return "No tools were executed."
-        
+
         content_parts = ["# Tool Execution Results\n"]
-        
+
         for i, result in enumerate(tool_results, 1):
-            content_parts.append(f"## Tool Call {i}: {result.get('tool_call_id', 'Unknown')}\n")
-            
+            content_parts.append(
+                f"## Tool Call {i}: {result.get('tool_call_id', 'Unknown')}\n"
+            )
+
             if result.get("success"):
                 content_parts.append("✅ **Status**: Success\n")
                 if result.get("content"):
@@ -490,9 +510,13 @@ class OpenAIClient:
                     for content_item in result["content"]:
                         if isinstance(content_item, dict):
                             if content_item.get("type") == "text":
-                                content_parts.append(f"```\n{content_item.get('text', '')}\n```\n")
+                                content_parts.append(
+                                    f"```\n{content_item.get('text', '')}\n```\n"
+                                )
                             else:
-                                content_parts.append(f"```json\n{json.dumps(content_item, indent=2)}\n```\n")
+                                content_parts.append(
+                                    f"```json\n{json.dumps(content_item, indent=2)}\n```\n"
+                                )
                         else:
                             content_parts.append(f"```\n{str(content_item)}\n```\n")
                 else:
@@ -501,12 +525,14 @@ class OpenAIClient:
                 content_parts.append("❌ **Status**: Failed\n")
                 if result.get("error"):
                     content_parts.append(f"**Error**: {result['error']}\n")
-            
+
             if result.get("execution_time_ms"):
-                content_parts.append(f"**Execution Time**: {result['execution_time_ms']:.2f}ms\n")
-            
+                content_parts.append(
+                    f"**Execution Time**: {result['execution_time_ms']:.2f}ms\n"
+                )
+
             content_parts.append("\n---\n\n")
-        
+
         return "".join(content_parts)
 
     async def _complete_with_tool_results(
@@ -515,43 +541,43 @@ class OpenAIClient:
         tool_calls,
         tool_results: List[Dict[str, Any]],
         temperature: float,
-        max_tokens: Optional[int]
+        max_tokens: Optional[int],
     ) -> Dict[str, Any]:
         """
         Send tool results back to OpenAI for final completion.
-        
+
         This method is used when tool_handling_mode is COMPLETE_WITH_RESULTS.
-        
+
         Args:
             original_messages: Original message history
             tool_calls: Original tool calls from OpenAI
             tool_results: Results from tool execution
             temperature: Response temperature
             max_tokens: Maximum tokens for response
-            
+
         Returns:
             dict: Final completion response
         """
         # Build messages with tool results
         completion_messages = original_messages.copy()
-        
+
         # Add the assistant's tool call message
         assistant_message = {
             "role": "assistant",
             "content": None,
-            "tool_calls": [tool_call.model_dump() for tool_call in tool_calls]
+            "tool_calls": [tool_call.model_dump() for tool_call in tool_calls],
         }
         completion_messages.append(assistant_message)
-        
+
         # Add tool results as tool messages
         for tool_call, result in zip(tool_calls, tool_results):
             tool_message = {
                 "role": "tool",
                 "tool_call_id": tool_call.id,
-                "content": self._format_tool_result_for_ai(result)
+                "content": self._format_tool_result_for_ai(result),
             }
             completion_messages.append(tool_message)
-        
+
         # Make final completion call
         @tool_operation(
             retry_config=RetryConfig(
@@ -573,7 +599,7 @@ class OpenAIClient:
             }
             if max_tokens:
                 request_params["max_tokens"] = max_tokens
-                
+
             response = await self.client.chat.completions.create(**request_params)
             return response
 
@@ -594,19 +620,19 @@ class OpenAIClient:
     def _format_tool_result_for_ai(self, result: Dict[str, Any]) -> str:
         """
         Format a single tool result for AI consumption.
-        
+
         Args:
             result: Tool execution result
-            
+
         Returns:
             str: Formatted result for AI
         """
         if not result.get("success"):
             return f"Tool execution failed: {result.get('error', 'Unknown error')}"
-        
+
         if not result.get("content"):
             return "Tool executed successfully but returned no content."
-        
+
         # Format content for AI
         content_parts = []
         for content_item in result["content"]:
@@ -617,8 +643,12 @@ class OpenAIClient:
                     content_parts.append(json.dumps(content_item, indent=2))
             else:
                 content_parts.append(str(content_item))
-        
-        return "\n\n".join(content_parts) if content_parts else "Tool executed successfully."
+
+        return (
+            "\n\n".join(content_parts)
+            if content_parts
+            else "Tool executed successfully."
+        )
 
     @handle_api_errors("Embedding creation failed")
     async def create_embedding(

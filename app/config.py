@@ -77,7 +77,9 @@ class Settings(BaseSettings):
     mcp_enabled: bool = Field(default=True, description="Enable FastMCP integration")
     mcp_timeout: int = Field(default=30, description="MCP operation timeout in seconds")
     mcp_servers: dict = Field(
-        default_factory=lambda: {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}},
+        default_factory=lambda: {
+            "tools": {"url": "http://localhost:9000/mcp", "transport": "http"}
+        },
         description="Dictionary of MCP servers",
     )
 
@@ -180,11 +182,14 @@ class Settings(BaseSettings):
         """Parse MCP servers from string or dict."""
         if isinstance(v, str):
             import json
+
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
                 logger.warning(f"Invalid JSON for mcp_servers: {v}")
-                return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
+                return {
+                    "tools": {"url": "http://localhost:9000/mcp", "transport": "http"}
+                }
         elif isinstance(v, dict):
             return v
         return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
@@ -216,7 +221,29 @@ class Settings(BaseSettings):
     @field_validator("allowed_headers", mode="before")
     @classmethod
     def parse_cors_headers(cls, v):
-        """Parse CORS headers from string or list."""
+        """
+        Parse CORS headers from string or list format.
+
+        Handles multiple input formats for CORS headers configuration:
+        - String with comma-separated values: "Content-Type,Authorization"
+        - Single asterisk for all headers: "*"
+        - Empty string defaults to wildcard: ""
+        - List format passes through unchanged: ["Content-Type", "Authorization"]
+
+        Args:
+            v: Input value (string or list) representing CORS headers
+
+        Returns:
+            list: Parsed list of header names, or ["*"] for wildcard
+
+        Examples:
+            >>> parse_cors_headers("Content-Type,Authorization")
+            ["Content-Type", "Authorization"]
+            >>> parse_cors_headers("*")
+            ["*"]
+            >>> parse_cors_headers("")
+            ["*"]
+        """
         if isinstance(v, str):
             if not v.strip():
                 return ["*"]

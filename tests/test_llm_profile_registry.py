@@ -18,19 +18,21 @@ class TestLLMProfileService:
     @pytest.mark.asyncio
     async def test_create_profile(self):
         """Test creating an LLM profile."""
-        with patch('app.services.llm_profile_service.AsyncSessionLocal') as mock_session:
+        with patch(
+            "app.services.llm_profile_service.AsyncSessionLocal"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-            
+
             profile = await LLMProfileService.create_profile(
                 name="test_profile",
                 title="Test Profile",
                 description="Test profile description",
                 temperature=0.7,
                 top_p=0.9,
-                max_tokens=2000
+                max_tokens=2000,
             )
-            
+
             # Verify database interaction
             mock_db.add.assert_called_once()
             mock_db.commit.assert_called_once()
@@ -39,17 +41,19 @@ class TestLLMProfileService:
     @pytest.mark.asyncio
     async def test_create_default_profile(self):
         """Test creating a default profile unsets other defaults."""
-        with patch('app.services.llm_profile_service.AsyncSessionLocal') as mock_session:
+        with patch(
+            "app.services.llm_profile_service.AsyncSessionLocal"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-            
+
             await LLMProfileService.create_profile(
                 name="default_profile",
                 title="Default Profile",
                 is_default=True,
-                temperature=0.5
+                temperature=0.5,
             )
-            
+
             # Should unset existing defaults first
             assert mock_db.execute.call_count >= 1
             mock_db.add.assert_called_once()
@@ -60,17 +64,15 @@ class TestLLMProfileService:
         """Test parameter validation."""
         # Test valid parameters
         errors = await LLMProfileService.validate_parameters(
-            temperature=0.7,
-            top_p=0.9,
-            max_tokens=2000
+            temperature=0.7, top_p=0.9, max_tokens=2000
         )
         assert len(errors) == 0
-        
+
         # Test invalid parameters
         errors = await LLMProfileService.validate_parameters(
             temperature=3.0,  # Too high
-            top_p=-0.1,       # Too low
-            max_tokens=-100   # Negative
+            top_p=-0.1,  # Too low
+            max_tokens=-100,  # Negative
         )
         assert len(errors) == 3
         assert "temperature" in errors
@@ -80,10 +82,12 @@ class TestLLMProfileService:
     @pytest.mark.asyncio
     async def test_clone_profile(self):
         """Test cloning an existing profile."""
-        with patch('app.services.llm_profile_service.AsyncSessionLocal') as mock_session:
+        with patch(
+            "app.services.llm_profile_service.AsyncSessionLocal"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-            
+
             # Mock source profile
             source_profile = AsyncMock()
             source_profile.title = "Original Profile"
@@ -95,18 +99,18 @@ class TestLLMProfileService:
             source_profile.frequency_penalty = 0.2
             source_profile.stop = ["STOP"]
             source_profile.other_params = {"custom": "value"}
-            
-            with patch.object(LLMProfileService, 'get_profile') as mock_get:
-                with patch.object(LLMProfileService, 'create_profile') as mock_create:
+
+            with patch.object(LLMProfileService, "get_profile") as mock_get:
+                with patch.object(LLMProfileService, "create_profile") as mock_create:
                     mock_get.return_value = source_profile
                     mock_create.return_value = AsyncMock()
-                    
+
                     cloned = await LLMProfileService.clone_profile(
                         source_name="original",
                         new_name="cloned",
-                        new_title="Cloned Profile"
+                        new_title="Cloned Profile",
                     )
-                    
+
                     # Verify create was called with correct parameters
                     mock_create.assert_called_once()
                     call_args = mock_create.call_args
@@ -118,20 +122,20 @@ class TestLLMProfileService:
     @pytest.mark.asyncio
     async def test_get_profile_for_openai(self):
         """Test getting profile parameters for OpenAI API."""
-        with patch.object(LLMProfileService, 'get_profile') as mock_get:
-            with patch.object(LLMProfileService, 'record_profile_usage') as mock_record:
+        with patch.object(LLMProfileService, "get_profile") as mock_get:
+            with patch.object(LLMProfileService, "record_profile_usage") as mock_record:
                 # Mock profile
                 mock_profile = AsyncMock()
                 mock_profile.name = "test_profile"
                 mock_profile.to_openai_params.return_value = {
                     "temperature": 0.7,
                     "top_p": 0.9,
-                    "max_tokens": 2000
+                    "max_tokens": 2000,
                 }
                 mock_get.return_value = mock_profile
-                
+
                 params = await LLMProfileService.get_profile_for_openai("test_profile")
-                
+
                 assert params["temperature"] == 0.7
                 assert params["top_p"] == 0.9
                 assert params["max_tokens"] == 2000
@@ -144,7 +148,7 @@ class TestLLMProfileModel:
     def test_profile_to_openai_params(self):
         """Test converting profile to OpenAI parameters."""
         from app.models.llm_profile import LLMProfile
-        
+
         profile = LLMProfile(
             name="test",
             title="Test Profile",
@@ -153,11 +157,11 @@ class TestLLMProfileModel:
             max_tokens=2000,
             presence_penalty=0.1,
             frequency_penalty=0.2,
-            stop=["STOP", "END"]
+            stop=["STOP", "END"],
         )
-        
+
         params = profile.to_openai_params()
-        
+
         assert params["temperature"] == 0.7
         assert params["top_p"] == 0.9
         assert params["max_tokens"] == 2000
@@ -168,16 +172,19 @@ class TestLLMProfileModel:
     def test_profile_to_openai_params_with_other_params(self):
         """Test converting profile with other_params to OpenAI parameters."""
         from app.models.llm_profile import LLMProfile
-        
+
         profile = LLMProfile(
             name="test",
             title="Test Profile",
             temperature=0.7,
-            other_params={"custom_param": "value", "temperature": 0.8}  # Should not override
+            other_params={
+                "custom_param": "value",
+                "temperature": 0.8,
+            },  # Should not override
         )
-        
+
         params = profile.to_openai_params()
-        
+
         assert params["temperature"] == 0.7  # Original value, not overridden
         assert params["custom_param"] == "value"
 
@@ -186,7 +193,7 @@ class TestLLMProfileModel:
         from datetime import datetime
 
         from app.models.llm_profile import LLMProfile
-        
+
         now = datetime.utcnow()
         profile = LLMProfile(
             name="test",
@@ -196,11 +203,11 @@ class TestLLMProfileModel:
             is_active=True,
             temperature=0.7,
             usage_count=5,
-            last_used_at=now
+            last_used_at=now,
         )
-        
+
         data = profile.to_dict()
-        
+
         assert data["name"] == "test"
         assert data["title"] == "Test Profile"
         assert data["description"] == "Test description"
@@ -215,15 +222,11 @@ class TestLLMProfileModel:
         from datetime import datetime
 
         from app.models.llm_profile import LLMProfile
-        
-        profile = LLMProfile(
-            name="test",
-            title="Test Profile",
-            usage_count=10
-        )
-        
+
+        profile = LLMProfile(name="test", title="Test Profile", usage_count=10)
+
         profile.record_usage()
-        
+
         assert profile.usage_count == 11
         assert isinstance(profile.last_used_at, datetime)
 
@@ -237,14 +240,14 @@ class TestLLMProfileParameterValidation:
         # Valid values
         errors = await LLMProfileService.validate_parameters(temperature=0.0)
         assert "temperature" not in errors
-        
+
         errors = await LLMProfileService.validate_parameters(temperature=2.0)
         assert "temperature" not in errors
-        
+
         # Invalid values
         errors = await LLMProfileService.validate_parameters(temperature=-0.1)
         assert "temperature" in errors
-        
+
         errors = await LLMProfileService.validate_parameters(temperature=2.1)
         assert "temperature" in errors
 
@@ -253,16 +256,14 @@ class TestLLMProfileParameterValidation:
         """Test penalty parameter validation."""
         # Valid values
         errors = await LLMProfileService.validate_parameters(
-            presence_penalty=-2.0,
-            frequency_penalty=2.0
+            presence_penalty=-2.0, frequency_penalty=2.0
         )
         assert "presence_penalty" not in errors
         assert "frequency_penalty" not in errors
-        
+
         # Invalid values
         errors = await LLMProfileService.validate_parameters(
-            presence_penalty=-2.1,
-            frequency_penalty=2.1
+            presence_penalty=-2.1, frequency_penalty=2.1
         )
         assert "presence_penalty" in errors
         assert "frequency_penalty" in errors
@@ -272,17 +273,13 @@ class TestLLMProfileParameterValidation:
         """Test positive integer parameter validation."""
         # Valid values
         errors = await LLMProfileService.validate_parameters(
-            top_k=50,
-            max_tokens=1000,
-            context_length=4000
+            top_k=50, max_tokens=1000, context_length=4000
         )
         assert len(errors) == 0
-        
+
         # Invalid values
         errors = await LLMProfileService.validate_parameters(
-            top_k=0,
-            max_tokens=-100,
-            context_length=0
+            top_k=0, max_tokens=-100, context_length=0
         )
         assert "top_k" in errors
         assert "max_tokens" in errors

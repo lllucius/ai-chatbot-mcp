@@ -1,7 +1,7 @@
 """
 User service for user management and profile operations.
 
-This service provides comprehensive methods for user CRUD operations, 
+This service provides comprehensive methods for user CRUD operations,
 profile management, user statistics, and analytics. It handles user
 lifecycle management including creation, updates, password changes,
 and account deactivation.
@@ -66,35 +66,35 @@ class UserService(BaseService):
         super().__init__(db, "user_service")
 
     async def create_user(
-        self, 
-        username: str, 
-        email: str, 
-        password: str, 
+        self,
+        username: str,
+        email: str,
+        password: str,
         full_name: str = None,
-        is_superuser: bool = False
+        is_superuser: bool = False,
     ) -> User:
         """
         Create a new user account.
-        
+
         Args:
             username: Unique username for the user
             email: User's email address
             password: Plain text password (will be hashed)
             full_name: Optional full name
             is_superuser: Whether the user should have superuser privileges
-            
+
         Returns:
             User: Created user object
-            
+
         Raises:
             ValidationError: If username or email already exists
         """
         operation = "create_user"
         self._log_operation_start(operation, username=username, email=email)
-        
+
         try:
             await self._ensure_db_session()
-            
+
             # Check if username already exists
             existing_username = await self.db.execute(
                 select(User).where(User.username == username)
@@ -111,7 +111,7 @@ class UserService(BaseService):
 
             # Create new user
             hashed_password = get_password_hash(password)
-            
+
             user = User(
                 username=username,
                 email=email,
@@ -131,7 +131,7 @@ class UserService(BaseService):
                 username=user.username,
                 is_superuser=user.is_superuser,
             )
-            
+
             return user
 
         except ValidationError:

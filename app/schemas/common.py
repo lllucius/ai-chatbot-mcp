@@ -242,6 +242,23 @@ class PaginatedResponse(BaseResponse, Generic[T]):
 
 
 class SearchParams(PaginationParams):
+    """
+    Search parameters schema extending pagination with search-specific options.
+
+    Combines pagination functionality with search algorithm selection and
+    result limiting. Supports multiple search algorithms including vector,
+    text, hybrid, and MMR (Maximum Marginal Relevance) approaches.
+
+    Attributes:
+        query: Search query string (1-500 characters)
+        algorithm: Search algorithm type (vector/text/hybrid/mmr)
+        limit: Maximum number of results to return (1-50)
+
+    Inherits from PaginationParams:
+        page: Page number for pagination
+        per_page: Items per page
+    """
+
     query: Optional[str] = Field(
         default=None, min_length=1, max_length=500, description="Search query string"
     )

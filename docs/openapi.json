@@ -371,7 +371,7 @@
           "authentication"
         ],
         "summary": "Request Password Reset",
-        "description": "Request password reset.\n\nInitiates password reset process for the given email address.\nNote: This is a placeholder implementation.",
+        "description": "Request password reset (Admin Dashboard).\n\nInitiates password reset process for the given email address.\nIn an admin-only dashboard, this would typically be handled directly\nby administrators through user management interface.",
         "operationId": "request_password_reset_api_v1_auth_password_reset_post",
         "requestBody": {
           "content": {
@@ -414,7 +414,7 @@
           "authentication"
         ],
         "summary": "Confirm Password Reset",
-        "description": "Confirm password reset.\n\nResets user password using the provided reset token.\nNote: This is a placeholder implementation.",
+        "description": "Confirm password reset (Admin Dashboard).\n\nResets user password using the provided reset token.\nIn an admin-only dashboard, password resets are handled by administrators\ndirectly through the user management interface.",
         "operationId": "confirm_password_reset_api_v1_auth_password_reset_confirm_post",
         "requestBody": {
           "content": {
@@ -2085,7 +2085,7 @@
           "search"
         ],
         "summary": "Get Search History",
-        "description": "Get user's search history.\n\nReturns recent search queries performed by the current user.\nNote: This is a placeholder implementation.",
+        "description": "Get user's search history.\n\nReturns recent search queries performed by the current user.\nFor admin dashboard, shows aggregated search patterns.",
         "operationId": "get_search_history_api_v1_search_history_get",
         "security": [
           {
@@ -2133,7 +2133,7 @@
           "search"
         ],
         "summary": "Clear Search History",
-        "description": "Clear user's search history.\n\nRemoves all search history entries for the current user.\nNote: This is a placeholder implementation.",
+        "description": "Clear user's search history.\n\nRemoves all search history entries for the current user.\nFor admin dashboard, this clears system-wide search analytics.",
         "operationId": "clear_search_history_api_v1_search_history_delete",
         "security": [
           {
@@ -2152,6 +2152,214 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/tools/": {
+      "get": {
+        "tags": [
+          "tools",
+          "tools"
+        ],
+        "summary": "List Tools",
+        "description": "List all available MCP tools.\n\nReturns information about all configured MCP tools including their\nstatus, schemas, and configuration details.\n\nOnly available to superusers.",
+        "operationId": "list_tools_api_v1_tools__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response List Tools Api V1 Tools  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tools/{tool_name}": {
+      "get": {
+        "tags": [
+          "tools",
+          "tools"
+        ],
+        "summary": "Get Tool Details",
+        "description": "Get detailed information about a specific tool.\n\nReturns the complete schema, configuration, and status\ninformation for the specified tool.",
+        "operationId": "get_tool_details_api_v1_tools__tool_name__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tool_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tool Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Tool Details Api V1 Tools  Tool Name  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tools/{tool_name}/test": {
+      "post": {
+        "tags": [
+          "tools",
+          "tools"
+        ],
+        "summary": "Test Tool",
+        "description": "Test a tool with optional parameters.\n\nExecutes the tool with provided test parameters to verify\nit's working correctly.",
+        "operationId": "test_tool_api_v1_tools__tool_name__test_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tool_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tool Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Test Params"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Test Tool Api V1 Tools  Tool Name  Test Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tools/refresh": {
+      "post": {
+        "tags": [
+          "tools",
+          "tools"
+        ],
+        "summary": "Refresh Tools",
+        "description": "Refresh tool discovery and reconnect to MCP servers.\n\nTriggers a fresh discovery of all available tools from\nconfigured MCP servers.",
+        "operationId": "refresh_tools_api_v1_tools_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tools/servers/status": {
+      "get": {
+        "tags": [
+          "tools",
+          "tools"
+        ],
+        "summary": "Get Server Status",
+        "description": "Get status of all configured MCP servers.\n\nReturns connection status, tool counts, and health information\nfor all configured MCP servers.",
+        "operationId": "get_server_status_api_v1_tools_servers_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Server Status Api V1 Tools Servers Status Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     }
   },

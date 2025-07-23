@@ -242,8 +242,8 @@ async def request_password_reset(
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than self-service email
     return BaseResponse(
-        success=True, 
-        message="Password reset request noted. Contact system administrator for password changes."
+        success=True,
+        message="Password reset request noted. Contact system administrator for password changes.",
     )
 
 
@@ -261,6 +261,6 @@ async def confirm_password_reset(
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than token-based reset
     return BaseResponse(
-        success=True, 
-        message="Password reset must be performed by system administrator through user management interface."
+        success=True,
+        message="Password reset must be performed by system administrator through user management interface.",
     )

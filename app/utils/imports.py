@@ -11,7 +11,7 @@ Import Order Standards:
 3. Local application imports (alphabetically sorted within groups):
    - Core modules (config, exceptions, etc.)
    - Database and models
-   - Services and utilities  
+   - Services and utilities
    - Schemas and API modules
 
 Example Import Organization:

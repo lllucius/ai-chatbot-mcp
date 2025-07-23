@@ -13,8 +13,31 @@ console = Console()
 
 
 def async_command(func: Callable) -> Callable:
-    """Decorator to run async functions in CLI commands."""
+    """
+    Decorator to enable async functions in Typer CLI commands.
+
+    Handles the complexity of running async functions in CLI environments where
+    an event loop may or may not already be running. Uses thread pool execution
+    to avoid nested event loop issues that commonly occur in CLI applications.
+
+    Args:
+        func: Async function to wrap for CLI usage
+
+    Returns:
+        Callable: Synchronous wrapper function that can be used with Typer
+
+    Example:
+        @async_command
+        async def my_cli_command():
+            await some_async_operation()
+    """
+
     def wrapper(*args, **kwargs):
+        """
+        Synchronous wrapper that executes the async function.
+
+        Attempts to handle different event loop scenarios gracefully.
+        """
         try:
             # Try to get the current event loop
             loop = asyncio.get_running_loop()
@@ -24,15 +47,17 @@ def async_command(func: Callable) -> Callable:
 
             # Run in a separate thread to avoid nested loop issues
             def run_in_thread():
+                """Execute the async function in a new event loop."""
                 return asyncio.run(func(*args, **kwargs))
-            
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(run_in_thread)
                 return future.result()
-                
+
         except RuntimeError:
             # No running loop, safe to use asyncio.run()
             return asyncio.run(func(*args, **kwargs))
+
     return wrapper
 
 
@@ -43,7 +68,7 @@ async def progress_context(description: str):
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
-        transient=True
+        transient=True,
     ) as progress:
         task = progress.add_task(description, total=None)
         try:
@@ -83,11 +108,11 @@ def format_size(size_bytes: int) -> str:
     """Format file size in human readable format."""
     if size_bytes == 0:
         return "0 B"
-    
+
     size_names = ["B", "KB", "MB", "GB", "TB"]
     i = 0
     while size_bytes >= 1024 and i < len(size_names) - 1:
         size_bytes /= 1024.0
         i += 1
-    
+
     return f"{size_bytes:.1f} {size_names[i]}"

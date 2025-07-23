@@ -47,7 +47,7 @@ class TestEnhancedDocumentProcessor:
         This   has    multiple    spaces…
         "Smart quotes" and 'single quotes'
         Em—dash and en–dash
-        Non-breaking\u00A0space
+        Non-breaking\u00a0space
         
         
         Multiple newlines
@@ -61,7 +61,7 @@ class TestEnhancedDocumentProcessor:
         assert "…" not in processed  # Ellipsis normalized
         assert '"' in processed and '"' not in processed  # Smart quotes normalized
         assert "-" in processed and "—" not in processed  # Em dash normalized
-        assert "\u00A0" not in processed  # Non-breaking space removed
+        assert "\u00a0" not in processed  # Non-breaking space removed
 
         # Check whitespace cleanup
         assert "    " not in processed  # Multiple spaces removed

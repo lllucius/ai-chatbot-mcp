@@ -157,6 +157,7 @@ async def rate_limiting_middleware(request: Request, call_next):
     """Rate limiting middleware wrapper."""
     return await rate_limit_middleware(request, call_next)
 
+
 # Input validation middleware (add before other middleware)
 @app.middleware("http")
 async def input_validation_middleware(request: Request, call_next):
@@ -343,9 +344,9 @@ async def root() -> Dict[str, Any]:
         "version": settings.app_version,
         "description": settings.app_description,
         "status": "operational",
-        "docs": "/docs"
-        if settings.debug
-        else "Documentation not available in production",
+        "docs": (
+            "/docs" if settings.debug else "Documentation not available in production"
+        ),
         "timestamp": get_current_timestamp(),
     }
 

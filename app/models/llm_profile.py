@@ -29,7 +29,7 @@ class LLMProfile(BaseModelDB):
         is_active: Whether the profile is active/available
         usage_count: Number of times the profile has been used
         last_used_at: Timestamp of last usage
-        
+
         # Core LLM Parameters
         temperature: Controls randomness in generation (0.0-2.0)
         top_p: Nucleus sampling parameter (0.0-1.0)
@@ -41,7 +41,7 @@ class LLMProfile(BaseModelDB):
         presence_penalty: Presence penalty (-2.0 to 2.0)
         frequency_penalty: Frequency penalty (-2.0 to 2.0)
         stop: Stop sequences as JSON list
-        
+
         # Additional parameters
         other_params: Additional model-specific parameters as JSON
     """
@@ -49,78 +49,75 @@ class LLMProfile(BaseModelDB):
     __tablename__ = "llm_profiles"
 
     name: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True,
-        doc="Unique name/identifier for the profile"
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True,
+        doc="Unique name/identifier for the profile",
     )
     title: Mapped[str] = mapped_column(
-        String(200), nullable=False,
-        doc="Display title for the profile"
+        String(200), nullable=False, doc="Display title for the profile"
     )
     description: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True,
-        doc="Optional description of the profile's purpose"
+        Text, nullable=True, doc="Optional description of the profile's purpose"
     )
     is_default: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False, index=True,
-        doc="Whether this is the default profile"
+        Boolean,
+        default=False,
+        nullable=False,
+        index=True,
+        doc="Whether this is the default profile",
     )
     is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True, nullable=False, index=True,
-        doc="Whether the profile is active/available"
+        Boolean,
+        default=True,
+        nullable=False,
+        index=True,
+        doc="Whether the profile is active/available",
     )
     usage_count: Mapped[int] = mapped_column(
-        Integer, default=0, nullable=False,
-        doc="Number of times the profile has been used"
+        Integer,
+        default=0,
+        nullable=False,
+        doc="Number of times the profile has been used",
     )
     last_used_at: Mapped[Optional[datetime]] = mapped_column(
-        nullable=True,
-        doc="Timestamp of last usage"
+        nullable=True, doc="Timestamp of last usage"
     )
 
     # Core LLM Parameters
     temperature: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True,
-        doc="Controls randomness in generation (0.0-2.0)"
+        Float, nullable=True, doc="Controls randomness in generation (0.0-2.0)"
     )
     top_p: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True,
-        doc="Nucleus sampling parameter (0.0-1.0)"
+        Float, nullable=True, doc="Nucleus sampling parameter (0.0-1.0)"
     )
     top_k: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True,
-        doc="Top-k sampling parameter"
+        Integer, nullable=True, doc="Top-k sampling parameter"
     )
     repeat_penalty: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True,
-        doc="Repetition penalty (typically around 1.0)"
+        Float, nullable=True, doc="Repetition penalty (typically around 1.0)"
     )
     max_tokens: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True,
-        doc="Maximum tokens to generate"
+        Integer, nullable=True, doc="Maximum tokens to generate"
     )
     max_new_tokens: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True,
-        doc="Maximum new tokens to generate"
+        Integer, nullable=True, doc="Maximum new tokens to generate"
     )
     context_length: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True,
-        doc="Maximum context length"
+        Integer, nullable=True, doc="Maximum context length"
     )
     presence_penalty: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True,
-        doc="Presence penalty (-2.0 to 2.0)"
+        Float, nullable=True, doc="Presence penalty (-2.0 to 2.0)"
     )
     frequency_penalty: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True,
-        doc="Frequency penalty (-2.0 to 2.0)"
+        Float, nullable=True, doc="Frequency penalty (-2.0 to 2.0)"
     )
     stop: Mapped[Optional[list]] = mapped_column(
-        JSON, nullable=True,
-        doc="Stop sequences as JSON list"
+        JSON, nullable=True, doc="Stop sequences as JSON list"
     )
     other_params: Mapped[Optional[dict]] = mapped_column(
-        JSON, nullable=True,
-        doc="Additional model-specific parameters"
+        JSON, nullable=True, doc="Additional model-specific parameters"
     )
 
     # Indexes for performance
@@ -137,9 +134,30 @@ class LLMProfile(BaseModelDB):
         self.last_used_at = datetime.utcnow()
 
     def to_openai_params(self) -> dict:
-        """Convert profile to OpenAI API parameters."""
+        """
+        Convert LLM profile to OpenAI API parameters dictionary.
+
+        Transforms the profile settings into a format compatible with OpenAI's
+        chat completion API. Only includes parameters that are not None to allow
+        OpenAI's defaults to take effect for unspecified parameters.
+
+        Returns:
+            dict: Dictionary of OpenAI API parameters with the following possible keys:
+                - temperature: Controls randomness (0.0-2.0)
+                - top_p: Controls nucleus sampling (0.0-1.0)
+                - max_tokens: Maximum tokens to generate
+                - presence_penalty: Penalty for token presence (-2.0-2.0)
+                - frequency_penalty: Penalty for token frequency (-2.0-2.0)
+                - stop: List of stop sequences
+
+        Example:
+            >>> profile = LLMProfile(temperature=0.7, max_tokens=1000)
+            >>> params = profile.to_openai_params()
+            >>> params
+            {"temperature": 0.7, "max_tokens": 1000}
+        """
         params = {}
-        
+
         if self.temperature is not None:
             params["temperature"] = self.temperature
         if self.top_p is not None:
@@ -152,17 +170,40 @@ class LLMProfile(BaseModelDB):
             params["frequency_penalty"] = self.frequency_penalty
         if self.stop is not None:
             params["stop"] = self.stop
-            
+
         # Add other parameters
         if self.other_params:
             for key, value in self.other_params.items():
                 if key not in params:  # Don't override existing parameters
                     params[key] = value
-                    
+
         return params
 
     def to_dict(self) -> dict:
-        """Convert profile to dictionary with all parameters."""
+        """
+        Convert profile to complete dictionary representation.
+
+        Creates a comprehensive dictionary containing all profile parameters,
+        metadata, and usage statistics. Useful for JSON serialization,
+        API responses, and profile export/import operations.
+
+        Returns:
+            dict: Complete profile data including:
+                - Basic info: name, title, description
+                - Status flags: is_default, is_active
+                - LLM parameters: temperature, top_p, max_tokens, etc.
+                - Penalties: presence_penalty, frequency_penalty
+                - Metadata: created_at, updated_at, usage stats
+                - Additional custom parameters from other_params
+
+        Example:
+            >>> profile = LLMProfile(name="creative", temperature=0.8)
+            >>> data = profile.to_dict()
+            >>> data["name"]
+            "creative"
+            >>> data["temperature"]
+            0.8
+        """
         return {
             "name": self.name,
             "title": self.title,

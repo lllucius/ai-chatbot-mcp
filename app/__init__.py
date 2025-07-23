@@ -7,6 +7,7 @@ vector search, conversation management, and MCP tool integration.
 Generated on: 2025-07-14 03:47:30 UTC
 Current User: lllucius
 """
+
 from .main import app
 
 __version__ = "1.0.0"

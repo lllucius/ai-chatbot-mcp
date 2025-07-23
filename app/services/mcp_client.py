@@ -93,7 +93,9 @@ class FastMCPClientService:
                 if not url:
                     # Default to localhost with server name as port for demo
                     # You may customize this per your deployment!
-                    port = 8000 + len(self.servers)  # Example: http://localhost:8000, 8001, etc.
+                    port = 8000 + len(
+                        self.servers
+                    )  # Example: http://localhost:8000, 8001, etc.
                     url = f"http://localhost:{port}"
                 server = MCPServerConfig(
                     name=server_name,
@@ -165,7 +167,9 @@ class FastMCPClientService:
             async with asyncio.timeout(server.timeout):
                 # Store client first
                 self.clients[server_name] = client
-                logger.info(f"Successfully configured MCP HTTP server: {server_name} ({server.url})")
+                logger.info(
+                    f"Successfully configured MCP HTTP server: {server_name} ({server.url})"
+                )
 
         except asyncio.TimeoutError:
             logger.error(

@@ -128,7 +128,7 @@ async def init_db(with_default_data: bool = True) -> None:
 
     This function creates all tables and enables pgvector extension for PostgreSQL.
     Optionally initializes default data.
-    
+
     Args:
         with_default_data: Whether to create default prompts, profiles, and servers
     """
@@ -146,17 +146,20 @@ async def init_db(with_default_data: bool = True) -> None:
                 await conn.run_sync(BaseModelDB.metadata.create_all)
 
                 logger.info("Database initialized successfully")
-                
+
                 # Initialize default data if requested
                 if with_default_data:
                     try:
                         from ..core.default_data import initialize_default_data
+
                         result = await initialize_default_data()
-                        logger.info(f"Default data initialized: {result['total_created']} items created")
+                        logger.info(
+                            f"Default data initialized: {result['total_created']} items created"
+                        )
                     except Exception as e:
                         logger.warning(f"Failed to initialize default data: {e}")
                         # Don't fail the entire init if default data creation fails
-                
+
                 return
 
         except Exception as e:

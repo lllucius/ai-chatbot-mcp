@@ -15,9 +15,10 @@ The AI Chatbot Platform provides a comprehensive RESTful API for managing users,
 3. [Conversations](#conversations)
 4. [Documents](#documents)
 5. [Search](#search)
-6. [Health](#health)
-7. [Error Handling](#error-handling)
-8. [Rate Limiting](#rate-limiting)
+6. [Tools](#tools)
+7. [Health](#health)
+8. [Error Handling](#error-handling)
+9. [Rate Limiting](#rate-limiting)
 
 ## Authentication
 
@@ -480,6 +481,177 @@ Search through document content using RAG.
     }
   ],
   "total_count": 1
+}
+```
+
+## Tools
+
+The tools endpoints provide access to MCP (Model Context Protocol) tool management and execution capabilities.
+
+### GET /api/v1/tools/
+
+List all available tools across MCP servers.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "tools": [
+      {
+        "name": "weather_tool",
+        "description": "Get current weather information",
+        "server": "weather_server",
+        "enabled": true,
+        "usage_count": 42,
+        "last_used": "2025-01-20T10:30:00Z",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "Location to get weather for"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+### GET /api/v1/tools/{tool_name}
+
+Get detailed information about a specific tool.
+
+**Parameters:**
+- `tool_name`: Name of the tool to retrieve
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "name": "weather_tool",
+    "description": "Get current weather information",
+    "server": "weather_server",
+    "enabled": true,
+    "usage_count": 42,
+    "last_used": "2025-01-20T10:30:00Z",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "description": "Location to get weather for"
+        }
+      },
+      "required": ["location"]
+    }
+  }
+}
+```
+
+### POST /api/v1/tools/{tool_name}/test
+
+Test a tool with provided parameters.
+
+**Parameters:**
+- `tool_name`: Name of the tool to test
+
+**Request Body:**
+```json
+{
+  "parameters": {
+    "location": "New York, NY"
+  }
+}
+```
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "result": {
+      "temperature": "22°C",
+      "condition": "Partly cloudy",
+      "humidity": "65%"
+    },
+    "execution_time": 0.45,
+    "tool_name": "weather_tool"
+  }
+}
+```
+
+### POST /api/v1/tools/refresh
+
+Refresh the list of available tools from all MCP servers.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "refreshed_servers": ["weather_server", "file_server"],
+    "total_tools": 8,
+    "new_tools": 2,
+    "removed_tools": 0
+  }
+}
+```
+
+### GET /api/v1/tools/servers/status
+
+Get the status of all MCP servers.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "servers": [
+      {
+        "name": "weather_server",
+        "url": "http://localhost:9000/mcp/",
+        "status": "connected",
+        "tool_count": 3,
+        "last_ping": "2025-01-20T10:30:00Z"
+      },
+      {
+        "name": "file_server",
+        "url": "http://localhost:9001/mcp/",
+        "status": "disconnected",
+        "tool_count": 0,
+        "last_ping": "2025-01-20T09:30:00Z"
+      }
+    ]
+  }
 }
 ```
 

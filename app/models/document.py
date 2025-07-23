@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 # Import pgvector only for PostgreSQL compatibility
 try:
     from pgvector.sqlalchemy import Vector
+
     HAS_PGVECTOR = True
 except ImportError:
     HAS_PGVECTOR = False

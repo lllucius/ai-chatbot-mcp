@@ -32,24 +32,24 @@ async def list_tools(
 
     Returns information about all configured MCP tools including their
     status, schemas, and configuration details.
-    
+
     Only available to superusers.
     """
     log_api_call("list_tools", user_id=current_user.id)
-    
+
     try:
         # Get MCP client
         mcp_client = await get_mcp_client()
-        
+
         # Get unified tool executor
         tool_executor = await get_unified_tool_executor()
-        
+
         # Get available tools from MCP client
         available_tools = mcp_client.get_available_tools() if mcp_client else {}
-        
+
         # Get OpenAI-formatted tools
         openai_tools = mcp_client.get_tools_for_openai() if mcp_client else []
-        
+
         # Get server status
         server_status = {}
         if mcp_client:
@@ -59,17 +59,23 @@ async def list_tools(
                     server_tools = mcp_client.get_available_tools()
                     server_status[server_name] = {
                         "status": "connected",
-                        "tool_count": len([t for t in server_tools.keys() if t.startswith(f"{server_name}:")]),
-                        "last_checked": "2024-01-22T20:59:27Z"  # In real implementation, track this
+                        "tool_count": len(
+                            [
+                                t
+                                for t in server_tools.keys()
+                                if t.startswith(f"{server_name}:")
+                            ]
+                        ),
+                        "last_checked": "2024-01-22T20:59:27Z",  # In real implementation, track this
                     }
                 except Exception as e:
                     server_status[server_name] = {
                         "status": "error",
                         "error": str(e),
                         "tool_count": 0,
-                        "last_checked": "2024-01-22T20:59:27Z"
+                        "last_checked": "2024-01-22T20:59:27Z",
                     }
-        
+
         return {
             "success": True,
             "data": {
@@ -77,14 +83,16 @@ async def list_tools(
                 "openai_tools": openai_tools,
                 "servers": server_status,
                 "total_tools": len(available_tools),
-                "enabled_tools": len([t for t in available_tools.values() if t.get("enabled", True)]),
-            }
+                "enabled_tools": len(
+                    [t for t in available_tools.values() if t.get("enabled", True)]
+                ),
+            },
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve tools: {str(e)}"
+            detail=f"Failed to retrieve tools: {str(e)}",
         )
 
 
@@ -96,34 +104,34 @@ async def get_tool_details(
 ):
     """
     Get detailed information about a specific tool.
-    
+
     Returns the complete schema, configuration, and status
     information for the specified tool.
     """
     log_api_call("get_tool_details", user_id=current_user.id, tool_name=tool_name)
-    
+
     try:
         mcp_client = await get_mcp_client()
-        
+
         if not mcp_client:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="MCP client not available"
+                detail="MCP client not available",
             )
-        
+
         # Get tool schema
         tool_schema = mcp_client.get_tool_schema(tool_name)
-        
+
         if not tool_schema:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tool '{tool_name}' not found"
+                detail=f"Tool '{tool_name}' not found",
             )
-        
+
         # Get additional tool information
         available_tools = mcp_client.get_available_tools()
         tool_info = available_tools.get(tool_name, {})
-        
+
         return {
             "success": True,
             "data": {
@@ -135,15 +143,15 @@ async def get_tool_details(
                 "parameters": tool_schema.get("parameters", {}),
                 "last_used": tool_info.get("last_used"),
                 "usage_count": tool_info.get("usage_count", 0),
-            }
+            },
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get tool details: {str(e)}"
+            detail=f"Failed to get tool details: {str(e)}",
         )
 
 
@@ -156,46 +164,46 @@ async def test_tool(
 ):
     """
     Test a tool with optional parameters.
-    
+
     Executes the tool with provided test parameters to verify
     it's working correctly.
     """
     log_api_call("test_tool", user_id=current_user.id, tool_name=tool_name)
-    
+
     try:
         mcp_client = await get_mcp_client()
-        
+
         if not mcp_client:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="MCP client not available"
+                detail="MCP client not available",
             )
-        
+
         # Get tool schema to validate parameters
         tool_schema = mcp_client.get_tool_schema(tool_name)
         if not tool_schema:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tool '{tool_name}' not found"
+                detail=f"Tool '{tool_name}' not found",
             )
-        
+
         # Use empty parameters if none provided
         if test_params is None:
             test_params = {}
-        
+
         # Execute the tool
         result = await mcp_client.call_tool(tool_name, test_params)
-        
+
         return {
             "success": True,
             "data": {
                 "tool_name": tool_name,
                 "test_parameters": test_params,
                 "result": result,
-                "status": "success"
-            }
+                "status": "success",
+            },
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -205,8 +213,8 @@ async def test_tool(
                 "tool_name": tool_name,
                 "test_parameters": test_params,
                 "error": str(e),
-                "status": "error"
-            }
+                "status": "error",
+            },
         }
 
 
@@ -217,33 +225,30 @@ async def refresh_tools(
 ):
     """
     Refresh tool discovery and reconnect to MCP servers.
-    
+
     Triggers a fresh discovery of all available tools from
     configured MCP servers.
     """
     log_api_call("refresh_tools", user_id=current_user.id)
-    
+
     try:
         mcp_client = await get_mcp_client()
-        
+
         if not mcp_client:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="MCP client not available"
+                detail="MCP client not available",
             )
-        
+
         # Force rediscovery of tools
         await mcp_client._discover_tools()
-        
-        return BaseResponse(
-            success=True,
-            message="Tools refreshed successfully"
-        )
-        
+
+        return BaseResponse(success=True, message="Tools refreshed successfully")
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to refresh tools: {str(e)}"
+            detail=f"Failed to refresh tools: {str(e)}",
         )
 
 
@@ -254,15 +259,15 @@ async def get_server_status(
 ):
     """
     Get status of all configured MCP servers.
-    
+
     Returns connection status, tool counts, and health information
     for all configured MCP servers.
     """
     log_api_call("get_server_status", user_id=current_user.id)
-    
+
     try:
         mcp_client = await get_mcp_client()
-        
+
         if not mcp_client:
             return {
                 "success": True,
@@ -270,50 +275,56 @@ async def get_server_status(
                     "servers": {},
                     "total_servers": 0,
                     "connected_servers": 0,
-                    "mcp_enabled": False
-                }
+                    "mcp_enabled": False,
+                },
             }
-        
+
         server_status = {}
         connected_count = 0
-        
+
         for server_name, server_config in mcp_client.servers.items():
             try:
                 # Check server health
                 # In a real implementation, you might ping the server or check last successful call
                 server_status[server_name] = {
                     "name": server_name,
-                    "url": getattr(server_config, 'url', 'unknown'),
+                    "url": getattr(server_config, "url", "unknown"),
                     "status": "connected",
                     "last_check": "2024-01-22T20:59:27Z",
                     "response_time": "150ms",
-                    "tool_count": len([t for t in mcp_client.get_available_tools().keys() if t.startswith(f"{server_name}:")]),
-                    "error": None
+                    "tool_count": len(
+                        [
+                            t
+                            for t in mcp_client.get_available_tools().keys()
+                            if t.startswith(f"{server_name}:")
+                        ]
+                    ),
+                    "error": None,
                 }
                 connected_count += 1
             except Exception as e:
                 server_status[server_name] = {
                     "name": server_name,
-                    "url": getattr(server_config, 'url', 'unknown'),
+                    "url": getattr(server_config, "url", "unknown"),
                     "status": "error",
                     "last_check": "2024-01-22T20:59:27Z",
                     "response_time": None,
                     "tool_count": 0,
-                    "error": str(e)
+                    "error": str(e),
                 }
-        
+
         return {
             "success": True,
             "data": {
                 "servers": server_status,
                 "total_servers": len(server_status),
                 "connected_servers": connected_count,
-                "mcp_enabled": True
-            }
+                "mcp_enabled": True,
+            },
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get server status: {str(e)}"
+            detail=f"Failed to get server status: {str(e)}",
         )

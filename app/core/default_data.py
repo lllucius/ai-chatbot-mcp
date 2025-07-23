@@ -32,7 +32,7 @@ Be professional but friendly in your responses.""",
             description="Default prompt for general AI assistant interactions",
             is_default=True,
             category="general",
-            tags=["assistant", "general", "helpful"]
+            tags=["assistant", "general", "helpful"],
         )
         logger.info(f"Created default prompt: {default_prompt.name}")
         return default_prompt
@@ -59,7 +59,7 @@ async def create_sample_prompts():
 Provide constructive feedback with specific suggestions for improvement.""",
             "description": "Specialized prompt for code review tasks",
             "category": "development",
-            "tags": ["code", "review", "development", "programming"]
+            "tags": ["code", "review", "development", "programming"],
         },
         {
             "name": "creative_writing",
@@ -76,7 +76,7 @@ Provide constructive feedback with specific suggestions for improvement.""",
 Be encouraging and provide detailed, actionable suggestions to improve their writing.""",
             "description": "Assistant for creative writing and storytelling",
             "category": "creative",
-            "tags": ["writing", "creative", "storytelling", "literature"]
+            "tags": ["writing", "creative", "storytelling", "literature"],
         },
         {
             "name": "technical_documentation",
@@ -93,10 +93,10 @@ Be encouraging and provide detailed, actionable suggestions to improve their wri
 Focus on making complex technical concepts accessible and actionable.""",
             "description": "Specialized assistant for technical documentation",
             "category": "documentation",
-            "tags": ["documentation", "technical", "writing", "guides"]
-        }
+            "tags": ["documentation", "technical", "writing", "guides"],
+        },
     ]
-    
+
     created_count = 0
     for prompt_data in sample_prompts:
         try:
@@ -105,7 +105,7 @@ Focus on making complex technical concepts accessible and actionable.""",
             created_count += 1
         except Exception as e:
             logger.warning(f"Failed to create prompt {prompt_data['name']}: {e}")
-    
+
     logger.info(f"Created {created_count}/{len(sample_prompts)} sample prompts")
     return created_count
 
@@ -122,7 +122,7 @@ async def create_default_llm_profile():
             top_p=0.9,
             max_tokens=2000,
             presence_penalty=0.0,
-            frequency_penalty=0.0
+            frequency_penalty=0.0,
         )
         logger.info(f"Created default LLM profile: {default_profile.name}")
         return default_profile
@@ -142,7 +142,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.95,
             "max_tokens": 3000,
             "presence_penalty": 0.5,
-            "frequency_penalty": 0.3
+            "frequency_penalty": 0.3,
         },
         {
             "name": "precise",
@@ -152,7 +152,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.8,
             "max_tokens": 1500,
             "presence_penalty": 0.0,
-            "frequency_penalty": 0.0
+            "frequency_penalty": 0.0,
         },
         {
             "name": "concise",
@@ -162,7 +162,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.85,
             "max_tokens": 500,
             "presence_penalty": 0.2,
-            "frequency_penalty": 0.1
+            "frequency_penalty": 0.1,
         },
         {
             "name": "detailed",
@@ -172,10 +172,10 @@ async def create_sample_llm_profiles():
             "top_p": 0.9,
             "max_tokens": 4000,
             "presence_penalty": 0.1,
-            "frequency_penalty": 0.0
-        }
+            "frequency_penalty": 0.0,
+        },
     ]
-    
+
     created_count = 0
     for profile_data in sample_profiles:
         try:
@@ -184,7 +184,7 @@ async def create_sample_llm_profiles():
             created_count += 1
         except Exception as e:
             logger.warning(f"Failed to create profile {profile_data['name']}: {e}")
-    
+
     logger.info(f"Created {created_count}/{len(sample_profiles)} sample LLM profiles")
     return created_count
 
@@ -197,24 +197,24 @@ async def create_sample_mcp_servers():
             "url": "http://localhost:9001/mcp",
             "description": "File system operations and management",
             "transport": "http",
-            "timeout": 30
+            "timeout": 30,
         },
         {
             "name": "web_search",
             "url": "http://localhost:9002/mcp",
             "description": "Web search and information retrieval",
             "transport": "http",
-            "timeout": 45
+            "timeout": 45,
         },
         {
             "name": "database",
             "url": "http://localhost:9003/mcp",
             "description": "Database query and management tools",
             "transport": "http",
-            "timeout": 60
-        }
+            "timeout": 60,
+        },
     ]
-    
+
     created_count = 0
     for server_data in sample_servers:
         try:
@@ -223,7 +223,7 @@ async def create_sample_mcp_servers():
             created_count += 1
         except Exception as e:
             logger.warning(f"Failed to create server {server_data['name']}: {e}")
-    
+
     logger.info(f"Created {created_count}/{len(sample_servers)} sample MCP servers")
     return created_count
 
@@ -231,38 +231,43 @@ async def create_sample_mcp_servers():
 async def initialize_default_data():
     """Initialize all default data for the platform."""
     logger.info("Initializing default data for AI Chatbot Platform...")
-    
+
     # Create default prompt
     default_prompt = await create_default_prompt()
-    
+
     # Create sample prompts
     sample_prompts_count = await create_sample_prompts()
-    
+
     # Create default LLM profile
     default_profile = await create_default_llm_profile()
-    
+
     # Create sample LLM profiles
     sample_profiles_count = await create_sample_llm_profiles()
-    
+
     # Create sample MCP servers
     sample_servers_count = await create_sample_mcp_servers()
-    
+
     # Summary
     success_count = 0
     if default_prompt:
         success_count += 1
     if default_profile:
         success_count += 1
-    
-    total_created = success_count + sample_prompts_count + sample_profiles_count + sample_servers_count
-    
+
+    total_created = (
+        success_count
+        + sample_prompts_count
+        + sample_profiles_count
+        + sample_servers_count
+    )
+
     logger.info(f"Default data initialization complete - {total_created} items created")
-    
+
     return {
         "default_prompt": default_prompt is not None,
         "default_profile": default_profile is not None,
         "sample_prompts": sample_prompts_count,
         "sample_profiles": sample_profiles_count,
         "sample_servers": sample_servers_count,
-        "total_created": total_created
+        "total_created": total_created,
     }

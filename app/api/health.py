@@ -237,9 +237,9 @@ async def _check_openai_health() -> Dict[str, Any]:
         health_result = await client.health_check()
 
         return {
-            "status": "healthy"
-            if health_result.get("openai_available")
-            else "unhealthy",
+            "status": (
+                "healthy" if health_result.get("openai_available") else "unhealthy"
+            ),
             "message": health_result.get("status", "Unknown"),
             "configured": True,
             "models_available": health_result.get("models_available", False),
