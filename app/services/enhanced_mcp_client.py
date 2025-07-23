@@ -8,6 +8,7 @@ Current Date and Time (UTC): 2025-07-23 03:50:00
 Current User: lllucius / assistant
 """
 
+import json
 import time
 from typing import Any, Dict, List, Optional
 
