@@ -27,15 +27,20 @@ database_app = typer.Typer(help="Database management commands")
 
 
 @database_app.command()
-def init():
+def init(
+    skip_default_data: bool = typer.Option(False, "--skip-default-data", help="Skip creating default prompts, profiles, and servers")
+):
     """Initialize the database and create all tables."""
     
     @async_command
     async def _init_database():
         try:
             from ..database import init_db
-            await init_db()
+            await init_db(with_default_data=not skip_default_data)
             success_message("Database initialized successfully")
+            
+            if not skip_default_data:
+                info_message("Default data (prompts, profiles, servers) has been created")
             
             # Show created tables
             async with AsyncSessionLocal() as db:
@@ -218,6 +223,7 @@ def migrations():
                 return
             
             # Get current revision
+            current_revision = ""
             current_result = subprocess.run(
                 ["alembic", "current"], 
                 capture_output=True, 
@@ -231,6 +237,8 @@ def migrations():
                     success_message(f"Current migration: {current_revision}")
                 else:
                     warning_message("No migrations applied")
+            else:
+                warning_message("Could not get current migration status")
             
             # Get migration history
             history_result = subprocess.run(
@@ -317,13 +325,17 @@ def downgrade(
                     warning_message("Downgrade cancelled")
                     return
             
+            # Get the project root directory dynamically
+            import os
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            
             info_message(f"Downgrading database to {revision}...")
             
             result = subprocess.run(
                 ["alembic", "downgrade", revision], 
                 capture_output=True, 
                 text=True,
-                cwd="/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp"
+                cwd=project_root
             )
             
             if result.returncode == 0:
@@ -489,36 +501,38 @@ def vacuum():
             # VACUUM cannot run inside a transaction, so we need a direct connection
             from ..database import engine
 
-            # Run VACUUM on main tables
-            tables_to_vacuum = [
-                "users", "documents", "document_chunks", 
-                "conversations", "messages"
-            ]
-            
             async with engine.connect() as conn:
-                # Check which tables exist first
-                for table_name in tables_to_vacuum:
+                # Get all user tables in the public schema
+                tables_result = await conn.execute(text("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_type = 'BASE TABLE'
+                    AND table_name != 'alembic_version'
+                    ORDER BY table_name
+                """))
+                
+                all_tables = [row[0] for row in tables_result.fetchall()]
+                
+                if not all_tables:
+                    warning_message("No user tables found to vacuum")
+                    return
+                
+                info_message(f"Found {len(all_tables)} tables to vacuum: {', '.join(all_tables)}")
+                
+                # VACUUM each table
+                vacuumed_count = 0
+                for table_name in all_tables:
                     try:
-                        # Check if table exists
-                        exists_result = await conn.execute(text("""
-                            SELECT EXISTS (
-                                SELECT FROM information_schema.tables 
-                                WHERE table_name = :table_name
-                            )
-                        """), {"table_name": table_name})
-                        
-                        if exists_result.scalar():
-                            # Execute VACUUM outside of transaction
-                            await conn.execute(text("COMMIT"))  # End any existing transaction
-                            await conn.execute(text(f'VACUUM ANALYZE "{table_name}"'))
-                            info_message(f"Vacuumed table: {table_name}")
-                        else:
-                            warning_message(f"Table not found: {table_name}")
-                            
+                        # Execute VACUUM outside of transaction
+                        await conn.execute(text("COMMIT"))  # End any existing transaction
+                        await conn.execute(text(f'VACUUM ANALYZE "{table_name}"'))
+                        info_message(f"Vacuumed table: {table_name}")
+                        vacuumed_count += 1
                     except Exception as e:
                         warning_message(f"Failed to vacuum {table_name}: {e}")
             
-            success_message("Database VACUUM completed")
+            success_message(f"Database VACUUM completed - {vacuumed_count}/{len(all_tables)} tables processed")
                 
         except Exception as e:
             error_message(f"Database VACUUM failed: {e}")
