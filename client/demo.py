@@ -12,9 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 import os
-import tempfile
 
-from client.config import ChatbotConfig, load_config
+from client.config import ChatbotConfig
 from client.chatbot import AIChatbotTerminal
 
 

@@ -16,7 +16,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError, ValidationError
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
@@ -55,7 +54,9 @@ async def create_conversation(
 
     Creates a new conversation thread for the current user.
     """
-    log_api_call("create_conversation", user_id=str(current_user.id), title=request.title)
+    log_api_call(
+        "create_conversation", user_id=str(current_user.id), title=request.title
+    )
 
     conversation = await conversation_service.create_conversation(
         request, current_user.id
@@ -78,7 +79,13 @@ async def list_conversations(
     Returns paginated list of conversations owned by the current user
     with optional filtering by active status.
     """
-    log_api_call("list_conversations", user_id=str(current_user.id), page=page, size=size, active_only=active_only)
+    log_api_call(
+        "list_conversations",
+        user_id=str(current_user.id),
+        page=page,
+        size=size,
+        active_only=active_only,
+    )
 
     conversations, total = await conversation_service.list_conversations(
         user_id=current_user.id, page=page, size=size, active_only=active_only
@@ -110,7 +117,11 @@ async def get_conversation(
     Returns detailed information about a specific conversation
     owned by the current user.
     """
-    log_api_call("get_conversation", user_id=str(current_user.id), conversation_id=str(conversation_id))
+    log_api_call(
+        "get_conversation",
+        user_id=str(current_user.id),
+        conversation_id=str(conversation_id),
+    )
 
     conversation = await conversation_service.get_conversation(
         conversation_id, current_user.id
@@ -131,7 +142,11 @@ async def update_conversation(
 
     Allows updating conversation title, active status, and metadata.
     """
-    log_api_call("update_conversation", user_id=str(current_user.id), conversation_id=str(conversation_id))
+    log_api_call(
+        "update_conversation",
+        user_id=str(current_user.id),
+        conversation_id=str(conversation_id),
+    )
 
     conversation = await conversation_service.update_conversation(
         conversation_id, request, current_user.id
@@ -151,16 +166,18 @@ async def delete_conversation(
 
     Permanently deletes the conversation and all associated messages.
     """
-    log_api_call("delete_conversation", user_id=str(current_user.id), conversation_id=str(conversation_id))
+    log_api_call(
+        "delete_conversation",
+        user_id=str(current_user.id),
+        conversation_id=str(conversation_id),
+    )
 
     success = await conversation_service.delete_conversation(
         conversation_id, current_user.id
     )
 
     if success:
-        return BaseResponse(
-            success=True, message="Conversation deleted successfully"
-        )
+        return BaseResponse(success=True, message="Conversation deleted successfully")
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
@@ -183,7 +200,13 @@ async def get_messages(
 
     Returns paginated list of messages in the specified conversation.
     """
-    log_api_call("get_messages", user_id=str(current_user.id), conversation_id=str(conversation_id), page=page, size=size)
+    log_api_call(
+        "get_messages",
+        user_id=str(current_user.id),
+        conversation_id=str(conversation_id),
+        page=page,
+        size=size,
+    )
 
     messages, total = await conversation_service.get_messages(
         conversation_id, current_user.id, page=page, size=size
@@ -219,7 +242,12 @@ async def chat(
     - LLM profile management for parameter optimization
     - Enhanced MCP tool integration with usage tracking
     """
-    log_api_call("chat", user_id=str(current_user.id), conversation_id=str(request.conversation_id), message_length=len(request.message))
+    log_api_call(
+        "chat",
+        user_id=str(current_user.id),
+        conversation_id=str(request.conversation_id),
+        message_length=len(request.message),
+    )
 
     start_time = time.time()
 
@@ -255,7 +283,12 @@ async def chat_stream(
     Returns a Server-Sent Events (SSE) stream of the AI response as it's generated,
     providing real-time feedback to the user.
     """
-    log_api_call("chat_stream", user_id=str(current_user.id), conversation_id=str(request.conversation_id), message_length=len(request.message))
+    log_api_call(
+        "chat_stream",
+        user_id=str(current_user.id),
+        conversation_id=str(request.conversation_id),
+        message_length=len(request.message),
+    )
 
     async def generate_response():
         # Send initial event

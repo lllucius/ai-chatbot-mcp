@@ -15,9 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
+from ..middleware.performance import get_performance_stats
 from ..schemas.common import BaseResponse
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
-from ..utils.performance import get_performance_stats
 from ..utils.timestamp import utcnow
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -334,7 +334,7 @@ async def get_system_metrics() -> Dict[str, Any]:
         dict: System metrics and performance data
     """
     log_api_call("get_system_metrics")
-    
+
     try:
         import time
 

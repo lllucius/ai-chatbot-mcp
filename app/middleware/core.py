@@ -10,11 +10,12 @@ import time
 
 from fastapi import Request, Response
 
-from ..config import settings
 from ..core.logging import get_component_logger
-from ..utils.performance import record_request_metric
-from ..utils.rate_limiting import rate_limit_middleware as _rate_limit_middleware
-from ..utils.validation import validate_request_middleware as _validate_request_middleware
+from ..middleware.performance import record_request_metric
+from ..middleware.rate_limiting import rate_limit_middleware as _rate_limit_middleware
+from ..middleware.validation import (
+    validate_request_middleware as _validate_request_middleware,
+)
 
 logger = get_component_logger("middleware.core")
 
@@ -22,27 +23,27 @@ logger = get_component_logger("middleware.core")
 async def timing_middleware(request: Request, call_next) -> Response:
     """
     Request timing middleware with performance monitoring.
-    
+
     Adds processing time headers to responses and records performance metrics.
-    
+
     Args:
         request: The HTTP request
         call_next: The next middleware or endpoint handler
-        
+
     Returns:
         Response: The HTTP response with timing headers
     """
     start_time = time.time()
-    
+
     # Process request
     response = await call_next(request)
-    
+
     # Calculate processing time
     process_time = time.time() - start_time
-    
+
     # Add timing header to response
     response.headers["X-Process-Time"] = f"{process_time:.4f}"
-    
+
     # Record performance metric
     try:
         record_request_metric(
@@ -62,20 +63,20 @@ async def timing_middleware(request: Request, call_next) -> Response:
                 }
             },
         )
-    
+
     return response
 
 
 async def validation_middleware(request: Request, call_next) -> Response:
     """
     Input validation middleware wrapper.
-    
+
     Validates and sanitizes input data to prevent common security vulnerabilities.
-    
+
     Args:
         request: The HTTP request
         call_next: The next middleware or endpoint handler
-        
+
     Returns:
         Response: The HTTP response
     """
@@ -85,13 +86,13 @@ async def validation_middleware(request: Request, call_next) -> Response:
 async def rate_limiting_middleware(request: Request, call_next) -> Response:
     """
     Rate limiting middleware wrapper.
-    
+
     Applies rate limiting to prevent abuse and ensure fair usage.
-    
+
     Args:
         request: The HTTP request
         call_next: The next middleware or endpoint handler
-        
+
     Returns:
         Response: The HTTP response
     """

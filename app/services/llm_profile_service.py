@@ -8,7 +8,7 @@ track their usage, and support default profile handling.
 
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
@@ -83,7 +83,9 @@ class LLMProfileService(BaseService):
             await self.db.commit()
             await self.db.refresh(profile)
 
-            self._log_operation_success(operation, name=name, profile_id=str(profile.id))
+            self._log_operation_success(
+                operation, name=name, profile_id=str(profile.id)
+            )
             return profile
 
         except Exception as e:
@@ -104,15 +106,15 @@ class LLMProfileService(BaseService):
         return result.scalar_one_or_none()
 
     async def list_profiles(
-        self, 
-        active_only: bool = True, 
+        self,
+        active_only: bool = True,
         search: Optional[str] = None,
         page: int = 1,
         size: int = 50,
     ) -> tuple[List[LLMProfile], int]:
         """List profiles with optional filtering and pagination."""
         filters = []
-        
+
         if active_only:
             filters.append(LLMProfile.is_active)
 
@@ -153,7 +155,9 @@ class LLMProfileService(BaseService):
             # Update fields
             profile = await self._update_entity(profile, updates)
 
-            self._log_operation_success(operation, name=name, profile_id=str(profile.id))
+            self._log_operation_success(
+                operation, name=name, profile_id=str(profile.id)
+            )
             return profile
 
         except Exception as e:
@@ -277,7 +281,9 @@ class LLMProfileService(BaseService):
             await self.db.rollback()
             return False
 
-    async def get_profile_for_openai(self, name: Optional[str] = None) -> Dict[str, Any]:
+    async def get_profile_for_openai(
+        self, name: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get profile parameters formatted for OpenAI API."""
         if name:
             profile = await self.get_profile(name)
@@ -322,11 +328,15 @@ class LLMProfileService(BaseService):
                 other_params=source_profile.other_params,
             )
 
-            self._log_operation_success(operation, source_name=source_name, new_name=new_name)
+            self._log_operation_success(
+                operation, source_name=source_name, new_name=new_name
+            )
             return new_profile
 
         except Exception as e:
-            self._log_operation_error(operation, e, source_name=source_name, new_name=new_name)
+            self._log_operation_error(
+                operation, e, source_name=source_name, new_name=new_name
+            )
             raise
 
     async def get_profile_stats(self) -> Dict[str, Any]:
@@ -424,18 +434,18 @@ class LLMProfileService(BaseService):
             if presence_penalty is not None and (
                 presence_penalty < -2.0 or presence_penalty > 2.0
             ):
-                errors["presence_penalty"] = (
-                    "presence_penalty must be between -2.0 and 2.0"
-                )
+                errors[
+                    "presence_penalty"
+                ] = "presence_penalty must be between -2.0 and 2.0"
 
         if "frequency_penalty" in parameters:
             frequency_penalty = parameters["frequency_penalty"]
             if frequency_penalty is not None and (
                 frequency_penalty < -2.0 or frequency_penalty > 2.0
             ):
-                errors["frequency_penalty"] = (
-                    "frequency_penalty must be between -2.0 and 2.0"
-                )
+                errors[
+                    "frequency_penalty"
+                ] = "frequency_penalty must be between -2.0 and 2.0"
 
         return errors
 
@@ -468,12 +478,12 @@ class LLMProfileService(BaseService):
             if candidate:
                 candidate.is_default = True
                 await self.db.commit()
-                self._log_operation_success(
-                    operation, new_default=candidate.name
-                )
+                self._log_operation_success(operation, new_default=candidate.name)
                 return True
             else:
-                self.logger.warning("No active LLM profiles available to set as default")
+                self.logger.warning(
+                    "No active LLM profiles available to set as default"
+                )
                 return False
 
         except Exception as e:

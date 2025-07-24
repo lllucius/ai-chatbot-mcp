@@ -8,10 +8,9 @@ various algorithms including vector similarity, text search, and hybrid approach
 
 import time
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import SearchError, ValidationError
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
@@ -44,7 +43,12 @@ async def search_documents(
     - hybrid: Combines vector and text search
     - mmr: Maximum Marginal Relevance for diverse results
     """
-    log_api_call("search_documents", user_id=str(current_user.id), query=request.query, algorithm=request.algorithm)
+    log_api_call(
+        "search_documents",
+        user_id=str(current_user.id),
+        query=request.query,
+        algorithm=request.algorithm,
+    )
 
     start_time = time.time()
 
@@ -79,14 +83,17 @@ async def find_similar_chunks(
     Uses vector similarity to find document chunks that are
     semantically similar to the specified chunk.
     """
-    log_api_call("find_similar_chunks", user_id=str(current_user.id), chunk_id=chunk_id, limit=limit)
+    log_api_call(
+        "find_similar_chunks",
+        user_id=str(current_user.id),
+        chunk_id=chunk_id,
+        limit=limit,
+    )
 
     start_time = time.time()
 
     # Find similar chunks
-    results = await search_service.get_similar_chunks(
-        chunk_id, current_user.id, limit
-    )
+    results = await search_service.get_similar_chunks(chunk_id, current_user.id, limit)
 
     # Calculate search time
     search_time_ms = (time.time() - start_time) * 1000
@@ -116,7 +123,9 @@ async def get_search_suggestions(
     Returns suggested search terms based on document content
     and previous search patterns.
     """
-    log_api_call("get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit)
+    log_api_call(
+        "get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit
+    )
 
     # This is a simplified implementation
     # In a production system, you might want to implement

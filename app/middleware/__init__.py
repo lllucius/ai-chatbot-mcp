@@ -15,7 +15,7 @@ from .core import (
 
 __all__ = [
     "logging_middleware",
-    "debug_content_middleware", 
+    "debug_content_middleware",
     "timing_middleware",
     "validation_middleware",
     "rate_limiting_middleware",

@@ -23,6 +23,8 @@ from .tool_executor import (
     get_unified_tool_executor,
 )
 
+from .logging import StructuredLogger, get_logger, setup_logging
+
 __all__ = [
     "ChatbotPlatformException",
     "ValidationError",
@@ -37,4 +39,7 @@ __all__ = [
     "ToolResult",
     "ToolProvider",
     "get_unified_tool_executor",
+    "setup_logging",
+    "get_logger",
+    "StructuredLogger",
 ]

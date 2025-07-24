@@ -8,7 +8,7 @@ track their usage, and support default prompt handling.
 
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
@@ -95,7 +95,7 @@ class PromptService(BaseService):
     ) -> tuple[List[Prompt], int]:
         """List prompts with optional filtering and pagination."""
         filters = []
-        
+
         if active_only:
             filters.append(Prompt.is_active)
         if category:
@@ -368,9 +368,7 @@ class PromptService(BaseService):
             if candidate:
                 candidate.is_default = True
                 await self.db.commit()
-                self._log_operation_success(
-                    operation, new_default=candidate.name
-                )
+                self._log_operation_success(operation, new_default=candidate.name)
                 return True
             else:
                 self.logger.warning("No active prompts available to set as default")

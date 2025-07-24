@@ -15,7 +15,13 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..services.prompt_service import PromptService
-from .base import console, error_message, info_message, success_message, get_service_context
+from .base import (
+    console,
+    error_message,
+    info_message,
+    success_message,
+    get_service_context,
+)
 
 # Create the prompt management app
 prompt_app = typer.Typer(help="📝 Prompt management commands", rich_markup_mode="rich")
@@ -42,7 +48,11 @@ def list_prompts(
         try:
             async with get_service_context(PromptService) as prompt_service:
                 prompts, total = await prompt_service.list_prompts(
-                    active_only=active_only, category=category, search=search, page=1, size=100
+                    active_only=active_only,
+                    category=category,
+                    search=search,
+                    page=1,
+                    size=100,
                 )
 
             if not prompts:

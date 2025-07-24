@@ -6,7 +6,6 @@ middleware, exception handlers, and API routes.
 
 """
 
-import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
@@ -39,9 +38,9 @@ from .middleware import (
     validation_middleware,
     rate_limiting_middleware,
 )
+from .middleware.performance import start_system_monitoring
+from .middleware.rate_limiting import start_rate_limiter_cleanup
 from .utils.caching import start_cache_cleanup_task
-from .utils.performance import start_system_monitoring
-from .utils.rate_limiting import start_rate_limiter_cleanup
 from .utils.timestamp import get_current_timestamp
 
 # Setup logging
@@ -164,17 +163,20 @@ app.openapi = custom_openapi
 
 # Apply middleware in the correct order (innermost to outermost)
 
+
 # Debug content middleware (only active when debug=True)
 @app.middleware("http")
 async def debug_content_middleware_wrapper(request: Request, call_next):
     """Debug content logging middleware wrapper."""
     return await debug_content_middleware(request, call_next)
 
+
 # Standard request logging middleware
 @app.middleware("http")
 async def logging_middleware_wrapper(request: Request, call_next):
-    """Request logging middleware wrapper.""" 
+    """Request logging middleware wrapper."""
     return await logging_middleware(request, call_next)
+
 
 # Request timing middleware with performance monitoring
 @app.middleware("http")
@@ -182,11 +184,13 @@ async def timing_middleware_wrapper(request: Request, call_next):
     """Request timing middleware wrapper."""
     return await timing_middleware(request, call_next)
 
+
 # Input validation middleware
 @app.middleware("http")
 async def validation_middleware_wrapper(request: Request, call_next):
     """Input validation middleware wrapper."""
     return await validation_middleware(request, call_next)
+
 
 # Rate limiting middleware (applied first, outermost)
 @app.middleware("http")

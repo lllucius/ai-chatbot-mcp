@@ -47,7 +47,11 @@ async def list_prompts(
 
     try:
         prompts, total = await prompt_service.list_prompts(
-            active_only=active_only, category=category, search=search, page=page, size=size
+            active_only=active_only,
+            category=category,
+            search=search,
+            page=page,
+            size=size,
         )
 
         return {

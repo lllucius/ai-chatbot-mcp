@@ -6,10 +6,10 @@ API endpoints and the client SDK to ensure consistency and reduce duplication.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 # Base models
 class BaseResponse(BaseModel):

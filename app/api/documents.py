@@ -22,7 +22,6 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
-from ..core.exceptions import DocumentError, NotFoundError, ValidationError
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
@@ -62,8 +61,10 @@ async def upload_document(
 
     Enhanced with auto-processing option and priority control.
     """
-    log_api_call("upload_document", user_id=str(user.id), title=title, auto_process=auto_process)
-    
+    log_api_call(
+        "upload_document", user_id=str(user.id), title=title, auto_process=auto_process
+    )
+
     # Create document
     document = await service.create_document(file, title, user.id)
 
@@ -170,9 +171,9 @@ async def delete_document(
     success = await document_service.delete_document(document_id, current_user.id)
 
     if success:
-        return baseresponse(success=true, message="document deleted successfully")
+        return BaseResponse(success=True, message="document deleted successfully")
     else:
-        raise httpexception(
+        raise HTTPException(
             status_code=status.http_404_not_found, detail="document not found"
         )
 
@@ -219,9 +220,7 @@ async def reprocess_document(
     chunking, and embedding generation. Useful if processing failed
     or if you want to update with new processing parameters.
     """
-    success = await document_service.reprocess_document(
-        document_id, current_user.id
-    )
+    success = await document_service.reprocess_document(document_id, current_user.id)
 
     if success:
         return BaseResponse(success=True, message="Document reprocessing started")

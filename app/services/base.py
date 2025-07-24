@@ -13,7 +13,7 @@ from uuid import UUID
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError, ValidationError
+from ..core.exceptions import NotFoundError
 from ..core.logging import StructuredLogger
 
 ModelType = TypeVar("ModelType")
@@ -143,7 +143,9 @@ class BaseService(ABC):
         entity = result.scalar_one_or_none()
 
         if not entity:
-            message = error_message or f"{model.__name__} not found with ID: {entity_id}"
+            message = (
+                error_message or f"{model.__name__} not found with ID: {entity_id}"
+            )
             raise NotFoundError(message)
 
         return entity

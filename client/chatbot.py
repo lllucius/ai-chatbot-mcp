@@ -19,11 +19,10 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Optional
 
 from client.ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest,
-                            ConversationCreate, DocumentSearchRequest,
-                            PromptCreate, LLMProfileCreate)
+                            ConversationCreate, DocumentSearchRequest)
 from client.config import ChatbotConfig, load_config, get_default_token_file
 
 # --- UTILITIES ---

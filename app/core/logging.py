@@ -26,7 +26,7 @@ import traceback
 import uuid
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Optional
 
 from ..config import settings
 
@@ -34,7 +34,7 @@ from ..config import settings
 class StructuredFormatter(logging.Formatter):
     """
     Structured JSON formatter for production logging.
-    
+
     Provides consistent structured logging with metadata for monitoring
     and log aggregation systems.
     """
@@ -43,7 +43,9 @@ class StructuredFormatter(logging.Formatter):
         """Format log record as structured JSON."""
         # Base log entry - use timezone-aware datetime
         log_entry = {
-            "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat().replace('+00:00', 'Z'),
+            "timestamp": datetime.fromtimestamp(record.created, UTC)
+            .isoformat()
+            .replace("+00:00", "Z"),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -91,7 +93,7 @@ class StructuredFormatter(logging.Formatter):
 class DevelopmentFormatter(logging.Formatter):
     """
     Human-readable formatter for development logging.
-    
+
     Provides colored, readable output for local development with
     essential context information.
     """
@@ -146,7 +148,7 @@ class DevelopmentFormatter(logging.Formatter):
 class ContextFilter(logging.Filter):
     """
     Filter to add contextual information to log records.
-    
+
     Adds correlation IDs, user context, and operation context to all log records.
     """
 
@@ -182,7 +184,7 @@ class ContextFilter(logging.Filter):
 class PerformanceLogger:
     """
     Logger for performance monitoring and metrics.
-    
+
     Provides easy-to-use decorators and context managers for
     tracking operation performance.
     """
@@ -264,7 +266,7 @@ class StructuredLogger:
     This class provides methods for logging with structured data
     that can be easily parsed and analyzed. It also includes timing
     capabilities and contextual information for better observability.
-    
+
     This is provided for backward compatibility with existing services.
     """
 
@@ -351,7 +353,7 @@ class StructuredLogger:
 class LoggingService:
     """
     Centralized logging service for the application.
-    
+
     This class provides a unified interface for all logging functionality,
     consolidating configuration, context management, and specialized loggers.
     """
@@ -535,11 +537,7 @@ class LoggingService:
             self._context_filter.set_operation(operation)
 
     def log_structured(
-        self,
-        logger: logging.Logger,
-        level: str,
-        message: str,
-        **kwargs
+        self, logger: logging.Logger, level: str, message: str, **kwargs
     ):
         """
         Log a message with structured data.
@@ -551,7 +549,7 @@ class LoggingService:
             **kwargs: Additional structured data
         """
         log_method = getattr(logger, level.lower())
-        
+
         if kwargs:
             extra_fields = kwargs
             log_method(message, extra={"extra_fields": extra_fields})
@@ -562,56 +560,66 @@ class LoggingService:
 # Global logging service instance
 logging_service = LoggingService()
 
+
 # Convenience functions for backward compatibility
 def setup_logging(**kwargs) -> logging.Logger:
     """Setup logging using the global logging service."""
     return logging_service.setup_logging(**kwargs)
 
+
 def get_logger(name: str) -> logging.Logger:
     """Get a logger using the global logging service."""
     return logging_service.get_logger(name)
+
 
 def get_api_logger(endpoint_name: str) -> logging.Logger:
     """Get an API logger using the global logging service."""
     return logging_service.get_api_logger(endpoint_name)
 
+
 def get_service_logger(service_name: str) -> logging.Logger:
     """Get a service logger using the global logging service."""
     return logging_service.get_service_logger(service_name)
+
 
 def get_component_logger(component_name: str) -> logging.Logger:
     """Get a component logger using the global logging service."""
     return logging_service.get_component_logger(component_name)
 
+
 def get_performance_logger(name: str) -> PerformanceLogger:
     """Get a performance logger using the global logging service."""
     return logging_service.get_performance_logger(name)
+
 
 def set_correlation_id(correlation_id: Optional[str] = None) -> str:
     """Set correlation ID using the global logging service."""
     return logging_service.set_correlation_id(correlation_id)
 
+
 def set_user_context(user_id: str):
     """Set user context using the global logging service."""
     logging_service.set_user_context(user_id)
+
 
 def set_operation_context(operation: str):
     """Set operation context using the global logging service."""
     logging_service.set_operation_context(operation)
 
+
 # Export StructuredLogger for backward compatibility
 __all__ = [
     "LoggingService",
-    "StructuredLogger", 
+    "StructuredLogger",
     "PerformanceLogger",
     "OperationTimer",
     "setup_logging",
     "get_logger",
-    "get_api_logger", 
+    "get_api_logger",
     "get_service_logger",
     "get_component_logger",
     "get_performance_logger",
     "set_correlation_id",
-    "set_user_context", 
+    "set_user_context",
     "set_operation_context",
 ]

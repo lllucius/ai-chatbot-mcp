@@ -22,11 +22,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 # Import the app models and config
 from app.config import settings
-from app.models import (
-    BaseModelDB, TimestampMixin, UUIDMixin,
-    User, Document, DocumentChunk, Conversation, Message,
-    MCPServer, MCPTool, Prompt, LLMProfile
-)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -786,7 +786,9 @@ def trends(
                         growth_status = (
                             "📈 Growing"
                             if growth_rate > 0
-                            else "📉 Declining" if growth_rate < -10 else "➡️ Stable"
+                            else "📉 Declining"
+                            if growth_rate < -10
+                            else "➡️ Stable"
                         )
 
                         growth_panel = Panel(
@@ -795,7 +797,9 @@ def trends(
                             border_style=(
                                 "green"
                                 if growth_rate > 0
-                                else "red" if growth_rate < -10 else "yellow"
+                                else "red"
+                                if growth_rate < -10
+                                else "yellow"
                             ),
                         )
                         console.print(growth_panel)

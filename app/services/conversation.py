@@ -379,7 +379,9 @@ class ConversationService(BaseService):
 
                 # Record profile usage if we have a profile
                 if llm_profile:
-                    await self.llm_profile_service.record_profile_usage(llm_profile.name)
+                    await self.llm_profile_service.record_profile_usage(
+                        llm_profile.name
+                    )
             except Exception as e:
                 logger.warning(f"Failed to get LLM profile: {e}")
                 llm_profile = None
@@ -537,7 +539,9 @@ class ConversationService(BaseService):
 
                 # Record profile usage if we have a profile
                 if llm_profile:
-                    await self.llm_profile_service.record_profile_usage(llm_profile.name)
+                    await self.llm_profile_service.record_profile_usage(
+                        llm_profile.name
+                    )
             except Exception as e:
                 logger.warning(f"Failed to get LLM profile: {e}")
                 llm_profile = None

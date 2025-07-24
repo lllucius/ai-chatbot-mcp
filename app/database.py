@@ -21,38 +21,44 @@ from .models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
 
+
 # Create async engine with flexible database configuration
 def _get_engine_config():
     """Get database engine configuration based on database type."""
     base_config = {
         "echo": settings.debug,
     }
-    
+
     # Check if we're using PostgreSQL
     if settings.database_url.startswith(("postgresql", "asyncpg")):
         # PostgreSQL-specific configuration
-        base_config.update({
-            "pool_pre_ping": True,
-            "pool_size": 20,
-            "max_overflow": 30,
-            "pool_recycle": 1800,  # 30 minutes
-            "pool_timeout": 30,
-            "pool_reset_on_return": "commit",
-            "connect_args": {
-                "server_settings": {
-                    "jit": "off",  # Disable JIT for better connection performance
+        base_config.update(
+            {
+                "pool_pre_ping": True,
+                "pool_size": 20,
+                "max_overflow": 30,
+                "pool_recycle": 1800,  # 30 minutes
+                "pool_timeout": 30,
+                "pool_reset_on_return": "commit",
+                "connect_args": {
+                    "server_settings": {
+                        "jit": "off",  # Disable JIT for better connection performance
+                    },
+                    "command_timeout": 30,
                 },
-                "command_timeout": 30,
-            },
-        })
+            }
+        )
     elif settings.database_url.startswith("sqlite"):
-        # SQLite-specific configuration  
-        base_config.update({
-            "pool_pre_ping": True,
-            "connect_args": {"check_same_thread": False},
-        })
-    
+        # SQLite-specific configuration
+        base_config.update(
+            {
+                "pool_pre_ping": True,
+                "connect_args": {"check_same_thread": False},
+            }
+        )
+
     return base_config
+
 
 engine = create_async_engine(settings.database_url, **_get_engine_config())
 
@@ -85,7 +91,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         tb = traceback.extract_tb(sys.exc_info()[2])[-1]
         logger.error(
             f"Database connection error: {type(e).__name__}: {e} "
-            f"(File \"{tb.filename}\", line {tb.lineno})"
+            f'(File "{tb.filename}", line {tb.lineno})'
         )
         if session:
             await session.rollback()
@@ -100,7 +106,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             rtb = traceback.extract_tb(sys.exc_info()[2])[-1]
             logger.error(
                 f"Database retry failed: {type(retry_e).__name__}: {retry_e} "
-                f"(File \"{rtb.filename}\", line {rtb.lineno})"
+                f'(File "{rtb.filename}", line {rtb.lineno})'
             )
             if session:
                 await session.rollback()
@@ -109,7 +115,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         tb = traceback.extract_tb(sys.exc_info()[2])[-1]
         logger.error(
             f"SQLAlchemy error: {type(e).__name__}: {e} "
-            f"(File \"{tb.filename}\", line {tb.lineno})"
+            f'(File "{tb.filename}", line {tb.lineno})'
         )
         if session:
             await session.rollback()
@@ -118,7 +124,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         tb = traceback.extract_tb(sys.exc_info()[2])[-1]
         logger.error(
             f"Non-database exception in DB session: {type(e).__name__}: {e} "
-            f"(File \"{tb.filename}\", line {tb.lineno})"
+            f'(File "{tb.filename}", line {tb.lineno})'
         )
         if session:
             await session.rollback()

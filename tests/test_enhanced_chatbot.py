@@ -8,7 +8,6 @@ improved functionality of the chatbot client.
 import json
 import os
 import tempfile
-from pathlib import Path
 from unittest.mock import Mock, patch, mock_open
 import pytest
 

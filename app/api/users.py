@@ -26,7 +26,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError, ValidationError
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..schemas.common import BaseResponse, PaginatedResponse
@@ -149,7 +148,14 @@ async def list_users(
     Returns paginated list of users with optional filtering.
     Requires superuser privileges.
     """
-    log_api_call("list_users", user_id=str(current_user.id), page=page, size=size, active_only=active_only, superuser_only=superuser_only)
+    log_api_call(
+        "list_users",
+        user_id=str(current_user.id),
+        page=page,
+        size=size,
+        active_only=active_only,
+        superuser_only=superuser_only,
+    )
 
     users, total = await user_service.list_users(
         page=page, size=size, active_only=active_only, superuser_only=superuser_only
@@ -179,7 +185,9 @@ async def get_user(
     Returns detailed user information including statistics.
     Requires superuser privileges.
     """
-    log_api_call("get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id))
+    log_api_call(
+        "get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
+    )
 
     profile = await user_service.get_user_profile(user_id)
     return profile
@@ -199,7 +207,9 @@ async def update_user(
     Allows administrators to update any user's profile.
     Requires superuser privileges.
     """
-    log_api_call("update_user", admin_user_id=str(current_user.id), target_user_id=str(user_id))
+    log_api_call(
+        "update_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
+    )
 
     updated_user = await user_service.update_user(user_id, request)
     return UserResponse.model_validate(updated_user)
@@ -218,7 +228,9 @@ async def delete_user(
     Permanently deletes a user and all associated data.
     Requires superuser privileges.
     """
-    log_api_call("delete_user", admin_user_id=str(current_user.id), target_user_id=str(user_id))
+    log_api_call(
+        "delete_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
+    )
 
     # Prevent self-deletion
     if user_id == current_user.id:
