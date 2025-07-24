@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import Field, constr, field_validator
+from pydantic import Field, constr
 
 from .base import BaseSchema
 from .common import BaseResponse

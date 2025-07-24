@@ -13,14 +13,12 @@ import asyncio
 import logging
 import mimetypes
 import os
-import tempfile
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List
 
 import psutil
 from unstructured.partition.auto import partition
 from unstructured.chunking.title import chunk_by_title
-from unstructured.staging.base import convert_to_dict
 
 from ..core.exceptions import DocumentError, ValidationError
 

@@ -429,7 +429,7 @@ class FastMCPClientService:
                     name=original_tool_name, arguments=parameters
                 )
             success = True
-        except Exception as e:
+        except Exception:
             success = False
             raise
         finally:

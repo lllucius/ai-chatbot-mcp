@@ -44,8 +44,6 @@ from ..models.document import Document, DocumentChunk, FileStatus
 from ..schemas.document import DocumentUpdate
 from ..services.background_processor import get_background_processor
 from ..services.embedding import EmbeddingService
-from ..utils.enhanced_document_processor import \
-    DocumentProcessor as EnhancedDocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
@@ -90,7 +88,6 @@ class DocumentService(BaseService):
 
         # Initialize processing components
         self.file_processor = FileProcessor()
-        self.enhanced_processor = EnhancedDocumentProcessor(config={})
         self.text_processor = TextProcessor(
             chunk_size=settings.default_chunk_size,
             chunk_overlap=settings.default_chunk_overlap,
@@ -241,8 +238,7 @@ class DocumentService(BaseService):
                     "upload_info": file_info,
                     "processing_config": {
                         "chunk_size": settings.default_chunk_size,
-                        "chunk_overlap": settings.default_chunk_overlap,
-                        "enhanced_processor": True,
+                        "chunk_overlap": settings.default_chunk_overlap
                     },
                 },
             )

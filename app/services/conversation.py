@@ -387,7 +387,7 @@ class ConversationService(BaseService):
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:
                 try:
-                    mcp_client = await get_mcp_client()
+                    _ = await get_mcp_client()
                     openai_params["use_unified_tools"] = True
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
@@ -544,7 +544,7 @@ class ConversationService(BaseService):
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:
                 try:
-                    mcp_client = await get_mcp_client()
+                    _ = await get_mcp_client()
                     openai_params["use_unified_tools"] = True
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
@@ -840,7 +840,7 @@ class ConversationService(BaseService):
 
             # Get tool stats from enhanced MCP client
             mcp_client = await get_mcp_client()
-            health = await enhanced_client.health_check()
+            health = await mcp_client.health_check()
 
             return {
                 "prompts": {

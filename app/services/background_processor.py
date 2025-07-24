@@ -35,7 +35,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..services.embedding import EmbeddingService
-from ..utils.enhanced_document_processor import DocumentProcessor
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
@@ -119,7 +118,6 @@ class BackgroundProcessor(BaseService):
         self.task_results: Dict[str, Dict[str, Any]] = {}
 
         # Processing components
-        self.document_processor = DocumentProcessor(config={})
         self.file_processor = FileProcessor()
         self.text_processor = TextProcessor(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
