@@ -9,19 +9,27 @@ track their usage, and support default profile handling.
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import AsyncSessionLocal
+from ..core.exceptions import NotFoundError, ValidationError
 from ..models.llm_profile import LLMProfile
-from ..utils.logging import get_api_logger
-
-logger = get_api_logger("llm_profile_service")
+from .base import BaseService
 
 
-class LLMProfileService:
-    """Service for managing LLM parameter profiles and their usage."""
+class LLMProfileService(BaseService):
+    """Service for managing LLM parameter profiles and their usage with dependency injection."""
 
-    @staticmethod
+    def __init__(self, db: AsyncSession):
+        """
+        Initialize LLM profile service with database session.
+
+        Args:
+            db: Database session for LLM profile operations
+        """
+        super().__init__(db, "llm_profile_service")
+
     async def create_profile(
+        self,
         name: str,
         title: str,
         description: Optional[str] = None,
@@ -29,10 +37,15 @@ class LLMProfileService:
         **parameters,
     ) -> LLMProfile:
         """Create a new LLM profile."""
-        async with AsyncSessionLocal() as db:
+        operation = "create_profile"
+        self._log_operation_start(operation, name=name, is_default=is_default)
+
+        try:
+            await self._ensure_db_session()
+
             # If setting as default, unset any existing defaults
             if is_default:
-                await db.execute(update(LLMProfile).values(is_default=False))
+                await self._bulk_update(LLMProfile, [], {"is_default": False})
 
             # Separate known parameters from others
             known_params = {
@@ -66,289 +79,308 @@ class LLMProfileService:
                 **profile_params,
             )
 
-            db.add(profile)
-            await db.commit()
-            await db.refresh(profile)
+            self.db.add(profile)
+            await self.db.commit()
+            await self.db.refresh(profile)
 
-            logger.info(f"Created LLM profile: {name}")
+            self._log_operation_success(operation, name=name, profile_id=str(profile.id))
             return profile
 
-    @staticmethod
-    async def get_profile(name: str) -> Optional[LLMProfile]:
+        except Exception as e:
+            self._log_operation_error(operation, e, name=name)
+            await self.db.rollback()
+            raise ValidationError(f"LLM profile creation failed: {e}")
+
+    async def get_profile(self, name: str) -> Optional[LLMProfile]:
         """Get a profile by name."""
-        async with AsyncSessionLocal() as db:
-            result = await db.execute(select(LLMProfile).where(LLMProfile.name == name))
-            return result.scalar_one_or_none()
+        try:
+            return await self._get_by_field(LLMProfile, "name", name)
+        except NotFoundError:
+            return None
 
-    @staticmethod
-    async def get_default_profile() -> Optional[LLMProfile]:
+    async def get_default_profile(self) -> Optional[LLMProfile]:
         """Get the default profile."""
-        async with AsyncSessionLocal() as db:
-            result = await db.execute(select(LLMProfile).where(LLMProfile.is_default))
-            return result.scalar_one_or_none()
+        result = await self.db.execute(select(LLMProfile).where(LLMProfile.is_default))
+        return result.scalar_one_or_none()
 
-    @staticmethod
     async def list_profiles(
-        active_only: bool = True, search: Optional[str] = None
-    ) -> List[LLMProfile]:
-        """List profiles with optional filtering."""
-        async with AsyncSessionLocal() as db:
-            query = select(LLMProfile)
+        self, 
+        active_only: bool = True, 
+        search: Optional[str] = None,
+        page: int = 1,
+        size: int = 50,
+    ) -> tuple[List[LLMProfile], int]:
+        """List profiles with optional filtering and pagination."""
+        filters = []
+        
+        if active_only:
+            filters.append(LLMProfile.is_active)
 
-            filters = []
-            if active_only:
-                filters.append(LLMProfile.is_active)
-            if search:
-                # Search in name, title, and description
-                search_term = f"%{search}%"
-                filters.append(
-                    or_(
-                        LLMProfile.name.ilike(search_term),
-                        LLMProfile.title.ilike(search_term),
-                        LLMProfile.description.ilike(search_term),
-                    )
-                )
-
-            if filters:
-                query = query.where(and_(*filters))
-
-            result = await db.execute(query.order_by(LLMProfile.name))
-            return list(result.scalars().all())
-
-    @staticmethod
-    async def update_profile(name: str, **updates) -> Optional[LLMProfile]:
-        """Update a profile."""
-        async with AsyncSessionLocal() as db:
-            profile = await db.execute(
-                select(LLMProfile).where(LLMProfile.name == name)
+        if search:
+            # Use the base service search functionality
+            return await self._search_entities(
+                model=LLMProfile,
+                search_fields=["name", "title", "description"],
+                search_term=search,
+                additional_filters=filters,
+                page=page,
+                size=size,
             )
-            profile = profile.scalar_one_or_none()
+        else:
+            return await self._list_with_filters(
+                model=LLMProfile,
+                filters=filters,
+                page=page,
+                size=size,
+                order_by=LLMProfile.name,
+            )
 
+    async def update_profile(self, name: str, **updates) -> Optional[LLMProfile]:
+        """Update a profile."""
+        operation = "update_profile"
+        self._log_operation_start(operation, name=name, updates=list(updates.keys()))
+
+        try:
+            profile = await self.get_profile(name)
             if not profile:
                 return None
 
             # Handle is_default specially
             if updates.get("is_default"):
                 # Unset any existing defaults
-                await db.execute(update(LLMProfile).values(is_default=False))
+                await self._bulk_update(LLMProfile, [], {"is_default": False})
 
-            for key, value in updates.items():
-                if hasattr(profile, key):
-                    setattr(profile, key, value)
+            # Update fields
+            profile = await self._update_entity(profile, updates)
 
-            await db.commit()
-            await db.refresh(profile)
-
-            logger.info(f"Updated LLM profile: {name}")
+            self._log_operation_success(operation, name=name, profile_id=str(profile.id))
             return profile
 
-    @staticmethod
-    async def delete_profile(name: str) -> bool:
-        """Delete a profile and ensure a default remains."""
-        async with AsyncSessionLocal() as db:
-            profile = await db.execute(
-                select(LLMProfile).where(LLMProfile.name == name)
-            )
-            profile = profile.scalar_one_or_none()
+        except Exception as e:
+            self._log_operation_error(operation, e, name=name)
+            await self.db.rollback()
+            raise ValidationError(f"LLM profile update failed: {e}")
 
+    async def delete_profile(self, name: str) -> bool:
+        """Delete a profile and ensure a default remains."""
+        operation = "delete_profile"
+        self._log_operation_start(operation, name=name)
+
+        try:
+            profile = await self.get_profile(name)
             if not profile:
                 return False
 
             was_default = profile.is_default
-
-            await db.delete(profile)
-            await db.commit()
+            await self._delete_entity(profile)
 
             # If we deleted the default profile, assign a new default
             if was_default:
-                await LLMProfileService._ensure_default_profile()
+                await self._ensure_default_profile()
 
-            logger.info(f"Deleted LLM profile: {name}")
+            self._log_operation_success(operation, name=name)
             return True
 
-    @staticmethod
-    async def set_default_profile(name: str) -> bool:
+        except Exception as e:
+            self._log_operation_error(operation, e, name=name)
+            await self.db.rollback()
+            raise
+
+    async def set_default_profile(self, name: str) -> bool:
         """Set a profile as the default."""
-        async with AsyncSessionLocal() as db:
+        operation = "set_default_profile"
+        self._log_operation_start(operation, name=name)
+
+        try:
             # First unset all defaults
-            await db.execute(update(LLMProfile).values(is_default=False))
+            await self._bulk_update(LLMProfile, [], {"is_default": False})
 
             # Set the new default
-            result = await db.execute(
-                update(LLMProfile)
-                .where(LLMProfile.name == name)
-                .values(is_default=True)
+            result = await self._bulk_update(
+                LLMProfile, [LLMProfile.name == name], {"is_default": True}
             )
-            await db.commit()
 
-            if result.rowcount > 0:
-                logger.info(f"Set default LLM profile: {name}")
+            if result > 0:
+                self._log_operation_success(operation, name=name)
                 return True
             return False
 
-    @staticmethod
-    async def activate_profile(name: str) -> bool:
+        except Exception as e:
+            self._log_operation_error(operation, e, name=name)
+            await self.db.rollback()
+            raise
+
+    async def activate_profile(self, name: str) -> bool:
         """Activate a profile."""
-        async with AsyncSessionLocal() as db:
-            result = await db.execute(
-                update(LLMProfile).where(LLMProfile.name == name).values(is_active=True)
-            )
-            await db.commit()
+        operation = "activate_profile"
+        self._log_operation_start(operation, name=name)
 
-            if result.rowcount > 0:
-                logger.info(f"Activated LLM profile: {name}")
+        try:
+            result = await self._bulk_update(
+                LLMProfile, [LLMProfile.name == name], {"is_active": True}
+            )
+
+            if result > 0:
+                self._log_operation_success(operation, name=name)
                 return True
             return False
 
-    @staticmethod
-    async def deactivate_profile(name: str) -> bool:
-        """Deactivate a profile and ensure a default remains."""
-        async with AsyncSessionLocal() as db:
-            # Get the profile to check if it's the default
-            profile = await db.execute(
-                select(LLMProfile).where(LLMProfile.name == name)
-            )
-            profile = profile.scalar_one_or_none()
+        except Exception as e:
+            self._log_operation_error(operation, e, name=name)
+            await self.db.rollback()
+            raise
 
+    async def deactivate_profile(self, name: str) -> bool:
+        """Deactivate a profile and ensure a default remains."""
+        operation = "deactivate_profile"
+        self._log_operation_start(operation, name=name)
+
+        try:
+            # Get the profile to check if it's the default
+            profile = await self.get_profile(name)
             if not profile:
                 return False
 
             was_default = profile.is_default
 
-            result = await db.execute(
-                update(LLMProfile)
-                .where(LLMProfile.name == name)
-                .values(is_active=False)
+            result = await self._bulk_update(
+                LLMProfile, [LLMProfile.name == name], {"is_active": False}
             )
-            await db.commit()
 
-            if result.rowcount > 0:
+            if result > 0:
                 # If we deactivated the default profile, assign a new default
                 if was_default:
-                    await LLMProfileService._ensure_default_profile()
+                    await self._ensure_default_profile()
 
-                logger.info(f"Deactivated LLM profile: {name}")
+                self._log_operation_success(operation, name=name)
                 return True
             return False
 
-    @staticmethod
-    async def record_profile_usage(name: str) -> bool:
-        """Record a profile usage event."""
-        async with AsyncSessionLocal() as db:
-            profile = await db.execute(
-                select(LLMProfile).where(LLMProfile.name == name)
-            )
-            profile = profile.scalar_one_or_none()
+        except Exception as e:
+            self._log_operation_error(operation, e, name=name)
+            await self.db.rollback()
+            raise
 
+    async def record_profile_usage(self, name: str) -> bool:
+        """Record a profile usage event."""
+        try:
+            profile = await self.get_profile(name)
             if not profile:
                 return False
 
             profile.record_usage()
-            await db.commit()
-
+            await self.db.commit()
             return True
 
-    @staticmethod
-    async def get_profile_for_openai(name: Optional[str] = None) -> Dict[str, Any]:
+        except Exception as e:
+            self.logger.warning(f"Failed to record profile usage: {e}")
+            await self.db.rollback()
+            return False
+
+    async def get_profile_for_openai(self, name: Optional[str] = None) -> Dict[str, Any]:
         """Get profile parameters formatted for OpenAI API."""
         if name:
-            profile = await LLMProfileService.get_profile(name)
+            profile = await self.get_profile(name)
         else:
-            profile = await LLMProfileService.get_default_profile()
+            profile = await self.get_default_profile()
 
         if not profile:
             return {}
 
         # Record usage
-        await LLMProfileService.record_profile_usage(profile.name)
+        await self.record_profile_usage(profile.name)
 
         return profile.to_openai_params()
 
-    @staticmethod
     async def clone_profile(
-        source_name: str, new_name: str, new_title: Optional[str] = None
+        self, source_name: str, new_name: str, new_title: Optional[str] = None
     ) -> Optional[LLMProfile]:
         """Clone an existing profile with a new name."""
-        source_profile = await LLMProfileService.get_profile(source_name)
-        if not source_profile:
-            return None
+        operation = "clone_profile"
+        self._log_operation_start(operation, source_name=source_name, new_name=new_name)
 
-        new_profile = await LLMProfileService.create_profile(
-            name=new_name,
-            title=new_title or f"{source_profile.title} (Copy)",
-            description=source_profile.description,
-            is_default=False,  # Never clone as default
-            temperature=source_profile.temperature,
-            top_p=source_profile.top_p,
-            top_k=source_profile.top_k,
-            repeat_penalty=source_profile.repeat_penalty,
-            max_tokens=source_profile.max_tokens,
-            max_new_tokens=source_profile.max_new_tokens,
-            context_length=source_profile.context_length,
-            presence_penalty=source_profile.presence_penalty,
-            frequency_penalty=source_profile.frequency_penalty,
-            stop=source_profile.stop,
-            other_params=source_profile.other_params,
+        try:
+            source_profile = await self.get_profile(source_name)
+            if not source_profile:
+                return None
+
+            new_profile = await self.create_profile(
+                name=new_name,
+                title=new_title or f"{source_profile.title} (Copy)",
+                description=source_profile.description,
+                is_default=False,  # Never clone as default
+                temperature=source_profile.temperature,
+                top_p=source_profile.top_p,
+                top_k=source_profile.top_k,
+                repeat_penalty=source_profile.repeat_penalty,
+                max_tokens=source_profile.max_tokens,
+                max_new_tokens=source_profile.max_new_tokens,
+                context_length=source_profile.context_length,
+                presence_penalty=source_profile.presence_penalty,
+                frequency_penalty=source_profile.frequency_penalty,
+                stop=source_profile.stop,
+                other_params=source_profile.other_params,
+            )
+
+            self._log_operation_success(operation, source_name=source_name, new_name=new_name)
+            return new_profile
+
+        except Exception as e:
+            self._log_operation_error(operation, e, source_name=source_name, new_name=new_name)
+            raise
+
+    async def get_profile_stats(self) -> Dict[str, Any]:
+        """Get profile usage statistics."""
+        # Total counts
+        total_profiles = await self.db.scalar(select(func.count(LLMProfile.id)))
+        active_profiles = await self.db.scalar(
+            select(func.count(LLMProfile.id)).where(LLMProfile.is_active)
         )
 
-        logger.info(f"Cloned LLM profile {source_name} to {new_name}")
-        return new_profile
-
-    @staticmethod
-    async def get_profile_stats() -> Dict[str, Any]:
-        """Get profile usage statistics."""
-        async with AsyncSessionLocal() as db:
-            # Total counts
-            total_profiles = await db.scalar(select(func.count(LLMProfile.id)))
-            active_profiles = await db.scalar(
-                select(func.count(LLMProfile.id)).where(LLMProfile.is_active)
-            )
-
-            # Most used profiles
-            most_used = await db.execute(
-                select(LLMProfile).order_by(LLMProfile.usage_count.desc()).limit(5)
-            )
-            most_used_list = [
-                {
-                    "name": p.name,
-                    "title": p.title,
-                    "usage_count": p.usage_count,
-                    "last_used_at": p.last_used_at,
-                }
-                for p in most_used.scalars().all()
-            ]
-
-            # Recently used profiles
-            recently_used = await db.execute(
-                select(LLMProfile)
-                .where(LLMProfile.last_used_at.isnot(None))
-                .order_by(LLMProfile.last_used_at.desc())
-                .limit(5)
-            )
-            recently_used_list = [
-                {
-                    "name": p.name,
-                    "title": p.title,
-                    "usage_count": p.usage_count,
-                    "last_used_at": p.last_used_at,
-                }
-                for p in recently_used.scalars().all()
-            ]
-
-            # Default profile
-            default_profile = await LLMProfileService.get_default_profile()
-
-            return {
-                "total_profiles": total_profiles,
-                "active_profiles": active_profiles,
-                "inactive_profiles": total_profiles - active_profiles,
-                "default_profile": default_profile.name if default_profile else None,
-                "most_used": most_used_list,
-                "recently_used": recently_used_list,
+        # Most used profiles
+        most_used = await self.db.execute(
+            select(LLMProfile).order_by(LLMProfile.usage_count.desc()).limit(5)
+        )
+        most_used_list = [
+            {
+                "name": p.name,
+                "title": p.title,
+                "usage_count": p.usage_count,
+                "last_used_at": p.last_used_at,
             }
+            for p in most_used.scalars().all()
+        ]
 
-    @staticmethod
-    async def validate_parameters(**parameters) -> Dict[str, str]:
+        # Recently used profiles
+        recently_used = await self.db.execute(
+            select(LLMProfile)
+            .where(LLMProfile.last_used_at.isnot(None))
+            .order_by(LLMProfile.last_used_at.desc())
+            .limit(5)
+        )
+        recently_used_list = [
+            {
+                "name": p.name,
+                "title": p.title,
+                "usage_count": p.usage_count,
+                "last_used_at": p.last_used_at,
+            }
+            for p in recently_used.scalars().all()
+        ]
+
+        # Default profile
+        default_profile = await self.get_default_profile()
+
+        return {
+            "total_profiles": total_profiles,
+            "active_profiles": active_profiles,
+            "inactive_profiles": total_profiles - active_profiles,
+            "default_profile": default_profile.name if default_profile else None,
+            "most_used": most_used_list,
+            "recently_used": recently_used_list,
+        }
+
+    async def validate_parameters(self, **parameters) -> Dict[str, str]:
         """Validate LLM parameters and return any errors."""
         errors = {}
 
@@ -407,12 +439,14 @@ class LLMProfileService:
 
         return errors
 
-    @staticmethod
-    async def _ensure_default_profile() -> bool:
+    async def _ensure_default_profile(self) -> bool:
         """Ensure there is at least one default LLM profile active."""
-        async with AsyncSessionLocal() as db:
+        operation = "ensure_default_profile"
+        self._log_operation_start(operation)
+
+        try:
             # Check if there's any active default profile
-            default_profile = await db.execute(
+            default_profile = await self.db.execute(
                 select(LLMProfile).where(
                     and_(LLMProfile.is_default, LLMProfile.is_active)
                 )
@@ -423,7 +457,7 @@ class LLMProfileService:
                 return True  # Already have a default
 
             # Find the most recently used active profile to make default
-            candidate = await db.execute(
+            candidate = await self.db.execute(
                 select(LLMProfile)
                 .where(LLMProfile.is_active)
                 .order_by(LLMProfile.usage_count.desc(), LLMProfile.created_at.desc())
@@ -433,11 +467,16 @@ class LLMProfileService:
 
             if candidate:
                 candidate.is_default = True
-                await db.commit()
-                logger.info(
-                    f"Automatically assigned new default LLM profile: {candidate.name}"
+                await self.db.commit()
+                self._log_operation_success(
+                    operation, new_default=candidate.name
                 )
                 return True
             else:
-                logger.warning("No active LLM profiles available to set as default")
+                self.logger.warning("No active LLM profiles available to set as default")
                 return False
+
+        except Exception as e:
+            self._log_operation_error(operation, e)
+            await self.db.rollback()
+            return False
