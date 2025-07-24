@@ -83,6 +83,7 @@ async def upload_document(
 
 
 @router.get("/", response_model=PaginatedResponse[DocumentResponse])
+@handle_api_errors("Failed to retrieve documents")
 async def list_documents(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
@@ -97,33 +98,27 @@ async def list_documents(
     Returns paginated list of documents owned by the current user
     with optional filtering by file type and processing status.
     """
-    try:
-        documents, total = await document_service.list_documents(
-            user_id=current_user.id,
-            page=page,
-            size=size,
-            file_type=file_type,
-            status_filter=status_filter,
-        )
+    documents, total = await document_service.list_documents(
+        user_id=current_user.id,
+        page=page,
+        size=size,
+        file_type=file_type,
+        status_filter=status_filter,
+    )
 
-        document_responses = [DocumentResponse.model_validate(doc) for doc in documents]
+    document_responses = [DocumentResponse.model_validate(doc) for doc in documents]
 
-        return PaginatedResponse.create(
-            items=document_responses,
-            total=total,
-            page=page,
-            size=size,
-            message="Documents retrieved successfully",
-        )
-
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve documents",
-        )
+    return PaginatedResponse.create(
+        items=document_responses,
+        total=total,
+        page=page,
+        size=size,
+        message="Documents retrieved successfully",
+    )
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
+@handle_api_errors("Failed to retrieve document")
 async def get_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -135,20 +130,12 @@ async def get_document(
     Returns detailed information about a specific document
     owned by the current user.
     """
-    try:
-        document = await document_service.get_document(document_id, current_user.id)
-        return DocumentResponse.model_validate(document)
-
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve document",
-        )
+    document = await document_service.get_document(document_id, current_user.id)
+    return DocumentResponse.model_validate(document)
 
 
 @router.put("/{document_id}", response_model=DocumentResponse)
+@handle_api_errors("Document update failed")
 async def update_document(
     document_id: UUID,
     request: DocumentUpdate,
@@ -161,24 +148,14 @@ async def update_document(
     Allows updating document title and metadata.
     Cannot change the actual file content.
     """
-    try:
-        document = await document_service.update_document(
-            document_id, request, current_user.id
-        )
-        return DocumentResponse.model_validate(document)
-
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Document update failed",
-        )
+    document = await document_service.update_document(
+        document_id, request, current_user.id
+    )
+    return DocumentResponse.model_validate(document)
 
 
 @router.delete("/{document_id}", response_model=BaseResponse)
+@handle_api_errors("Document deletion failed")
 async def delete_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -190,22 +167,13 @@ async def delete_document(
     Permanently deletes the document, its chunks, embeddings,
     and removes the file from storage.
     """
-    try:
-        success = await document_service.delete_document(document_id, current_user.id)
+    success = await document_service.delete_document(document_id, current_user.id)
 
-        if success:
-            return BaseResponse(success=True, message="Document deleted successfully")
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
-            )
-
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Document deletion failed",
+    if success:
+        return baseresponse(success=true, message="document deleted successfully")
+    else:
+        raise httpexception(
+            status_code=status.http_404_not_found, detail="document not found"
         )
 
 
@@ -225,28 +193,20 @@ async def get_processing_status(
     Returns current processing status, progress, and any error information
     for the specified document. Can include background task details if task_id is provided.
     """
-    try:
-        if task_id:
-            # Enhanced processing status with task details
-            status_info = await service.get_processing_status(document_id, task_id)
-            message = "Enhanced processing status retrieved"
-        else:
-            # Basic processing status
-            status_info = await service.get_processing_status(document_id, user.id)
-            message = "Processing status retrieved"
+    if task_id:
+        # Enhanced processing status with task details
+        status_info = await service.get_processing_status(document_id, task_id)
+        message = "Enhanced processing status retrieved"
+    else:
+        # Basic processing status
+        status_info = await service.get_processing_status(document_id, user.id)
+        message = "Processing status retrieved"
 
-        return ProcessingStatusResponse(success=True, message=message, **status_info)
-
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve processing status",
-        )
+    return ProcessingStatusResponse(success=True, message=message, **status_info)
 
 
 @router.post("/{document_id}/reprocess", response_model=BaseResponse)
+@handle_api_errors("Reprocessing failed for document", log_errors=True)
 async def reprocess_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -259,29 +219,21 @@ async def reprocess_document(
     chunking, and embedding generation. Useful if processing failed
     or if you want to update with new processing parameters.
     """
-    try:
-        success = await document_service.reprocess_document(
-            document_id, current_user.id
-        )
+    success = await document_service.reprocess_document(
+        document_id, current_user.id
+    )
 
-        if success:
-            return BaseResponse(success=True, message="Document reprocessing started")
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot reprocess document at this time",
-            )
-
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
+    if success:
+        return BaseResponse(success=True, message="Document reprocessing started")
+    else:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Reprocessing failed",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot reprocess document at this time",
         )
 
 
 @router.get("/{document_id}/download")
+@handle_api_errors("Download of document failed", log_errors=True)
 async def download_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -292,21 +244,13 @@ async def download_document(
 
     Returns the original uploaded file for download.
     """
-    try:
-        file_path, filename, mime_type = await document_service.get_download_info(
-            document_id, current_user.id
-        )
+    file_path, filename, mime_type = await document_service.get_download_info(
+        document_id, current_user.id
+    )
 
-        from fastapi.responses import FileResponse
+    from fastapi.responses import FileResponse
 
-        return FileResponse(path=file_path, filename=filename, media_type=mime_type)
-
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Download failed"
-        )
+    return FileResponse(path=file_path, filename=filename, media_type=mime_type)
 
 
 @router.post("/{document_id}/process", response_model=BackgroundTaskResponse)
@@ -324,25 +268,18 @@ async def start_document_processing(
 
     Initiates text extraction, chunking, and embedding generation.
     """
-    try:
-        task_id = await service.start_processing(document_id, priority=priority)
+    task_id = await service.start_processing(document_id, priority=priority)
 
-        return BackgroundTaskResponse(
-            message="Document processing started",
-            task_id=task_id,
-            document_id=str(document_id),
-            status="queued",
-        )
-
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
-        )
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return BackgroundTaskResponse(
+        message="Document processing started",
+        task_id=task_id,
+        document_id=str(document_id),
+        status="queued",
+    )
 
 
 @router.get("/processing-config", response_model=ProcessingConfigResponse)
+@handle_api_errors("Failed to retrieve configuration", log_errors=True)
 async def get_processing_config() -> ProcessingConfigResponse:
     """
     Get current document processing configuration.
