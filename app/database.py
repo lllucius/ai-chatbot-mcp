@@ -7,6 +7,9 @@ and database initialization utilities.
 
 import asyncio
 import logging
+import sys
+import traceback
+
 from typing import AsyncGenerator
 
 from sqlalchemy import text
@@ -79,7 +82,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
         await session.commit()
     except (DisconnectionError, OperationalError) as e:
-        logger.error(f"Database connection error: {e}")
+        tb = traceback.extract_tb(sys.exc_info()[2])[-1]
+        logger.error(
+            f"Database connection error: {type(e).__name__}: {e} "
+            f"(File \"{tb.filename}\", line {tb.lineno})"
+        )
         if session:
             await session.rollback()
         # Attempt to recreate session for connection errors
@@ -90,17 +97,29 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             yield session
             await session.commit()
         except Exception as retry_e:
-            logger.error(f"Database retry failed: {retry_e}")
+            rtb = traceback.extract_tb(sys.exc_info()[2])[-1]
+            logger.error(
+                f"Database retry failed: {type(retry_e).__name__}: {retry_e} "
+                f"(File \"{rtb.filename}\", line {rtb.lineno})"
+            )
             if session:
                 await session.rollback()
             raise
     except SQLAlchemyError as e:
-        logger.error(f"Database error: {e}")
+        tb = traceback.extract_tb(sys.exc_info()[2])[-1]
+        logger.error(
+            f"SQLAlchemy error: {type(e).__name__}: {e} "
+            f"(File \"{tb.filename}\", line {tb.lineno})"
+        )
         if session:
             await session.rollback()
         raise
     except Exception as e:
-        logger.error(f"Unexpected database error: {e}")
+        tb = traceback.extract_tb(sys.exc_info()[2])[-1]
+        logger.error(
+            f"Non-database exception in DB session: {type(e).__name__}: {e} "
+            f"(File \"{tb.filename}\", line {tb.lineno})"
+        )
         if session:
             await session.rollback()
         raise

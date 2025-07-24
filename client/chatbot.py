@@ -7,6 +7,11 @@ advanced features like registry management, document handling, and configuration
 
 """
 
+# Add the app directory to the Python path
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
 import json
 import os
 import sys

@@ -5,14 +5,14 @@ Demo script for the Enhanced AI Chatbot Terminal Client.
 This script demonstrates the new features and improvements made to the chatbot client,
 including configuration management, registry support, and enhanced commands.
 """
+# Add the project root to the Python path
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 
 import os
-import sys
 import tempfile
-from pathlib import Path
-
-# Add the project root to the Python path
-sys.path.insert(0, str(Path(__file__).parent))
 
 from client.config import ChatbotConfig, load_config
 from client.chatbot import AIChatbotTerminal

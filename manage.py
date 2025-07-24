@@ -27,15 +27,14 @@ Features:
 - Background task management (monitoring, scheduling, retry)
 """
 
+# Add the app directory to the Python path
 import sys
 from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
 
 import typer
 from rich.columns import Columns
 from rich.panel import Panel
-
-# Add the app directory to the Python path
-sys.path.append(str(Path(__file__).parent.parent))
 
 from app.cli.analytics import analytics_app
 from app.cli.base import console, info_message, success_message
