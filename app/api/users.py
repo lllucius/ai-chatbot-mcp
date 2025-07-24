@@ -84,6 +84,7 @@ async def get_my_profile(
 
 
 @router.put("/me", response_model=UserResponse)
+@handle_api_errors("Profile update failed")
 async def update_my_profile(
     request: UserUpdate,
     current_user=Depends(get_current_user),
@@ -95,20 +96,14 @@ async def update_my_profile(
     Allows users to update their own profile information
     such as email and full name.
     """
-    try:
-        updated_user = await user_service.update_user(current_user.id, request)
-        return UserResponse.model_validate(updated_user)
+    log_api_call("update_my_profile", user_id=str(current_user.id))
 
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Profile update failed",
-        )
+    updated_user = await user_service.update_user(current_user.id, request)
+    return UserResponse.model_validate(updated_user)
 
 
 @router.post("/me/change-password", response_model=BaseResponse)
+@handle_api_errors("Password change failed")
 async def change_password(
     request: UserPasswordUpdate,
     current_user=Depends(get_current_user),
@@ -120,25 +115,18 @@ async def change_password(
     Requires the current password for verification
     and the new password.
     """
-    try:
-        success = await user_service.change_password(
-            current_user.id, request.current_password, request.new_password
-        )
+    log_api_call("change_password", user_id=str(current_user.id))
 
-        if success:
-            return BaseResponse(success=True, message="Password changed successfully")
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password is incorrect",
-            )
+    success = await user_service.change_password(
+        current_user.id, request.current_password, request.new_password
+    )
 
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
+    if success:
+        return BaseResponse(success=True, message="Password changed successfully")
+    else:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Password change failed",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
         )
 
 
@@ -146,6 +134,7 @@ async def change_password(
 
 
 @router.get("/", response_model=PaginatedResponse[UserResponse])
+@handle_api_errors("Failed to retrieve users")
 async def list_users(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
@@ -160,29 +149,25 @@ async def list_users(
     Returns paginated list of users with optional filtering.
     Requires superuser privileges.
     """
-    try:
-        users, total = await user_service.list_users(
-            page=page, size=size, active_only=active_only, superuser_only=superuser_only
-        )
+    log_api_call("list_users", user_id=str(current_user.id), page=page, size=size, active_only=active_only, superuser_only=superuser_only)
 
-        user_responses = [UserResponse.model_validate(user) for user in users]
+    users, total = await user_service.list_users(
+        page=page, size=size, active_only=active_only, superuser_only=superuser_only
+    )
 
-        return PaginatedResponse.create(
-            items=user_responses,
-            total=total,
-            page=page,
-            size=size,
-            message="Users retrieved successfully",
-        )
+    user_responses = [UserResponse.model_validate(user) for user in users]
 
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve users",
-        )
+    return PaginatedResponse.create(
+        items=user_responses,
+        total=total,
+        page=page,
+        size=size,
+        message="Users retrieved successfully",
+    )
 
 
 @router.get("/{user_id}", response_model=UserResponse)
+@handle_api_errors("Failed to retrieve user")
 async def get_user(
     user_id: UUID,
     current_user=Depends(get_current_superuser),
@@ -194,20 +179,14 @@ async def get_user(
     Returns detailed user information including statistics.
     Requires superuser privileges.
     """
-    try:
-        profile = await user_service.get_user_profile(user_id)
-        return profile
+    log_api_call("get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id))
 
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve user",
-        )
+    profile = await user_service.get_user_profile(user_id)
+    return profile
 
 
 @router.put("/{user_id}", response_model=UserResponse)
+@handle_api_errors("User update failed")
 async def update_user(
     user_id: UUID,
     request: UserUpdate,
@@ -220,22 +199,14 @@ async def update_user(
     Allows administrators to update any user's profile.
     Requires superuser privileges.
     """
-    try:
-        updated_user = await user_service.update_user(user_id, request)
-        return UserResponse.model_validate(updated_user)
+    log_api_call("update_user", admin_user_id=str(current_user.id), target_user_id=str(user_id))
 
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="User update failed",
-        )
+    updated_user = await user_service.update_user(user_id, request)
+    return UserResponse.model_validate(updated_user)
 
 
 @router.delete("/{user_id}", response_model=BaseResponse)
+@handle_api_errors("User deletion failed")
 async def delete_user(
     user_id: UUID,
     current_user=Depends(get_current_superuser),
@@ -247,27 +218,20 @@ async def delete_user(
     Permanently deletes a user and all associated data.
     Requires superuser privileges.
     """
-    try:
-        # Prevent self-deletion
-        if user_id == current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete your own account",
-            )
+    log_api_call("delete_user", admin_user_id=str(current_user.id), target_user_id=str(user_id))
 
-        success = await user_service.delete_user(user_id)
-
-        if success:
-            return BaseResponse(success=True, message="User deleted successfully")
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
-
-    except HTTPException:
-        raise
-    except Exception:
+    # Prevent self-deletion
+    if user_id == current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="User deletion failed",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account",
+        )
+
+    success = await user_service.delete_user(user_id)
+
+    if success:
+        return BaseResponse(success=True, message="User deleted successfully")
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
