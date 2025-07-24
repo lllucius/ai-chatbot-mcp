@@ -1,5 +1,8 @@
 """
 Base CLI utilities and common functionality.
+
+This module provides common utilities for CLI commands including async command
+handling, progress indicators, and console output utilities.
 """
 
 import asyncio
