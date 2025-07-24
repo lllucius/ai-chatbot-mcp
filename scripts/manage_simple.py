@@ -4,8 +4,6 @@ Simple management CLI for the AI Chatbot Platform.
 This script provides basic administrative commands for user management,
 system statistics, and maintenance operations.
 
-Generated on: 2025-07-14 03:21:19 UTC
-Current User: lllucius
 """
 
 import argparse

@@ -19,8 +19,14 @@ from sqlalchemy import text
 
 from ..config import settings
 from ..database import AsyncSessionLocal
-from .base import (async_command, console, error_message, info_message,
-                   success_message, warning_message)
+from .base import (
+    async_command,
+    console,
+    error_message,
+    info_message,
+    success_message,
+    warning_message,
+)
 
 # Create the database management app
 database_app = typer.Typer(help="Database management commands")

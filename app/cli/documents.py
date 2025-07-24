@@ -23,9 +23,17 @@ from ..database import AsyncSessionLocal
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
 from ..services.document import DocumentService
-from .base import (async_command, console, error_message, format_size,
-                   format_timestamp, info_message, progress_context,
-                   success_message, warning_message)
+from .base import (
+    async_command,
+    console,
+    error_message,
+    format_size,
+    format_timestamp,
+    info_message,
+    progress_context,
+    success_message,
+    warning_message,
+)
 
 
 def get_content_type(filename: str) -> str:

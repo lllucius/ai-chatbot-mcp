@@ -4,8 +4,6 @@ FastAPI dependencies for authentication and authorization.
 This module provides reusable dependencies for FastAPI endpoints
 including user authentication, authorization checks, and common utilities.
 
-Generated on: 2025-07-14 03:52:46 UTC
-Current User: lllucius
 """
 
 from typing import Optional

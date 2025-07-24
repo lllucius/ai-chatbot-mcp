@@ -6,9 +6,6 @@ for tool calling and external function execution capabilities.
 
 Updated to use HTTP transport for all server connections.
 
-Current Date and Time (UTC): 2025-07-21 04:22:44
-Updated on: 2025-07-21 04:22:44 UTC
-Current User: lllucius / assistant
 """
 
 import asyncio

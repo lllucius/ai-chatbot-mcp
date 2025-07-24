@@ -4,8 +4,6 @@ Base Pydantic schemas for API responses.
 This module provides base schemas and common response formats
 using modern Pydantic V2 features, completely separate from SQLAlchemy models.
 
-Current Date and Time (UTC): 2025-07-14 05:03:11
-Current User: lllucius
 """
 
 import uuid

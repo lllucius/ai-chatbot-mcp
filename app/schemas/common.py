@@ -4,8 +4,6 @@ Common Pydantic schemas used across the application.
 This module provides base schemas and common response formats
 using modern Pydantic V2 features and serialization.
 
-Current Date and Time (UTC): 2025-07-14 05:01:09
-Current User: lllucius
 """
 
 from datetime import datetime

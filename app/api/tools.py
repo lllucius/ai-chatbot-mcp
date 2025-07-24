@@ -5,9 +5,6 @@ This module provides endpoints for managing MCP (Model Context Protocol) tools
 including listing available tools, enabling/disabling tools, viewing tool configurations,
 and comprehensive registry-based management with usage tracking.
 
-Generated on: 2025-07-22 UTC
-Updated on: 2025-07-23 04:00:00 UTC - Enhanced with registry services
-Current User: lllucius
 """
 
 from typing import Any, Dict, Optional

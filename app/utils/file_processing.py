@@ -5,8 +5,6 @@ This module provides functions for extracting text content from various
 file formats using the unstructured library for unified document processing
 with streaming support and memory optimization.
 
-Generated on: 2025-07-14 03:18:45 UTC
-Current User: lllucius
 """
 
 import asyncio
@@ -27,10 +25,10 @@ logger = logging.getLogger(__name__)
 
 class FileProcessor:
     """
-    Unified file processor using unstructured library for extracting text content 
+    Unified file processor using unstructured library for extracting text content
     from various file formats.
 
-    Supports PDF, DOCX, TXT, MD, RTF, HTML and more through unstructured's 
+    Supports PDF, DOCX, TXT, MD, RTF, HTML and more through unstructured's
     auto-partitioning with optimized chunking and memory management.
     """
 
@@ -47,11 +45,27 @@ class FileProcessor:
         # Unstructured supports many formats, but some have constraints
         # Focus on the most commonly used and well-supported formats
         self.supported_types = {
-            "pdf", "docx", "doc", "txt", "md", "rtf", "html", "htm", 
-            "csv", "tsv", "xlsx", "xls", "pptx", "ppt", "odt", "epub",
-            "xml", "eml", "msg"
+            "pdf",
+            "docx",
+            "doc",
+            "txt",
+            "md",
+            "rtf",
+            "html",
+            "htm",
+            "csv",
+            "tsv",
+            "xlsx",
+            "xls",
+            "pptx",
+            "ppt",
+            "odt",
+            "epub",
+            "xml",
+            "eml",
+            "msg",
         }
-        
+
         # Formats that may need special handling
         self.text_formats = {"txt", "md", "csv", "tsv"}
 
@@ -114,7 +128,7 @@ class FileProcessor:
         try:
             # Use unstructured to partition the document
             logger.info(f"Processing {file_type} file: {file_path}")
-            
+
             # Run the potentially CPU-intensive operation in a thread pool
             elements = await asyncio.get_event_loop().run_in_executor(
                 None, partition, file_path
@@ -126,7 +140,7 @@ class FileProcessor:
             # Extract text from all elements
             text_content = []
             for element in elements:
-                if hasattr(element, 'text') and element.text:
+                if hasattr(element, "text") and element.text:
                     text_content.append(element.text.strip())
 
             content = "\n\n".join(text_content)
@@ -134,18 +148,26 @@ class FileProcessor:
             if not content.strip():
                 raise DocumentError("No text content found in file")
 
-            logger.info(f"Successfully extracted {len(content)} characters from {file_path}")
+            logger.info(
+                f"Successfully extracted {len(content)} characters from {file_path}"
+            )
             return content.strip()
 
         except Exception as partition_error:
             # Fallback for simple text files when unstructured fails
             if file_type in self.text_formats:
-                logger.warning(f"Unstructured partitioning failed for {file_path}, trying simple text extraction: {partition_error}")
+                logger.warning(
+                    f"Unstructured partitioning failed for {file_path}, trying simple text extraction: {partition_error}"
+                )
                 try:
                     return await self._extract_simple_text(file_path)
                 except Exception as text_error:
-                    logger.error(f"Simple text extraction also failed for {file_path}: {text_error}")
-                    raise DocumentError(f"Both unstructured and simple text extraction failed: {text_error}")
+                    logger.error(
+                        f"Simple text extraction also failed for {file_path}: {text_error}"
+                    )
+                    raise DocumentError(
+                        f"Both unstructured and simple text extraction failed: {text_error}"
+                    )
             else:
                 raise DocumentError(f"Text extraction failed: {partition_error}")
 
@@ -191,11 +213,11 @@ class FileProcessor:
             current_chunk = ""
 
             for element in elements:
-                if hasattr(element, 'text') and element.text:
+                if hasattr(element, "text") and element.text:
                     element_text = element.text.strip()
                     if element_text:
                         current_chunk += element_text + "\n\n"
-                        
+
                         # Yield chunks when they reach the target size
                         while len(current_chunk) >= chunk_size:
                             yield current_chunk[:chunk_size]
@@ -212,10 +234,10 @@ class FileProcessor:
     async def _extract_simple_text(self, file_path: str) -> str:
         """
         Simple text extraction fallback for basic text files.
-        
+
         Args:
             file_path: Path to the text file
-            
+
         Returns:
             str: Extracted text content
         """
@@ -288,7 +310,7 @@ class FileProcessor:
         try:
             # Use unstructured to partition the document
             logger.info(f"Extracting chunks from {file_type} file: {file_path}")
-            
+
             # Run partitioning in thread pool
             elements = await asyncio.get_event_loop().run_in_executor(
                 None, partition, file_path
@@ -300,7 +322,7 @@ class FileProcessor:
             # Use unstructured's chunking functionality
             def chunk_elements():
                 return chunk_by_title(elements, max_characters=max_characters)
-            
+
             chunked_elements = await asyncio.get_event_loop().run_in_executor(
                 None, chunk_elements
             )
@@ -308,22 +330,24 @@ class FileProcessor:
             # Convert to structured format
             chunks = []
             for i, element in enumerate(chunked_elements):
-                if hasattr(element, 'text') and element.text:
+                if hasattr(element, "text") and element.text:
                     # Get metadata from element
                     metadata = {}
-                    if hasattr(element, 'metadata') and element.metadata:
+                    if hasattr(element, "metadata") and element.metadata:
                         element_metadata = element.metadata
-                        if hasattr(element_metadata, 'to_dict'):
+                        if hasattr(element_metadata, "to_dict"):
                             metadata.update(element_metadata.to_dict())
                         elif isinstance(element_metadata, dict):
                             metadata.update(element_metadata)
 
-                    chunks.append({
-                        'text': element.text,
-                        'chunk_index': i,
-                        'character_count': len(element.text),
-                        'metadata': metadata
-                    })
+                    chunks.append(
+                        {
+                            "text": element.text,
+                            "chunk_index": i,
+                            "character_count": len(element.text),
+                            "metadata": metadata,
+                        }
+                    )
 
             logger.info(f"Successfully extracted {len(chunks)} chunks from {file_path}")
             return chunks
@@ -359,7 +383,7 @@ class FileProcessor:
                 "created": stat.st_ctime,
                 "modified": stat.st_mtime,
                 "is_supported": file_extension in self.supported_types,
-                "supported_formats": list(self.supported_types)
+                "supported_formats": list(self.supported_types),
             }
 
         except Exception as e:

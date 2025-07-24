@@ -22,8 +22,15 @@ from sqlalchemy import desc, func, or_, select
 from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation, Message
 from ..models.user import User
-from .base import (async_command, console, error_message, format_timestamp,
-                   info_message, success_message, warning_message)
+from .base import (
+    async_command,
+    console,
+    error_message,
+    format_timestamp,
+    info_message,
+    success_message,
+    warning_message,
+)
 
 # Create the conversation management app
 conversation_app = typer.Typer(help="Conversation management commands")

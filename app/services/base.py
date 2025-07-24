@@ -4,8 +4,6 @@ Base service class with common functionality for all service classes.
 This module provides the BaseService class that other services can inherit from
 to eliminate code duplication and ensure consistent patterns across services.
 
-Generated on: 2025-01-20 19:30:00 UTC
-Current User: assistant
 """
 
 from abc import ABC

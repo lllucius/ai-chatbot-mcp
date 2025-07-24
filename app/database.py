@@ -10,10 +10,8 @@ import logging
 from typing import AsyncGenerator
 
 from sqlalchemy import text
-from sqlalchemy.exc import (DisconnectionError, OperationalError,
-                            SQLAlchemyError)
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.exc import DisconnectionError, OperationalError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .config import settings
 from .models.base import BaseModelDB

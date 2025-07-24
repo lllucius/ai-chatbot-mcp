@@ -4,8 +4,6 @@ AI Chatbot SDK - Python client library for the AI Chatbot Platform.
 This module provides a comprehensive SDK for interacting with the AI Chatbot Platform,
 including authentication, document management, conversation handling, and search capabilities.
 
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
 """
 
 from datetime import datetime

@@ -18,10 +18,6 @@ Security Features:
 - JWT token expiration and validation
 - Protection against common attacks
 - Audit logging for security events
-
-Generated on: 2025-07-14 03:08:19 UTC
-Updated on: 2025-01-20 19:50:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging

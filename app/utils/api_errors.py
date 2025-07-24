@@ -4,8 +4,6 @@ Common error handling utilities and decorators for API endpoints.
 This module provides standardized error handling patterns to eliminate
 duplication across API endpoints and ensure consistent error responses.
 
-Generated on: 2025-01-20 20:20:00 UTC
-Current User: assistant
 """
 
 import functools
@@ -13,10 +11,16 @@ from typing import Any, Callable, Dict, Optional
 
 from fastapi import HTTPException, status
 
-from ..core.exceptions import (AuthenticationError, AuthorizationError,
-                               ChatbotPlatformException, DocumentError,
-                               ExternalServiceError, NotFoundError,
-                               SearchError, ValidationError)
+from ..core.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    ChatbotPlatformException,
+    DocumentError,
+    ExternalServiceError,
+    NotFoundError,
+    SearchError,
+    ValidationError,
+)
 from ..utils.logging import get_api_logger
 from ..utils.timestamp import get_current_timestamp
 

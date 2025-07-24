@@ -4,8 +4,6 @@ LLM Profile management CLI commands.
 This module provides comprehensive LLM parameter profile management functionality
 through the command line interface.
 
-Current Date and Time (UTC): 2025-07-23 03:35:00
-Current User: lllucius / assistant
 """
 
 import asyncio

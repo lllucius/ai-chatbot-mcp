@@ -23,8 +23,14 @@ from ..models.user import User
 from ..services.auth import AuthService
 from ..services.user import UserService
 from ..utils.security import get_password_hash
-from .base import (async_command, console, error_message, format_timestamp,
-                   success_message, warning_message)
+from .base import (
+    async_command,
+    console,
+    error_message,
+    format_timestamp,
+    success_message,
+    warning_message,
+)
 
 # Create the user management app
 user_app = typer.Typer(help="User management commands")

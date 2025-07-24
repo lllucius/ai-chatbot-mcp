@@ -4,8 +4,6 @@ Document management API endpoints.
 This module provides endpoints for document upload, processing,
 management, and retrieval operations.
 
-Generated on: 2025-07-14 03:12:05 UTC
-Current User: lllucius
 """
 
 from typing import Optional

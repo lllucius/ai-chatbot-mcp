@@ -22,9 +22,6 @@ Processing Pipeline:
 5. Database storage with search optimization
 6. Status tracking and error recovery
 
-Generated on: 2025-07-14 03:50:38 UTC
-Updated on: 2025-01-20 20:00:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging
@@ -238,7 +235,7 @@ class DocumentService(BaseService):
                     "upload_info": file_info,
                     "processing_config": {
                         "chunk_size": settings.default_chunk_size,
-                        "chunk_overlap": settings.default_chunk_overlap
+                        "chunk_overlap": settings.default_chunk_overlap,
                     },
                 },
             )
@@ -402,12 +399,14 @@ class DocumentService(BaseService):
 
             # Extract structured chunks directly using unstructured
             chunks_data = await self.file_processor.extract_chunks(
-                document.file_path, 
+                document.file_path,
                 document.file_type,
-                max_characters=settings.default_chunk_size
+                max_characters=settings.default_chunk_size,
             )
 
-            logger.info(f"Extracted {len(chunks_data)} chunks for document {document.id}")
+            logger.info(
+                f"Extracted {len(chunks_data)} chunks for document {document.id}"
+            )
 
             # Also extract full text for backward compatibility and statistics
             text_content = await self.file_processor.extract_text(
@@ -422,22 +421,26 @@ class DocumentService(BaseService):
             for i, chunk_data in enumerate(chunks_data):
                 # Generate embedding for the chunk text
                 embedding = await self.embedding_service.generate_embedding(
-                    chunk_data['text']
+                    chunk_data["text"]
                 )
 
                 # Create chunk record with unstructured metadata
                 chunk_record = DocumentChunk(
-                    content=chunk_data['text'],
+                    content=chunk_data["text"],
                     chunk_index=i,
                     start_offset=None,  # Unstructured doesn't provide character offsets in same way
                     end_offset=None,
                     token_count=self.embedding_service.openai_client.count_tokens(
-                        chunk_data['text']
+                        chunk_data["text"]
                     ),
                     embedding=embedding,
                     document_id=document.id,
                     # Store unstructured metadata
-                    **({'language': chunk_data['metadata'].get('language')} if chunk_data.get('metadata', {}).get('language') else {})
+                    **(
+                        {"language": chunk_data["metadata"].get("language")}
+                        if chunk_data.get("metadata", {}).get("language")
+                        else {}
+                    ),
                 )
 
                 chunk_records.append(chunk_record)
@@ -452,7 +455,7 @@ class DocumentService(BaseService):
                 "processing_completed": True,
                 "chunk_count": len(chunks_data),
                 "unstructured_processing": True,
-                "chunks_metadata": [chunk.get('metadata', {}) for chunk in chunks_data]
+                "chunks_metadata": [chunk.get("metadata", {}) for chunk in chunks_data],
             }
             document.status = FileStatus.COMPLETED
 

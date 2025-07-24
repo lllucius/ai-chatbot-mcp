@@ -13,7 +13,6 @@ Key Features:
 - File and console output options
 - Error tracking and monitoring
 
-Current User: assistant
 Current Date: 2025-01-20
 """
 

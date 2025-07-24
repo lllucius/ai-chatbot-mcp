@@ -4,8 +4,6 @@ MCP Registry service for managing MCP servers and tools.
 This service provides functionality to manage MCP server registrations,
 tool discovery, and usage statistics.
 
-Current Date and Time (UTC): 2025-07-23 03:30:00
-Current User: lllucius / assistant
 """
 
 import asyncio

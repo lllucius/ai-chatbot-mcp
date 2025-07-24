@@ -4,8 +4,6 @@ Application startup script for database initialization and setup.
 This script handles initial database setup, creates default users,
 and prepares the application for first use with REQUIRED FastMCP integration.
 
-Generated on: 2025-07-14 04:20:12 UTC
-Current User: lllucius
 """
 
 import asyncio
@@ -224,8 +222,6 @@ async def setup_mcp_workspace():
 This is the workspace directory for the FastMCP filesystem server.
 The AI assistant can read and write files in this directory.
 
-Generated on: 2025-07-14 04:20:12
-Current User: lllucius
 
 ## Available Operations
 - Read files
@@ -252,8 +248,6 @@ Ask the AI assistant to:
         sample_python = '''#!/usr/bin/env python3
 """
 Sample Python file in MCP workspace.
-Generated on: 2025-07-14 04:20:12
-Current User: lllucius
 """
 
 def greet(name: str = "World") -> str:
