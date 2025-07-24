@@ -9,7 +9,9 @@ including CRUD operations, statistics, and category management.
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
@@ -19,16 +21,24 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["prompts"])
 
 
+async def get_prompt_service(db: AsyncSession = Depends(get_db)) -> PromptService:
+    """Get prompt service instance."""
+    return PromptService(db)
+
+
 @router.get("/", response_model=Dict[str, Any])
 @handle_api_errors("Failed to list prompts")
 async def list_prompts(
     active_only: bool = Query(True, description="Show only active prompts"),
     category: Optional[str] = Query(None, description="Filter by category"),
     search: Optional[str] = Query(None, description="Search in prompts"),
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
 ):
     """
-    List all prompts with optional filtering.
+    List all prompts with optional filtering and pagination.
 
     Returns information about available prompts including their
     content, categories, tags, and usage statistics.
@@ -36,8 +46,8 @@ async def list_prompts(
     log_api_call("list_prompts", user_id=current_user.id)
 
     try:
-        prompts = await PromptService.list_prompts(
-            active_only=active_only, category=category, search=search
+        prompts, total = await prompt_service.list_prompts(
+            active_only=active_only, category=category, search=search, page=page, size=size
         )
 
         return {
@@ -60,7 +70,9 @@ async def list_prompts(
                     }
                     for p in prompts
                 ],
-                "total": len(prompts),
+                "total": total,
+                "page": page,
+                "size": size,
                 "filters": {
                     "active_only": active_only,
                     "category": category,
@@ -81,6 +93,7 @@ async def list_prompts(
 async def get_prompt_details(
     prompt_name: str,
     current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
 ):
     """
     Get detailed information about a specific prompt.
@@ -90,7 +103,7 @@ async def get_prompt_details(
     log_api_call("get_prompt_details", user_id=current_user.id, prompt_name=prompt_name)
 
     try:
-        prompt = await PromptService.get_prompt(prompt_name)
+        prompt = await prompt_service.get_prompt(prompt_name)
 
         if not prompt:
             raise HTTPException(
@@ -131,13 +144,14 @@ async def get_prompt_details(
 @handle_api_errors("Failed to get categories")
 async def get_categories(
     current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
 ):
     """Get all available prompt categories."""
     log_api_call("get_prompt_categories", user_id=current_user.id)
 
     try:
-        categories = await PromptService.get_categories()
-        tags = await PromptService.get_all_tags()
+        categories = await prompt_service.get_categories()
+        tags = await prompt_service.get_all_tags()
 
         return {
             "success": True,
@@ -159,6 +173,7 @@ async def get_categories(
 async def set_default_prompt(
     prompt_name: str,
     current_user: User = Depends(get_current_superuser),
+    prompt_service: PromptService = Depends(get_prompt_service),
 ):
     """
     Set a prompt as the default system prompt.
@@ -168,7 +183,7 @@ async def set_default_prompt(
     log_api_call("set_default_prompt", user_id=current_user.id, prompt_name=prompt_name)
 
     try:
-        success = await PromptService.set_default_prompt(prompt_name)
+        success = await prompt_service.set_default_prompt(prompt_name)
 
         if success:
             return BaseResponse(
@@ -193,12 +208,13 @@ async def set_default_prompt(
 @handle_api_errors("Failed to get prompt statistics")
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
 ):
     """Get prompt usage statistics and analytics."""
     log_api_call("get_prompt_stats", user_id=current_user.id)
 
     try:
-        stats = await PromptService.get_prompt_stats()
+        stats = await prompt_service.get_prompt_stats()
 
         return {
             "success": True,

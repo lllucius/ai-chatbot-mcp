@@ -12,7 +12,64 @@ from typing import Callable
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from ..database import AsyncSessionLocal
+from ..services.prompt_service import PromptService
+from ..services.llm_profile_service import LLMProfileService
+from ..services.user import UserService
+from ..services.conversation import ConversationService
+
 console = Console()
+
+
+async def get_prompt_service():
+    """Get a PromptService instance with database session."""
+    db = AsyncSessionLocal()
+    try:
+        return PromptService(db)
+    except Exception:
+        await db.close()
+        raise
+
+
+async def get_profile_service():
+    """Get a LLMProfileService instance with database session."""
+    db = AsyncSessionLocal()
+    try:
+        return LLMProfileService(db)
+    except Exception:
+        await db.close()
+        raise
+
+
+async def get_user_service():
+    """Get a UserService instance with database session."""
+    db = AsyncSessionLocal()
+    try:
+        return UserService(db)
+    except Exception:
+        await db.close()
+        raise
+
+
+async def get_conversation_service():
+    """Get a ConversationService instance with database session."""
+    db = AsyncSessionLocal()
+    try:
+        return ConversationService(db)
+    except Exception:
+        await db.close()
+        raise
+
+
+@asynccontextmanager
+async def get_service_context(service_class):
+    """Context manager for service instances that handles cleanup."""
+    db = AsyncSessionLocal()
+    try:
+        service = service_class(db)
+        yield service
+    finally:
+        await db.close()
 
 
 def async_command(func: Callable) -> Callable:

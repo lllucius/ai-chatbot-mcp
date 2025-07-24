@@ -18,23 +18,40 @@ from .models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
 
-# Create async engine with PostgreSQL-specific configuration
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    pool_pre_ping=True,
-    pool_size=20,  # Increased from 10 for better performance
-    max_overflow=30,  # Increased from 20
-    pool_recycle=1800,  # Recycle connections every 30 minutes (reduced from 1 hour)
-    pool_timeout=30,  # Connection timeout
-    pool_reset_on_return="commit",  # Reset connections on return
-    connect_args={
-        "server_settings": {
-            "jit": "off",  # Disable JIT for better connection performance
-        },
-        "command_timeout": 30,  # Command timeout in seconds
-    },
-)
+# Create async engine with flexible database configuration
+def _get_engine_config():
+    """Get database engine configuration based on database type."""
+    base_config = {
+        "echo": settings.debug,
+    }
+    
+    # Check if we're using PostgreSQL
+    if settings.database_url.startswith(("postgresql", "asyncpg")):
+        # PostgreSQL-specific configuration
+        base_config.update({
+            "pool_pre_ping": True,
+            "pool_size": 20,
+            "max_overflow": 30,
+            "pool_recycle": 1800,  # 30 minutes
+            "pool_timeout": 30,
+            "pool_reset_on_return": "commit",
+            "connect_args": {
+                "server_settings": {
+                    "jit": "off",  # Disable JIT for better connection performance
+                },
+                "command_timeout": 30,
+            },
+        })
+    elif settings.database_url.startswith("sqlite"):
+        # SQLite-specific configuration  
+        base_config.update({
+            "pool_pre_ping": True,
+            "connect_args": {"check_same_thread": False},
+        })
+    
+    return base_config
+
+engine = create_async_engine(settings.database_url, **_get_engine_config())
 
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -104,15 +121,16 @@ async def health_check_db() -> bool:
             # Test basic connectivity
             await session.execute(text("SELECT 1"))
 
-            # Test pgvector extension for PostgreSQL
-            result = await session.execute(
-                text("SELECT extname FROM pg_extension WHERE extname = 'vector'")
-            )
-            vector_enabled = result.scalar() is not None
+            # Check for pgvector extension only if using PostgreSQL
+            if settings.database_url.startswith(("postgresql", "asyncpg")):
+                result = await session.execute(
+                    text("SELECT extname FROM pg_extension WHERE extname = 'vector'")
+                )
+                vector_enabled = result.scalar() is not None
 
-            if not vector_enabled:
-                logger.warning("pgvector extension is not enabled")
-                return False
+                if not vector_enabled:
+                    logger.warning("pgvector extension is not enabled")
+                    return False
 
             return True
     except Exception as e:
@@ -134,11 +152,11 @@ async def init_db(with_default_data: bool = True) -> None:
     for attempt in range(max_retries):
         try:
             async with engine.begin() as conn:
-                # Enable pgvector extension
-                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-
-                # Verify pgvector is working
-                await conn.execute(text("SELECT '[1,2,3]'::vector"))
+                # Enable pgvector extension only for PostgreSQL
+                if settings.database_url.startswith(("postgresql", "asyncpg")):
+                    await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                    # Verify pgvector is working
+                    await conn.execute(text("SELECT '[1,2,3]'::vector"))
 
                 # Create all tables
                 await conn.run_sync(BaseModelDB.metadata.create_all)

@@ -97,6 +97,8 @@ class ConversationService(BaseService):
         self.openai_client = OpenAIClient()
         self.search_service = SearchService(db)
         self.embedding_service = EmbeddingService(db)
+        self.prompt_service = PromptService(db)
+        self.llm_profile_service = LLMProfileService(db)
 
     async def create_conversation(
         self, request: ConversationCreate, user_id: UUID
@@ -368,16 +370,16 @@ class ConversationService(BaseService):
                     llm_profile = request.llm_profile
                 elif request.profile_name:
                     # Load profile by name
-                    llm_profile = await LLMProfileService.get_profile(
+                    llm_profile = await self.llm_profile_service.get_profile(
                         request.profile_name
                     )
                 else:
                     # Get default profile
-                    llm_profile = await LLMProfileService.get_default_profile()
+                    llm_profile = await self.llm_profile_service.get_default_profile()
 
                 # Record profile usage if we have a profile
                 if llm_profile:
-                    await LLMProfileService.record_profile_usage(llm_profile.name)
+                    await self.llm_profile_service.record_profile_usage(llm_profile.name)
             except Exception as e:
                 logger.warning(f"Failed to get LLM profile: {e}")
                 llm_profile = None
@@ -526,16 +528,16 @@ class ConversationService(BaseService):
                     llm_profile = request.llm_profile
                 elif request.profile_name:
                     # Load profile by name
-                    llm_profile = await LLMProfileService.get_profile(
+                    llm_profile = await self.llm_profile_service.get_profile(
                         request.profile_name
                     )
                 else:
                     # Get default profile
-                    llm_profile = await LLMProfileService.get_default_profile()
+                    llm_profile = await self.llm_profile_service.get_default_profile()
 
                 # Record profile usage if we have a profile
                 if llm_profile:
-                    await LLMProfileService.record_profile_usage(llm_profile.name)
+                    await self.llm_profile_service.record_profile_usage(llm_profile.name)
             except Exception as e:
                 logger.warning(f"Failed to get LLM profile: {e}")
                 llm_profile = None
@@ -635,10 +637,10 @@ class ConversationService(BaseService):
         # Try to get prompt from registry if specified
         if request.prompt_name:
             try:
-                prompt = await PromptService.get_prompt(request.prompt_name)
+                prompt = await self.prompt_service.get_prompt(request.prompt_name)
                 if prompt:
                     # Record prompt usage
-                    await PromptService.record_prompt_usage(prompt.name)
+                    await self.prompt_service.record_prompt_usage(prompt.name)
                     return prompt.content
                 else:
                     logger.warning(
@@ -649,9 +651,9 @@ class ConversationService(BaseService):
 
         # Get default prompt if no specific prompt requested or if specific prompt failed
         try:
-            default_prompt = await PromptService.get_default_prompt()
+            default_prompt = await self.prompt_service.get_default_prompt()
             if default_prompt:
-                await PromptService.record_prompt_usage(default_prompt.name)
+                await self.prompt_service.record_prompt_usage(default_prompt.name)
                 return default_prompt.content
         except Exception as e:
             logger.warning(f"Failed to get default prompt: {e}")
@@ -840,8 +842,8 @@ class ConversationService(BaseService):
     async def _get_registry_stats(self) -> Dict[str, Any]:
         """Get statistics from the prompt, profile, and tool registries."""
         try:
-            prompt_stats = await PromptService.get_prompt_stats()
-            profile_stats = await LLMProfileService.get_profile_stats()
+            prompt_stats = await self.prompt_service.get_prompt_stats()
+            profile_stats = await self.llm_profile_service.get_profile_stats()
 
             # Get tool stats from enhanced MCP client
             mcp_client = await get_mcp_client()
