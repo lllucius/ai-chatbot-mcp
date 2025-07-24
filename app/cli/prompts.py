@@ -15,7 +15,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..services.prompt_service import PromptService
-from .base import console, error_message, info_message, success_message
+from .base import console, error_message, info_message, success_message, get_service_context
 
 # Create the prompt management app
 prompt_app = typer.Typer(help="📝 Prompt management commands", rich_markup_mode="rich")
@@ -40,9 +40,10 @@ def list_prompts(
 
     async def _list_prompts():
         try:
-            prompts = await PromptService.list_prompts(
-                active_only=active_only, category=category, search=search
-            )
+            async with get_service_context(PromptService) as prompt_service:
+                prompts, total = await prompt_service.list_prompts(
+                    active_only=active_only, category=category, search=search, page=1, size=100
+                )
 
             if not prompts:
                 info_message("No prompts found")
@@ -118,10 +119,11 @@ def show_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
     async def _show_prompt():
         try:
-            prompt = await PromptService.get_prompt(name)
-            if not prompt:
-                error_message(f"Prompt not found: {name}")
-                return
+            async with get_service_context(PromptService) as prompt_service:
+                prompt = await prompt_service.get_prompt(name)
+                if not prompt:
+                    error_message(f"Prompt not found: {name}")
+                    return
 
             status_color = "green" if prompt.is_active else "yellow"
             default_marker = " (DEFAULT)" if prompt.is_default else ""
@@ -180,21 +182,22 @@ def add_prompt(
             if tags:
                 tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
 
-            prompt = await PromptService.create_prompt(
-                name=name,
-                title=title,
-                content=content,
-                description=description,
-                is_default=set_default,
-                category=category,
-                tags=tag_list,
-            )
+            async with get_service_context(PromptService) as prompt_service:
+                prompt = await prompt_service.create_prompt(
+                    name=name,
+                    title=title,
+                    content=content,
+                    description=description,
+                    is_default=set_default,
+                    category=category,
+                    tags=tag_list,
+                )
 
-            # Set active status
-            if inactive:
-                await PromptService.deactivate_prompt(name)
+                # Set active status
+                if inactive:
+                    await prompt_service.deactivate_prompt(name)
 
-            success_message(f"Added prompt: {prompt.name}")
+                success_message(f"Added prompt: {prompt.name}")
 
         except Exception as e:
             error_message(f"Failed to add prompt: {e}")
