@@ -1,29 +1,18 @@
-"""
-Authentication-related Pydantic schemas.
-
-This module provides schemas for user authentication, registration,
-and token management.
-
-Generated on: 2025-07-14 03:06:28 UTC
-Current User: lllucius
-"""
+"Pydantic schemas for auth data validation."
 
 import re
 from typing import Optional
-
 from pydantic import EmailStr, Field, field_validator
-
 from .base import BaseSchema
 
 
 class LoginRequest(BaseSchema):
-    """Schema for user login request."""
+    "LoginRequest schema for data validation and serialization."
 
     username: str = Field(
         ..., min_length=3, max_length=50, description="Username or email"
     )
     password: str = Field(..., min_length=8, max_length=100, description="Password")
-
     model_config = {
         "json_schema_extra": {
             "example": {"username": "johndoe", "password": "SecurePass123"}
@@ -32,7 +21,7 @@ class LoginRequest(BaseSchema):
 
 
 class RegisterRequest(BaseSchema):
-    """Schema for user registration request."""
+    "RegisterRequest schema for data validation and serialization."
 
     username: str = Field(
         ..., min_length=3, max_length=50, description="Unique username"
@@ -48,8 +37,8 @@ class RegisterRequest(BaseSchema):
     @field_validator("username")
     @classmethod
     def validate_username(cls, v):
-        """Validate username format."""
-        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+        "Validate username data."
+        if not re.match("^[a-zA-Z0-9_-]+$", v):
             raise ValueError(
                 "Username can only contain letters, numbers, underscores, and hyphens"
             )
@@ -58,14 +47,14 @@ class RegisterRequest(BaseSchema):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v):
-        """Validate password strength."""
+        "Validate password data."
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        if not re.search(r"[A-Z]", v):
+        if not re.search("[A-Z]", v):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r"[a-z]", v):
+        if not re.search("[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r"\d", v):
+        if not re.search("\\d", v):
             raise ValueError("Password must contain at least one number")
         return v
 
@@ -82,12 +71,11 @@ class RegisterRequest(BaseSchema):
 
 
 class Token(BaseSchema):
-    """Schema for JWT token response."""
+    "Token class for specialized functionality."
 
     access_token: str = Field(..., description="JWT access token")
     token_type: str = Field("bearer", description="Token type")
     expires_in: int = Field(..., description="Token expiration in seconds")
-
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -100,15 +88,14 @@ class Token(BaseSchema):
 
 
 class PasswordResetRequest(BaseSchema):
-    """Schema for password reset request."""
+    "PasswordResetRequest schema for data validation and serialization."
 
     email: EmailStr = Field(..., description="Email address for password reset")
-
     model_config = {"json_schema_extra": {"example": {"email": "john@example.com"}}}
 
 
 class PasswordResetConfirm(BaseSchema):
-    """Schema for password reset confirmation."""
+    "PasswordResetConfirm class for specialized functionality."
 
     token: str = Field(..., description="Password reset token")
     new_password: str = Field(
@@ -118,14 +105,14 @@ class PasswordResetConfirm(BaseSchema):
     @field_validator("new_password")
     @classmethod
     def validate_password(cls, v):
-        """Validate password strength."""
+        "Validate password data."
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        if not re.search(r"[A-Z]", v):
+        if not re.search("[A-Z]", v):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r"[a-z]", v):
+        if not re.search("[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r"\d", v):
+        if not re.search("\\d", v):
             raise ValueError("Password must contain at least one number")
         return v
 

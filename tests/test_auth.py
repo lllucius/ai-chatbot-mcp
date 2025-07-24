@@ -1,9 +1,4 @@
-"""
-Unit tests for authentication API endpoints.
-
-These tests cover user registration, login, token management, and related
-authentication functionality using mocked dependencies.
-"""
+"Test cases for auth functionality."
 
 import pytest
 from fastapi import status
@@ -11,31 +6,27 @@ from fastapi.testclient import TestClient
 
 
 class TestAuthEndpoints:
-    """Test authentication API endpoints."""
+    "Test class for authendpoints functionality."
 
     @pytest.mark.unit
     def test_register_user_success(self, client: TestClient, sample_user_data: dict):
-        """Test successful user registration."""
+        "Test register user success functionality."
         response = client.post("/api/v1/auth/register", json=sample_user_data)
-
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["success"] is True
         assert "user" in data
         assert data["user"]["username"] == sample_user_data["username"]
         assert data["user"]["email"] == sample_user_data["email"]
-        assert "password" not in data["user"]  # Password should not be returned
+        assert "password" not in data["user"]
 
     @pytest.mark.unit
     def test_register_user_duplicate_username(
         self, client: TestClient, sample_user_data: dict
     ):
-        """Test registration with duplicate username."""
-        # Register user first time
+        "Test register user duplicate username functionality."
         response = client.post("/api/v1/auth/register", json=sample_user_data)
         assert response.status_code == status.HTTP_201_CREATED
-
-        # Try to register same username again
         response = client.post("/api/v1/auth/register", json=sample_user_data)
         assert response.status_code == status.HTTP_409_CONFLICT
         data = response.json()
@@ -46,20 +37,18 @@ class TestAuthEndpoints:
     def test_register_user_invalid_email(
         self, client: TestClient, sample_user_data: dict
     ):
-        """Test registration with invalid email format."""
+        "Test register user invalid email functionality."
         sample_user_data["email"] = "invalid-email"
         response = client.post("/api/v1/auth/register", json=sample_user_data)
-
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.unit
     def test_register_user_weak_password(
         self, client: TestClient, sample_user_data: dict
     ):
-        """Test registration with weak password."""
+        "Test register user weak password functionality."
         sample_user_data["password"] = "weak"
         response = client.post("/api/v1/auth/register", json=sample_user_data)
-
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = response.json()
         assert data["success"] is False
@@ -67,17 +56,13 @@ class TestAuthEndpoints:
 
     @pytest.mark.unit
     def test_login_success(self, client: TestClient, sample_user_data: dict):
-        """Test successful user login."""
-        # Register user first
+        "Test login success functionality."
         client.post("/api/v1/auth/register", json=sample_user_data)
-
-        # Login
         login_data = {
             "username": sample_user_data["username"],
             "password": sample_user_data["password"],
         }
         response = client.post("/api/v1/auth/login", json=login_data)
-
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["success"] is True
@@ -87,27 +72,22 @@ class TestAuthEndpoints:
 
     @pytest.mark.unit
     def test_login_invalid_credentials(self, client: TestClient):
-        """Test login with invalid credentials."""
+        "Test login invalid credentials functionality."
         login_data = {"username": "nonexistent", "password": "wrongpassword"}
         response = client.post("/api/v1/auth/login", json=login_data)
-
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         data = response.json()
         assert data["success"] is False
 
     @pytest.mark.unit
     def test_login_with_email(self, client: TestClient, sample_user_data: dict):
-        """Test login using email instead of username."""
-        # Register user first
+        "Test login with email functionality."
         client.post("/api/v1/auth/register", json=sample_user_data)
-
-        # Login with email
         login_data = {
             "username": sample_user_data["email"],
             "password": sample_user_data["password"],
         }
         response = client.post("/api/v1/auth/login", json=login_data)
-
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["success"] is True
@@ -115,17 +95,14 @@ class TestAuthEndpoints:
 
 
 class TestAuthenticationFlow:
-    """Test complete authentication flows."""
+    "Test class for authenticationflow functionality."
 
     @pytest.mark.integration
     def test_complete_auth_flow(self, client: TestClient, test_factory):
-        """Test complete registration -> login -> access protected endpoint flow."""
-        # 1. Register new user
+        "Test complete auth flow functionality."
         user_data = test_factory.create_user_data("flowtest", "flow@test.com")
         response = client.post("/api/v1/auth/register", json=user_data)
         assert response.status_code == status.HTTP_201_CREATED
-
-        # 2. Login to get token
         login_data = {
             "username": user_data["username"],
             "password": user_data["password"],
@@ -133,25 +110,22 @@ class TestAuthenticationFlow:
         response = client.post("/api/v1/auth/login", json=login_data)
         assert response.status_code == status.HTTP_200_OK
         token = response.json()["access_token"]
-
-        # 3. Access protected endpoint with token
         headers = {"Authorization": f"Bearer {token}"}
         response = client.get("/api/v1/users/me", headers=headers)
         assert response.status_code == status.HTTP_200_OK
-
         user_info = response.json()
         assert user_info["username"] == user_data["username"]
         assert user_info["email"] == user_data["email"]
 
     @pytest.mark.integration
     def test_protected_endpoint_without_token(self, client: TestClient):
-        """Test accessing protected endpoint without authentication."""
+        "Test protected endpoint without token functionality."
         response = client.get("/api/v1/users/me")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.integration
     def test_protected_endpoint_with_invalid_token(self, client: TestClient):
-        """Test accessing protected endpoint with invalid token."""
+        "Test protected endpoint with invalid token functionality."
         headers = {"Authorization": "Bearer invalid_token_here"}
         response = client.get("/api/v1/users/me", headers=headers)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

@@ -1,26 +1,16 @@
-"""
-Conversation and message-related Pydantic schemas.
-
-This module provides schemas for chat conversations, messages,
-and related operations.
-
-Generated on: 2025-07-20 13:48:01 UTC
-Current User: lllucius
-"""
+"Pydantic schemas for conversation data validation."
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-
 from pydantic import Field, constr, field_validator
-
 from .base import BaseSchema
 from .common import BaseResponse
 from .tool_calling import ToolCallSummary, ToolHandlingMode
 
 
 class ConversationBase(BaseSchema):
-    """Base conversation schema with common fields."""
+    "ConversationBase class for specialized functionality."
 
     title: constr(min_length=1, max_length=500) = Field(
         ..., description="Conversation title"
@@ -29,10 +19,11 @@ class ConversationBase(BaseSchema):
 
 
 class ConversationCreate(ConversationBase):
-    """Schema for creating a new conversation."""
+    "ConversationCreate class for specialized functionality."
 
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
-
+    metainfo: Optional[Dict[(str, Any)]] = Field(
+        None, description="Additional metainfo"
+    )
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -45,14 +36,13 @@ class ConversationCreate(ConversationBase):
 
 
 class ConversationUpdate(BaseSchema):
-    """Schema for updating conversation information."""
+    "ConversationUpdate class for specialized functionality."
 
     title: Optional[constr(min_length=1, max_length=500)] = Field(
         None, description="New title"
     )
     is_active: Optional[bool] = Field(None, description="New active status")
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Updated metainfo")
-
+    metainfo: Optional[Dict[(str, Any)]] = Field(None, description="Updated metainfo")
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -65,7 +55,7 @@ class ConversationUpdate(BaseSchema):
 
 
 class ConversationResponse(ConversationBase):
-    """Schema for conversation response data."""
+    "ConversationResponse schema for data validation and serialization."
 
     id: UUID = Field(..., description="Conversation ID")
     user_id: UUID = Field(..., description="Owner user ID")
@@ -75,11 +65,12 @@ class ConversationResponse(ConversationBase):
     last_message_at: Optional[datetime] = Field(
         None, description="Last message timestamp"
     )
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
-
+    metainfo: Optional[Dict[(str, Any)]] = Field(
+        None, description="Additional metainfo"
+    )
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: (lambda v: v.isoformat())},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -97,7 +88,7 @@ class ConversationResponse(ConversationBase):
 
 
 class MessageBase(BaseSchema):
-    """Base message schema with common fields."""
+    "MessageBase class for specialized functionality."
 
     role: constr(pattern="^(user|assistant|system)$") = Field(
         ..., description="Message role"
@@ -108,16 +99,17 @@ class MessageBase(BaseSchema):
 
 
 class MessageCreate(MessageBase):
-    """Schema for creating a new message."""
+    "MessageCreate class for specialized functionality."
 
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, ge=0, description="Number of tokens")
-    tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
-    tool_call_results: Optional[Dict[str, Any]] = Field(
+    tool_calls: Optional[Dict[(str, Any)]] = Field(None, description="Tool calls made")
+    tool_call_results: Optional[Dict[(str, Any)]] = Field(
         None, description="Tool call results"
     )
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
-
+    metainfo: Optional[Dict[(str, Any)]] = Field(
+        None, description="Additional metainfo"
+    )
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -132,21 +124,22 @@ class MessageCreate(MessageBase):
 
 
 class MessageResponse(MessageBase):
-    """Schema for message response data."""
+    "MessageResponse schema for data validation and serialization."
 
     id: UUID = Field(..., description="Message ID")
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
-    tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
-    tool_call_results: Optional[Dict[str, Any]] = Field(
+    tool_calls: Optional[Dict[(str, Any)]] = Field(None, description="Tool calls made")
+    tool_call_results: Optional[Dict[(str, Any)]] = Field(
         None, description="Tool call results"
     )
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
+    metainfo: Optional[Dict[(str, Any)]] = Field(
+        None, description="Additional metainfo"
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
-
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: (lambda v: v.isoformat())},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -164,7 +157,7 @@ class MessageResponse(MessageBase):
 
 
 class ChatRequest(BaseSchema):
-    """Schema for chat request with enhanced registry integration."""
+    "ChatRequest schema for data validation and serialization."
 
     user_message: constr(min_length=1, max_length=10000) = Field(
         ..., description="User message"
@@ -184,18 +177,15 @@ class ChatRequest(BaseSchema):
     rag_documents: Optional[List[UUID]] = Field(
         None, description="Specific document IDs for RAG"
     )
-
-    # Registry integration fields
     prompt_name: Optional[str] = Field(
         None, description="Name of prompt to use from prompt registry"
     )
     profile_name: Optional[str] = Field(
         None, description="Name of LLM profile to use from profile registry"
     )
-    llm_profile: Optional[Dict[str, Any]] = Field(
+    llm_profile: Optional[Dict[(str, Any)]] = Field(
         None, description="LLM profile object with parameter configuration"
     )
-
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -217,15 +207,17 @@ class ChatRequest(BaseSchema):
 
 
 class ChatResponse(BaseResponse):
-    """Schema for chat response."""
+    "ChatResponse schema for data validation and serialization."
 
     ai_message: MessageResponse = Field(..., description="AI response message")
     conversation: ConversationResponse = Field(..., description="Updated conversation")
-    usage: Optional[Dict[str, Any]] = Field(None, description="Token usage information")
-    rag_context: Optional[List[Dict[str, Any]]] = Field(
+    usage: Optional[Dict[(str, Any)]] = Field(
+        None, description="Token usage information"
+    )
+    rag_context: Optional[List[Dict[(str, Any)]]] = Field(
         None, description="RAG context used"
     )
-    tool_calls_made: Optional[List[Dict[str, Any]]] = Field(
+    tool_calls_made: Optional[List[Dict[(str, Any)]]] = Field(
         None, description="Tool calls executed (deprecated - use tool_call_summary)"
     )
     tool_call_summary: Optional[ToolCallSummary] = Field(
@@ -235,7 +227,7 @@ class ChatResponse(BaseResponse):
 
 
 class ConversationListResponse(BaseResponse):
-    """Response schema for conversation list."""
+    "ConversationListResponse schema for data validation and serialization."
 
     conversations: List[ConversationResponse] = Field(
         [], description="List of conversations"
@@ -244,7 +236,7 @@ class ConversationListResponse(BaseResponse):
 
 
 class MessageListResponse(BaseResponse):
-    """Response schema for message list."""
+    "MessageListResponse schema for data validation and serialization."
 
     messages: List[MessageResponse] = Field([], description="List of messages")
     conversation: ConversationResponse = Field(..., description="Parent conversation")
@@ -252,7 +244,7 @@ class MessageListResponse(BaseResponse):
 
 
 class ConversationStats(BaseSchema):
-    """Schema for conversation statistics."""
+    "ConversationStats class for specialized functionality."
 
     total_conversations: int = Field(0, description="Total conversations")
     active_conversations: int = Field(0, description="Active conversations")
@@ -263,5 +255,4 @@ class ConversationStats(BaseSchema):
     most_recent_activity: Optional[datetime] = Field(
         None, description="Most recent activity"
     )
-
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    model_config = {"json_encoders": {datetime: (lambda v: v.isoformat())}}

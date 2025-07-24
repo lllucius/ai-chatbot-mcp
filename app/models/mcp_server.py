@@ -1,19 +1,9 @@
-"""
-MCP Server registry model for managing MCP server configurations.
-
-This module defines the MCPServer model for tracking configured MCP servers,
-their status, and configuration details.
-
-Current Date and Time (UTC): 2025-07-23 03:25:00
-Current User: lllucius / assistant
-"""
+"Mcp_Server model definitions and database schemas."
 
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
-
 from sqlalchemy import JSON, Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from .base import BaseModelDB
 
 if TYPE_CHECKING:
@@ -21,25 +11,9 @@ if TYPE_CHECKING:
 
 
 class MCPServer(BaseModelDB):
-    """
-    MCP Server registry model for managing server configurations.
-
-    Attributes:
-        name: Unique name/identifier for the server
-        url: Connection URL for the server
-        description: Optional description of the server
-        transport: Transport type (http, stdio, etc.)
-        timeout: Connection timeout in seconds
-        config: Additional server configuration as JSON
-        is_enabled: Whether the server is enabled
-        is_connected: Current connection status
-        last_connected_at: Timestamp of last successful connection
-        connection_errors: Count of recent connection errors
-        tools: Related tools provided by this server
-    """
+    "MCPServer class for specialized functionality."
 
     __tablename__ = "mcp_servers"
-
     name: Mapped[str] = mapped_column(
         String(100),
         unique=True,
@@ -85,14 +59,12 @@ class MCPServer(BaseModelDB):
     connection_errors: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, doc="Count of recent connection errors"
     )
-
-    # Relationships
     tools: Mapped[List["MCPTool"]] = relationship(
         "MCPTool", back_populates="server", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
-        """Return string representation of MCPServer model."""
+        "Return detailed object representation."
         status = "enabled" if self.is_enabled else "disabled"
         connected = "connected" if self.is_connected else "disconnected"
         return f"<MCPServer(name='{self.name}', status='{status}', {connected})>"

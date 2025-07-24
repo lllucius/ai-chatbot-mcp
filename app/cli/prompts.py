@@ -1,25 +1,14 @@
-"""
-Prompt management CLI commands.
-
-This module provides comprehensive prompt management functionality
-through the command line interface.
-
-Current Date and Time (UTC): 2025-07-23 03:35:00
-Current User: lllucius / assistant
-"""
+"Command-line interface for prompts management."
 
 import asyncio
 from typing import Optional
-
 import typer
 from rich import box
 from rich.panel import Panel
 from rich.table import Table
-
 from ..services.prompt_service import PromptService
 from .base import console, error_message, info_message, success_message
 
-# Create the prompt management app
 prompt_app = typer.Typer(help="📝 Prompt management commands", rich_markup_mode="rich")
 
 
@@ -38,37 +27,34 @@ def list_prompts(
         False, "--detailed", "-d", help="Show detailed information"
     ),
 ):
-    """List all prompts."""
+    "List prompts entries."
 
     async def _list_prompts():
+        "List Prompts operation."
         try:
             prompts = await PromptService.list_prompts(
                 active_only=active_only, category=category, search=search
             )
-
             if not prompts:
                 info_message("No prompts found")
                 return
-
             if detailed:
                 for prompt in prompts:
                     status_color = "green" if prompt.is_active else "yellow"
                     default_marker = " (DEFAULT)" if prompt.is_default else ""
-
                     panel_content = f"""
 [bold]Title:[/bold] {prompt.title}
-[bold]Category:[/bold] {prompt.category or 'None'}
-[bold]Tags:[/bold] {', '.join(prompt.tag_list) if prompt.tag_list else 'None'}
+[bold]Category:[/bold] {(prompt.category or 'None')}
+[bold]Tags:[/bold] {(', '.join(prompt.tag_list) if prompt.tag_list else 'None')}
 [bold]Active:[/bold] [{status_color}]{prompt.is_active}[/{status_color}]
-[bold]Default:[/bold] {'Yes' if prompt.is_default else 'No'}
+[bold]Default:[/bold] {('Yes' if prompt.is_default else 'No')}
 [bold]Usage Count:[/bold] {prompt.usage_count}
-[bold]Last Used:[/bold] {prompt.last_used_at or 'Never'}
-[bold]Description:[/bold] {prompt.description or 'No description'}
+[bold]Last Used:[/bold] {(prompt.last_used_at or 'Never')}
+[bold]Description:[/bold] {(prompt.description or 'No description')}
 
 [bold]Content:[/bold]
-{prompt.content[:200]}{"..." if len(prompt.content) > 200 else ""}
+{prompt.content[:200]}{('...' if (len(prompt.content) > 200) else '')}
 """
-
                     console.print(
                         Panel(
                             panel_content.strip(),
@@ -85,29 +71,24 @@ def list_prompts(
                 table.add_column("Status")
                 table.add_column("Usage")
                 table.add_column("Last Used")
-
                 for prompt in prompts:
                     status = "🟢 Active" if prompt.is_active else "🟡 Inactive"
                     if prompt.is_default:
                         status += " (DEFAULT)"
-
                     last_used = (
                         prompt.last_used_at.strftime("%Y-%m-%d")
                         if prompt.last_used_at
                         else "Never"
                     )
-
                     table.add_row(
                         prompt.name,
                         prompt.title,
-                        prompt.category or "",
+                        (prompt.category or ""),
                         status,
                         str(prompt.usage_count),
                         last_used,
                     )
-
                 console.print(table)
-
         except Exception as e:
             error_message(f"Failed to list prompts: {e}")
 
@@ -116,35 +97,33 @@ def list_prompts(
 
 @prompt_app.command("show")
 def show_prompt(name: str = typer.Argument(..., help="Prompt name")):
-    """Show detailed information about a specific prompt."""
+    "Show Prompt operation."
 
     async def _show_prompt():
+        "Show Prompt operation."
         try:
             prompt = await PromptService.get_prompt(name)
             if not prompt:
                 error_message(f"Prompt not found: {name}")
                 return
-
             status_color = "green" if prompt.is_active else "yellow"
             default_marker = " (DEFAULT)" if prompt.is_default else ""
-
             panel_content = f"""
 [bold]Name:[/bold] {prompt.name}
 [bold]Title:[/bold] {prompt.title}
-[bold]Category:[/bold] {prompt.category or 'None'}
-[bold]Tags:[/bold] {', '.join(prompt.tag_list) if prompt.tag_list else 'None'}
+[bold]Category:[/bold] {(prompt.category or 'None')}
+[bold]Tags:[/bold] {(', '.join(prompt.tag_list) if prompt.tag_list else 'None')}
 [bold]Active:[/bold] [{status_color}]{prompt.is_active}[/{status_color}]
-[bold]Default:[/bold] {'Yes' if prompt.is_default else 'No'}
+[bold]Default:[/bold] {('Yes' if prompt.is_default else 'No')}
 [bold]Usage Count:[/bold] {prompt.usage_count}
-[bold]Last Used:[/bold] {prompt.last_used_at or 'Never'}
+[bold]Last Used:[/bold] {(prompt.last_used_at or 'Never')}
 [bold]Created:[/bold] {prompt.created_at}
 [bold]Updated:[/bold] {prompt.updated_at}
-[bold]Description:[/bold] {prompt.description or 'No description'}
+[bold]Description:[/bold] {(prompt.description or 'No description')}
 
 [bold]Content:[/bold]
 {prompt.content}
 """
-
             console.print(
                 Panel(
                     panel_content.strip(),
@@ -152,7 +131,6 @@ def show_prompt(name: str = typer.Argument(..., help="Prompt name")):
                     border_style=status_color,
                 )
             )
-
         except Exception as e:
             error_message(f"Failed to show prompt: {e}")
 
@@ -174,14 +152,14 @@ def add_prompt(
         False, "--inactive", help="Create prompt in inactive state"
     ),
 ):
-    """Add a new prompt."""
+    "Add Prompt operation."
 
     async def _add_prompt():
+        "Add Prompt operation."
         try:
             tag_list = []
             if tags:
                 tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
-
             prompt = await PromptService.create_prompt(
                 name=name,
                 title=title,
@@ -191,13 +169,9 @@ def add_prompt(
                 category=category,
                 tags=tag_list,
             )
-
-            # Set active status
             if inactive:
-                await PromptService.deactivate_prompt(name)
-
+                (await PromptService.deactivate_prompt(name))
             success_message(f"Added prompt: {prompt.name}")
-
         except Exception as e:
             error_message(f"Failed to add prompt: {e}")
 
@@ -219,12 +193,12 @@ def update_prompt(
     ),
     clear_tags: bool = typer.Option(False, "--clear-tags", help="Clear tags"),
 ):
-    """Update an existing prompt."""
+    "Update existing prompt."
 
     async def _update_prompt():
+        "Update Prompt operation."
         try:
             updates = {}
-
             if title is not None:
                 updates["title"] = title
             if content is not None:
@@ -241,17 +215,14 @@ def update_prompt(
                 ]
             if clear_tags:
                 updates["tags"] = []
-
             if not updates:
                 error_message("No updates specified")
                 return
-
             prompt = await PromptService.update_prompt(name, **updates)
             if prompt:
                 success_message(f"Updated prompt: {name}")
             else:
                 error_message(f"Prompt not found: {name}")
-
         except Exception as e:
             error_message(f"Failed to update prompt: {e}")
 
@@ -265,9 +236,10 @@ def remove_prompt(
         False, "--confirm", "-y", help="Skip confirmation prompt"
     ),
 ):
-    """Remove a prompt."""
+    "Remove Prompt operation."
 
     async def _remove_prompt():
+        "Remove Prompt operation."
         try:
             if not confirm:
                 confirmed = typer.confirm(
@@ -276,13 +248,11 @@ def remove_prompt(
                 if not confirmed:
                     info_message("Operation cancelled")
                     return
-
             success = await PromptService.delete_prompt(name)
             if success:
                 success_message(f"Removed prompt: {name}")
             else:
                 error_message(f"Prompt not found: {name}")
-
         except Exception as e:
             error_message(f"Failed to remove prompt: {e}")
 
@@ -291,16 +261,16 @@ def remove_prompt(
 
 @prompt_app.command("set-default")
 def set_default_prompt(name: str = typer.Argument(..., help="Prompt name")):
-    """Set a prompt as the default."""
+    "Set Default Prompt operation."
 
     async def _set_default():
+        "Set Default operation."
         try:
             success = await PromptService.set_default_prompt(name)
             if success:
                 success_message(f"Set default prompt: {name}")
             else:
                 error_message(f"Prompt not found: {name}")
-
         except Exception as e:
             error_message(f"Failed to set default prompt: {e}")
 
@@ -309,16 +279,16 @@ def set_default_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
 @prompt_app.command("activate")
 def activate_prompt(name: str = typer.Argument(..., help="Prompt name")):
-    """Activate a prompt."""
+    "Activate Prompt operation."
 
     async def _activate():
+        "Activate operation."
         try:
             success = await PromptService.activate_prompt(name)
             if success:
                 success_message(f"Activated prompt: {name}")
             else:
                 error_message(f"Prompt not found: {name}")
-
         except Exception as e:
             error_message(f"Failed to activate prompt: {e}")
 
@@ -327,16 +297,16 @@ def activate_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
 @prompt_app.command("deactivate")
 def deactivate_prompt(name: str = typer.Argument(..., help="Prompt name")):
-    """Deactivate a prompt."""
+    "Deactivate Prompt operation."
 
     async def _deactivate():
+        "Deactivate operation."
         try:
             success = await PromptService.deactivate_prompt(name)
             if success:
                 success_message(f"Deactivated prompt: {name}")
             else:
                 error_message(f"Prompt not found: {name}")
-
         except Exception as e:
             error_message(f"Failed to deactivate prompt: {e}")
 
@@ -345,20 +315,18 @@ def deactivate_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
 @prompt_app.command("categories")
 def list_categories():
-    """List all available prompt categories."""
+    "List categories entries."
 
     async def _list_categories():
+        "List Categories operation."
         try:
             categories = await PromptService.get_categories()
-
             if not categories:
                 info_message("No categories found")
                 return
-
             console.print("Available Categories:")
             for category in categories:
                 console.print(f"  • {category}")
-
         except Exception as e:
             error_message(f"Failed to list categories: {e}")
 
@@ -367,20 +335,18 @@ def list_categories():
 
 @prompt_app.command("tags")
 def list_tags():
-    """List all available prompt tags."""
+    "List tags entries."
 
     async def _list_tags():
+        "List Tags operation."
         try:
             tags = await PromptService.get_all_tags()
-
             if not tags:
                 info_message("No tags found")
                 return
-
             console.print("Available Tags:")
             for tag in tags:
                 console.print(f"  • {tag}")
-
         except Exception as e:
             error_message(f"Failed to list tags: {e}")
 
@@ -389,22 +355,20 @@ def list_tags():
 
 @prompt_app.command("stats")
 def show_stats():
-    """Show prompt usage statistics."""
+    "Show Stats operation."
 
     async def _show_stats():
+        "Show Stats operation."
         try:
             stats = await PromptService.get_prompt_stats()
-
-            # Overview panel
             overview_content = f"""
 [bold]Total Prompts:[/bold] {stats['total_prompts']}
 [bold]Active Prompts:[/bold] {stats['active_prompts']}
 [bold]Inactive Prompts:[/bold] {stats['inactive_prompts']}
-[bold]Default Prompt:[/bold] {stats['default_prompt'] or 'None set'}
+[bold]Default Prompt:[/bold] {(stats['default_prompt'] or 'None set')}
 [bold]Categories:[/bold] {len(stats['categories'])}
 [bold]Total Tags:[/bold] {stats['total_tags']}
 """
-
             console.print(
                 Panel(
                     overview_content.strip(),
@@ -412,15 +376,12 @@ def show_stats():
                     border_style="blue",
                 )
             )
-
-            # Most used prompts
             if stats["most_used"]:
                 table = Table(title="Most Used Prompts", box=box.ROUNDED)
                 table.add_column("Name", style="bold")
                 table.add_column("Title")
                 table.add_column("Usage Count")
                 table.add_column("Last Used")
-
                 for prompt in stats["most_used"]:
                     last_used = (
                         prompt["last_used_at"].strftime("%Y-%m-%d")
@@ -433,17 +394,13 @@ def show_stats():
                         str(prompt["usage_count"]),
                         last_used,
                     )
-
                 console.print(table)
-
-            # Recently used prompts
             if stats["recently_used"]:
                 table = Table(title="Recently Used Prompts", box=box.ROUNDED)
                 table.add_column("Name", style="bold")
                 table.add_column("Title")
                 table.add_column("Usage Count")
                 table.add_column("Last Used")
-
                 for prompt in stats["recently_used"]:
                     last_used = (
                         prompt["last_used_at"].strftime("%Y-%m-%d %H:%M")
@@ -456,9 +413,7 @@ def show_stats():
                         str(prompt["usage_count"]),
                         last_used,
                     )
-
                 console.print(table)
-
         except Exception as e:
             error_message(f"Failed to get statistics: {e}")
 

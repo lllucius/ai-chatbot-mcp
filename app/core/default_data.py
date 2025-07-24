@@ -1,12 +1,6 @@
-"""
-Default data initialization for the AI Chatbot MCP platform.
-
-This module contains functions to create default prompts, LLM profiles,
-and sample MCP server configurations during database initialization.
-"""
+"Core default_data functionality and business logic."
 
 import logging
-
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_registry import MCPRegistryService
 from app.services.prompt_service import PromptService
@@ -15,20 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 async def create_default_prompt():
-    """Create a default prompt."""
+    "Create new default prompt."
     try:
         default_prompt = await PromptService.create_prompt(
             name="default_assistant",
             title="Default AI Assistant",
-            content="""You are a helpful, knowledgeable AI assistant. You provide accurate, helpful, and concise responses to user questions. When appropriate, you:
-
-- Ask clarifying questions if the request is unclear
-- Provide step-by-step explanations for complex topics
-- Acknowledge when you don't know something
-- Suggest alternatives when applicable
-- Use tools when they would be helpful for the user's request
-
-Be professional but friendly in your responses.""",
+            content="You are a helpful, knowledgeable AI assistant. You provide accurate, helpful, and concise responses to user questions. When appropriate, you:\n\n- Ask clarifying questions if the request is unclear\n- Provide step-by-step explanations for complex topics\n- Acknowledge when you don't know something\n- Suggest alternatives when applicable\n- Use tools when they would be helpful for the user's request\n\nBe professional but friendly in your responses.",
             description="Default prompt for general AI assistant interactions",
             is_default=True,
             category="general",
@@ -42,21 +28,12 @@ Be professional but friendly in your responses.""",
 
 
 async def create_sample_prompts():
-    """Create sample prompts for different use cases."""
+    "Create new sample prompts."
     sample_prompts = [
         {
             "name": "code_review",
             "title": "Code Review Assistant",
-            "content": """You are an expert code reviewer. When reviewing code, you should:
-
-1. Check for correctness and functionality
-2. Look for potential bugs or security issues
-3. Evaluate code style and readability
-4. Suggest improvements for performance
-5. Ensure proper error handling
-6. Verify documentation and comments
-
-Provide constructive feedback with specific suggestions for improvement.""",
+            "content": "You are an expert code reviewer. When reviewing code, you should:\n\n1. Check for correctness and functionality\n2. Look for potential bugs or security issues\n3. Evaluate code style and readability\n4. Suggest improvements for performance\n5. Ensure proper error handling\n6. Verify documentation and comments\n\nProvide constructive feedback with specific suggestions for improvement.",
             "description": "Specialized prompt for code review tasks",
             "category": "development",
             "tags": ["code", "review", "development", "programming"],
@@ -64,16 +41,7 @@ Provide constructive feedback with specific suggestions for improvement.""",
         {
             "name": "creative_writing",
             "title": "Creative Writing Assistant",
-            "content": """You are a creative writing assistant. Help users with:
-
-- Story development and plot ideas
-- Character creation and development
-- Writing style and voice
-- Grammar and flow improvement
-- Genre-specific guidance
-- Overcoming writer's block
-
-Be encouraging and provide detailed, actionable suggestions to improve their writing.""",
+            "content": "You are a creative writing assistant. Help users with:\n\n- Story development and plot ideas\n- Character creation and development\n- Writing style and voice\n- Grammar and flow improvement\n- Genre-specific guidance\n- Overcoming writer's block\n\nBe encouraging and provide detailed, actionable suggestions to improve their writing.",
             "description": "Assistant for creative writing and storytelling",
             "category": "creative",
             "tags": ["writing", "creative", "storytelling", "literature"],
@@ -81,22 +49,12 @@ Be encouraging and provide detailed, actionable suggestions to improve their wri
         {
             "name": "technical_documentation",
             "title": "Technical Documentation Assistant",
-            "content": """You are a technical documentation specialist. Help create clear, comprehensive documentation that:
-
-- Uses clear, concise language
-- Follows proper documentation structure
-- Includes relevant examples and code snippets
-- Considers the target audience's technical level
-- Provides step-by-step instructions
-- Includes troubleshooting information
-
-Focus on making complex technical concepts accessible and actionable.""",
+            "content": "You are a technical documentation specialist. Help create clear, comprehensive documentation that:\n\n- Uses clear, concise language\n- Follows proper documentation structure\n- Includes relevant examples and code snippets\n- Considers the target audience's technical level\n- Provides step-by-step instructions\n- Includes troubleshooting information\n\nFocus on making complex technical concepts accessible and actionable.",
             "description": "Specialized assistant for technical documentation",
             "category": "documentation",
             "tags": ["documentation", "technical", "writing", "guides"],
         },
     ]
-
     created_count = 0
     for prompt_data in sample_prompts:
         try:
@@ -105,13 +63,12 @@ Focus on making complex technical concepts accessible and actionable.""",
             created_count += 1
         except Exception as e:
             logger.warning(f"Failed to create prompt {prompt_data['name']}: {e}")
-
     logger.info(f"Created {created_count}/{len(sample_prompts)} sample prompts")
     return created_count
 
 
 async def create_default_llm_profile():
-    """Create a default LLM profile."""
+    "Create new default llm profile."
     try:
         default_profile = await LLMProfileService.create_profile(
             name="balanced",
@@ -132,7 +89,7 @@ async def create_default_llm_profile():
 
 
 async def create_sample_llm_profiles():
-    """Create sample LLM profiles for different use cases."""
+    "Create new sample llm profiles."
     sample_profiles = [
         {
             "name": "creative",
@@ -175,7 +132,6 @@ async def create_sample_llm_profiles():
             "frequency_penalty": 0.0,
         },
     ]
-
     created_count = 0
     for profile_data in sample_profiles:
         try:
@@ -184,13 +140,12 @@ async def create_sample_llm_profiles():
             created_count += 1
         except Exception as e:
             logger.warning(f"Failed to create profile {profile_data['name']}: {e}")
-
     logger.info(f"Created {created_count}/{len(sample_profiles)} sample LLM profiles")
     return created_count
 
 
 async def create_sample_mcp_servers():
-    """Create sample MCP server registrations."""
+    "Create new sample mcp servers."
     sample_servers = [
         {
             "name": "filesystem",
@@ -214,7 +169,6 @@ async def create_sample_mcp_servers():
             "timeout": 60,
         },
     ]
-
     created_count = 0
     for server_data in sample_servers:
         try:
@@ -223,49 +177,30 @@ async def create_sample_mcp_servers():
             created_count += 1
         except Exception as e:
             logger.warning(f"Failed to create server {server_data['name']}: {e}")
-
     logger.info(f"Created {created_count}/{len(sample_servers)} sample MCP servers")
     return created_count
 
 
 async def initialize_default_data():
-    """Initialize all default data for the platform."""
+    "Initialize Default Data operation."
     logger.info("Initializing default data for AI Chatbot Platform...")
-
-    # Create default prompt
     default_prompt = await create_default_prompt()
-
-    # Create sample prompts
     sample_prompts_count = await create_sample_prompts()
-
-    # Create default LLM profile
     default_profile = await create_default_llm_profile()
-
-    # Create sample LLM profiles
     sample_profiles_count = await create_sample_llm_profiles()
-
-    # Create sample MCP servers
     sample_servers_count = await create_sample_mcp_servers()
-
-    # Summary
     success_count = 0
     if default_prompt:
         success_count += 1
     if default_profile:
         success_count += 1
-
     total_created = (
-        success_count
-        + sample_prompts_count
-        + sample_profiles_count
-        + sample_servers_count
-    )
-
+        (success_count + sample_prompts_count) + sample_profiles_count
+    ) + sample_servers_count
     logger.info(f"Default data initialization complete - {total_created} items created")
-
     return {
-        "default_prompt": default_prompt is not None,
-        "default_profile": default_profile is not None,
+        "default_prompt": (default_prompt is not None),
+        "default_profile": (default_profile is not None),
         "sample_prompts": sample_prompts_count,
         "sample_profiles": sample_profiles_count,
         "sample_servers": sample_servers_count,

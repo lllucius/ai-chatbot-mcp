@@ -1,11 +1,8 @@
-"""
-Base CLI utilities and common functionality.
-"""
+"Command-line interface for base management."
 
 import asyncio
 from contextlib import asynccontextmanager
 from typing import Callable
-
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
@@ -13,49 +10,22 @@ console = Console()
 
 
 def async_command(func: Callable) -> Callable:
-    """
-    Decorator to enable async functions in Typer CLI commands.
-
-    Handles the complexity of running async functions in CLI environments where
-    an event loop may or may not already be running. Uses thread pool execution
-    to avoid nested event loop issues that commonly occur in CLI applications.
-
-    Args:
-        func: Async function to wrap for CLI usage
-
-    Returns:
-        Callable: Synchronous wrapper function that can be used with Typer
-
-    Example:
-        @async_command
-        async def my_cli_command():
-            await some_async_operation()
-    """
+    "Async Command operation."
 
     def wrapper(*args, **kwargs):
-        """
-        Synchronous wrapper that executes the async function.
-
-        Attempts to handle different event loop scenarios gracefully.
-        """
+        "Wrapper operation."
         try:
-            # Try to get the current event loop
             asyncio.get_running_loop()
-            # If there's already a running loop, we can't use asyncio.run()
-            # Instead, create a task
             import concurrent.futures
 
-            # Run in a separate thread to avoid nested loop issues
             def run_in_thread():
-                """Execute the async function in a new event loop."""
+                "Run In Thread operation."
                 return asyncio.run(func(*args, **kwargs))
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(run_in_thread)
                 return future.result()
-
         except RuntimeError:
-            # No running loop, safe to use asyncio.run()
             return asyncio.run(func(*args, **kwargs))
 
     return wrapper
@@ -63,7 +33,7 @@ def async_command(func: Callable) -> Callable:
 
 @asynccontextmanager
 async def progress_context(description: str):
-    """Context manager for showing progress during operations."""
+    "Progress Context operation."
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -72,47 +42,45 @@ async def progress_context(description: str):
     ) as progress:
         task = progress.add_task(description, total=None)
         try:
-            yield progress
+            (yield progress)
         finally:
             progress.remove_task(task)
 
 
 def success_message(message: str):
-    """Display a success message."""
+    "Success Message operation."
     console.print(f"[green]✅ {message}[/green]")
 
 
 def error_message(message: str):
-    """Display an error message."""
+    "Error Message operation."
     console.print(f"[red]❌ {message}[/red]")
 
 
 def warning_message(message: str):
-    """Display a warning message."""
+    "Warning Message operation."
     console.print(f"[yellow]⚠️ {message}[/yellow]")
 
 
 def info_message(message: str):
-    """Display an info message."""
+    "Info Message operation."
     console.print(f"[blue]ℹ️ {message}[/blue]")
 
 
 def format_timestamp(dt) -> str:
-    """Format datetime for display."""
+    "Format Timestamp operation."
     if dt:
         return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
     return "N/A"
 
 
 def format_size(size_bytes: int) -> str:
-    """Format file size in human readable format."""
+    "Format Size operation."
     if size_bytes == 0:
         return "0 B"
-
     size_names = ["B", "KB", "MB", "GB", "TB"]
     i = 0
-    while size_bytes >= 1024 and i < len(size_names) - 1:
+    while (size_bytes >= 1024) and (i < (len(size_names) - 1)):
         size_bytes /= 1024.0
         i += 1
-
     return f"{size_bytes:.1f} {size_names[i]}"

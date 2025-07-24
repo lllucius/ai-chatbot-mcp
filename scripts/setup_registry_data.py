@@ -1,46 +1,26 @@
-"""
-Setup script to create default data for testing the registry functionality.
-
-This script creates sample data including:
-- Default prompt
-- Sample LLM profiles
-- Example MCP server registrations
-
-Current Date and Time (UTC): 2025-07-23 03:45:00
-Current User: lllucius / assistant
-"""
+"Script for setup registry data operations."
 
 import asyncio
 import sys
 from pathlib import Path
 
-# Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
-
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_registry import MCPRegistryService
 from app.services.prompt_service import PromptService
 
 
 async def create_default_prompt():
-    """Create a default prompt."""
+    "Create new default prompt."
     try:
         default_prompt = await PromptService.create_prompt(
             name="default_assistant",
             title="Default AI Assistant",
-            content="""You are a helpful, knowledgeable AI assistant. You provide accurate, helpful, and concise responses to user questions. When appropriate, you:
-
-- Ask clarifying questions if the request is unclear
-- Provide step-by-step explanations for complex topics
-- Acknowledge when you don't know something
-- Suggest alternatives when applicable
-- Use tools when they would be helpful for the user's request
-
-Be professional but friendly in your responses.""",
+            content="You are a helpful, knowledgeable AI assistant. You provide accurate, helpful, and concise responses to user questions. When appropriate, you:\n\n- Ask clarifying questions if the request is unclear\n- Provide step-by-step explanations for complex topics\n- Acknowledge when you don't know something\n- Suggest alternatives when applicable\n- Use tools when they would be helpful for the user's request\n\nBe professional but friendly in your responses.",
             description="Default prompt for general AI assistant interactions",
             is_default=True,
             category="general",
-            tags=["assistant", "general", "helpful"]
+            tags=["assistant", "general", "helpful"],
         )
         print(f"✅ Created default prompt: {default_prompt.name}")
     except Exception as e:
@@ -48,61 +28,33 @@ Be professional but friendly in your responses.""",
 
 
 async def create_sample_prompts():
-    """Create sample prompts for different use cases."""
+    "Create new sample prompts."
     sample_prompts = [
         {
             "name": "code_review",
             "title": "Code Review Assistant",
-            "content": """You are an expert code reviewer. When reviewing code, you should:
-
-1. Check for correctness and functionality
-2. Look for potential bugs or security issues
-3. Evaluate code style and readability
-4. Suggest improvements for performance
-5. Ensure proper error handling
-6. Verify documentation and comments
-
-Provide constructive feedback with specific suggestions for improvement.""",
+            "content": "You are an expert code reviewer. When reviewing code, you should:\n\n1. Check for correctness and functionality\n2. Look for potential bugs or security issues\n3. Evaluate code style and readability\n4. Suggest improvements for performance\n5. Ensure proper error handling\n6. Verify documentation and comments\n\nProvide constructive feedback with specific suggestions for improvement.",
             "description": "Specialized prompt for code review tasks",
             "category": "development",
-            "tags": ["code", "review", "development", "programming"]
+            "tags": ["code", "review", "development", "programming"],
         },
         {
             "name": "creative_writing",
             "title": "Creative Writing Assistant",
-            "content": """You are a creative writing assistant. Help users with:
-
-- Story development and plot ideas
-- Character creation and development
-- Writing style and voice
-- Grammar and flow improvement
-- Genre-specific guidance
-- Overcoming writer's block
-
-Be encouraging and provide detailed, actionable suggestions to improve their writing.""",
+            "content": "You are a creative writing assistant. Help users with:\n\n- Story development and plot ideas\n- Character creation and development\n- Writing style and voice\n- Grammar and flow improvement\n- Genre-specific guidance\n- Overcoming writer's block\n\nBe encouraging and provide detailed, actionable suggestions to improve their writing.",
             "description": "Assistant for creative writing and storytelling",
             "category": "creative",
-            "tags": ["writing", "creative", "storytelling", "literature"]
+            "tags": ["writing", "creative", "storytelling", "literature"],
         },
         {
             "name": "technical_documentation",
             "title": "Technical Documentation Assistant",
-            "content": """You are a technical documentation specialist. Help create clear, comprehensive documentation that:
-
-- Uses clear, concise language
-- Follows proper documentation structure
-- Includes relevant examples and code snippets
-- Considers the target audience's technical level
-- Provides step-by-step instructions
-- Includes troubleshooting information
-
-Focus on making complex technical concepts accessible and actionable.""",
+            "content": "You are a technical documentation specialist. Help create clear, comprehensive documentation that:\n\n- Uses clear, concise language\n- Follows proper documentation structure\n- Includes relevant examples and code snippets\n- Considers the target audience's technical level\n- Provides step-by-step instructions\n- Includes troubleshooting information\n\nFocus on making complex technical concepts accessible and actionable.",
             "description": "Specialized assistant for technical documentation",
             "category": "documentation",
-            "tags": ["documentation", "technical", "writing", "guides"]
-        }
+            "tags": ["documentation", "technical", "writing", "guides"],
+        },
     ]
-    
     for prompt_data in sample_prompts:
         try:
             prompt = await PromptService.create_prompt(**prompt_data)
@@ -112,7 +64,7 @@ Focus on making complex technical concepts accessible and actionable.""",
 
 
 async def create_default_llm_profile():
-    """Create a default LLM profile."""
+    "Create new default llm profile."
     try:
         default_profile = await LLMProfileService.create_profile(
             name="balanced",
@@ -123,7 +75,7 @@ async def create_default_llm_profile():
             top_p=0.9,
             max_tokens=2000,
             presence_penalty=0.0,
-            frequency_penalty=0.0
+            frequency_penalty=0.0,
         )
         print(f"✅ Created default LLM profile: {default_profile.name}")
     except Exception as e:
@@ -131,7 +83,7 @@ async def create_default_llm_profile():
 
 
 async def create_sample_llm_profiles():
-    """Create sample LLM profiles for different use cases."""
+    "Create new sample llm profiles."
     sample_profiles = [
         {
             "name": "creative",
@@ -141,7 +93,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.95,
             "max_tokens": 3000,
             "presence_penalty": 0.5,
-            "frequency_penalty": 0.3
+            "frequency_penalty": 0.3,
         },
         {
             "name": "precise",
@@ -151,7 +103,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.8,
             "max_tokens": 1500,
             "presence_penalty": 0.0,
-            "frequency_penalty": 0.0
+            "frequency_penalty": 0.0,
         },
         {
             "name": "concise",
@@ -161,7 +113,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.85,
             "max_tokens": 500,
             "presence_penalty": 0.2,
-            "frequency_penalty": 0.1
+            "frequency_penalty": 0.1,
         },
         {
             "name": "detailed",
@@ -171,10 +123,9 @@ async def create_sample_llm_profiles():
             "top_p": 0.9,
             "max_tokens": 4000,
             "presence_penalty": 0.1,
-            "frequency_penalty": 0.0
-        }
+            "frequency_penalty": 0.0,
+        },
     ]
-    
     for profile_data in sample_profiles:
         try:
             profile = await LLMProfileService.create_profile(**profile_data)
@@ -184,31 +135,30 @@ async def create_sample_llm_profiles():
 
 
 async def create_sample_mcp_servers():
-    """Create sample MCP server registrations."""
+    "Create new sample mcp servers."
     sample_servers = [
         {
             "name": "filesystem",
             "url": "http://localhost:9001/mcp",
             "description": "File system operations and management",
             "transport": "http",
-            "timeout": 30
+            "timeout": 30,
         },
         {
             "name": "web_search",
             "url": "http://localhost:9002/mcp",
             "description": "Web search and information retrieval",
             "transport": "http",
-            "timeout": 45
+            "timeout": 45,
         },
         {
             "name": "database",
             "url": "http://localhost:9003/mcp",
             "description": "Database query and management tools",
             "transport": "http",
-            "timeout": 60
-        }
+            "timeout": 60,
+        },
     ]
-    
     for server_data in sample_servers:
         try:
             server = await MCPRegistryService.create_server(**server_data)
@@ -218,24 +168,20 @@ async def create_sample_mcp_servers():
 
 
 async def main():
-    """Main setup function."""
+    "Main entry point."
     print("🚀 Setting up default data for AI Chatbot Platform registries...")
     print()
-    
     print("📝 Creating default and sample prompts...")
-    await create_default_prompt()
-    await create_sample_prompts()
+    (await create_default_prompt())
+    (await create_sample_prompts())
     print()
-    
     print("🎛️ Creating default and sample LLM profiles...")
-    await create_default_llm_profile()
-    await create_sample_llm_profiles()
+    (await create_default_llm_profile())
+    (await create_sample_llm_profiles())
     print()
-    
     print("🔌 Creating sample MCP server registrations...")
-    await create_sample_mcp_servers()
+    (await create_sample_mcp_servers())
     print()
-    
     print("✨ Setup complete! You can now test the registry functionality:")
     print("  • python manage.py prompts list")
     print("  • python manage.py profiles list")

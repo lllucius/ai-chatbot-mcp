@@ -1,141 +1,107 @@
-"""
-FastAPI application entry point with middleware and exception handling.
-
-This module creates and configures the FastAPI application with all necessary
-middleware, exception handlers, and API routes.
-
-Generated on: 2025-07-14 04:24:47 UTC
-Current User: lllucius
-"""
+"FastAPI application entry point and configuration."
 
 import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict
-
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
-
-# Import API routers
-from .api import (auth_router, conversations_router, documents_router,
-                  health_router, profiles_router, prompts_router, search_router,
-                  tools_router, users_router)
+from .api import (
+    auth_router,
+    conversations_router,
+    documents_router,
+    health_router,
+    profiles_router,
+    prompts_router,
+    search_router,
+    tools_router,
+    users_router,
+)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .database import close_db, init_db
 from .utils.caching import start_cache_cleanup_task
 from .utils.logging import setup_logging
 from .utils.performance import record_request_metric, start_system_monitoring
-from .utils.rate_limiting import (rate_limit_middleware,
-                                  start_rate_limiter_cleanup)
+from .utils.rate_limiting import rate_limit_middleware, start_rate_limiter_cleanup
 from .utils.timestamp import get_current_timestamp
 from .utils.validation import validate_request_middleware
 
-# Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Application lifespan manager.
-
-    Handles startup and shutdown events for the FastAPI application.
-    """
-    # Startup
+    "Lifespan operation."
     logger.info("Starting AI Chatbot Platform...")
     try:
-        await init_db()
+        (await init_db())
         logger.info("Database initialized successfully")
-
-        # Start cache cleanup task
-        await start_cache_cleanup_task()
+        (await start_cache_cleanup_task())
         logger.info("Cache system initialized")
-
-        # Start rate limiter cleanup task
-        await start_rate_limiter_cleanup()
+        (await start_rate_limiter_cleanup())
         logger.info("Rate limiting system initialized")
-
-        # Start performance monitoring
-        await start_system_monitoring()
+        (await start_system_monitoring())
         logger.info("Performance monitoring system initialized")
-
-        # Initialize FastMCP and UnifiedToolExecutor
         try:
             from .core.tool_executor import get_unified_tool_executor
 
-            await get_unified_tool_executor()
+            (await get_unified_tool_executor())
             logger.info("UnifiedToolExecutor initialized successfully")
         except Exception as e:
             logger.warning(f"UnifiedToolExecutor initialization failed (optional): {e}")
-            # Continue without unified tools - it's not critical for basic operation
-
     except Exception as e:
         logger.error(f"Application initialization failed: {e}")
         raise
-
     logger.info("Application startup completed")
-
-    yield
-
-    # Shutdown
+    (yield)
     logger.info("Shutting down AI Chatbot Platform...")
     try:
-        # Cleanup UnifiedToolExecutor and MCP
         try:
             from .core.tool_executor import cleanup_unified_tool_executor
             from .services.mcp_client import cleanup_mcp_client
 
-            await cleanup_unified_tool_executor()
-            await cleanup_mcp_client()
+            (await cleanup_unified_tool_executor())
+            (await cleanup_mcp_client())
             logger.info("Tool execution system cleaned up")
         except Exception as e:
             logger.warning(f"Tool execution cleanup failed: {e}")
-
-        await close_db()
+        (await close_db())
         logger.info("Database connections closed")
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
-
     logger.info("Application shutdown completed")
 
 
-# Create FastAPI application
 app = FastAPI(
     title=settings.app_name,
     description=settings.app_description,
     version=settings.app_version,
     debug=settings.debug,
     lifespan=lifespan,
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
-    openapi_url="/openapi.json" if settings.debug else None,
+    docs_url=("/docs" if settings.debug else None),
+    redoc_url=("/redoc" if settings.debug else None),
+    openapi_url=("/openapi.json" if settings.debug else None),
 )
 
 
-# Custom OpenAPI schema
 def custom_openapi():
-    """Generate custom OpenAPI schema with additional information."""
+    "Custom Openapi operation."
     if app.openapi_schema:
         return app.openapi_schema
-
     openapi_schema = get_openapi(
         title=settings.app_name,
         version=settings.app_version,
         description=settings.app_description,
         routes=app.routes,
     )
-
-    # Add custom information
     openapi_schema["info"]["x-logo"] = {
         "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
     }
-
-    # Add authentication security scheme
     openapi_schema["components"]["securitySchemes"] = {
         "bearerAuth": {
             "type": "http",
@@ -144,7 +110,6 @@ def custom_openapi():
             "description": "Enter JWT token",
         }
     }
-
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -152,63 +117,48 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-# Rate limiting middleware (add before other middleware)
 @app.middleware("http")
 async def rate_limiting_middleware(request: Request, call_next):
-    """Rate limiting middleware wrapper."""
+    "Rate Limiting Middleware operation."
     return await rate_limit_middleware(request, call_next)
 
 
-# Input validation middleware (add before other middleware)
 @app.middleware("http")
 async def input_validation_middleware(request: Request, call_next):
-    """Input validation middleware wrapper."""
+    "Input Validation Middleware operation."
     return await validate_request_middleware(request, call_next)
 
 
-# Request timing middleware with performance monitoring
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    """Add processing time header to responses and record metrics."""
+    "Add Process Time Header operation."
     start_time = time.time()
-
     response = await call_next(request)
-
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(f"{process_time:.4f}")
-
-    # Record performance metric
     record_request_metric(
         path=request.url.path,
         method=request.method,
         status_code=response.status_code,
         duration=process_time,
     )
-
     return response
 
 
-# Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Log all requests for monitoring and debugging."""
+    "Log Requests operation."
     start_time = time.time()
-
-    # Log request
     logger.info(
         "Request started",
         extra={
             "method": request.method,
             "url": str(request.url),
-            "client_ip": request.client.host if request.client else "unknown",
+            "client_ip": (request.client.host if request.client else "unknown"),
             "user_agent": request.headers.get("user-agent", "unknown"),
         },
     )
-
-    # Process request
     response = await call_next(request)
-
-    # Log response
     process_time = time.time() - start_time
     logger.info(
         "Request completed",
@@ -219,11 +169,9 @@ async def log_requests(request: Request, call_next):
             "process_time": f"{process_time:.4f}s",
         },
     )
-
     return response
 
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
@@ -231,21 +179,15 @@ app.add_middleware(
     allow_methods=settings.allowed_methods,
     allow_headers=settings.allowed_headers,
 )
-
-
-# Trusted host middleware for production
 if settings.is_production:
-    app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["*"]  # Configure based on deployment
-    )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 
-# Global exception handlers
 @app.exception_handler(ChatbotPlatformException)
 async def chatbot_platform_exception_handler(
     request: Request, exc: ChatbotPlatformException
 ) -> JSONResponse:
-    """Handle custom application exceptions."""
+    "Chatbot Platform Exception Handler operation."
     logger.error(
         f"Application error: {exc.message}",
         extra={
@@ -255,7 +197,6 @@ async def chatbot_platform_exception_handler(
             "method": request.method,
         },
     )
-
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={
@@ -270,7 +211,7 @@ async def chatbot_platform_exception_handler(
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    """Handle HTTP exceptions with consistent format."""
+    "Http Exception Handler operation."
     logger.warning(
         f"HTTP error {exc.status_code}: {exc.detail}",
         extra={
@@ -279,7 +220,6 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             "method": request.method,
         },
     )
-
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -293,7 +233,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Handle unexpected exceptions."""
+    "General Exception Handler operation."
     logger.error(
         f"Unexpected error: {str(exc)}",
         extra={
@@ -303,10 +243,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         },
         exc_info=True,
     )
-
-    # Don't expose internal error details in production
     error_message = str(exc) if settings.debug else "Internal server error"
-
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -318,33 +255,22 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
 
-# API Routes
 app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
-
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
-
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
-
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
-
 app.include_router(
     conversations_router, prefix="/api/v1/conversations", tags=["conversations"]
 )
-
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
-
 app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
-
-# Registry-based API routes
 app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
-
 app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"])
 
 
-# Root endpoint
 @app.get("/", include_in_schema=False)
-async def root() -> Dict[str, Any]:
-    """Root endpoint with basic application information."""
+async def root() -> Dict[(str, Any)]:
+    "Root operation."
     return {
         "name": settings.app_name,
         "version": settings.app_version,
@@ -357,10 +283,9 @@ async def root() -> Dict[str, Any]:
     }
 
 
-# Health check endpoint (for load balancers)
 @app.get("/ping", include_in_schema=False)
-async def ping() -> Dict[str, str]:
-    """Simple health check endpoint."""
+async def ping() -> Dict[(str, str)]:
+    "Ping operation."
     return {"status": "ok", "timestamp": get_current_timestamp()}
 
 

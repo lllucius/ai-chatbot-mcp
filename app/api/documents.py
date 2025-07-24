@@ -1,16 +1,7 @@
-"""
-Document management API endpoints.
-
-This module provides endpoints for document upload, processing,
-management, and retrieval operations.
-
-Generated on: 2025-07-14 03:12:05 UTC
-Current User: lllucius
-"""
+"API endpoints for documents operations."
 
 from typing import Optional
 from uuid import UUID
-
 from fastapi import (
     APIRouter,
     Depends,
@@ -22,7 +13,6 @@ from fastapi import (
     status,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from ..config import settings
 from ..core.exceptions import DocumentError, NotFoundError, ValidationError
 from ..database import get_db
@@ -45,7 +35,7 @@ router = APIRouter(tags=["documents"])
 
 
 async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentService:
-    """Get document service instance."""
+    "Get document service data."
     return DocumentService(db)
 
 
@@ -59,29 +49,20 @@ async def upload_document(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentUploadResponse:
-    """
-    Upload a document for processing.
-
-    Enhanced with auto-processing option and priority control.
-    """
+    "Upload Document operation."
     try:
-        # Create document
         document = await service.create_document(file, title, user.id)
-
         task_id = None
         if auto_process:
-            # Start background processing
             task_id = await service.start_processing(
                 document.id, priority=processing_priority
             )
-
         return DocumentUploadResponse(
             message="Document uploaded successfully",
             document=DocumentResponse.model_validate(document),
             task_id=task_id,
             auto_processing=auto_process,
         )
-
     except (ValidationError, DocumentError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception:
@@ -99,23 +80,16 @@ async def list_documents(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    List user's documents with pagination and filtering.
-
-    Returns paginated list of documents owned by the current user
-    with optional filtering by file type and processing status.
-    """
+    "List documents entries."
     try:
-        documents, total = await document_service.list_documents(
+        (documents, total) = await document_service.list_documents(
             user_id=current_user.id,
             page=page,
             size=size,
             file_type=file_type,
             status_filter=status_filter,
         )
-
         document_responses = [DocumentResponse.model_validate(doc) for doc in documents]
-
         return PaginatedResponse.create(
             items=document_responses,
             total=total,
@@ -123,7 +97,6 @@ async def list_documents(
             size=size,
             message="Documents retrieved successfully",
         )
-
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -137,16 +110,10 @@ async def get_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Get document by ID.
-
-    Returns detailed information about a specific document
-    owned by the current user.
-    """
+    "Get document data."
     try:
         document = await document_service.get_document(document_id, current_user.id)
         return DocumentResponse.model_validate(document)
-
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception:
@@ -163,18 +130,12 @@ async def update_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Update document metadata.
-
-    Allows updating document title and metadata.
-    Cannot change the actual file content.
-    """
+    "Update existing document."
     try:
         document = await document_service.update_document(
             document_id, request, current_user.id
         )
         return DocumentResponse.model_validate(document)
-
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationError as e:
@@ -192,22 +153,15 @@ async def delete_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Delete document and all associated data.
-
-    Permanently deletes the document, its chunks, embeddings,
-    and removes the file from storage.
-    """
+    "Delete document."
     try:
         success = await document_service.delete_document(document_id, current_user.id)
-
         if success:
             return BaseResponse(success=True, message="Document deleted successfully")
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
             )
-
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception:
@@ -227,24 +181,15 @@ async def get_processing_status(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> ProcessingStatusResponse:
-    """
-    Get document processing status with optional background task information.
-
-    Returns current processing status, progress, and any error information
-    for the specified document. Can include background task details if task_id is provided.
-    """
+    "Get processing status data."
     try:
         if task_id:
-            # Enhanced processing status with task details
             status_info = await service.get_processing_status(document_id, task_id)
             message = "Enhanced processing status retrieved"
         else:
-            # Basic processing status
             status_info = await service.get_processing_status(document_id, user.id)
             message = "Processing status retrieved"
-
         return ProcessingStatusResponse(success=True, message=message, **status_info)
-
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception:
@@ -260,18 +205,11 @@ async def reprocess_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Reprocess document.
-
-    Triggers reprocessing of the document, including text extraction,
-    chunking, and embedding generation. Useful if processing failed
-    or if you want to update with new processing parameters.
-    """
+    "Reprocess Document operation."
     try:
         success = await document_service.reprocess_document(
             document_id, current_user.id
         )
-
         if success:
             return BaseResponse(success=True, message="Document reprocessing started")
         else:
@@ -279,7 +217,6 @@ async def reprocess_document(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot reprocess document at this time",
             )
-
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception:
@@ -295,20 +232,14 @@ async def download_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Download original document file.
-
-    Returns the original uploaded file for download.
-    """
+    "Download Document operation."
     try:
-        file_path, filename, mime_type = await document_service.get_download_info(
+        (file_path, filename, mime_type) = await document_service.get_download_info(
             document_id, current_user.id
         )
-
         from fastapi.responses import FileResponse
 
         return FileResponse(path=file_path, filename=filename, media_type=mime_type)
-
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception:
@@ -327,21 +258,15 @@ async def start_document_processing(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> BackgroundTaskResponse:
-    """
-    Start background processing for a document.
-
-    Initiates text extraction, chunking, and embedding generation.
-    """
+    "Start Document Processing operation."
     try:
         task_id = await service.start_processing(document_id, priority=priority)
-
         return BackgroundTaskResponse(
             message="Document processing started",
             task_id=task_id,
             document_id=str(document_id),
             status="queued",
         )
-
     except NotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
@@ -352,11 +277,7 @@ async def start_document_processing(
 
 @router.get("/processing-config", response_model=ProcessingConfigResponse)
 async def get_processing_config() -> ProcessingConfigResponse:
-    """
-    Get current document processing configuration.
-
-    Returns the current settings for chunk sizes, overlaps, and other processing parameters.
-    """
+    "Get processing config data."
     return ProcessingConfigResponse(
         message="Processing configuration retrieved",
         config={
@@ -381,15 +302,9 @@ async def get_processing_config() -> ProcessingConfigResponse:
 @router.get("/queue-status")
 @handle_api_errors("Failed to get queue status", log_errors=True)
 async def get_queue_status(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
-    """
-    Get background processing queue status.
-
-    Provides information about current queue size, active tasks, and processing capacity.
-    """
+    "Get queue status data."
     background_processor = await get_background_processor(db)
     queue_status = await background_processor.get_queue_status()
-
     return {"message": "Queue status retrieved", **queue_status}

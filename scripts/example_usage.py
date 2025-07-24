@@ -1,39 +1,29 @@
-"""
-Example usage scripts demonstrating API functionality.
-
-This script shows how to interact with the AI Chatbot Platform API
-programmatically for common operations.
-
-Generated on: 2025-07-14 03:21:19 UTC
-Current User: lllucius
-"""
+"Script for example usage operations."
 
 import asyncio
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
-
 import httpx
 
-# Add the parent directory to the path so we can import the app
 sys.path.append(str(Path(__file__).parent.parent))
 
 
 class APIClient:
-    """Simple API client for demonstration."""
+    "API client for external service communication."
 
     def __init__(self, base_url: str = "http://localhost:8000"):
-        """Initialize API client."""
+        "Initialize class instance."
         self.base_url = base_url
         self.token: Optional[str] = None
         self.client = httpx.AsyncClient()
 
     async def close(self):
-        """Close the HTTP client."""
-        await self.client.aclose()
+        "Close operation."
+        (await self.client.aclose())
 
-    def _get_headers(self) -> Dict[str, str]:
-        """Get headers with authentication."""
+    def _get_headers(self) -> Dict[(str, str)]:
+        "Get Headers operation."
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
@@ -41,12 +31,11 @@ class APIClient:
 
     async def register(
         self, username: str, email: str, password: str, full_name: str = None
-    ) -> Dict[str, Any]:
-        """Register a new user."""
+    ) -> Dict[(str, Any)]:
+        "Register operation."
         data = {"username": username, "email": email, "password": password}
         if full_name:
             data["full_name"] = full_name
-
         response = await self.client.post(
             f"{self.base_url}/api/v1/auth/register",
             json=data,
@@ -54,22 +43,19 @@ class APIClient:
         )
         return response.json()
 
-    async def login(self, username: str, password: str) -> Dict[str, Any]:
-        """Login and store token."""
+    async def login(self, username: str, password: str) -> Dict[(str, Any)]:
+        "Login operation."
         data = {"username": username, "password": password}
-
         response = await self.client.post(
             f"{self.base_url}/api/v1/auth/login", json=data, headers=self._get_headers()
         )
-
         result = response.json()
         if "access_token" in result:
             self.token = result["access_token"]
-
         return result
 
-    async def get_profile(self) -> Dict[str, Any]:
-        """Get current user profile."""
+    async def get_profile(self) -> Dict[(str, Any)]:
+        "Get profile data."
         response = await self.client.get(
             f"{self.base_url}/api/v1/users/me", headers=self._get_headers()
         )
@@ -77,25 +63,25 @@ class APIClient:
 
     async def upload_document(
         self, file_path: str, title: str = None
-    ) -> Dict[str, Any]:
-        """Upload a document."""
+    ) -> Dict[(str, Any)]:
+        "Upload Document operation."
         with open(file_path, "rb") as f:
             files = {"file": f}
             data = {}
             if title:
                 data["title"] = title
-
             response = await self.client.post(
                 f"{self.base_url}/api/v1/documents/upload",
                 files=files,
                 data=data,
-                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
+                headers=(
+                    {"Authorization": f"Bearer {self.token}"} if self.token else {}
+                ),
             )
-
         return response.json()
 
-    async def list_documents(self) -> Dict[str, Any]:
-        """List user documents."""
+    async def list_documents(self) -> Dict[(str, Any)]:
+        "List documents entries."
         response = await self.client.get(
             f"{self.base_url}/api/v1/documents/", headers=self._get_headers()
         )
@@ -103,10 +89,9 @@ class APIClient:
 
     async def search_documents(
         self, query: str, algorithm: str = "hybrid"
-    ) -> Dict[str, Any]:
-        """Search documents."""
+    ) -> Dict[(str, Any)]:
+        "Search for documents."
         data = {"query": query, "algorithm": algorithm, "limit": 5, "threshold": 0.7}
-
         response = await self.client.post(
             f"{self.base_url}/api/v1/search/", json=data, headers=self._get_headers()
         )
@@ -114,18 +99,16 @@ class APIClient:
 
     async def chat(
         self, message: str, conversation_id: int = None, use_rag: bool = True
-    ) -> Dict[str, Any]:
-        """Send a chat message."""
+    ) -> Dict[(str, Any)]:
+        "Chat operation."
         data = {
             "user_message": message,
             "use_rag": use_rag,
             "use_tools": True,
             "temperature": 0.7,
         }
-
         if conversation_id:
             data["conversation_id"] = conversation_id
-
         response = await self.client.post(
             f"{self.base_url}/api/v1/conversations/chat",
             json=data,
@@ -133,26 +116,21 @@ class APIClient:
         )
         return response.json()
 
-    async def health_check(self) -> Dict[str, Any]:
-        """Check API health."""
+    async def health_check(self) -> Dict[(str, Any)]:
+        "Health Check operation."
         response = await self.client.get(f"{self.base_url}/api/v1/health/")
         return response.json()
 
 
 async def demonstrate_workflow():
-    """Demonstrate a complete workflow."""
+    "Demonstrate Workflow operation."
     client = APIClient()
-
     try:
         print("🤖 AI Chatbot Platform API Demo")
-        print("=" * 50)
-
-        # Health check
+        print(("=" * 50))
         print("1. 🏥 Checking API health...")
         health = await client.health_check()
         print(f"   Status: {health.get('status', 'unknown')}")
-
-        # Login with default admin (assuming it exists)
         print("\n2. 🔐 Logging in...")
         login_result = await client.login("admin", "Admin123!")
         if "access_token" in login_result:
@@ -160,36 +138,14 @@ async def demonstrate_workflow():
         else:
             print("   ❌ Login failed - make sure to run startup.py first")
             return
-
-        # Get profile
         print("\n3. 👤 Getting user profile...")
         profile = await client.get_profile()
         print(f"   User: {profile.get('username')} ({profile.get('email')})")
-
-        # Create a sample text file for upload
         print("\n4. 📄 Creating sample document...")
-        sample_content = """
-        Artificial Intelligence (AI) is a branch of computer science that aims to create 
-        intelligent machines that work and react like humans. Some of the activities 
-        computers with artificial intelligence are designed for include:
-        
-        - Speech recognition
-        - Learning
-        - Planning
-        - Problem solving
-        
-        Machine Learning is a subset of AI that provides systems the ability to 
-        automatically learn and improve from experience without being explicitly programmed.
-        
-        Deep Learning is a subset of machine learning that uses neural networks with 
-        three or more layers to simulate the behavior of the human brain.
-        """
-
+        sample_content = "\n        Artificial Intelligence (AI) is a branch of computer science that aims to create \n        intelligent machines that work and react like humans. Some of the activities \n        computers with artificial intelligence are designed for include:\n        \n        - Speech recognition\n        - Learning\n        - Planning\n        - Problem solving\n        \n        Machine Learning is a subset of AI that provides systems the ability to \n        automatically learn and improve from experience without being explicitly programmed.\n        \n        Deep Learning is a subset of machine learning that uses neural networks with \n        three or more layers to simulate the behavior of the human brain.\n        "
         sample_file = Path("sample_ai_doc.txt")
         sample_file.write_text(sample_content)
         print(f"   Created: {sample_file}")
-
-        # Upload document
         print("\n5. ⬆️ Uploading document...")
         upload_result = await client.upload_document(
             str(sample_file), "AI Introduction"
@@ -200,20 +156,14 @@ async def demonstrate_workflow():
         else:
             print("   ❌ Upload failed")
             return
-
-        # Wait a moment for processing
         print("\n6. ⏳ Waiting for document processing...")
-        await asyncio.sleep(3)
-
-        # List documents
+        (await asyncio.sleep(3))
         print("\n7. 📋 Listing documents...")
         docs = await client.list_documents()
         if docs.get("success") and docs.get("items"):
-            for doc in docs["items"][:3]:  # Show first 3
+            for doc in docs["items"][:3]:
                 status = doc["processing_status"]
                 print(f"   📄 {doc['title']} - Status: {status}")
-
-        # Search documents
         print("\n8. 🔍 Searching documents...")
         search_result = await client.search_documents("What is machine learning?")
         if search_result.get("success") and search_result.get("results"):
@@ -222,8 +172,6 @@ async def demonstrate_workflow():
                 score = result.get("similarity_score", 0)
                 content_preview = result["content"][:100] + "..."
                 print(f"   {i}. Score: {score:.3f} - {content_preview}")
-
-        # Chat with AI
         print("\n9. 💬 Chatting with AI...")
         chat_result = await client.chat(
             "What is the difference between AI and machine learning?"
@@ -231,36 +179,26 @@ async def demonstrate_workflow():
         if chat_result.get("success"):
             ai_response = chat_result["ai_message"]["content"]
             print(f"   🤖 AI: {ai_response[:200]}...")
-
-            # Follow-up question
             conv_id = chat_result["conversation"]["id"]
             followup = await client.chat("Can you give me an example?", conv_id)
             if followup.get("success"):
                 followup_response = followup["ai_message"]["content"]
                 print(f"   🤖 AI: {followup_response[:200]}...")
-
-        # Clean up
         sample_file.unlink(missing_ok=True)
-
         print("\n✅ Demo completed successfully!")
         print("\n📚 Try the interactive API docs at: http://localhost:8000/docs")
-
     except Exception as e:
         print(f"❌ Demo failed: {e}")
-
     finally:
-        await client.close()
+        (await client.close())
 
 
 async def demonstrate_registration():
-    """Demonstrate user registration flow."""
+    "Demonstrate Registration operation."
     client = APIClient()
-
     try:
         print("👤 User Registration Demo")
-        print("=" * 30)
-
-        # Register new user
+        print(("=" * 30))
         print("1. 📝 Registering new user...")
         reg_result = await client.register(
             username="test_user",
@@ -268,17 +206,12 @@ async def demonstrate_registration():
             password="SecureTestPass123!",
             full_name="Test User",
         )
-
         if reg_result.get("username"):
             print(f"   ✅ User registered: {reg_result['username']}")
-
-            # Login with new user
             print("\n2. 🔐 Logging in with new user...")
             login_result = await client.login("test_user", "SecureTestPass123!")
             if "access_token" in login_result:
                 print("   ✅ Login successful")
-
-                # Get profile
                 profile = await client.get_profile()
                 print(
                     f"   👤 Profile: {profile.get('full_name')} ({profile.get('email')})"
@@ -287,18 +220,16 @@ async def demonstrate_registration():
                 print("   ❌ Login failed")
         else:
             print(f"   ❌ Registration failed: {reg_result}")
-
     except Exception as e:
         print(f"❌ Registration demo failed: {e}")
-
     finally:
-        await client.close()
+        (await client.close())
 
 
 def show_usage():
-    """Show usage examples."""
+    "Show Usage operation."
     print("🔧 EXAMPLE USAGE SCRIPTS")
-    print("=" * 40)
+    print(("=" * 40))
     print("Run complete workflow demo:")
     print("  python scripts/example_usage.py workflow")
     print()
@@ -307,21 +238,19 @@ def show_usage():
     print()
     print("NOTE: Make sure the application is running:")
     print("  uvicorn app.main:app --reload")
-    print("=" * 40)
+    print(("=" * 40))
 
 
 async def main():
-    """Main entry point."""
+    "Main entry point."
     if len(sys.argv) < 2:
         show_usage()
         return
-
     command = sys.argv[1]
-
     if command == "workflow":
-        await demonstrate_workflow()
+        (await demonstrate_workflow())
     elif command == "register":
-        await demonstrate_registration()
+        (await demonstrate_registration())
     else:
         show_usage()
 

@@ -1,27 +1,19 @@
-"""
-Unit tests for prompt registry functionality.
-
-These tests cover prompt management including creation, activation,
-and usage tracking.
-"""
+"Test cases for prompt_registry functionality."
 
 from unittest.mock import AsyncMock, patch
-
 import pytest
-
 from app.services.prompt_service import PromptService
 
 
 class TestPromptService:
-    """Test prompt service functionality."""
+    "TestPrompt service for business logic operations."
 
     @pytest.mark.asyncio
     async def test_create_prompt(self):
-        """Test creating a prompt."""
+        "Test create prompt functionality."
         with patch("app.services.prompt_service.AsyncSessionLocal") as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-
             prompt = await PromptService.create_prompt(
                 name="test_prompt",
                 title="Test Prompt",
@@ -30,145 +22,117 @@ class TestPromptService:
                 category="test",
                 tags=["test", "example"],
             )
-
-            # Verify database interaction
             mock_db.add.assert_called_once()
             mock_db.commit.assert_called_once()
             mock_db.refresh.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_create_default_prompt(self):
-        """Test creating a default prompt unsets other defaults."""
+        "Test create default prompt functionality."
         with patch("app.services.prompt_service.AsyncSessionLocal") as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-
-            await PromptService.create_prompt(
-                name="default_prompt",
-                title="Default Prompt",
-                content="You are a helpful assistant.",
-                is_default=True,
+            (
+                await PromptService.create_prompt(
+                    name="default_prompt",
+                    title="Default Prompt",
+                    content="You are a helpful assistant.",
+                    is_default=True,
+                )
             )
-
-            # Should unset existing defaults first
-            assert (
-                mock_db.execute.call_count >= 1
-            )  # At least one execute call to unset defaults
+            assert mock_db.execute.call_count >= 1
             mock_db.add.assert_called_once()
             mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_set_default_prompt(self):
-        """Test setting a prompt as default."""
+        "Test set default prompt functionality."
         with patch("app.services.prompt_service.AsyncSessionLocal") as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
             mock_db.execute.return_value.rowcount = 1
-
             result = await PromptService.set_default_prompt("test_prompt")
-
             assert result is True
-            # Should execute two queries: unset all defaults, then set new default
             assert mock_db.execute.call_count == 2
             mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_record_prompt_usage(self):
-        """Test recording prompt usage."""
+        "Test record prompt usage functionality."
         with patch("app.services.prompt_service.AsyncSessionLocal") as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-
-            # Mock prompt exists
             mock_prompt = AsyncMock()
             mock_db.execute.return_value.scalar_one_or_none.return_value = mock_prompt
-
             result = await PromptService.record_prompt_usage("test_prompt")
-
             assert result is True
             mock_prompt.record_usage.assert_called_once()
             mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_list_prompts_with_search(self):
-        """Test listing prompts with search functionality."""
+        "Test list prompts with search functionality."
         with patch("app.services.prompt_service.AsyncSessionLocal") as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-
-            # Mock query result
             mock_db.execute.return_value.scalars.return_value.all.return_value = []
-
-            await PromptService.list_prompts(
-                active_only=True, category="test", search="assistant"
+            (
+                await PromptService.list_prompts(
+                    active_only=True, category="test", search="assistant"
+                )
             )
-
-            # Verify query was executed
             mock_db.execute.assert_called_once()
 
 
 class TestPromptModel:
-    """Test prompt model functionality."""
+    "TestPromptModel data model for database operations."
 
     def test_prompt_tag_list_property(self):
-        """Test prompt tag list property."""
+        "Test prompt tag list property functionality."
         from app.models.prompt import Prompt
 
         prompt = Prompt(
             name="test", title="Test", content="Content", tags="tag1, tag2 ,  tag3"
         )
-
         assert prompt.tag_list == ["tag1", "tag2", "tag3"]
 
     def test_prompt_tag_list_setter(self):
-        """Test prompt tag list setter."""
+        "Test prompt tag list setter functionality."
         from app.models.prompt import Prompt
 
         prompt = Prompt(name="test", title="Test", content="Content")
-
         prompt.tag_list = ["new", "tags", "here"]
         assert prompt.tags == "new,tags,here"
 
     def test_prompt_record_usage(self):
-        """Test prompt usage recording."""
+        "Test prompt record usage functionality."
         from datetime import datetime
-
         from app.models.prompt import Prompt
 
         prompt = Prompt(name="test", title="Test", content="Content", usage_count=5)
-
         prompt.record_usage()
-
         assert prompt.usage_count == 6
         assert isinstance(prompt.last_used_at, datetime)
 
 
 class TestPromptStatistics:
-    """Test prompt statistics functionality."""
+    "Test class for promptstatistics functionality."
 
     @pytest.mark.asyncio
     async def test_get_prompt_stats(self):
-        """Test getting prompt statistics."""
+        "Test get prompt stats functionality."
         with patch("app.services.prompt_service.AsyncSessionLocal") as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
-
-            # Mock database queries
-            mock_db.scalar.side_effect = [10, 8]  # total, active
+            mock_db.scalar.side_effect = [10, 8]
             mock_db.execute.return_value.scalars.return_value.all.return_value = []
-
-            # Mock get_default_prompt
             with patch.object(PromptService, "get_default_prompt") as mock_default:
                 mock_default.return_value = None
-
-                # Mock get_categories and get_all_tags
                 with patch.object(PromptService, "get_categories") as mock_categories:
                     with patch.object(PromptService, "get_all_tags") as mock_tags:
                         mock_categories.return_value = ["test", "example"]
                         mock_tags.return_value = ["tag1", "tag2"]
-
                         stats = await PromptService.get_prompt_stats()
-
                         assert stats["total_prompts"] == 10
                         assert stats["active_prompts"] == 8
                         assert stats["inactive_prompts"] == 2

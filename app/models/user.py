@@ -1,11 +1,9 @@
-"""User model definitions and database schemas."""
+"User model definitions and database schemas."
 
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
-
 from sqlalchemy import Boolean, DateTime, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from .base import BaseModelDB
 
 if TYPE_CHECKING:
@@ -14,10 +12,9 @@ if TYPE_CHECKING:
 
 
 class User(BaseModelDB):
-    """User data model for database operations."""
+    "User data model for database operations."
 
     __tablename__ = "users"
-
     username: Mapped[str] = mapped_column(
         String(50), unique=True, nullable=False, index=True
     )
@@ -35,17 +32,12 @@ class User(BaseModelDB):
     last_login: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-
-    # Relationships
     documents: Mapped[List["Document"]] = relationship(
         "Document", back_populates="owner", cascade="all, delete-orphan"
     )
-
     conversations: Mapped[List["Conversation"]] = relationship(
         "Conversation", back_populates="user", cascade="all, delete-orphan"
     )
-
-    # Indexes
     __table_args__ = (
         Index("idx_users_username", "username"),
         Index("idx_users_email", "email"),
@@ -54,5 +46,5 @@ class User(BaseModelDB):
     )
 
     def __repr__(self) -> str:
-        """Return detailed object representation."""
+        "Return detailed object representation."
         return f"<User(username='{self.username}', email='{self.email}')>"

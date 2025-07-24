@@ -1,25 +1,15 @@
-"""
-Management CLI for the AI Chatbot Platform.
-
-This script provides command-line utilities for user management,
-database operations, and system maintenance.
-
-DEPRECATED: This script is kept for backward compatibility.
-Please use the new comprehensive CLI: python manage.py
-"""
+"Management CLI for the AI chatbot platform."
 
 import asyncio
 import sys
 from pathlib import Path
 from typing import Optional
-
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.table import Table
 from sqlalchemy import func, select
-
 from app.config import settings
 from app.database import AsyncSessionLocal
 from app.models.conversation import Conversation
@@ -28,13 +18,8 @@ from app.models.user import User
 from app.services.auth import AuthService
 from app.services.user import UserService
 
-# Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
-
-
 console = Console()
-
-# Create the main Typer app with minimal configuration
 app = typer.Typer(help="AI Chatbot Platform Management CLI (Legacy)")
 
 
@@ -45,22 +30,19 @@ def create_user_cmd(
     full_name: Optional[str] = None,
     superuser: bool = False,
 ):
-    """Create a new user account."""
+    "Create new user cmd."
 
     async def _create_user():
+        "Create User operation."
         try:
             async with AsyncSessionLocal() as db:
                 auth_service = AuthService(db)
-
-                # Check if user exists
                 existing_user = await auth_service.get_user_by_username(username)
                 if existing_user:
                     console.print(
                         f"[red]Error: Username '{username}' already exists[/red]"
                     )
                     return
-
-                # Create user
                 from app.schemas.auth import RegisterRequest
 
                 user_data = RegisterRequest(
@@ -69,20 +51,15 @@ def create_user_cmd(
                     password=password,
                     full_name=full_name,
                 )
-
                 user = await auth_service.register_user(user_data)
-
-                # Make superuser if requested
                 if superuser:
                     user.is_superuser = True
-                    await db.commit()
-                    await db.refresh(user)
-
+                    (await db.commit())
+                    (await db.refresh(user))
                 console.print("[green]User created successfully:[/green]")
                 console.print(f"  Username: {user.username}")
                 console.print(f"  Email: {user.email}")
                 console.print(f"  Superuser: {user.is_superuser}")
-
         except Exception as e:
             console.print(f"[red]Error creating user: {e}[/red]")
 
@@ -90,24 +67,21 @@ def create_user_cmd(
 
 
 def list_users_cmd(limit: int = 10, superusers_only: bool = False):
-    """List user accounts."""
+    "List users cmd entries."
 
     async def _list_users():
+        "List Users operation."
         try:
             async with AsyncSessionLocal() as db:
                 query = select(User)
-
                 if superusers_only:
-                    query = query.where(User.is_superuser is True)
-
+                    query = query.where((User.is_superuser is True))
                 query = query.limit(limit)
                 result = await db.execute(query)
                 users = result.scalars().all()
-
                 if not users:
                     console.print("[yellow]No users found[/yellow]")
                     return
-
                 table = Table(title="User Accounts")
                 table.add_column("ID", style="cyan")
                 table.add_column("Username", style="green")
@@ -116,20 +90,17 @@ def list_users_cmd(limit: int = 10, superusers_only: bool = False):
                 table.add_column("Active", style="yellow")
                 table.add_column("Superuser", style="red")
                 table.add_column("Created")
-
                 for user in users:
                     table.add_row(
                         str(user.id),
                         user.username,
                         user.email,
-                        user.full_name or "",
-                        "✓" if user.is_active else "✗",
-                        "✓" if user.is_superuser else "✗",
+                        (user.full_name or ""),
+                        ("✓" if user.is_active else "✗"),
+                        ("✓" if user.is_superuser else "✗"),
                         user.created_at.strftime("%Y-%m-%d"),
                     )
-
                 console.print(table)
-
         except Exception as e:
             console.print(f"[red]Error listing users: {e}[/red]")
 
@@ -137,41 +108,33 @@ def list_users_cmd(limit: int = 10, superusers_only: bool = False):
 
 
 def delete_user_cmd(username: str, force: bool = False):
-    """Delete a user account."""
+    "Delete user cmd."
 
     async def _delete_user():
+        "Delete User operation."
         try:
             async with AsyncSessionLocal() as db:
                 auth_service = AuthService(db)
                 user_service = UserService(db)
-
-                # Find user
                 user = await auth_service.get_user_by_username(username)
                 if not user:
                     console.print(f"[red]User '{username}' not found[/red]")
                     return
-
-                # Confirm deletion
                 if not force:
                     console.print("User to delete:")
                     console.print(f"  Username: {user.username}")
                     console.print(f"  Email: {user.email}")
                     console.print(f"  Superuser: {user.is_superuser}")
-
                     if not Confirm.ask("Are you sure you want to delete this user?"):
                         console.print("[yellow]Deletion cancelled[/yellow]")
                         return
-
-                # Delete user
                 success = await user_service.delete_user(user.id)
-
                 if success:
                     console.print(
                         f"[green]User '{username}' deleted successfully[/green]"
                     )
                 else:
                     console.print(f"[red]Failed to delete user '{username}'[/red]")
-
         except Exception as e:
             console.print(f"[red]Error deleting user: {e}[/red]")
 
@@ -179,29 +142,24 @@ def delete_user_cmd(username: str, force: bool = False):
 
 
 def reset_password_cmd(username: str, password: str):
-    """Reset user password."""
+    "Reset Password Cmd operation."
 
     async def _reset_password():
+        "Reset Password operation."
         try:
             async with AsyncSessionLocal() as db:
                 auth_service = AuthService(db)
-
-                # Find user
                 user = await auth_service.get_user_by_username(username)
                 if not user:
                     console.print(f"[red]User '{username}' not found[/red]")
                     return
-
-                # Reset password
                 from app.utils.security import get_password_hash
 
                 user.hashed_password = get_password_hash(password)
-                await db.commit()
-
+                (await db.commit())
                 console.print(
                     f"[green]Password reset successfully for user '{username}'[/green]"
                 )
-
         except Exception as e:
             console.print(f"[red]Error resetting password: {e}[/red]")
 
@@ -209,57 +167,47 @@ def reset_password_cmd(username: str, password: str):
 
 
 def show_stats():
-    """Show system statistics."""
+    "Show Stats operation."
 
     async def _show_stats():
+        "Show Stats operation."
         try:
             async with AsyncSessionLocal() as db:
-                # User statistics
                 user_count = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active is True)
+                    select(func.count(User.id)).where((User.is_active is True))
                 )
                 superusers = await db.scalar(
-                    select(func.count(User.id)).where(User.is_superuser is True)
+                    select(func.count(User.id)).where((User.is_superuser is True))
                 )
-
-                # Document statistics
                 doc_count = await db.scalar(select(func.count(Document.id)))
                 completed_docs = await db.scalar(
                     select(func.count(Document.id)).where(
-                        Document.status == FileStatus.COMPLETED
+                        (Document.status == FileStatus.COMPLETED)
                     )
                 )
-
-                # Conversation statistics
                 conv_count = await db.scalar(select(func.count(Conversation.id)))
                 active_convs = await db.scalar(
                     select(func.count(Conversation.id)).where(
-                        Conversation.is_active is True
+                        (Conversation.is_active is True)
                     )
                 )
-
-                # Display statistics
                 table = Table(title="System Statistics")
                 table.add_column("Category", style="cyan")
                 table.add_column("Metric", style="green")
                 table.add_column("Count", style="yellow")
-
                 stats_data = [
-                    ("Users", "Total Users", str(user_count or 0)),
-                    ("Users", "Active Users", str(active_users or 0)),
-                    ("Users", "Superusers", str(superusers or 0)),
-                    ("Documents", "Total Documents", str(doc_count or 0)),
-                    ("Documents", "Completed Documents", str(completed_docs or 0)),
-                    ("Conversations", "Total Conversations", str(conv_count or 0)),
-                    ("Conversations", "Active Conversations", str(active_convs or 0)),
+                    ("Users", "Total Users", str((user_count or 0))),
+                    ("Users", "Active Users", str((active_users or 0))),
+                    ("Users", "Superusers", str((superusers or 0))),
+                    ("Documents", "Total Documents", str((doc_count or 0))),
+                    ("Documents", "Completed Documents", str((completed_docs or 0))),
+                    ("Conversations", "Total Conversations", str((conv_count or 0))),
+                    ("Conversations", "Active Conversations", str((active_convs or 0))),
                 ]
-
                 for category, metric, count in stats_data:
                     table.add_row(category, metric, count)
-
                 console.print(table)
-
         except Exception as e:
             console.print(f"[red]Error retrieving statistics: {e}[/red]")
 
@@ -267,15 +215,15 @@ def show_stats():
 
 
 def init_database():
-    """Initialize the database."""
+    "Init Database operation."
 
     async def _init_db():
+        "Init Db operation."
         try:
             from app.database import init_db
 
-            await init_db()
+            (await init_db())
             console.print("[green]Database initialized successfully[/green]")
-
         except Exception as e:
             console.print(f"[red]Database initialization failed: {e}[/red]")
 
@@ -283,16 +231,14 @@ def init_database():
 
 
 def health_check():
-    """Check system health."""
+    "Health Check operation."
 
     async def _health_check():
+        "Health Check operation."
         try:
-            # Check database connection
             async with AsyncSessionLocal() as db:
-                await db.execute(select(func.count(User.id)))
+                (await db.execute(select(func.count(User.id))))
                 console.print("[green]✓ Database connection OK[/green]")
-
-            # Check OpenAI API
             try:
                 from app.services.openai_client import OpenAIClient
 
@@ -304,24 +250,19 @@ def health_check():
                     console.print("[yellow]⚠ OpenAI API models not available[/yellow]")
             except Exception as e:
                 console.print(f"[red]✗ OpenAI API error: {e}[/red]")
-
-            # Check configuration
             required_settings = ["database_url", "secret_key", "openai_api_key"]
             config_ok = True
             for setting in required_settings:
                 if not getattr(settings, setting, None):
                     console.print(f"[red]✗ Missing required setting: {setting}[/red]")
                     config_ok = False
-
             if config_ok:
                 console.print("[green]✓ Configuration OK[/green]")
-
             console.print("\n[blue]System Status Summary:[/blue]")
             console.print(f"App Name: {settings.app_name}")
             console.print(f"Version: {settings.app_version}")
             console.print(f"Debug Mode: {settings.debug}")
             console.print(f"Log Level: {settings.log_level}")
-
         except Exception as e:
             console.print(f"[red]Health check failed: {e}[/red]")
 
@@ -329,13 +270,11 @@ def health_check():
 
 
 def show_config():
-    """Show current configuration."""
-
+    "Show Config operation."
     table = Table(title="Current Configuration")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="green")
     table.add_column("Description", style="dim")
-
     config_items = [
         ("APP_NAME", settings.app_name, "Application name"),
         ("APP_VERSION", settings.app_version, "Application version"),
@@ -343,9 +282,11 @@ def show_config():
         ("LOG_LEVEL", settings.log_level, "Logging level"),
         (
             "DATABASE_URL",
-            settings.database_url[:50] + "..."
-            if len(settings.database_url) > 50
-            else settings.database_url,
+            (
+                (settings.database_url[:50] + "...")
+                if (len(settings.database_url) > 50)
+                else settings.database_url
+            ),
             "Database connection",
         ),
         ("OPENAI_BASE_URL", settings.openai_base_url, "OpenAI API base URL"),
@@ -353,7 +294,7 @@ def show_config():
         ("OPENAI_EMBEDDING_MODEL", settings.openai_embedding_model, "Embedding model"),
         (
             "MAX_FILE_SIZE",
-            f"{settings.max_file_size // 1024 // 1024}MB",
+            f"{((settings.max_file_size // 1024) // 1024)}MB",
             "Maximum file size",
         ),
         (
@@ -369,14 +310,11 @@ def show_config():
         ),
         ("UPLOAD_DIRECTORY", settings.upload_directory, "Upload directory"),
     ]
-
     for setting, value, description in config_items:
         table.add_row(setting, value, description)
-
     console.print(table)
 
 
-# Register commands with simple arguments
 @app.command()
 def create_user(
     username: str = typer.Argument(..., help="Username"),
@@ -385,7 +323,7 @@ def create_user(
     full_name: str = typer.Argument(None, help="Full name"),
     superuser: bool = typer.Option(False, help="Create as superuser"),
 ):
-    """Create a new user account."""
+    "Create new user."
     create_user_cmd(username, email, password, full_name, superuser)
 
 
@@ -394,7 +332,7 @@ def list_users(
     limit: int = typer.Option(10, help="Number of users to show"),
     superusers_only: bool = typer.Option(False, help="Show only superusers"),
 ):
-    """List user accounts."""
+    "List users entries."
     list_users_cmd(limit, superusers_only)
 
 
@@ -403,7 +341,7 @@ def delete_user(
     username: str = typer.Argument(..., help="Username to delete"),
     force: bool = typer.Option(False, help="Skip confirmation"),
 ):
-    """Delete a user account."""
+    "Delete user."
     delete_user_cmd(username, force)
 
 
@@ -412,63 +350,53 @@ def reset_password(
     username: str = typer.Argument(..., help="Username"),
     password: str = typer.Argument(..., help="New password"),
 ):
-    """Reset user password."""
+    "Reset Password operation."
     reset_password_cmd(username, password)
 
 
 @app.command()
 def stats():
-    """Show system statistics."""
+    "Stats operation."
     show_stats()
 
 
 @app.command()
 def init_db():
-    """Initialize the database."""
+    "Init Db operation."
     init_database()
 
 
 @app.command()
 def health():
-    """Check system health."""
+    "Health operation."
     health_check()
 
 
 @app.command()
 def config():
-    """Show current configuration."""
+    "Config operation."
     show_config()
 
 
 @app.command()
 def migrate():
-    """Show migration notice to new CLI."""
+    "Migrate operation."
     migration_notice = Panel(
-        "[bold red]⚠️ DEPRECATED CLI[/bold red]\n\n"
-        "This CLI script is deprecated and kept only for backward compatibility.\n"
-        "Please use the new comprehensive management CLI:\n\n"
-        "[green]python manage.py --help[/green]\n\n"
-        "The new CLI provides:\n"
-        "• Enhanced user management\n"
-        "• Document processing tools\n"
-        "• Conversation management\n"
-        "• Analytics and reporting\n"
-        "• Database management\n"
-        "• Background task monitoring\n\n"
-        "[yellow]Quick start:[/yellow]\n"
-        "[cyan]python manage.py quickstart[/cyan]",
+        "[bold red]⚠️ DEPRECATED CLI[/bold red]\n\nThis CLI script is deprecated and kept only for backward compatibility.\nPlease use the new comprehensive management CLI:\n\n[green]python manage.py --help[/green]\n\nThe new CLI provides:\n• Enhanced user management\n• Document processing tools\n• Conversation management\n• Analytics and reporting\n• Database management\n• Background task monitoring\n\n[yellow]Quick start:[/yellow]\n[cyan]python manage.py quickstart[/cyan]",
         title="🚀 Migration Notice",
         border_style="bright_yellow",
-        padding=(1, 2)
+        padding=(1, 2),
     )
     console.print(migration_notice)
 
 
 if __name__ == "__main__":
-    # Show migration notice by default
-    console.print("[yellow]⚠️ You are using the deprecated CLI. Use 'python manage.py' instead.[/yellow]")
-    console.print("[dim]Run 'python scripts/manage.py migrate' for more information.[/dim]\n")
-    
+    console.print(
+        "[yellow]⚠️ You are using the deprecated CLI. Use 'python manage.py' instead.[/yellow]"
+    )
+    console.print(
+        "[dim]Run 'python scripts/manage.py migrate' for more information.[/dim]\n"
+    )
     try:
         app()
     except Exception as e:

@@ -1,25 +1,15 @@
-"""
-Document-related Pydantic schemas.
-
-This module provides schemas for document management, file uploads,
-processing status, and document search operations.
-
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
-"""
+"Pydantic schemas for document data validation."
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-
 from pydantic import BaseModel, Field, field_validator
-
 from .base import BaseSchema
 from .common import BaseResponse, SearchParams
 
 
 class DocumentResponse(BaseSchema):
-    """Schema for document response data."""
+    "DocumentResponse schema for data validation and serialization."
 
     id: UUID = Field(..., description="Document ID")
     title: str = Field(..., description="Document title")
@@ -29,14 +19,15 @@ class DocumentResponse(BaseSchema):
     mime_type: Optional[str] = Field(None, description="MIME type")
     processing_status: str = Field(..., description="Processing status")
     owner_id: UUID = Field(..., description="Owner user ID")
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
+    metainfo: Optional[Dict[(str, Any)]] = Field(
+        None, description="Additional metainfo"
+    )
     chunk_count: int = Field(0, description="Number of chunks")
     created_at: datetime = Field(..., description="Upload timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: (lambda v: v.isoformat())},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -57,13 +48,12 @@ class DocumentResponse(BaseSchema):
 
 
 class DocumentUpdate(BaseSchema):
-    """Schema for document updates."""
+    "DocumentUpdate class for specialized functionality."
 
     title: Optional[str] = Field(
         None, min_length=1, max_length=500, description="New title"
     )
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Updated metainfo")
-
+    metainfo: Optional[Dict[(str, Any)]] = Field(None, description="Updated metainfo")
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -75,7 +65,7 @@ class DocumentUpdate(BaseSchema):
 
 
 class DocumentChunkResponse(BaseSchema):
-    """Schema for document chunk response data."""
+    "DocumentChunkResponse schema for data validation and serialization."
 
     id: UUID = Field(..., description="Chunk ID")
     content: str = Field(..., description="Chunk text content")
@@ -88,12 +78,13 @@ class DocumentChunkResponse(BaseSchema):
     similarity_score: Optional[float] = Field(
         None, description="Similarity score (for search)"
     )
-    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
+    metainfo: Optional[Dict[(str, Any)]] = Field(
+        None, description="Additional metainfo"
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
-
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: (lambda v: v.isoformat())},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -113,7 +104,7 @@ class DocumentChunkResponse(BaseSchema):
 
 
 class DocumentSearchRequest(SearchParams):
-    """Schema for document search requests."""
+    "DocumentSearchRequest schema for data validation and serialization."
 
     document_ids: Optional[List[UUID]] = Field(
         None, description="Specific document IDs to search"
@@ -123,10 +114,10 @@ class DocumentSearchRequest(SearchParams):
     @field_validator("file_types")
     @classmethod
     def validate_file_types(cls, v):
-        """Validate file types."""
+        "Validate file types data."
         if v:
             allowed_types = ["pdf", "docx", "txt", "md", "rtf"]
-            invalid_types = [ft for ft in v if ft.lower() not in allowed_types]
+            invalid_types = [ft for ft in v if (ft.lower() not in allowed_types)]
             if invalid_types:
                 raise ValueError(f"Invalid file types: {invalid_types}")
             return [ft.lower() for ft in v]
@@ -147,7 +138,7 @@ class DocumentSearchRequest(SearchParams):
 
 
 class DocumentUploadResponse(BaseResponse):
-    """Schema for document upload response with enhanced features."""
+    "DocumentUploadResponse schema for data validation and serialization."
 
     document: DocumentResponse = Field(..., description="Uploaded document information")
     task_id: Optional[str] = Field(None, description="Background processing task ID")
@@ -157,7 +148,7 @@ class DocumentUploadResponse(BaseResponse):
 
 
 class ProcessingStatusResponse(BaseResponse):
-    """Enhanced schema for document processing status with background task information."""
+    "ProcessingStatusResponse schema for data validation and serialization."
 
     document_id: UUID = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")
@@ -168,27 +159,24 @@ class ProcessingStatusResponse(BaseResponse):
     error_message: Optional[str] = Field(None, description="Error message if failed")
     created_at: datetime = Field(..., description="Document creation time")
     updated_at: datetime = Field(..., description="Document last update time")
-
-    # Background task information
     task_id: Optional[str] = Field(None, description="Background task ID")
     task_status: Optional[str] = Field(None, description="Background task status")
     progress: Optional[float] = Field(None, description="Processing progress (0-1)")
     task_created_at: Optional[datetime] = Field(None, description="Task creation time")
     task_started_at: Optional[datetime] = Field(None, description="Task start time")
     task_error: Optional[str] = Field(None, description="Task error message")
-
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    model_config = {"json_encoders": {datetime: (lambda v: v.isoformat())}}
 
 
 class DocumentListResponse(BaseResponse):
-    """Response schema for document list."""
+    "DocumentListResponse schema for data validation and serialization."
 
     documents: List[DocumentResponse] = Field([], description="List of documents")
     total: int = Field(0, description="Total number of documents")
 
 
 class DocumentSearchResponse(BaseResponse):
-    """Response schema for document search."""
+    "DocumentSearchResponse schema for data validation and serialization."
 
     results: List[DocumentChunkResponse] = Field([], description="Search results")
     query: str = Field(..., description="Original search query")
@@ -198,7 +186,7 @@ class DocumentSearchResponse(BaseResponse):
 
 
 class BackgroundTaskResponse(BaseModel):
-    """Response schema for background task operations."""
+    "BackgroundTaskResponse schema for data validation and serialization."
 
     message: str
     task_id: str
@@ -209,7 +197,7 @@ class BackgroundTaskResponse(BaseModel):
 
 
 class ProcessingConfigRequest(BaseModel):
-    """Request schema for processing configuration."""
+    "ProcessingConfigRequest schema for data validation and serialization."
 
     chunk_size: Optional[int] = Field(None, ge=100, le=4000)
     chunk_overlap: Optional[int] = Field(None, ge=0, le=1000)
@@ -221,7 +209,7 @@ class ProcessingConfigRequest(BaseModel):
 
 
 class ProcessingConfigResponse(BaseModel):
-    """Response schema for processing configuration."""
+    "ProcessingConfigResponse schema for data validation and serialization."
 
     message: str
-    config: Dict[str, Any]
+    config: Dict[(str, Any)]

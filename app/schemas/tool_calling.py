@@ -1,40 +1,25 @@
-"""
-Tool calling related schemas and enums.
-
-This module provides schemas and enums for tool calling functionality,
-including different modes for handling tool call results.
-
-Generated on: 2025-01-20 20:50:00 UTC
-Current User: assistant
-"""
+"Pydantic schemas for tool_calling data validation."
 
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
 from pydantic import Field
-
 from .base import BaseSchema
 
 
 class ToolHandlingMode(str, Enum):
-    """
-    Enum for different tool call result handling modes.
-
-    - RETURN_RESULTS: Return tool call results as content without further AI processing
-    - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
-    """
+    "ToolHandlingMode class for specialized functionality."
 
     RETURN_RESULTS = "return_results"
     COMPLETE_WITH_RESULTS = "complete_with_results"
 
 
 class ToolCallResult(BaseSchema):
-    """Schema for individual tool call result."""
+    "ToolCallResult class for specialized functionality."
 
     tool_call_id: str = Field(..., description="ID of the tool call")
     tool_name: str = Field(..., description="Name of the tool that was called")
     success: bool = Field(..., description="Whether the tool call was successful")
-    content: List[Dict[str, Any]] = Field(
+    content: List[Dict[(str, Any)]] = Field(
         default_factory=list, description="Tool result content"
     )
     error: Optional[str] = Field(None, description="Error message if tool call failed")
@@ -47,7 +32,7 @@ class ToolCallResult(BaseSchema):
 
 
 class ToolCallSummary(BaseSchema):
-    """Schema for tool call execution summary."""
+    "ToolCallSummary class for specialized functionality."
 
     total_calls: int = Field(..., description="Total number of tool calls made")
     successful_calls: int = Field(..., description="Number of successful tool calls")

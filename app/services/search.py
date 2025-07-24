@@ -1,48 +1,11 @@
-"""
-Search service for comprehensive document retrieval and similarity search.
-
-This service provides advanced search capabilities for the AI chatbot platform
-including multiple search algorithms, caching optimization, and performance
-monitoring. It integrates vector similarity search, full-text search, hybrid
-algorithms, and Maximum Marginal Relevance (MMR) for diverse search needs.
-
-Key Features:
-- Multiple search algorithms (vector, text, hybrid, MMR)
-- LRU caching for query embeddings to optimize performance
-- PGVector integration for efficient similarity search
-- PostgreSQL full-text search with GIN indexing
-- Configurable similarity thresholds and result limits
-- User-based access control and security filtering
-
-Search Algorithms:
-- Vector Search: Semantic similarity using embeddings with PGVector ivfflat index
-- Text Search: Traditional full-text search with PostgreSQL tsvector and BM25 ranking
-- Hybrid Search: Normalized and calibrated blending of vector and text scores
-- MMR Search: Maximum Marginal Relevance using embedding cosine distance for diversity
-
-Performance Features:
-- In-memory LRU cache for embedding queries (reduces API calls)
-- User-based filtering for security and performance optimization
-- Result metadata for search explainability and debugging
-- Comprehensive error handling and logging for monitoring
-
-API Endpoints Integration:
-- search_documents: Main search interface with algorithm selection
-- get_similar_chunks: Direct similarity search for related content
-
-Generated on: 2025-07-14 04:00:00 UTC
-Updated on: 2025-01-20 20:15:00 UTC
-Current User: lllucius / assistant
-"""
+"Service layer for search business logic."
 
 import logging
 from time import time
 from typing import Dict, List, Tuple
 from uuid import UUID
-
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from ..core.exceptions import NotFoundError, SearchError
 from ..models.document import Document, DocumentChunk
 from ..schemas.document import DocumentChunkResponse, DocumentSearchRequest
@@ -52,16 +15,17 @@ from .base import BaseService
 logger = logging.getLogger(__name__)
 
 
-# ----- In-memory LRU cache for embeddings -----
 class LRUCache:
-    """A simple LRU cache for query embeddings."""
+    "LRUCache class for specialized functionality."
 
     def __init__(self, capacity=128):
-        self.cache: Dict[str, Tuple[float, list]] = {}
+        "Initialize class instance."
+        self.cache: Dict[(str, Tuple[(float, list)])] = {}
         self.order: List[str] = []
         self.capacity = capacity
 
     def get(self, key):
+        "Get operation."
         if key in self.cache:
             self.order.remove(key)
             self.order.insert(0, key)
@@ -69,6 +33,7 @@ class LRUCache:
         return None
 
     def set(self, key, value):
+        "Set operation."
         if key in self.cache:
             self.order.remove(key)
         elif len(self.order) >= self.capacity:
@@ -82,46 +47,15 @@ embedding_cache = LRUCache(capacity=256)
 
 
 class SearchService(BaseService):
-    """
-    Service for comprehensive document search and retrieval operations.
-
-    This service extends BaseService to provide advanced search capabilities
-    including vector similarity search, text search, hybrid algorithms, and
-    Maximum Marginal Relevance (MMR) with enhanced caching, logging, and
-    performance optimization.
-
-    Search Algorithms:
-    - Vector Search: Pure semantic similarity using embeddings with PGVector
-    - Text Search: Traditional full-text search with PostgreSQL GIN indexing
-    - Hybrid Search: Weighted combination of vector and text search results
-    - MMR Search: Maximum Marginal Relevance for diverse result sets
-
-    Performance Features:
-    - LRU caching for query embeddings to reduce API calls
-    - Optimized database queries with proper indexing
-    - Configurable similarity thresholds and result limits
-    - User-based access control and security filtering
-
-    Responsibilities:
-    - Query embedding generation with caching optimization
-    - Multi-algorithm search execution with result ranking
-    - Search result formatting and metadata enrichment
-    - Performance monitoring and query optimization
-    - User access control and security enforcement
-    """
+    "Search service for business logic operations."
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize search service with embedding capabilities.
-
-        Args:
-            db: Database session for search operations
-        """
+        "Initialize class instance."
         super().__init__(db, "search_service")
         self.embedding_service = EmbeddingService(db)
 
     async def get_query_embedding(self, query: str):
-        """Returns embedding for query, using cache for performance."""
+        "Get query embedding data."
         cached = embedding_cache.get(query)
         if cached is not None:
             return cached
@@ -133,14 +67,7 @@ class SearchService(BaseService):
     async def search_documents(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Search documents using the specified algorithm.
-        Args:
-            request: Search request parameters
-            user_id: User ID for access control
-        Returns:
-            List[DocumentChunkResponse]: Search results with metadata and similarity scores
-        """
+        "Search for documents."
         try:
             if request.algorithm == "vector":
                 return await self._vector_search(request, user_id)
@@ -159,48 +86,36 @@ class SearchService(BaseService):
     async def _vector_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Vector similarity search using PGVector ivfflat index.
-        - Uses pre-filtering on user_id and other filters for index efficiency.
-        - Returns similarity_score and search_meta for each result.
-        """
+        "Vector Search operation."
         embedding = await self.get_query_embedding(request.query)
         if not embedding:
             raise SearchError("Failed to generate query embedding")
-
         distance_expr = DocumentChunk.embedding.op("<=>")(embedding).label("distance")
         similarity_threshold = 1.0 - request.threshold
-
-        # Pre-filter user_id before vector op!
         query = (
             select(DocumentChunk, distance_expr)
-            .join(Document, DocumentChunk.document_id == Document.id)
-            .where(Document.owner_id == user_id)
+            .join(Document, (DocumentChunk.document_id == Document.id))
+            .where((Document.owner_id == user_id))
             .where(DocumentChunk.embedding.isnot(None))
         )
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))
         if request.file_types:
             query = query.where(Document.file_type.in_(request.file_types))
-
         query = (
-            query.where(distance_expr <= similarity_threshold)
+            query.where((distance_expr <= similarity_threshold))
             .order_by(distance_expr)
             .limit(request.limit)
         )
-
         result = await self.db.execute(query)
         rows = result.fetchall()
-
-        # Normalize scores to [0, 1]
-        distances = [distance for _, distance in rows]
+        distances = [distance for (_, distance) in rows]
         max_distance = max(distances, default=1.0)
         min_distance = min(distances, default=0.0)
 
         def norm(d):
-            return 1.0 - (
-                (d - min_distance) / (max_distance - min_distance + 1e-8)
-            )  # [0,1], higher is better
+            "Norm operation."
+            return 1.0 - ((d - min_distance) / ((max_distance - min_distance) + 1e-08))
 
         results = []
         for chunk, distance in rows:
@@ -218,14 +133,8 @@ class SearchService(BaseService):
     async def _text_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Full-text search using Postgres GIN index and tsvector column.
-        - Uses plainto_tsquery and tsvector column (content_tsv) for performance.
-        - Uses BM25 ranking (if pg_bm25 is installed), else fallback to ts_rank_cd.
-        - Returns search_meta for each result.
-        """
+        "Text Search operation."
         ts_query = func.plainto_tsquery("english", request.query)
-        # Use BM25 if available, fallback to ts_rank_cd
         try:
             rank_expr = func.bm25("content_tsv", ts_query).label("rank")
             bm25_supported = True
@@ -234,11 +143,10 @@ class SearchService(BaseService):
                 func.to_tsvector("english", DocumentChunk.content), ts_query
             ).label("rank")
             bm25_supported = False
-
         query = (
             select(DocumentChunk, rank_expr)
-            .join(Document, DocumentChunk.document_id == Document.id)
-            .where(Document.owner_id == user_id)
+            .join(Document, (DocumentChunk.document_id == Document.id))
+            .where((Document.owner_id == user_id))
             .where(
                 func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query)
             )
@@ -247,19 +155,16 @@ class SearchService(BaseService):
             query = query.where(Document.id.in_(request.document_ids))
         if request.file_types:
             query = query.where(Document.file_type.in_(request.file_types))
-
         query = query.order_by(rank_expr.desc()).limit(request.limit)
-
         result = await self.db.execute(query)
         rows = result.fetchall()
-
-        # Normalize rank to [0,1]
-        ranks = [float(rank) for _, rank in rows]
+        ranks = [float(rank) for (_, rank) in rows]
         max_rank = max(ranks, default=1.0)
         min_rank = min(ranks, default=0.0)
 
         def norm(r):
-            return (r - min_rank) / (max_rank - min_rank + 1e-8)
+            "Norm operation."
+            return (r - min_rank) / ((max_rank - min_rank) + 1e-08)
 
         results = []
         for chunk, rank in rows:
@@ -274,20 +179,15 @@ class SearchService(BaseService):
                     "normalized_score": score,
                 }
                 results.append(chunk_response)
-        results.sort(key=lambda x: x.similarity_score or 0, reverse=True)
+        results.sort(key=(lambda x: (x.similarity_score or 0)), reverse=True)
         return results[: request.limit]
 
     async def _hybrid_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Hybrid search: combine normalized vector and text scores.
-        - Each result contains the method(s) that matched and their scores.
-        - Score normalization/calibration to [0, 1].
-        """
+        "Hybrid Search operation."
         vector_results = await self._vector_search(request, user_id)
         text_results = await self._text_search(request, user_id)
-
         combined_results = {}
         for result in vector_results:
             chunk_id = result.id
@@ -299,7 +199,6 @@ class SearchService(BaseService):
             combined_results[chunk_id].similarity_score = (
                 result.similarity_score or 0
             ) * 0.7
-
         for result in text_results:
             chunk_id = result.id
             if chunk_id in combined_results:
@@ -310,48 +209,40 @@ class SearchService(BaseService):
                 result.similarity_score = (result.similarity_score or 0) * 0.3
                 result.search_meta = {"methods": ["text"], **result.search_meta}
                 combined_results[chunk_id] = result
-
         results = list(combined_results.values())
-        results.sort(key=lambda x: x.similarity_score or 0, reverse=True)
+        results.sort(key=(lambda x: (x.similarity_score or 0)), reverse=True)
         filtered_results = [
-            r for r in results if (r.similarity_score or 0) >= request.threshold
+            r for r in results if ((r.similarity_score or 0) >= request.threshold)
         ]
         return filtered_results[: request.limit]
 
     async def _mmr_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Maximum Marginal Relevance (MMR) for diverse, relevant results:
-        - Use cosine similarity between embeddings for diversity.
-        - Returns results with method metadata.
-        """
+        "Mmr Search operation."
         vector_request = DocumentSearchRequest(
             query=request.query,
             document_ids=request.document_ids,
             file_types=request.file_types,
-            limit=min(request.limit * 3, 50),
-            threshold=max(request.threshold - 0.1, 0.5),
+            limit=min((request.limit * 3), 50),
+            threshold=max((request.threshold - 0.1), 0.5),
             algorithm="vector",
         )
         candidates = await self._vector_search(vector_request, user_id)
         if not candidates:
             return []
-
         lambda_param = 0.7
         selected = [candidates[0]]
         remaining = candidates[1:]
 
-        # Pre-fetch embeddings for all chunks for cosine calculation
         def get_emb(chunk):
+            "Get emb data."
             return getattr(chunk, "embedding", None)
 
         selected_embs = [get_emb(selected[0])]
-
-        while len(selected) < request.limit and remaining:
+        while (len(selected) < request.limit) and remaining:
             best_score = -1
             best_idx = -1
-
             for i, candidate in enumerate(remaining):
                 relevance = candidate.similarity_score or 0
                 candidate_emb = get_emb(candidate)
@@ -361,7 +252,7 @@ class SearchService(BaseService):
                         if emb is not None:
                             sim = self._cosine_similarity(candidate_emb, emb)
                             max_sim = max(max_sim, sim)
-                mmr_score = lambda_param * relevance - (1 - lambda_param) * max_sim
+                mmr_score = (lambda_param * relevance) - ((1 - lambda_param) * max_sim)
                 if mmr_score > best_score:
                     best_score = mmr_score
                     best_idx = i
@@ -378,21 +269,18 @@ class SearchService(BaseService):
 
     @staticmethod
     def _cosine_similarity(vec1, vec2):
-        """Cosine similarity for two lists of floats."""
-        if not vec1 or not vec2 or len(vec1) != len(vec2):
+        "Cosine Similarity operation."
+        if (not vec1) or (not vec2) or (len(vec1) != len(vec2)):
             return 0.0
-        dot = sum(a * b for a, b in zip(vec1, vec2))
-        norm1 = sum(a * a for a in vec1) ** 0.5
-        norm2 = sum(b * b for b in vec2) ** 0.5
-        if norm1 == 0 or norm2 == 0:
+        dot = sum(((a * b) for (a, b) in zip(vec1, vec2)))
+        norm1 = sum(((a * a) for a in vec1)) ** 0.5
+        norm2 = sum(((b * b) for b in vec2)) ** 0.5
+        if (norm1 == 0) or (norm2 == 0):
             return 0.0
         return dot / (norm1 * norm2)
 
     def _calculate_text_similarity(self, query: str, content: str) -> float:
-        """
-        Calculate simple text similarity score (Jaccard).
-        Used as a fallback for diversity in MMR if embeddings are missing.
-        """
+        "Calculate Text Similarity operation."
         query_terms = set(query.lower().split())
         content_terms = set(content.lower().split())
         if not query_terms:
@@ -406,44 +294,39 @@ class SearchService(BaseService):
     async def get_similar_chunks(
         self, chunk_id: int, user_id: UUID, limit: int = 5
     ) -> List[DocumentChunkResponse]:
-        """
-        Find chunks similar to a given chunk using vector ANN search.
-        Args:
-            chunk_id: Reference chunk ID
-            user_id: User ID for access control
-            limit: Maximum results to return
-        Returns:
-            List[DocumentChunkResponse]: Similar chunks
-        """
+        "Get similar chunks data."
         try:
             chunk_result = await self.db.execute(
                 select(DocumentChunk)
-                .join(Document, DocumentChunk.document_id == Document.id)
-                .where(and_(DocumentChunk.id == chunk_id, Document.owner_id == user_id))
+                .join(Document, (DocumentChunk.document_id == Document.id))
+                .where(
+                    and_((DocumentChunk.id == chunk_id), (Document.owner_id == user_id))
+                )
             )
             reference_chunk = chunk_result.scalar_one_or_none()
-            if not reference_chunk or not reference_chunk.embedding:
+            if (not reference_chunk) or (not reference_chunk.embedding):
                 raise NotFoundError("Reference chunk not found or has no embedding")
             distance_expr = DocumentChunk.embedding.op("<=>")(reference_chunk.embedding)
             query = (
                 select(DocumentChunk, distance_expr.label("distance"))
-                .join(Document, DocumentChunk.document_id == Document.id)
-                .where(Document.owner_id == user_id)
-                .where(DocumentChunk.id != chunk_id)
+                .join(Document, (DocumentChunk.document_id == Document.id))
+                .where((Document.owner_id == user_id))
+                .where((DocumentChunk.id != chunk_id))
                 .where(DocumentChunk.embedding.isnot(None))
                 .order_by(distance_expr)
                 .limit(limit)
             )
-
             result = await self.db.execute(query)
             rows = result.fetchall()
-
-            distances = [distance for _, distance in rows]
+            distances = [distance for (_, distance) in rows]
             max_distance = max(distances, default=1.0)
             min_distance = min(distances, default=0.0)
 
             def norm(d):
-                return 1.0 - ((d - min_distance) / (max_distance - min_distance + 1e-8))
+                "Norm operation."
+                return 1.0 - (
+                    (d - min_distance) / ((max_distance - min_distance) + 1e-08)
+                )
 
             results = []
             for chunk, distance in rows:

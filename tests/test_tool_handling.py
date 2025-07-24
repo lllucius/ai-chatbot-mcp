@@ -1,35 +1,24 @@
-"""
-Tests for tool call handling modes functionality.
-
-This module tests the new tool handling modes: RETURN_RESULTS and COMPLETE_WITH_RESULTS.
-
-Generated on: 2025-01-20 20:55:00 UTC
-Current User: assistant
-"""
+"Test cases for tool_handling functionality."
 
 from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
-
 from app.schemas.conversation import ChatRequest
 from app.schemas.tool_calling import ToolHandlingMode
 from app.services.openai_client import OpenAIClient
 
 
 class TestToolHandlingModes:
-    """Test class for tool handling modes functionality."""
+    "Test class for toolhandlingmodes functionality."
 
     def setup_method(self):
-        """Setup for each test method."""
+        "Setup Method operation."
         self.openai_client = OpenAIClient()
 
     @pytest.mark.asyncio
     async def test_return_results_mode(self):
-        """Test RETURN_RESULTS tool handling mode."""
-        # Mock the OpenAI client
+        "Test return results mode functionality."
         with patch("app.services.openai_client.OPENAI_AVAILABLE", True):
             with patch.object(self.openai_client, "client") as mock_client:
-                # Mock the chat completion response with tool calls
                 mock_response = MagicMock()
                 mock_response.choices = [MagicMock()]
                 mock_response.choices[0].message = MagicMock()
@@ -44,18 +33,14 @@ class TestToolHandlingModes:
                     "id": "test_call_1",
                     "function": {"name": "test_tool", "arguments": '{"query": "test"}'},
                 }
-
                 mock_response.choices[0].message.tool_calls = [mock_tool_call]
                 mock_response.choices[0].finish_reason = "tool_calls"
                 mock_response.usage = MagicMock(
                     prompt_tokens=10, completion_tokens=5, total_tokens=15
                 )
-
                 mock_client.chat.completions.create = AsyncMock(
                     return_value=mock_response
                 )
-
-                # Mock tool execution
                 with patch.object(
                     self.openai_client, "_execute_unified_tool_calls"
                 ) as mock_execute:
@@ -70,14 +55,10 @@ class TestToolHandlingModes:
                             "execution_time_ms": 150.0,
                         }
                     ]
-
-                    # Test RETURN_RESULTS mode
                     result = await self.openai_client.chat_completion(
                         messages=[{"role": "user", "content": "Test message"}],
                         tool_handling_mode=ToolHandlingMode.RETURN_RESULTS,
                     )
-
-                    # Assertions
                     assert (
                         result["tool_handling_mode"]
                         == ToolHandlingMode.RETURN_RESULTS.value
@@ -90,11 +71,9 @@ class TestToolHandlingModes:
 
     @pytest.mark.asyncio
     async def test_complete_with_results_mode(self):
-        """Test COMPLETE_WITH_RESULTS tool handling mode."""
-        # Mock the OpenAI client
+        "Test complete with results mode functionality."
         with patch("app.services.openai_client.OPENAI_AVAILABLE", True):
             with patch.object(self.openai_client, "client") as mock_client:
-                # Mock the initial chat completion response with tool calls
                 mock_response_1 = MagicMock()
                 mock_response_1.choices = [MagicMock()]
                 mock_response_1.choices[0].message = MagicMock()
@@ -109,14 +88,11 @@ class TestToolHandlingModes:
                     "id": "test_call_1",
                     "function": {"name": "test_tool", "arguments": '{"query": "test"}'},
                 }
-
                 mock_response_1.choices[0].message.tool_calls = [mock_tool_call_1]
                 mock_response_1.choices[0].finish_reason = "tool_calls"
                 mock_response_1.usage = MagicMock(
                     prompt_tokens=10, completion_tokens=5, total_tokens=15
                 )
-
-                # Mock the final completion response
                 mock_response_2 = MagicMock()
                 mock_response_2.choices = [MagicMock()]
                 mock_response_2.choices[0].message = MagicMock()
@@ -128,13 +104,9 @@ class TestToolHandlingModes:
                 mock_response_2.usage = MagicMock(
                     prompt_tokens=20, completion_tokens=10, total_tokens=30
                 )
-
-                # Configure the mock to return different responses for different calls
                 mock_client.chat.completions.create = AsyncMock(
                     side_effect=[mock_response_1, mock_response_2]
                 )
-
-                # Mock tool execution
                 with patch.object(
                     self.openai_client, "_execute_unified_tool_calls"
                 ) as mock_execute:
@@ -151,14 +123,10 @@ class TestToolHandlingModes:
                             "execution_time_ms": 200.0,
                         }
                     ]
-
-                    # Test COMPLETE_WITH_RESULTS mode
                     result = await self.openai_client.chat_completion(
                         messages=[{"role": "user", "content": "Test message"}],
                         tool_handling_mode=ToolHandlingMode.COMPLETE_WITH_RESULTS,
                     )
-
-                    # Assertions
                     assert (
                         result["tool_handling_mode"]
                         == ToolHandlingMode.COMPLETE_WITH_RESULTS.value
@@ -167,15 +135,13 @@ class TestToolHandlingModes:
                         result["content"]
                         == "Based on the tool results, here is my final answer."
                     )
-                    assert result["usage"]["total_tokens"] == 45  # 15 + 30
+                    assert result["usage"]["total_tokens"] == 45
                     assert result["tool_calls_executed"]
                     assert len(result["tool_calls_executed"]) == 1
-
-                    # Verify that two API calls were made
                     assert mock_client.chat.completions.create.call_count == 2
 
     def test_format_tool_results_as_content(self):
-        """Test the helper method for formatting tool results as content."""
+        "Test format tool results as content functionality."
         tool_results = [
             {
                 "tool_call_id": "test_1",
@@ -190,9 +156,7 @@ class TestToolHandlingModes:
                 "execution_time_ms": 50.0,
             },
         ]
-
         content = self.openai_client._format_tool_results_as_content(tool_results)
-
         assert "# Tool Execution Results" in content
         assert "✅ **Status**: Success" in content
         assert "First result" in content
@@ -202,33 +166,25 @@ class TestToolHandlingModes:
         assert "50.00ms" in content
 
     def test_format_tool_result_for_ai(self):
-        """Test the helper method for formatting tool results for AI consumption."""
-        # Successful result
+        "Test format tool result for ai functionality."
         success_result = {
             "success": True,
             "content": [{"type": "text", "text": "Successful execution"}],
         }
         formatted = self.openai_client._format_tool_result_for_ai(success_result)
         assert formatted == "Successful execution"
-
-        # Failed result
         failed_result = {"success": False, "error": "Something went wrong"}
         formatted = self.openai_client._format_tool_result_for_ai(failed_result)
         assert formatted == "Tool execution failed: Something went wrong"
-
-        # Empty content result
         empty_result = {"success": True, "content": []}
         formatted = self.openai_client._format_tool_result_for_ai(empty_result)
         assert formatted == "Tool executed successfully but returned no content."
 
     @pytest.mark.asyncio
     async def test_chat_request_with_tool_handling_mode(self):
-        """Test that ChatRequest properly handles tool_handling_mode."""
-        # Test default mode
+        "Test chat request with tool handling mode functionality."
         request = ChatRequest(user_message="Test message")
         assert request.tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS
-
-        # Test explicit mode
         request = ChatRequest(
             user_message="Test message",
             tool_handling_mode=ToolHandlingMode.RETURN_RESULTS,
@@ -236,11 +192,9 @@ class TestToolHandlingModes:
         assert request.tool_handling_mode == ToolHandlingMode.RETURN_RESULTS
 
     def test_tool_handling_mode_enum_values(self):
-        """Test that ToolHandlingMode enum has correct values."""
+        "Test tool handling mode enum values functionality."
         assert ToolHandlingMode.RETURN_RESULTS.value == "return_results"
         assert ToolHandlingMode.COMPLETE_WITH_RESULTS.value == "complete_with_results"
-
-        # Test that enum can be created from strings
         assert ToolHandlingMode("return_results") == ToolHandlingMode.RETURN_RESULTS
         assert (
             ToolHandlingMode("complete_with_results")
