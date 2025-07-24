@@ -4,11 +4,88 @@ A comprehensive Python SDK for interacting with the AI Chatbot Platform API.
 
 ## Features
 
-- **Authentication**: User registration, login, token management
+- **Authentication**: User registration, login, token management with persistence
 - **Document Management**: Upload, process, search, and manage documents
 - **Conversations**: AI-powered chat with RAG and tool calling support
 - **Registry Integration**: Prompt templates, LLM profiles, and MCP tools
 - **Health Monitoring**: System status and performance metrics
+- **Enhanced Terminal Client**: Feature-rich command-line interface
+
+## Installation
+
+The SDK is included in the main project. Import it directly:
+
+```python
+from client.ai_chatbot_sdk import AIChatbotSDK
+```
+
+## Enhanced Terminal Client
+
+The terminal client (`client/chatbot.py`) has been significantly enhanced with advanced features:
+
+### Configuration Management
+
+Create a `.env` file or use environment variables:
+
+```bash
+# .env file
+CHATBOT_API_URL=http://localhost:8000
+CHATBOT_USERNAME=your_username
+CHATBOT_DEFAULT_USE_RAG=true
+CHATBOT_DEFAULT_USE_TOOLS=true
+CHATBOT_SPINNER_ENABLED=true
+CHATBOT_DEBUG_MODE=false
+```
+
+### Running the Enhanced Client
+
+```bash
+# Basic usage
+python client/chatbot.py
+
+# With custom config file
+python client/chatbot.py --config my_config.env
+
+# With debug mode
+python client/chatbot.py --debug
+```
+
+### New Commands
+
+The enhanced client supports many new commands:
+
+#### Basic Commands
+- `/help` - Show comprehensive help
+- `/settings` - Display current settings
+- `/config` - Interactive configuration
+- `/export` - Export current conversation
+- `/search` - Search conversations
+- `/logout` - Logout and clear saved token
+
+#### Registry Commands
+- `/prompt list` - List available prompts
+- `/prompt use <name>` - Use a specific prompt
+- `/prompt show [name]` - Show prompt details
+- `/profile list` - List available LLM profiles
+- `/profile use <name>` - Use a specific profile
+- `/tools list` - List available tools
+- `/tools enable/disable <name>` - Manage tools
+
+#### Document Commands
+- `/docs list` - List your documents
+- `/docs upload <file>` - Upload a new document
+- `/docs search <query>` - Search documents
+- `/docs status <id>` - Check processing status
+
+### Key Improvements
+
+1. **Persistent Authentication**: Tokens are saved and reused automatically
+2. **Configuration Management**: Flexible configuration via files and environment variables
+3. **Registry Integration**: Full support for prompts, LLM profiles, and MCP tools
+4. **Document Management**: Upload, search, and manage documents directly from the terminal
+5. **Enhanced Conversation Management**: Search, filter, and export conversations
+6. **Better Error Handling**: Graceful error recovery and debugging support
+7. **Interactive Settings**: Configure preferences without editing files
 
 ## Installation
 
