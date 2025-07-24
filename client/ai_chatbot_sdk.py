@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 # --- Exceptions ---
 
@@ -48,36 +48,37 @@ class BaseResponse(BaseModel):
 
 
 class Token(BaseModel):
-    """Authentication token response model."""
-    access_token: str
-    expires_in: int
-    token_type: Optional[str] = None
+    """Authentication token response model - matches app/schemas/auth.py Token."""
+    access_token: str = Field(..., description="JWT access token")
+    token_type: str = Field("bearer", description="Token type")
+    expires_in: int = Field(..., description="Token expiration in seconds")
 
 
 class UserResponse(BaseModel):
-    """User profile response model."""
-    username: str
-    email: str
-    id: str
-    is_active: bool
-    is_superuser: bool
-    created_at: str
-    updated_at: str
-    full_name: Optional[str] = None
+    """User profile response model - matches app/schemas/user.py UserResponse."""
+    username: str = Field(..., description="Unique username")
+    email: EmailStr = Field(..., description="User email address")
+    id: UUID = Field(..., description="Unique user identifier")
+    is_active: bool = Field(..., description="Whether the user account is active")
+    is_superuser: bool = Field(..., description="Whether the user has admin privileges")
+    created_at: datetime = Field(..., description="When the user account was created")
+    full_name: Optional[str] = Field(None, description="User's full name")
+
+    model_config = {"from_attributes": True}
 
 
 class RegisterRequest(BaseModel):
-    """User registration request model."""
-    username: str
-    email: str
-    password: str
-    full_name: Optional[str] = None
+    """User registration request model - matches app/schemas/auth.py RegisterRequest."""
+    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    email: EmailStr = Field(..., description="Valid email address")
+    password: str = Field(..., min_length=8, max_length=100, description="Strong password")
+    full_name: Optional[str] = Field(None, max_length=255, description="Full display name")
 
 
 class LoginRequest(BaseModel):
-    """User login request model."""
-    username: str
-    password: str
+    """User login request model - matches app/schemas/auth.py LoginRequest."""
+    username: str = Field(..., min_length=3, max_length=50, description="Username or email")
+    password: str = Field(..., min_length=8, max_length=100, description="Password")
 
 
 class PasswordResetRequest(BaseModel):
@@ -122,19 +123,21 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 
 class DocumentResponse(BaseModel):
-    """Document metadata response model."""
-    id: int
-    title: str
-    filename: str
-    file_type: str
-    file_size: int
-    processing_status: str
-    owner_id: int
-    chunk_count: int
-    created_at: str
-    updated_at: str
-    mime_type: Optional[str] = None
-    metainfo: Optional[Dict[str, Any]] = None
+    """Document metadata response model - matches app/schemas/document.py DocumentResponse."""
+    id: UUID = Field(..., description="Document ID")
+    title: str = Field(..., description="Document title")
+    filename: str = Field(..., description="Original filename")
+    file_type: str = Field(..., description="File type/extension")
+    file_size: int = Field(..., description="File size in bytes")
+    mime_type: Optional[str] = Field(None, description="MIME type")
+    processing_status: str = Field(..., description="Processing status")
+    owner_id: UUID = Field(..., description="Owner user ID")
+    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
+    chunk_count: int = Field(0, description="Number of chunks")
+    created_at: datetime = Field(..., description="Upload timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+
+    model_config = {"from_attributes": True}
 
 
 class DocumentUploadResponse(BaseResponse):
@@ -151,16 +154,18 @@ class DocumentUpdate(BaseModel):
 
 
 class ConversationResponse(BaseModel):
-    """Conversation metadata response model."""
-    title: str
-    is_active: bool
-    id: UUID
-    user_id: UUID
-    message_count: int
-    created_at: str
-    updated_at: str
-    last_message_at: Optional[datetime] = None
-    metainfo: Optional[Dict[str, Any]] = None
+    """Conversation metadata response model - matches app/schemas/conversation.py ConversationResponse."""
+    id: UUID = Field(..., description="Conversation ID")
+    title: str = Field(..., description="Conversation title")
+    is_active: bool = Field(True, description="Whether conversation is active")
+    user_id: UUID = Field(..., description="Owner user ID")
+    message_count: int = Field(0, description="Number of messages")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+    last_message_at: Optional[datetime] = Field(None, description="Last message timestamp")
+    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
+
+    model_config = {"from_attributes": True}
 
 
 class ConversationCreate(BaseModel):
@@ -178,16 +183,18 @@ class ConversationUpdate(BaseModel):
 
 
 class MessageResponse(BaseModel):
-    """Chat message response model."""
-    role: str
-    content: str
-    id: UUID
-    conversation_id: UUID
-    token_count: int
-    created_at: str
-    tool_calls: Optional[Dict[str, Any]] = None
-    tool_call_results: Optional[Dict[str, Any]] = None
-    metainfo: Optional[Dict[str, Any]] = None
+    """Chat message response model - matches app/schemas/conversation.py MessageResponse."""
+    id: UUID = Field(..., description="Message ID")
+    role: str = Field(..., description="Message role")
+    content: str = Field(..., description="Message content")
+    conversation_id: UUID = Field(..., description="Parent conversation ID")
+    token_count: int = Field(0, description="Number of tokens")
+    tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
+    tool_call_results: Optional[Dict[str, Any]] = Field(None, description="Tool call results")
+    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
+    created_at: datetime = Field(..., description="Creation timestamp")
+
+    model_config = {"from_attributes": True}
 
 
 class ProcessingStatusResponse(BaseResponse):
@@ -215,25 +222,113 @@ class DocumentSearchRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    """Chat message request model."""
-    user_message: str
-    conversation_id: Optional[UUID] = None
-    conversation_title: Optional[str] = None
-    use_rag: Optional[bool] = True
-    use_tools: Optional[bool] = True
-    rag_documents: Optional[List[UUID]] = None
-    max_tokens: Optional[int] = None
-    temperature: Optional[float] = 0.7
+    """Chat message request model - matches app/schemas/conversation.py ChatRequest."""
+    user_message: str = Field(..., min_length=1, max_length=10000, description="User message")
+    conversation_id: Optional[UUID] = Field(None, description="Existing conversation ID")
+    conversation_title: Optional[str] = Field(None, max_length=500, description="New conversation title")
+    use_rag: bool = Field(True, description="Whether to use RAG for context")
+    use_tools: bool = Field(True, description="Whether to enable tool calling")
+    rag_documents: Optional[List[UUID]] = Field(None, description="Specific document IDs for RAG")
+    
+    # Registry integration fields
+    prompt_name: Optional[str] = Field(None, description="Name of prompt to use from prompt registry")
+    profile_name: Optional[str] = Field(None, description="Name of LLM profile to use from profile registry")
+    llm_profile: Optional[Dict[str, Any]] = Field(None, description="LLM profile object with parameter configuration")
+    tool_handling_mode: Optional[str] = Field("complete_with_results", description="How to handle tool call results")
+
+    # Legacy fields for backward compatibility (deprecated)
+    max_tokens: Optional[int] = Field(None, description="Max tokens (deprecated - use profile)")
+    temperature: Optional[float] = Field(None, description="Temperature (deprecated - use profile)")
 
 
 class ChatResponse(BaseResponse):
-    """Chat response model with AI message."""
+    """Chat response model with AI message - matches app/schemas/conversation.py ChatResponse."""
     ai_message: MessageResponse
     conversation: ConversationResponse
     response_time_ms: float
     usage: Optional[Dict[str, Any]] = None
     rag_context: Optional[List[Dict[str, Any]]] = None
     tool_calls_made: Optional[List[Dict[str, Any]]] = None
+    tool_call_summary: Optional[Dict[str, Any]] = None
+
+
+# --- NEW REGISTRY MODELS ---
+
+
+class PromptResponse(BaseModel):
+    """Prompt registry response model."""
+    name: str = Field(..., description="Unique prompt name")
+    title: str = Field(..., description="Human-readable title")
+    description: Optional[str] = Field(None, description="Prompt description")
+    category: Optional[str] = Field(None, description="Prompt category")
+    content: str = Field(..., description="Prompt template content")
+    variables: Optional[List[str]] = Field(None, description="Template variables")
+    tags: Optional[List[str]] = Field(None, description="Tags for categorization")
+    is_active: bool = Field(True, description="Whether prompt is active")
+    usage_count: int = Field(0, description="How many times used")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+
+    model_config = {"from_attributes": True}
+
+
+class PromptCreate(BaseModel):
+    """Create prompt request model."""
+    name: str = Field(..., description="Unique prompt name")
+    title: str = Field(..., description="Human-readable title")
+    description: Optional[str] = Field(None, description="Prompt description")
+    category: Optional[str] = Field(None, description="Prompt category")
+    content: str = Field(..., description="Prompt template content")
+    variables: Optional[List[str]] = Field(None, description="Template variables")
+    tags: Optional[List[str]] = Field(None, description="Tags for categorization")
+
+
+class LLMProfileResponse(BaseModel):
+    """LLM profile registry response model."""
+    name: str = Field(..., description="Unique profile name")
+    title: str = Field(..., description="Human-readable title")
+    description: Optional[str] = Field(None, description="Profile description")
+    model_name: str = Field(..., description="OpenAI model name")
+    parameters: Dict[str, Any] = Field(..., description="Model parameters")
+    is_default: bool = Field(False, description="Whether this is the default profile")
+    is_active: bool = Field(True, description="Whether profile is active")
+    usage_count: int = Field(0, description="How many times used")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+
+    model_config = {"from_attributes": True}
+
+
+class LLMProfileCreate(BaseModel):
+    """Create LLM profile request model."""
+    name: str = Field(..., description="Unique profile name")
+    title: str = Field(..., description="Human-readable title")
+    description: Optional[str] = Field(None, description="Profile description")
+    model_name: str = Field(..., description="OpenAI model name")
+    parameters: Dict[str, Any] = Field(..., description="Model parameters")
+    is_default: bool = Field(False, description="Whether this is the default profile")
+
+
+class ToolResponse(BaseModel):
+    """MCP tool response model."""
+    name: str = Field(..., description="Tool name")
+    description: str = Field(..., description="Tool description")
+    tool_schema: Dict[str, Any] = Field(..., description="Tool schema", alias="schema")
+    server_name: str = Field(..., description="MCP server name")
+    is_enabled: bool = Field(True, description="Whether tool is enabled")
+    usage_count: int = Field(0, description="How many times used")
+    last_used_at: Optional[datetime] = Field(None, description="Last usage timestamp")
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
+class ToolsListResponse(BaseResponse):
+    """Tools list response model."""
+    available_tools: List[ToolResponse] = Field([], description="Available MCP tools")
+    openai_tools: List[Dict[str, Any]] = Field([], description="OpenAI-formatted tools")
+    servers: List[Dict[str, Any]] = Field([], description="MCP servers status")
+    enabled_count: int = Field(0, description="Number of enabled tools")
+    total_count: int = Field(0, description="Total number of tools")
 
 
 # --- Helper Functions ---
@@ -398,7 +493,7 @@ class AuthClient:
             "/api/v1/auth/register",
             UserResponse,
             method="POST",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
     def login(self, username: str, password: str) -> Token:
@@ -427,7 +522,7 @@ class AuthClient:
             "/api/v1/auth/password-reset",
             BaseResponse,
             method="POST",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
     def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
@@ -435,7 +530,7 @@ class AuthClient:
             "/api/v1/auth/password-reset/confirm",
             BaseResponse,
             method="POST",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
 
@@ -448,7 +543,7 @@ class UsersClient:
 
     def update_me(self, data: UserUpdate) -> UserResponse:
         return self.sdk._request(
-            "/api/v1/users/me", UserResponse, method="PUT", json=data.dict()
+            "/api/v1/users/me", UserResponse, method="PUT", json=data.model_dump()
         )
 
     def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
@@ -456,7 +551,7 @@ class UsersClient:
             "/api/v1/users/me/change-password",
             BaseResponse,
             method="POST",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
     def list(
@@ -476,18 +571,18 @@ class UsersClient:
         )
         return self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
-    def get(self, user_id: int) -> UserResponse:
+    def get(self, user_id: UUID) -> UserResponse:
         return self.sdk._request(f"/api/v1/users/{user_id}", UserResponse)
 
-    def update(self, user_id: int, data: UserUpdate) -> UserResponse:
+    def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
         return self.sdk._request(
             f"/api/v1/users/{user_id}",
             UserResponse,
             method="PUT",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
-    def delete(self, user_id: int) -> BaseResponse:
+    def delete(self, user_id: UUID) -> BaseResponse:
         return self.sdk._request(
             f"/api/v1/users/{user_id}", BaseResponse, method="DELETE"
         )
@@ -525,38 +620,38 @@ class DocumentsClient:
             "/api/v1/documents/", DocumentResponse, params=params
         )
 
-    def get(self, document_id: int) -> DocumentResponse:
+    def get(self, document_id: UUID) -> DocumentResponse:
         return self.sdk._request(
             f"/api/v1/documents/{document_id}", DocumentResponse
         )
 
-    def update(self, document_id: int, data: DocumentUpdate) -> DocumentResponse:
+    def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
         return self.sdk._request(
             f"/api/v1/documents/{document_id}",
             DocumentResponse,
             method="PUT",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
-    def delete(self, document_id: int) -> BaseResponse:
+    def delete(self, document_id: UUID) -> BaseResponse:
         return self.sdk._request(
             f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE"
         )
 
-    def status(self, document_id: int) -> ProcessingStatusResponse:
+    def status(self, document_id: UUID) -> ProcessingStatusResponse:
         return self.sdk._request(
             f"/api/v1/documents/{document_id}/status",
             ProcessingStatusResponse,
         )
 
-    def reprocess(self, document_id: int) -> BaseResponse:
+    def reprocess(self, document_id: UUID) -> BaseResponse:
         return self.sdk._request(
             f"/api/v1/documents/{document_id}/reprocess",
             BaseResponse,
             method="POST",
         )
 
-    def download(self, document_id: int) -> bytes:
+    def download(self, document_id: UUID) -> bytes:
         url = make_url(
             self.sdk.base_url, f"/api/v1/documents/{document_id}/download"
         )
@@ -588,23 +683,23 @@ class ConversationsClient:
             "/api/v1/conversations/", ConversationResponse, params=params
         )
 
-    def get(self, conversation_id: int) -> ConversationResponse:
+    def get(self, conversation_id: UUID) -> ConversationResponse:
         return self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
         )
 
     def update(
-        self, conversation_id: int, data: ConversationUpdate
+        self, conversation_id: UUID, data: ConversationUpdate
     ) -> ConversationResponse:
         return self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
             method="PUT",
-            json=data.dict(),
+            json=data.model_dump(),
         )
 
-    def delete(self, conversation_id: int) -> BaseResponse:
+    def delete(self, conversation_id: UUID) -> BaseResponse:
         return self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             BaseResponse,
@@ -612,7 +707,7 @@ class ConversationsClient:
         )
 
     def messages(
-        self, conversation_id: int, page: int = 1, size: int = 50
+        self, conversation_id: UUID, page: int = 1, size: int = 50
     ) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size})
         return self.sdk._request(
@@ -635,13 +730,15 @@ class ConversationsClient:
 
 
 class SearchClient:
+    """Client for search operations."""
+    
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
     def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
         """Search across documents using various algorithms."""
         return self.sdk._request(
-            "/api/v1/search/", dict, method="POST", json=data.dict()
+            "/api/v1/search/", dict, method="POST", json=data.model_dump()
         )
 
     def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
@@ -666,6 +763,135 @@ class SearchClient:
         )
 
 
+class ToolsClient:
+    """Client for MCP tools management."""
+    
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    def list_tools(self) -> ToolsListResponse:
+        """List all available MCP tools with registry integration."""
+        return self.sdk._request("/api/v1/tools/", ToolsListResponse)
+
+    def get_tool(self, tool_name: str) -> ToolResponse:
+        """Get details for a specific tool."""
+        return self.sdk._request(f"/api/v1/tools/{tool_name}", ToolResponse)
+
+    def enable_tool(self, tool_name: str) -> BaseResponse:
+        """Enable a specific tool."""
+        return self.sdk._request(
+            f"/api/v1/tools/{tool_name}/enable", BaseResponse, method="POST"
+        )
+
+    def disable_tool(self, tool_name: str) -> BaseResponse:
+        """Disable a specific tool."""
+        return self.sdk._request(
+            f"/api/v1/tools/{tool_name}/disable", BaseResponse, method="POST"
+        )
+
+    def get_tool_stats(self) -> Dict[str, Any]:
+        """Get tool usage statistics."""
+        return self.sdk._request("/api/v1/tools/stats", dict)
+
+
+class PromptsClient:
+    """Client for prompt registry management."""
+    
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    def list_prompts(
+        self, 
+        active_only: bool = True, 
+        category: Optional[str] = None, 
+        search: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """List all prompts with optional filtering."""
+        params = filter_query({
+            "active_only": active_only,
+            "category": category,
+            "search": search
+        })
+        return self.sdk._request("/api/v1/prompts/", dict, params=params)
+
+    def get_prompt(self, prompt_name: str) -> PromptResponse:
+        """Get a specific prompt by name."""
+        return self.sdk._request(f"/api/v1/prompts/{prompt_name}", PromptResponse)
+
+    def create_prompt(self, data: PromptCreate) -> PromptResponse:
+        """Create a new prompt."""
+        return self.sdk._request(
+            "/api/v1/prompts/", PromptResponse, method="POST", json=data.model_dump()
+        )
+
+    def update_prompt(self, prompt_name: str, data: Dict[str, Any]) -> PromptResponse:
+        """Update an existing prompt."""
+        return self.sdk._request(
+            f"/api/v1/prompts/{prompt_name}", 
+            PromptResponse, 
+            method="PUT", 
+            json=data
+        )
+
+    def delete_prompt(self, prompt_name: str) -> BaseResponse:
+        """Delete a prompt."""
+        return self.sdk._request(
+            f"/api/v1/prompts/{prompt_name}", BaseResponse, method="DELETE"
+        )
+
+    def get_prompt_stats(self) -> Dict[str, Any]:
+        """Get prompt usage statistics."""
+        return self.sdk._request("/api/v1/prompts/stats", dict)
+
+
+class ProfilesClient:
+    """Client for LLM profile registry management."""
+    
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    def list_profiles(
+        self, 
+        active_only: bool = True, 
+        search: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """List all LLM profiles with optional filtering."""
+        params = filter_query({
+            "active_only": active_only,
+            "search": search
+        })
+        return self.sdk._request("/api/v1/profiles/", dict, params=params)
+
+    def get_profile(self, profile_name: str) -> LLMProfileResponse:
+        """Get a specific LLM profile by name."""
+        return self.sdk._request(f"/api/v1/profiles/{profile_name}", LLMProfileResponse)
+
+    def create_profile(self, data: LLMProfileCreate) -> LLMProfileResponse:
+        """Create a new LLM profile."""
+        return self.sdk._request(
+            "/api/v1/profiles/", LLMProfileResponse, method="POST", json=data.model_dump()
+        )
+
+    def update_profile(self, profile_name: str, data: Dict[str, Any]) -> LLMProfileResponse:
+        """Update an existing LLM profile."""
+        return self.sdk._request(
+            f"/api/v1/profiles/{profile_name}", 
+            LLMProfileResponse, 
+            method="PUT", 
+            json=data
+        )
+
+    def delete_profile(self, profile_name: str) -> BaseResponse:
+        """Delete an LLM profile."""
+        return self.sdk._request(
+            f"/api/v1/profiles/{profile_name}", BaseResponse, method="DELETE"
+        )
+
+    def get_profile_stats(self) -> Dict[str, Any]:
+        """Get LLM profile usage statistics."""
+        return self.sdk._request("/api/v1/profiles/stats", dict)
+
+
 # --- MAIN SDK CLASS ---
 
 
@@ -674,13 +900,32 @@ class AIChatbotSDK:
     Main SDK class for AI Chatbot Platform API interactions.
     
     Provides a comprehensive client for accessing all API endpoints including
-    authentication, document management, conversations, and search functionality.
+    authentication, document management, conversations, search functionality,
+    and registry-based features for prompts, LLM profiles, and MCP tools.
+    
+    Features:
+    - User authentication and management
+    - Document upload, processing, and search
+    - AI conversations with RAG and tool calling
+    - Health monitoring and system status
+    - Prompt registry for consistent system prompts
+    - LLM profile registry for parameter management
+    - MCP tools integration and management
     
     Args:
         base_url: Base URL of the AI Chatbot API.
         token: Optional authentication token.
         on_error: Optional error handler callback.
         session: Optional custom requests session.
+        
+    Example:
+        >>> sdk = AIChatbotSDK("http://localhost:8000")
+        >>> token = sdk.auth.login("username", "password")
+        >>> prompts = sdk.prompts.list_prompts()
+        >>> response = sdk.conversations.chat(ChatRequest(
+        ...     user_message="Hello!",
+        ...     prompt_name="helpful_assistant"
+        ... ))
     """
     
     def __init__(
@@ -695,12 +940,18 @@ class AIChatbotSDK:
         self.on_error = on_error
         self._session = session or requests.Session()
 
+        # Initialize all client endpoints
         self.health = HealthClient(self)
         self.auth = AuthClient(self)
         self.users = UsersClient(self)
         self.documents = DocumentsClient(self)
         self.conversations = ConversationsClient(self)
         self.search = SearchClient(self)
+        
+        # New registry-based clients
+        self.tools = ToolsClient(self)
+        self.prompts = PromptsClient(self)
+        self.profiles = ProfilesClient(self)
 
     def set_token(self, token: Optional[str]) -> None:
         """Set authentication token for API requests."""
