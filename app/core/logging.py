@@ -24,7 +24,7 @@ import sys
 import time
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
@@ -41,9 +41,9 @@ class StructuredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as structured JSON."""
-        # Base log entry
+        # Base log entry - use timezone-aware datetime
         log_entry = {
-            "timestamp": datetime.utcfromtimestamp(record.created).isoformat() + "Z",
+            "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat().replace('+00:00', 'Z'),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -111,8 +111,8 @@ class DevelopmentFormatter(logging.Formatter):
         level_color = self.COLORS.get(record.levelname, "")
         colored_level = f"{level_color}{record.levelname}{self.RESET}"
 
-        # Base format
-        timestamp = datetime.utcfromtimestamp(record.created).strftime("%H:%M:%S")
+        # Base format - use timezone-aware datetime
+        timestamp = datetime.fromtimestamp(record.created, UTC).strftime("%H:%M:%S")
         base_format = (
             f"{timestamp} {colored_level:<15} {record.name:<20} {record.getMessage()}"
         )

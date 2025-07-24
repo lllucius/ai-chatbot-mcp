@@ -79,3 +79,4 @@ dmypy.json
 .env
 
 
+logs/
