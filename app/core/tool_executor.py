@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 from ..core.exceptions import ExternalServiceError
 from ..utils.api_errors import handle_api_errors
 from ..utils.caching import api_response_cache, make_cache_key
-from ..utils.logging import get_api_logger
+from ..core.logging import get_api_logger
 
 logger = get_api_logger("tool_executor")
 

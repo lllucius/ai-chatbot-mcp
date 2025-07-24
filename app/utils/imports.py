@@ -36,7 +36,7 @@ Example Import Organization:
 
     # Local imports - Services
     from ..services.user import UserService
-    from ..utils.logging import get_service_logger
+    from ..core.logging import get_service_logger
 
     # Local imports - Schemas
     from ..schemas.user import UserResponse

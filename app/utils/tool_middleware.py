@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from typing import Any, Callable, List, Optional, Tuple, Type
 
 from ..utils.caching import api_response_cache, make_cache_key
-from ..utils.logging import get_api_logger
+from ..core.logging import get_component_logger
 
-logger = get_api_logger("tool_middleware")
+logger = get_component_logger("tool_middleware")
 
 
 @dataclass

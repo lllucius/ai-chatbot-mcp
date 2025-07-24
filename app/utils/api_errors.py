@@ -21,7 +21,7 @@ from ..core.exceptions import (
     SearchError,
     ValidationError,
 )
-from ..utils.logging import get_api_logger
+from ..core.logging import get_api_logger
 from ..utils.timestamp import get_current_timestamp
 
 logger = get_api_logger("error_handler")
