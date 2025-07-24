@@ -7,7 +7,6 @@ middleware, exception handlers, and API routes.
 """
 
 import logging
-import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
@@ -32,16 +31,22 @@ from .api import (
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .database import close_db, init_db
+from .core.logging import setup_logging, get_component_logger
+from .middleware import (
+    logging_middleware,
+    debug_content_middleware,
+    timing_middleware,
+    validation_middleware,
+    rate_limiting_middleware,
+)
 from .utils.caching import start_cache_cleanup_task
-from .utils.logging import setup_logging
-from .utils.performance import record_request_metric, start_system_monitoring
-from .utils.rate_limiting import rate_limit_middleware, start_rate_limiter_cleanup
+from .utils.performance import start_system_monitoring
+from .utils.rate_limiting import start_rate_limiter_cleanup
 from .utils.timestamp import get_current_timestamp
-from .utils.validation import validate_request_middleware
 
 # Setup logging
 setup_logging()
-logger = logging.getLogger(__name__)
+logger = get_component_logger("main")
 
 
 @asynccontextmanager
@@ -157,75 +162,37 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-# Rate limiting middleware (add before other middleware)
+# Apply middleware in the correct order (innermost to outermost)
+
+# Debug content middleware (only active when debug=True)
 @app.middleware("http")
-async def rate_limiting_middleware(request: Request, call_next):
-    """Rate limiting middleware wrapper."""
-    return await rate_limit_middleware(request, call_next)
+async def debug_content_middleware_wrapper(request: Request, call_next):
+    """Debug content logging middleware wrapper."""
+    return await debug_content_middleware(request, call_next)
 
-
-# Input validation middleware (add before other middleware)
+# Standard request logging middleware
 @app.middleware("http")
-async def input_validation_middleware(request: Request, call_next):
-    """Input validation middleware wrapper."""
-    return await validate_request_middleware(request, call_next)
-
+async def logging_middleware_wrapper(request: Request, call_next):
+    """Request logging middleware wrapper.""" 
+    return await logging_middleware(request, call_next)
 
 # Request timing middleware with performance monitoring
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    """Add processing time header to responses and record metrics."""
-    start_time = time.time()
+async def timing_middleware_wrapper(request: Request, call_next):
+    """Request timing middleware wrapper."""
+    return await timing_middleware(request, call_next)
 
-    response = await call_next(request)
-
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(f"{process_time:.4f}")
-
-    # Record performance metric
-    record_request_metric(
-        path=request.url.path,
-        method=request.method,
-        status_code=response.status_code,
-        duration=process_time,
-    )
-
-    return response
-
-
-# Request logging middleware
+# Input validation middleware
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Log all requests for monitoring and debugging."""
-    start_time = time.time()
+async def validation_middleware_wrapper(request: Request, call_next):
+    """Input validation middleware wrapper."""
+    return await validation_middleware(request, call_next)
 
-    # Log request
-    logger.info(
-        "Request started",
-        extra={
-            "method": request.method,
-            "url": str(request.url),
-            "client_ip": request.client.host if request.client else "unknown",
-            "user_agent": request.headers.get("user-agent", "unknown"),
-        },
-    )
-
-    # Process request
-    response = await call_next(request)
-
-    # Log response
-    process_time = time.time() - start_time
-    logger.info(
-        "Request completed",
-        extra={
-            "method": request.method,
-            "url": str(request.url),
-            "status_code": response.status_code,
-            "process_time": f"{process_time:.4f}s",
-        },
-    )
-
-    return response
+# Rate limiting middleware (applied first, outermost)
+@app.middleware("http")
+async def rate_limiting_middleware_wrapper(request: Request, call_next):
+    """Rate limiting middleware wrapper."""
+    return await rate_limiting_middleware(request, call_next)
 
 
 # CORS middleware

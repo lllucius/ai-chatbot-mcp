@@ -16,7 +16,7 @@ from sqlalchemy.orm import selectinload
 from ..database import AsyncSessionLocal
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..utils.logging import get_api_logger
+from ..core.logging import get_api_logger
 
 logger = get_api_logger("mcp_registry")
 
