@@ -19,9 +19,6 @@ Security Features:
 - Audit logging for security events
 - Protection against common attacks (brute force, timing)
 
-Generated on: 2025-07-14 03:12:05 UTC
-Updated on: 2025-01-20 20:30:00 UTC
-Current User: lllucius / assistant
 """
 
 from fastapi import APIRouter, Depends
@@ -30,8 +27,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from ..schemas.auth import (LoginRequest, PasswordResetConfirm,
-                            PasswordResetRequest, RegisterRequest, Token)
+from ..schemas.auth import (
+    LoginRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    RegisterRequest,
+    Token,
+)
 from ..schemas.common import BaseResponse
 from ..schemas.user import UserResponse
 from ..services.auth import AuthService

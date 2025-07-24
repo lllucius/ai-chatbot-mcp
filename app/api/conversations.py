@@ -5,9 +5,6 @@ This module provides endpoints for managing conversations, sending messages,
 and interacting with the AI assistant with RAG capabilities and enhanced
 registry integration for prompts, LLM profiles, and MCP tools.
 
-Generated on: 2025-07-14 03:15:29 UTC
-Updated on: 2025-07-23 04:00:00 UTC - Enhanced with registry services
-Current User: lllucius
 """
 
 import json
@@ -24,10 +21,15 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
-from ..schemas.conversation import (ChatRequest, ChatResponse,
-                                    ConversationCreate, ConversationResponse,
-                                    ConversationStats, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ChatResponse,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationStats,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..services.conversation import ConversationService
 
 router = APIRouter(tags=["conversations"])

@@ -4,8 +4,6 @@ Simple in-memory caching utilities for performance optimization.
 This module provides basic caching functionality for embeddings, API responses,
 and other frequently accessed data.
 
-Generated on: 2025-07-14 05:00:00 UTC
-Current User: lllucius
 """
 
 import asyncio

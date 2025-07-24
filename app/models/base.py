@@ -4,8 +4,6 @@ Base database model with common functionality.
 This module provides the base model class that all other models inherit from,
 including common fields and functionality like timestamps and soft deletes.
 
-Current Date and Time (UTC): 2025-07-14 05:01:09
-Current User: lllucius
 """
 
 import uuid
@@ -32,7 +30,6 @@ class TimestampMixin:
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=text("CURRENT_TIMESTAMP"),
-        doc="When the record was last updated",
     )
 
 

@@ -4,8 +4,6 @@ Document-related Pydantic schemas.
 This module provides schemas for document management, file uploads,
 processing status, and document search operations.
 
-Generated on: 2025-07-14 03:47:30 UTC
-Current User: lllucius
 """
 
 from datetime import datetime
@@ -167,7 +165,6 @@ class ProcessingStatusResponse(BaseResponse):
     )
     error_message: Optional[str] = Field(None, description="Error message if failed")
     created_at: datetime = Field(..., description="Document creation time")
-    updated_at: datetime = Field(..., description="Document last update time")
 
     # Background task information
     task_id: Optional[str] = Field(None, description="Background task ID")

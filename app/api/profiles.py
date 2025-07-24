@@ -4,8 +4,6 @@ LLM Profile registry API endpoints.
 This module provides endpoints for managing LLM parameter profiles,
 including CRUD operations, statistics, and parameter validation.
 
-Generated on: 2025-07-23 04:30:00 UTC
-Current User: lllucius / assistant
 """
 
 from typing import Any, Dict, Optional
@@ -53,7 +51,9 @@ async def list_profiles(
                         "is_active": p.is_active,
                         "parameters": p.to_openai_params(),
                         "usage_count": p.usage_count,
-                        "last_used_at": p.last_used_at.isoformat() if p.last_used_at else None,
+                        "last_used_at": (
+                            p.last_used_at.isoformat() if p.last_used_at else None
+                        ),
                         "created_at": p.created_at.isoformat(),
                     }
                     for p in profiles
@@ -84,7 +84,9 @@ async def get_profile_details(
 
     Returns the complete profile parameters, metadata, and usage statistics.
     """
-    log_api_call("get_profile_details", user_id=current_user.id, profile_name=profile_name)
+    log_api_call(
+        "get_profile_details", user_id=current_user.id, profile_name=profile_name
+    )
 
     try:
         profile = await LLMProfileService.get_profile(profile_name)
@@ -118,7 +120,9 @@ async def get_profile_details(
                 },
                 "openai_params": profile.to_openai_params(),
                 "usage_count": profile.usage_count,
-                "last_used_at": profile.last_used_at.isoformat() if profile.last_used_at else None,
+                "last_used_at": (
+                    profile.last_used_at.isoformat() if profile.last_used_at else None
+                ),
                 "created_at": profile.created_at.isoformat(),
                 "updated_at": profile.updated_at.isoformat(),
             },
@@ -144,7 +148,9 @@ async def set_default_profile(
 
     Only available to superusers.
     """
-    log_api_call("set_default_profile", user_id=current_user.id, profile_name=profile_name)
+    log_api_call(
+        "set_default_profile", user_id=current_user.id, profile_name=profile_name
+    )
 
     try:
         success = await LLMProfileService.set_default_profile(profile_name)

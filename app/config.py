@@ -4,8 +4,6 @@ Configuration management using Pydantic Settings.
 This module provides centralized configuration management with environment
 variable support, type validation, and secure defaults.
 
-Current Date and Time (UTC): 2025-07-14 04:41:14
-Current User: lllucius
 """
 
 import logging

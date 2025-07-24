@@ -4,8 +4,6 @@ Performance monitoring and metrics collection utilities.
 This module provides comprehensive performance monitoring including
 request timing, resource usage, and system health metrics.
 
-Generated on: 2025-07-14 05:45:00 UTC
-Current User: lllucius
 """
 
 import asyncio

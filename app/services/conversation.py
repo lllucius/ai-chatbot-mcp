@@ -22,9 +22,6 @@ AI Integration:
 - Tool calling capabilities through MCP integration
 - Token usage tracking and optimization
 
-Generated on: 2025-07-14 03:50:38 UTC
-Updated on: 2025-01-20 20:10:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging
@@ -36,9 +33,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.conversation import Conversation, Message
-from ..schemas.conversation import (ChatRequest, ConversationCreate,
-                                    ConversationResponse, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..schemas.document import DocumentSearchRequest
 from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
@@ -367,11 +368,13 @@ class ConversationService(BaseService):
                     llm_profile = request.llm_profile
                 elif request.profile_name:
                     # Load profile by name
-                    llm_profile = await LLMProfileService.get_profile(request.profile_name)
+                    llm_profile = await LLMProfileService.get_profile(
+                        request.profile_name
+                    )
                 else:
                     # Get default profile
                     llm_profile = await LLMProfileService.get_default_profile()
-                
+
                 # Record profile usage if we have a profile
                 if llm_profile:
                     await LLMProfileService.record_profile_usage(llm_profile.name)
@@ -399,8 +402,7 @@ class ConversationService(BaseService):
 
             # Get AI response with enhanced registry integration
             ai_response = await self.openai_client.chat_completion(
-                messages=ai_messages,
-                **openai_params
+                messages=ai_messages, **openai_params
             )
 
             # Create AI message
@@ -524,11 +526,13 @@ class ConversationService(BaseService):
                     llm_profile = request.llm_profile
                 elif request.profile_name:
                     # Load profile by name
-                    llm_profile = await LLMProfileService.get_profile(request.profile_name)
+                    llm_profile = await LLMProfileService.get_profile(
+                        request.profile_name
+                    )
                 else:
                     # Get default profile
                     llm_profile = await LLMProfileService.get_default_profile()
-                
+
                 # Record profile usage if we have a profile
                 if llm_profile:
                     await LLMProfileService.record_profile_usage(llm_profile.name)
@@ -559,8 +563,7 @@ class ConversationService(BaseService):
             tool_calls_executed = []
 
             async for chunk in self.openai_client.chat_completion_stream(
-                messages=ai_messages,
-                **openai_params
+                messages=ai_messages, **openai_params
             ):
                 if chunk.get("type") == "content":
                     content = chunk.get("content", "")
@@ -638,7 +641,9 @@ class ConversationService(BaseService):
                     await PromptService.record_prompt_usage(prompt.name)
                     return prompt.content
                 else:
-                    logger.warning(f"Prompt '{request.prompt_name}' not found, using default")
+                    logger.warning(
+                        f"Prompt '{request.prompt_name}' not found, using default"
+                    )
             except Exception as e:
                 logger.warning(f"Failed to get prompt '{request.prompt_name}': {e}")
 

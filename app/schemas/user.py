@@ -4,8 +4,6 @@ User-related Pydantic schemas for API requests and responses.
 This module defines schemas for user operations including creation,
 updates, authentication, and API responses using modern Pydantic V2.
 
-Current Date and Time (UTC): 2025-07-14 05:01:09
-Current User: lllucius
 """
 
 import uuid
@@ -122,7 +120,6 @@ class UserResponse(UserBase):
     is_active: bool = Field(description="Whether the user account is active")
     is_superuser: bool = Field(description="Whether the user has admin privileges")
     created_at: datetime = Field(description="When the user account was created")
-    updated_at: datetime = Field(description="When the user account was last updated")
 
     def model_dump_json(self, **kwargs):
         """Custom JSON serialization with UUID and datetime handling."""

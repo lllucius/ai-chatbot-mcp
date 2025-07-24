@@ -4,8 +4,6 @@ Rate limiting middleware and utilities for API security.
 This module provides rate limiting functionality to protect against
 abuse, DDoS attacks, and excessive API usage.
 
-Generated on: 2025-07-14 05:30:00 UTC
-Current User: lllucius
 """
 
 import asyncio

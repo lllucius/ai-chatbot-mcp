@@ -4,8 +4,6 @@ Prompt registry API endpoints.
 This module provides endpoints for managing prompts in the prompt registry,
 including CRUD operations, statistics, and category management.
 
-Generated on: 2025-07-23 04:30:00 UTC
-Current User: lllucius / assistant
 """
 
 from typing import Any, Dict, Optional
@@ -55,7 +53,9 @@ async def list_prompts(
                         "is_default": p.is_default,
                         "is_active": p.is_active,
                         "usage_count": p.usage_count,
-                        "last_used_at": p.last_used_at.isoformat() if p.last_used_at else None,
+                        "last_used_at": (
+                            p.last_used_at.isoformat() if p.last_used_at else None
+                        ),
                         "created_at": p.created_at.isoformat(),
                     }
                     for p in prompts
@@ -110,7 +110,9 @@ async def get_prompt_details(
                 "is_default": prompt.is_default,
                 "is_active": prompt.is_active,
                 "usage_count": prompt.usage_count,
-                "last_used_at": prompt.last_used_at.isoformat() if prompt.last_used_at else None,
+                "last_used_at": (
+                    prompt.last_used_at.isoformat() if prompt.last_used_at else None
+                ),
                 "created_at": prompt.created_at.isoformat(),
                 "updated_at": prompt.updated_at.isoformat(),
             },

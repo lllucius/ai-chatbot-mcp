@@ -16,7 +16,6 @@ Key Features:
 - Configurable processing parameters
 - Comprehensive logging and monitoring
 
-Current User: assistant
 Current Date: 2025-01-20
 """
 

@@ -8,8 +8,6 @@ Embeddings are expected to be 1D dense float vectors of length `vector_dimension
 (as defined by DocumentChunk.embedding in the data model).
 All values should be floats (typically in the range [-1, 1]), and no NaN or Inf values are allowed.
 
-Generated on: 2025-07-20 05:16:05 UTC
-Current User: lllucius
 """
 
 import logging

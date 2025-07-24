@@ -6,8 +6,6 @@ This script creates sample data including:
 - Sample LLM profiles
 - Example MCP server registrations
 
-Current Date and Time (UTC): 2025-07-23 03:45:00
-Current User: lllucius / assistant
 """
 
 import asyncio

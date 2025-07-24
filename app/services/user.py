@@ -12,10 +12,6 @@ Key Features:
 - User listing with pagination and filtering
 - User deletion with cascading cleanup
 - System-wide user analytics and metrics
-
-Generated on: 2025-07-14 03:08:19 UTC
-Updated on: 2025-01-20 19:40:00 UTC
-Current User: lllucius / assistant
 """
 
 import logging
@@ -26,8 +22,7 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import (AuthenticationError, NotFoundError,
-                               ValidationError)
+from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User

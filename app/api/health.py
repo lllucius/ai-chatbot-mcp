@@ -4,8 +4,6 @@ Health check API endpoints.
 This module provides health monitoring endpoints for the application,
 including database connectivity, external services, and system metrics.
 
-Generated on: 2025-07-14 04:24:47 UTC
-Current User: lllucius
 """
 
 import logging
@@ -18,8 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..database import get_db
 from ..schemas.common import BaseResponse
-from ..utils.caching import (api_response_cache, embedding_cache,
-                             search_result_cache)
+from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
 from ..utils.performance import get_performance_stats
 from ..utils.timestamp import utcnow
 
@@ -284,7 +281,7 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
         total_servers = registry_info.get("total_servers", 0)
         enabled_servers = registry_info.get("enabled_servers", 0)
         connected_servers = health_result.get("connected_servers", 0)
-        
+
         if connected_servers == 0:
             status = "warning"
             message = "No MCP servers are connected (optional service)"

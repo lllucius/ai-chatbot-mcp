@@ -21,8 +21,14 @@ from sqlalchemy import select
 
 from ..database import AsyncSessionLocal
 from ..models.document import Document, FileStatus
-from .base import (async_command, console, error_message, info_message,
-                   success_message, warning_message)
+from .base import (
+    async_command,
+    console,
+    error_message,
+    info_message,
+    success_message,
+    warning_message,
+)
 
 # Create the background tasks app
 tasks_app = typer.Typer(help="Background task management commands")

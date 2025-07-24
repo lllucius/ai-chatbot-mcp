@@ -4,8 +4,6 @@ Conversation and message-related Pydantic schemas.
 This module provides schemas for chat conversations, messages,
 and related operations.
 
-Generated on: 2025-07-20 13:48:01 UTC
-Current User: lllucius
 """
 
 from datetime import datetime

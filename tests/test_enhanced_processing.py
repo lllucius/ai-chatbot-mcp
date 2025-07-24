@@ -8,7 +8,6 @@ This test module covers:
 - API endpoints for enhanced functionality
 - Configuration management
 
-Current User: assistant
 Current Date: 2025-01-20
 """
 
