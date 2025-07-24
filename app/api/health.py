@@ -19,6 +19,7 @@ from ..schemas.common import BaseResponse
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
 from ..utils.performance import get_performance_stats
 from ..utils.timestamp import utcnow
+from ..utils.api_errors import handle_api_errors, log_api_call
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ async def basic_health_check() -> Dict[str, Any]:
 
 
 @router.get("/detailed")
+@handle_api_errors("Health check failed")
 async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
     """
     Detailed health check with all system components.
@@ -53,6 +55,8 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
     Returns:
         dict: Comprehensive system health status
     """
+    log_api_call("detailed_health_check")
+
     health_status = {
         "application": {
             "name": settings.app_name,
@@ -85,6 +89,7 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
 
 
 @router.get("/database")
+@handle_api_errors("Database health check failed")
 async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
     """
     Database connectivity health check.
@@ -95,10 +100,12 @@ async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
     Returns:
         dict: Database health status
     """
+    log_api_call("database_health_check")
     return await _check_database_health(db)
 
 
 @router.get("/services")
+@handle_api_errors("Services health check failed")
 async def services_health_check() -> Dict[str, Any]:
     """
     External services health check.
@@ -106,6 +113,7 @@ async def services_health_check() -> Dict[str, Any]:
     Returns:
         dict: External services health status
     """
+    log_api_call("services_health_check")
     return {
         "openai": await _check_openai_health(),
         "fastmcp": await _check_fastmcp_health(),
@@ -317,6 +325,7 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
 
 
 @router.get("/metrics")
+@handle_api_errors("Failed to get system metrics")
 async def get_system_metrics() -> Dict[str, Any]:
     """
     Get system performance metrics.
@@ -324,6 +333,8 @@ async def get_system_metrics() -> Dict[str, Any]:
     Returns:
         dict: System metrics and performance data
     """
+    log_api_call("get_system_metrics")
+    
     try:
         import time
 
@@ -361,9 +372,6 @@ async def get_system_metrics() -> Dict[str, Any]:
             "error": "psutil not available for system metrics",
             "timestamp": utcnow(),
         }
-    except Exception as e:
-        logger.error(f"Failed to get system metrics: {e}")
-        return {"error": f"Failed to get metrics: {str(e)}", "timestamp": utcnow()}
 
 
 @router.get("/readiness")
@@ -411,6 +419,7 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
 
 
 @router.get("/performance")
+@handle_api_errors("Failed to get performance metrics")
 async def get_performance_metrics() -> Dict[str, Any]:
     """
     Get comprehensive performance metrics and statistics.
@@ -418,6 +427,7 @@ async def get_performance_metrics() -> Dict[str, Any]:
     Returns:
         dict: Performance metrics and system health data
     """
+    log_api_call("get_performance_metrics")
     return get_performance_stats()
 
 

@@ -37,7 +37,7 @@ from ..schemas.document import (
 )
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
-from ..utils.api_errors import handle_api_errors
+from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["documents"])
 
@@ -48,7 +48,7 @@ async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentSe
 
 
 @router.post("/upload", response_model=DocumentUploadResponse)
-@handle_api_errors("Failed to upload document", log_errors=True)
+@handle_api_errors("Failed to upload document")
 async def upload_document(
     file: UploadFile = File(...),
     title: str = Form(...),
@@ -62,30 +62,24 @@ async def upload_document(
 
     Enhanced with auto-processing option and priority control.
     """
-    try:
-        # Create document
-        document = await service.create_document(file, title, user.id)
+    log_api_call("upload_document", user_id=str(user.id), title=title, auto_process=auto_process)
+    
+    # Create document
+    document = await service.create_document(file, title, user.id)
 
-        task_id = None
-        if auto_process:
-            # Start background processing
-            task_id = await service.start_processing(
-                document.id, priority=processing_priority
-            )
-
-        return DocumentUploadResponse(
-            message="Document uploaded successfully",
-            document=DocumentResponse.model_validate(document),
-            task_id=task_id,
-            auto_processing=auto_process,
+    task_id = None
+    if auto_process:
+        # Start background processing
+        task_id = await service.start_processing(
+            document.id, priority=processing_priority
         )
 
-    except (ValidationError, DocumentError) as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload failed"
-        )
+    return DocumentUploadResponse(
+        message="Document uploaded successfully",
+        document=DocumentResponse.model_validate(document),
+        task_id=task_id,
+        auto_processing=auto_process,
+    )
 
 
 @router.get("/", response_model=PaginatedResponse[DocumentResponse])

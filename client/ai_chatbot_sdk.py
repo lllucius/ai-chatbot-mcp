@@ -7,6 +7,7 @@ including authentication, document management, conversation handling, and search
 """
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import UUID
 
@@ -36,6 +37,21 @@ class ApiError(Exception):
 
 
 T = TypeVar("T")
+
+# --- ENUMS ---
+
+
+class ToolHandlingMode(str, Enum):
+    """
+    Enum for different tool call result handling modes.
+
+    - RETURN_RESULTS: Return tool call results as content without further AI processing
+    - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
+    """
+
+    RETURN_RESULTS = "return_results"
+    COMPLETE_WITH_RESULTS = "complete_with_results"
+
 
 # --- SCHEMA MODELS ---
 
@@ -210,15 +226,13 @@ class ProcessingStatusResponse(BaseResponse):
 
 
 class DocumentSearchRequest(BaseModel):
-    """Document search request model."""
-    page: Optional[int] = 1
-    per_page: Optional[int] = 10
-    sort_by: Optional[str] = None
-    sort_order: Optional[str] = "asc"
-    q: Optional[str] = None
-    filters: Optional[Dict[str, Any]] = None
-    document_ids: Optional[List[int]] = None
-    file_types: Optional[List[str]] = None
+    """Document search request model - matches app/schemas/document.py DocumentSearchRequest."""
+    query: str = Field(..., min_length=1, description="Search query")
+    limit: Optional[int] = Field(10, ge=1, le=100, description="Maximum number of results")
+    threshold: Optional[float] = Field(0.7, ge=0.0, le=1.0, description="Similarity threshold")
+    algorithm: str = Field("hybrid", description="Search algorithm: vector, text, hybrid, mmr")
+    document_ids: Optional[List[UUID]] = Field(None, description="Specific document IDs to search")
+    file_types: Optional[List[str]] = Field(None, description="File types to include")
 
 
 class ChatRequest(BaseModel):
@@ -228,13 +242,16 @@ class ChatRequest(BaseModel):
     conversation_title: Optional[str] = Field(None, max_length=500, description="New conversation title")
     use_rag: bool = Field(True, description="Whether to use RAG for context")
     use_tools: bool = Field(True, description="Whether to enable tool calling")
+    tool_handling_mode: ToolHandlingMode = Field(
+        default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
+        description="How to handle tool call results: return_results or complete_with_results",
+    )
     rag_documents: Optional[List[UUID]] = Field(None, description="Specific document IDs for RAG")
     
     # Registry integration fields
     prompt_name: Optional[str] = Field(None, description="Name of prompt to use from prompt registry")
     profile_name: Optional[str] = Field(None, description="Name of LLM profile to use from profile registry")
     llm_profile: Optional[Dict[str, Any]] = Field(None, description="LLM profile object with parameter configuration")
-    tool_handling_mode: Optional[str] = Field("complete_with_results", description="How to handle tool call results")
 
     # Legacy fields for backward compatibility (deprecated)
     max_tokens: Optional[int] = Field(None, description="Max tokens (deprecated - use profile)")
