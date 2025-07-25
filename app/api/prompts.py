@@ -15,6 +15,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
+from ..schemas.prompt import PromptResponse
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -90,7 +91,7 @@ async def list_prompts(
         )
 
 
-@router.get("/{prompt_name}", response_model=Dict[str, Any])
+@router.get("/{prompt_name}", response_model=PromptResponse)
 @handle_api_errors("Failed to get prompt details")
 async def get_prompt_details(
     prompt_name: str,
@@ -104,40 +105,29 @@ async def get_prompt_details(
     """
     log_api_call("get_prompt_details", user_id=current_user.id, prompt_name=prompt_name)
 
-    try:
-        prompt = await prompt_service.get_prompt(prompt_name)
+    prompt = await prompt_service.get_prompt(prompt_name)
 
-        if not prompt:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Prompt '{prompt_name}' not found",
-            )
-
-        return {
-            "success": True,
-            "data": {
-                "name": prompt.name,
-                "title": prompt.title,
-                "content": prompt.content,
-                "description": prompt.description,
-                "category": prompt.category,
-                "tags": prompt.tag_list,
-                "is_default": prompt.is_default,
-                "is_active": prompt.is_active,
-                "usage_count": prompt.usage_count,
-                "last_used_at": (prompt.last_used_at.isoformat() if prompt.last_used_at else None),
-                "created_at": prompt.created_at.isoformat(),
-                "updated_at": prompt.updated_at.isoformat(),
-            },
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
+    if not prompt:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get prompt details: {str(e)}",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Prompt '{prompt_name}' not found",
         )
+
+    return PromptResponse(
+        name=prompt.name,
+        title=prompt.title,
+        content=prompt.content,
+        description=prompt.description,
+        category=prompt.category,
+        variables=None,  # Not implemented in the current model
+        tags=prompt.tag_list,  # Use the tag_list property
+        is_active=prompt.is_active,
+        is_default=prompt.is_default,
+        usage_count=prompt.usage_count,
+        last_used_at=prompt.last_used_at,
+        created_at=prompt.created_at,
+        updated_at=prompt.updated_at,
+    )
 
 
 @router.get("/categories/", response_model=Dict[str, Any])

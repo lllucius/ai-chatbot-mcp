@@ -748,6 +748,19 @@ class AIChatbotTerminal:
                     print("Usage: /docs upload <file_path>")
                     return
                 file_path = parts[2]
+                
+                # Handle case-insensitive file search for common files
+                if not os.path.exists(file_path):
+                    # Try to find the file with different cases
+                    dir_name = os.path.dirname(file_path) or "."
+                    file_name = os.path.basename(file_path)
+                    
+                    # Search for case variations
+                    for item in os.listdir(dir_name):
+                        if item.lower() == file_name.lower():
+                            file_path = os.path.join(dir_name, item)
+                            break
+                
                 if not os.path.exists(file_path):
                     print(f"File not found: {file_path}")
                     return
@@ -805,20 +818,37 @@ class AIChatbotTerminal:
             return
 
         try:
-            msgs = self.sdk.conversations.messages(
-                conversation_id=self.conversation_id, page=1, size=1000
-            )
+            # Get all messages by pagination
+            all_messages = []
+            page = 1
+            size = 100  # Maximum allowed size
+            
+            while True:
+                msgs = self.sdk.conversations.messages(
+                    conversation_id=self.conversation_id, page=page, size=size
+                )
+                
+                if not msgs.items:
+                    break
+                    
+                all_messages.extend(msgs.items)
+                
+                # Check if we have all messages
+                if len(msgs.items) < size or len(all_messages) >= msgs.pagination.total:
+                    break
+                    
+                page += 1
 
             # Prepare export data
             export_data = {
                 "conversation_id": str(self.conversation_id),
                 "title": self.conversation_title,
                 "exported_at": datetime.now().isoformat(),
-                "message_count": len(msgs.items),
+                "message_count": len(all_messages),
                 "messages": [],
             }
 
-            for msg in msgs.items:
+            for msg in all_messages:
                 export_data["messages"].append(
                     {
                         "id": str(msg.id),

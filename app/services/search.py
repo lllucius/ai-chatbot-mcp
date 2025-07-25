@@ -121,9 +121,24 @@ class SearchService(BaseService):
         """Returns embedding for query, using cache for performance."""
         cached = embedding_cache.get(query)
         if cached is not None:
-            return cached
+            # Validate cached embedding type
+            if not isinstance(cached, list):
+                logger.warning(f"Invalid cached embedding type: {type(cached)}, regenerating")
+                # Remove invalid cache entry
+                if query in embedding_cache.cache:
+                    del embedding_cache.cache[query]
+                    if query in embedding_cache.order:
+                        embedding_cache.order.remove(query)
+                cached = None
+            else:
+                return cached
+        
         embedding = await self.embedding_service.generate_embedding(query)
         if embedding:
+            # Validate embedding before caching
+            if not isinstance(embedding, list):
+                logger.error(f"Invalid embedding type from service: {type(embedding)}")
+                return None
             embedding_cache.set(query, embedding)
         return embedding
 
@@ -164,6 +179,10 @@ class SearchService(BaseService):
         embedding = await self.get_query_embedding(request.query)
         if not embedding:
             raise SearchError("Failed to generate query embedding")
+        
+        # Validate embedding is a list
+        if not isinstance(embedding, list):
+            raise SearchError(f"Invalid embedding type: {type(embedding)}, expected list")
 
         distance_expr = DocumentChunk.embedding.op("<=>")(embedding).label("distance")
         similarity_threshold = 1.0 - request.threshold
