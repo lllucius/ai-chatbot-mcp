@@ -15,6 +15,8 @@ from .conversation import (ChatRequest, ChatResponse, ConversationCreate, Conver
                            MessageCreate, MessageListResponse, MessageResponse)
 from .document import (DocumentChunkResponse, DocumentResponse, DocumentSearchRequest,
                        DocumentUpdate, DocumentUploadResponse, ProcessingStatusResponse)
+from .llm_profile import LLMProfileCreate, LLMProfileListResponse, LLMProfileResponse, LLMProfileUpdate
+from .prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
 from .user import UserPasswordUpdate, UserResponse, UserStatsResponse, UserUpdate
 
 __all__ = [
@@ -43,6 +45,16 @@ __all__ = [
     "DocumentSearchRequest",
     "DocumentUploadResponse",
     "ProcessingStatusResponse",
+    # LLM Profile schemas
+    "LLMProfileResponse",
+    "LLMProfileCreate",
+    "LLMProfileUpdate",
+    "LLMProfileListResponse",
+    # Prompt schemas
+    "PromptResponse",
+    "PromptCreate",
+    "PromptUpdate",
+    "PromptListResponse",
     # Conversation schemas
     "ConversationResponse",
     "ConversationCreate",

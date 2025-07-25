@@ -11,10 +11,12 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
+from ..schemas.llm_profile import LLMProfileResponse
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -83,7 +85,7 @@ async def list_profiles(
         )
 
 
-@router.get("/{profile_name}", response_model=Dict[str, Any])
+@router.get("/{profile_name}", response_model=LLMProfileResponse)
 @handle_api_errors("Failed to get profile details")
 async def get_profile_details(
     profile_name: str,
@@ -97,53 +99,42 @@ async def get_profile_details(
     """
     log_api_call("get_profile_details", user_id=current_user.id, profile_name=profile_name)
 
-    try:
-        profile = await profile_service.get_profile(profile_name)
+    profile = await profile_service.get_profile(profile_name)
 
-        if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Profile '{profile_name}' not found",
-            )
-
-        return {
-            "success": True,
-            "data": {
-                "name": profile.name,
-                "title": profile.title,
-                "description": profile.description,
-                "is_default": profile.is_default,
-                "is_active": profile.is_active,
-                "parameters": {
-                    "temperature": profile.temperature,
-                    "top_p": profile.top_p,
-                    "top_k": profile.top_k,
-                    "repeat_penalty": profile.repeat_penalty,
-                    "max_tokens": profile.max_tokens,
-                    "max_new_tokens": profile.max_new_tokens,
-                    "context_length": profile.context_length,
-                    "presence_penalty": profile.presence_penalty,
-                    "frequency_penalty": profile.frequency_penalty,
-                    "stop": profile.stop,
-                    "other_params": profile.other_params,
-                },
-                "openai_params": profile.to_openai_params(),
-                "usage_count": profile.usage_count,
-                "last_used_at": (
-                    profile.last_used_at.isoformat() if profile.last_used_at else None
-                ),
-                "created_at": profile.created_at.isoformat(),
-                "updated_at": profile.updated_at.isoformat(),
-            },
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
+    if not profile:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get profile details: {str(e)}",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Profile '{profile_name}' not found",
         )
+
+    # Convert profile model to response schema
+    response_data = {
+        "name": profile.name,
+        "title": profile.title,
+        "description": profile.description,
+        "model_name": settings.openai_chat_model,  # Use default model from settings
+        "parameters": {
+            "temperature": profile.temperature,
+            "top_p": profile.top_p,
+            "top_k": profile.top_k,
+            "repeat_penalty": profile.repeat_penalty,
+            "max_tokens": profile.max_tokens,
+            "max_new_tokens": profile.max_new_tokens,
+            "context_length": profile.context_length,
+            "presence_penalty": profile.presence_penalty,
+            "frequency_penalty": profile.frequency_penalty,
+            "stop": profile.stop,
+            "other_params": profile.other_params,
+        },
+        "is_default": profile.is_default,
+        "is_active": profile.is_active,
+        "usage_count": profile.usage_count,
+        "last_used_at": profile.last_used_at,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at,
+    }
+
+    return LLMProfileResponse(**response_data)
 
 
 @router.post("/{profile_name}/set-default", response_model=BaseResponse)

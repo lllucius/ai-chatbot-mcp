@@ -52,6 +52,10 @@ def handle_api_errors(
             try:
                 return await func(*args, **kwargs)
 
+            except HTTPException:
+                # Re-raise HTTPExceptions as they are already properly formatted
+                raise
+            
             except ValidationError as e:
                 if log_errors:
                     logger.warning(
