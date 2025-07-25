@@ -258,7 +258,9 @@ async def refresh_tools(
             r.get("updated_tools", 0) for r in results if r.get("success")
         )
         failed_servers = [
-            r.get("server") for r in results if not r.get("success") and r.get("server")
+            str(r.get("server"))
+            for r in results
+            if not r.get("success") and r.get("server") is not None
         ]
 
         message = (

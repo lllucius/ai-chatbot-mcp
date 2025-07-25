@@ -197,13 +197,11 @@ async def get_processing_status(
     """
     if task_id:
         # Enhanced processing status with task details
-        status_info = await service.get_processing_status(str(document_id), task_id)
+        status_info = await service.get_processing_status(document_id, task_id)
         message = "Enhanced processing status retrieved"
     else:
         # Basic processing status
-        status_info = await service.get_processing_status(
-            str(document_id), str(user.id)
-        )
+        status_info = await service.get_processing_status(document_id, None)
         message = "Processing status retrieved"
 
     return ProcessingStatusResponse(success=True, message=message, **status_info)

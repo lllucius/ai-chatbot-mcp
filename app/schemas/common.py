@@ -276,9 +276,6 @@ class SearchParams(PaginationParams):
         pattern="^(vector|text|hybrid|mmr)$",
         description="Search algorithm to use",
     )
-    limit: Optional[int] = Field(
-        default=10, ge=1, le=50, description="Number of results to return"
-    )
     threshold: Optional[float] = Field(
         default=0.7, ge=0.0, le=1.0, description="Threshold to use"
     )

@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
+from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.conversation import (
     ChatRequest,
     ChatResponse,

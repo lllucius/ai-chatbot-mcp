@@ -111,10 +111,14 @@ def overview():
 
                 # System health indicators
                 processing_rate = (
-                    (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+                    ((completed_docs or 0) / max((total_docs or 1), 1)) * 100
+                    if total_docs
+                    else 0
                 )
                 user_activity = (
-                    (active_convs / max(total_convs, 1)) * 100 if total_convs else 0
+                    ((active_convs or 0) / max((total_convs or 1), 1)) * 100
+                    if total_convs
+                    else 0
                 )
 
                 health_indicators = []
@@ -378,17 +382,23 @@ def performance():
 
                 # Processing success rate
                 success_rate = (
-                    (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+                    ((completed_docs or 0) / max((total_docs or 1), 1)) * 100
+                    if total_docs
+                    else 0
                 )
                 failure_rate = (
-                    (failed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+                    ((failed_docs or 0) / max((total_docs or 1), 1)) * 100
+                    if total_docs
+                    else 0
                 )
 
                 # Average document size and processing metrics
                 avg_doc_size = await db.scalar(select(func.avg(Document.file_size)))
                 total_chunks = await db.scalar(select(func.count(DocumentChunk.id)))
                 avg_chunks_per_doc = (
-                    total_chunks / max(completed_docs, 1) if completed_docs else 0
+                    (total_chunks or 0) / max((completed_docs or 1), 1)
+                    if completed_docs
+                    else 0
                 )
 
                 # Conversation metrics
@@ -474,15 +484,16 @@ def performance():
                 # Storage efficiency
                 table.add_row("", "", "", "")  # Separator
                 total_storage = await db.scalar(select(func.sum(Document.file_size)))
+                user_count = await db.scalar(select(func.count(User.id)))
                 storage_per_user = (
-                    total_storage / max(await db.scalar(select(func.count(User.id))), 1)
+                    (total_storage or 0) / max((user_count or 1), 1)
                     if total_storage
                     else 0
                 )
                 table.add_row(
                     "Storage", "Total Storage", format_size(total_storage or 0), ""
                 )
-                table.add_row("", "Storage per User", format_size(storage_per_user), "")
+                table.add_row("", "Storage per User", format_size(int(storage_per_user)), "")
 
                 console.print(table)
 
