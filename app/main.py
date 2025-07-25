@@ -16,28 +16,14 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (
-    auth_router,
-    conversations_router,
-    documents_router,
-    health_router,
-    profiles_router,
-    prompts_router,
-    search_router,
-    tools_router,
-    users_router,
-)
+from .api import (auth_router, conversations_router, documents_router, health_router,
+                  profiles_router, prompts_router, search_router, tools_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .core.logging import get_component_logger, setup_logging
 from .database import close_db, init_db
-from .middleware import (
-    debug_content_middleware,
-    logging_middleware,
-    rate_limiting_middleware,
-    timing_middleware,
-    validation_middleware,
-)
+from .middleware import (debug_content_middleware, logging_middleware, rate_limiting_middleware,
+                         timing_middleware, validation_middleware)
 from .middleware.performance import start_system_monitoring
 from .middleware.rate_limiting import start_rate_limiter_cleanup
 from .utils.caching import start_cache_cleanup_task
@@ -211,9 +197,7 @@ app.add_middleware(
 
 # Trusted host middleware for production
 if settings.is_production:
-    app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["*"]  # Configure based on deployment
-    )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])  # Configure based on deployment
 
 
 # Global exception handlers
@@ -303,9 +287,7 @@ app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
 
-app.include_router(
-    conversations_router, prefix="/api/v1/conversations", tags=["conversations"]
-)
+app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["conversations"])
 
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 
@@ -326,9 +308,7 @@ async def root() -> Dict[str, Any]:
         "version": settings.app_version,
         "description": settings.app_description,
         "status": "operational",
-        "docs": (
-            "/docs" if settings.debug else "Documentation not available in production"
-        ),
+        "docs": ("/docs" if settings.debug else "Documentation not available in production"),
         "timestamp": get_current_timestamp(),
     }
 

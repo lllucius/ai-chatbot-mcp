@@ -27,13 +27,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from ..schemas.auth import (
-    LoginRequest,
-    PasswordResetConfirm,
-    PasswordResetRequest,
-    RegisterRequest,
-    Token,
-)
+from ..schemas.auth import (LoginRequest, PasswordResetConfirm, PasswordResetRequest,
+                            RegisterRequest, Token)
 from ..schemas.common import BaseResponse
 from ..schemas.user import UserResponse
 from ..services.auth import AuthService
@@ -49,9 +44,7 @@ async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
 
 @router.post("/register", response_model=UserResponse)
 @handle_api_errors("User registration failed")
-async def register(
-    request: RegisterRequest, auth_service: AuthService = Depends(get_auth_service)
-):
+async def register(request: RegisterRequest, auth_service: AuthService = Depends(get_auth_service)):
     """
     Register a new user account with validation and conflict detection.
 
@@ -93,9 +86,7 @@ async def register(
 
 @router.post("/login", response_model=Token)
 @handle_api_errors("User authentication failed")
-async def login(
-    request: LoginRequest, auth_service: AuthService = Depends(get_auth_service)
-):
+async def login(request: LoginRequest, auth_service: AuthService = Depends(get_auth_service)):
     """
     Authenticate user and return JWT access token.
 
@@ -130,9 +121,7 @@ async def login(
     """
     log_api_call("login", username=request.username)
 
-    token_data = await auth_service.authenticate_user(
-        request.username, request.password
-    )
+    token_data = await auth_service.authenticate_user(request.username, request.password)
     return token_data
 
 

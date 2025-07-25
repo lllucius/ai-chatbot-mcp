@@ -63,9 +63,7 @@ class BaseService(ABC):
             operation: Name of the operation that completed
             **kwargs: Additional context data for logging
         """
-        self.logger.info(
-            f"Completed {operation}", operation=operation, status="success", **kwargs
-        )
+        self.logger.info(f"Completed {operation}", operation=operation, status="success", **kwargs)
 
     def _log_operation_error(self, operation: str, error: Exception, **kwargs):
         """
@@ -112,13 +110,9 @@ class BaseService(ABC):
             ValueError: If validation fails
         """
         if required_fields:
-            missing_fields = [
-                field for field in required_fields if field not in input_data
-            ]
+            missing_fields = [field for field in required_fields if field not in input_data]
             if missing_fields:
-                raise ValueError(
-                    f"Missing required fields: {', '.join(missing_fields)}"
-                )
+                raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
         return input_data
 
@@ -143,9 +137,7 @@ class BaseService(ABC):
         entity = result.scalar_one_or_none()
 
         if not entity:
-            message = (
-                error_message or f"{model.__name__} not found with ID: {entity_id}"
-            )
+            message = error_message or f"{model.__name__} not found with ID: {entity_id}"
             raise NotFoundError(message)
 
         return entity
@@ -178,8 +170,7 @@ class BaseService(ABC):
 
         if not entity:
             message = (
-                error_message
-                or f"{model.__name__} not found with {field_name}: {field_value}"
+                error_message or f"{model.__name__} not found with {field_name}: {field_value}"
             )
             raise NotFoundError(message)
 
@@ -272,9 +263,7 @@ class BaseService(ABC):
         if additional_filters:
             filters.extend(additional_filters)
 
-        return await self._list_with_filters(
-            model=model, filters=filters, page=page, size=size
-        )
+        return await self._list_with_filters(model=model, filters=filters, page=page, size=size)
 
     async def _update_entity(
         self, entity: ModelType, update_data: Dict[str, Any], exclude_none: bool = True

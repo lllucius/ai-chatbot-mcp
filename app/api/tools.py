@@ -52,38 +52,36 @@ async def list_tools(
         server_status = []
 
         for server in servers:
-            server_status.append({
-                "name": server.name,
-                "status": "connected" if server.is_connected else "disconnected",
-                "enabled": server.is_enabled,
-                "url": server.url,
-                "tool_count": len(
-                    [
-                        t
-                        for t in available_tools.keys()
-                        if t.startswith(f"{server.name}_")
-                    ]
-                ),
-                "last_connected": (
-                    server.last_connected_at.isoformat()
-                    if server.last_connected_at
-                    else None
-                ),
-                "connection_errors": server.connection_errors,
-            })
+            server_status.append(
+                {
+                    "name": server.name,
+                    "status": "connected" if server.is_connected else "disconnected",
+                    "enabled": server.is_enabled,
+                    "url": server.url,
+                    "tool_count": len(
+                        [t for t in available_tools.keys() if t.startswith(f"{server.name}_")]
+                    ),
+                    "last_connected": (
+                        server.last_connected_at.isoformat() if server.last_connected_at else None
+                    ),
+                    "connection_errors": server.connection_errors,
+                }
+            )
 
         # Convert tools to the format expected by SDK
         tool_responses = []
         for tool_name, tool_data in available_tools.items():
-            tool_responses.append({
-                "name": tool_name,
-                "description": tool_data.get("description", ""),
-                "schema": tool_data.get("schema", {}),
-                "server_name": tool_data.get("server", "unknown"),
-                "is_enabled": tool_data.get("is_enabled", True),
-                "usage_count": tool_data.get("usage_count", 0),
-                "last_used_at": tool_data.get("last_used_at"),
-            })
+            tool_responses.append(
+                {
+                    "name": tool_name,
+                    "description": tool_data.get("description", ""),
+                    "schema": tool_data.get("schema", {}),
+                    "server_name": tool_data.get("server", "unknown"),
+                    "is_enabled": tool_data.get("is_enabled", True),
+                    "usage_count": tool_data.get("usage_count", 0),
+                    "last_used_at": tool_data.get("last_used_at"),
+                }
+            )
 
         # Return format expected by SDK ToolsListResponse
         return {
@@ -149,9 +147,7 @@ async def get_tool_details(
                     "error_count": tool.error_count,
                     "success_rate": tool.success_rate,
                     "average_duration_ms": tool.average_duration_ms,
-                    "last_used_at": (
-                        tool.last_used_at.isoformat() if tool.last_used_at else None
-                    ),
+                    "last_used_at": (tool.last_used_at.isoformat() if tool.last_used_at else None),
                 },
                 "server_info": {
                     "server_name": tool.server.name,
@@ -255,24 +251,18 @@ async def refresh_tools(
         results = await MCPRegistryService.discover_tools_all_servers()
 
         if not results:
-            return BaseResponse(
-                success=True, message="No enabled servers found for tool discovery"
-            )
+            return BaseResponse(success=True, message="No enabled servers found for tool discovery")
 
         # Summarize results
         total_new = sum(r.get("new_tools", 0) for r in results if r.get("success"))
-        total_updated = sum(
-            r.get("updated_tools", 0) for r in results if r.get("success")
-        )
+        total_updated = sum(r.get("updated_tools", 0) for r in results if r.get("success"))
         failed_servers = [
             str(r.get("server"))
             for r in results
             if not r.get("success") and r.get("server") is not None
         ]
 
-        message = (
-            f"Tools refreshed successfully: {total_new} new, {total_updated} updated"
-        )
+        message = f"Tools refreshed successfully: {total_new} new, {total_updated} updated"
         if failed_servers:
             message += f". Failed servers: {', '.join(failed_servers)}"
 
@@ -302,9 +292,7 @@ async def enable_tool(
         success = await MCPRegistryService.enable_tool(tool_name)
 
         if success:
-            return BaseResponse(
-                success=True, message=f"Tool '{tool_name}' enabled successfully"
-            )
+            return BaseResponse(success=True, message=f"Tool '{tool_name}' enabled successfully")
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -337,9 +325,7 @@ async def disable_tool(
         success = await MCPRegistryService.disable_tool(tool_name)
 
         if success:
-            return BaseResponse(
-                success=True, message=f"Tool '{tool_name}' disabled successfully"
-            )
+            return BaseResponse(success=True, message=f"Tool '{tool_name}' disabled successfully")
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -398,9 +384,7 @@ async def get_server_status(
                 "status": "connected" if server.is_connected else "disconnected",
                 "enabled": server.is_enabled,
                 "last_connected": (
-                    server.last_connected_at.isoformat()
-                    if server.last_connected_at
-                    else None
+                    server.last_connected_at.isoformat() if server.last_connected_at else None
                 ),
                 "connection_errors": server.connection_errors,
                 "tool_count": len(tools),

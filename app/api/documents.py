@@ -9,16 +9,7 @@ management, and retrieval operations.
 from typing import Optional
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    File,
-    Form,
-    HTTPException,
-    Query,
-    UploadFile,
-    status,
-)
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
@@ -26,14 +17,9 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.document import (
-    BackgroundTaskResponse,
-    DocumentResponse,
-    DocumentUpdate,
-    DocumentUploadResponse,
-    ProcessingConfigResponse,
-    ProcessingStatusResponse,
-)
+from ..schemas.document import (BackgroundTaskResponse, DocumentResponse, DocumentUpdate,
+                                DocumentUploadResponse, ProcessingConfigResponse,
+                                ProcessingStatusResponse)
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -61,9 +47,7 @@ async def upload_document(
 
     Enhanced with auto-processing option and priority control.
     """
-    log_api_call(
-        "upload_document", user_id=str(user.id), title=title, auto_process=auto_process
-    )
+    log_api_call("upload_document", user_id=str(user.id), title=title, auto_process=auto_process)
 
     # Create document
     document = await service.create_document(file, title, user.id)
@@ -71,9 +55,7 @@ async def upload_document(
     task_id = None
     if auto_process:
         # Start background processing
-        task_id = await service.start_processing(
-            document.id, priority=processing_priority
-        )
+        task_id = await service.start_processing(document.id, priority=processing_priority)
 
     return DocumentUploadResponse(
         success=True,
@@ -150,9 +132,7 @@ async def update_document(
     Allows updating document title and metadata.
     Cannot change the actual file content.
     """
-    document = await document_service.update_document(
-        document_id, request, current_user.id
-    )
+    document = await document_service.update_document(document_id, request, current_user.id)
     return DocumentResponse.model_validate(document)
 
 
@@ -174,9 +154,7 @@ async def delete_document(
     if success:
         return BaseResponse(success=True, message="document deleted successfully")
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="document not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
 
 
 @router.get("/{document_id}/status", response_model=ProcessingStatusResponse)

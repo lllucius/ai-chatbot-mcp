@@ -22,14 +22,7 @@ from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation, Message
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
-from .base import (
-    async_command,
-    console,
-    error_message,
-    format_size,
-    info_message,
-    success_message,
-)
+from .base import async_command, console, error_message, format_size, info_message, success_message
 
 # Create the analytics app
 analytics_app = typer.Typer(help="Analytics and reporting commands")
@@ -51,9 +44,7 @@ def overview():
 
                 # User metrics
                 total_users = await db.scalar(select(func.count(User.id)))
-                active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active)
-                )
+                active_users = await db.scalar(select(func.count(User.id)).where(User.is_active))
                 new_users_24h = await db.scalar(
                     select(func.count(User.id)).where(User.created_at >= last_24h)
                 )
@@ -61,15 +52,11 @@ def overview():
                 # Document metrics
                 total_docs = await db.scalar(select(func.count(Document.id)))
                 completed_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.COMPLETED
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.COMPLETED)
                 )
                 total_storage = await db.scalar(select(func.sum(Document.file_size)))
                 docs_24h = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.created_at >= last_24h
-                    )
+                    select(func.count(Document.id)).where(Document.created_at >= last_24h)
                 )
 
                 # Conversation metrics
@@ -111,14 +98,10 @@ def overview():
 
                 # System health indicators
                 processing_rate = (
-                    ((completed_docs or 0) / max((total_docs or 1), 1)) * 100
-                    if total_docs
-                    else 0
+                    ((completed_docs or 0) / max((total_docs or 1), 1)) * 100 if total_docs else 0
                 )
                 user_activity = (
-                    ((active_convs or 0) / max((total_convs or 1), 1)) * 100
-                    if total_convs
-                    else 0
+                    ((active_convs or 0) / max((total_convs or 1), 1)) * 100 if total_convs else 0
                 )
 
                 health_indicators = []
@@ -163,12 +146,8 @@ def overview():
 
 @analytics_app.command()
 def usage(
-    period: str = typer.Option(
-        "7d", "--period", "-p", help="Time period: 1d, 7d, 30d, 90d"
-    ),
-    detailed: bool = typer.Option(
-        False, "--detailed", "-d", help="Show detailed breakdown"
-    ),
+    period: str = typer.Option("7d", "--period", "-p", help="Time period: 1d, 7d, 30d, 90d"),
+    detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed breakdown"),
 ):
     """Show usage statistics for the specified period."""
 
@@ -206,9 +185,7 @@ def usage(
 
                 # Document activity
                 new_documents = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.created_at >= cutoff_date
-                    )
+                    select(func.count(Document.id)).where(Document.created_at >= cutoff_date)
                 )
 
                 processed_docs = await db.scalar(
@@ -228,16 +205,12 @@ def usage(
                 )
 
                 new_messages = await db.scalar(
-                    select(func.count(Message.id)).where(
-                        Message.created_at >= cutoff_date
-                    )
+                    select(func.count(Message.id)).where(Message.created_at >= cutoff_date)
                 )
 
                 # Token usage
                 tokens_used = await db.scalar(
-                    select(func.sum(Message.token_count)).where(
-                        Message.created_at >= cutoff_date
-                    )
+                    select(func.sum(Message.token_count)).where(Message.created_at >= cutoff_date)
                 )
 
                 # Create usage table
@@ -253,9 +226,7 @@ def usage(
                     str(active_users or 0),
                     f"{(active_users or 0) / days:.1f}",
                 )
-                table.add_row(
-                    "New Users", str(new_users or 0), f"{(new_users or 0) / days:.1f}"
-                )
+                table.add_row("New Users", str(new_users or 0), f"{(new_users or 0) / days:.1f}")
                 table.add_row(
                     "New Documents",
                     str(new_documents or 0),
@@ -300,9 +271,7 @@ def usage(
                             day_end = day_start + timedelta(days=1)
 
                             daily_users = await db.scalar(
-                                select(
-                                    func.count(func.distinct(Conversation.user_id))
-                                ).where(
+                                select(func.count(func.distinct(Conversation.user_id))).where(
                                     and_(
                                         Conversation.created_at >= day_start,
                                         Conversation.created_at < day_end,
@@ -365,40 +334,28 @@ def performance():
                 # Document processing metrics
                 total_docs = await db.scalar(select(func.count(Document.id)))
                 completed_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.COMPLETED
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.COMPLETED)
                 )
                 processing_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.PROCESSING
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.PROCESSING)
                 )
                 failed_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.FAILED
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.FAILED)
                 )
 
                 # Processing success rate
                 success_rate = (
-                    ((completed_docs or 0) / max((total_docs or 1), 1)) * 100
-                    if total_docs
-                    else 0
+                    ((completed_docs or 0) / max((total_docs or 1), 1)) * 100 if total_docs else 0
                 )
                 failure_rate = (
-                    ((failed_docs or 0) / max((total_docs or 1), 1)) * 100
-                    if total_docs
-                    else 0
+                    ((failed_docs or 0) / max((total_docs or 1), 1)) * 100 if total_docs else 0
                 )
 
                 # Average document size and processing metrics
                 avg_doc_size = await db.scalar(select(func.avg(Document.file_size)))
                 total_chunks = await db.scalar(select(func.count(DocumentChunk.id)))
                 avg_chunks_per_doc = (
-                    (total_chunks or 0) / max((completed_docs or 1), 1)
-                    if completed_docs
-                    else 0
+                    (total_chunks or 0) / max((completed_docs or 1), 1) if completed_docs else 0
                 )
 
                 # Conversation metrics
@@ -415,9 +372,7 @@ def performance():
 
                 # Token usage efficiency
                 total_tokens = await db.scalar(select(func.sum(Message.token_count)))
-                avg_tokens_per_message = await db.scalar(
-                    select(func.avg(Message.token_count))
-                )
+                avg_tokens_per_message = await db.scalar(select(func.avg(Message.token_count)))
 
                 # Performance table
                 table = Table(title="System Performance Metrics")
@@ -427,9 +382,7 @@ def performance():
                 table.add_column("Status", width=15)
 
                 # Document processing performance
-                status_icon = (
-                    "🟢" if success_rate > 90 else "🟡" if success_rate > 70 else "🔴"
-                )
+                status_icon = "🟢" if success_rate > 90 else "🟡" if success_rate > 70 else "🔴"
                 table.add_row(
                     "Document Processing",
                     "Success Rate",
@@ -438,9 +391,7 @@ def performance():
                 )
                 table.add_row("", "Failure Rate", f"{failure_rate:.1f}%", "")
                 table.add_row("", "Currently Processing", str(processing_docs or 0), "")
-                table.add_row(
-                    "", "Avg Document Size", format_size(avg_doc_size or 0), ""
-                )
+                table.add_row("", "Avg Document Size", format_size(avg_doc_size or 0), "")
                 table.add_row("", "Avg Chunks per Doc", f"{avg_chunks_per_doc:.1f}", "")
 
                 # Conversation performance
@@ -450,9 +401,7 @@ def performance():
                     if avg_messages_per_conv and avg_messages_per_conv > 5
                     else "🟡 Moderate"
                 )
-                table.add_row(
-                    "Conversations", "Total Conversations", str(total_convs or 0), ""
-                )
+                table.add_row("Conversations", "Total Conversations", str(total_convs or 0), "")
                 table.add_row(
                     "",
                     "Avg Messages/Conv",
@@ -486,31 +435,21 @@ def performance():
                 total_storage = await db.scalar(select(func.sum(Document.file_size)))
                 user_count = await db.scalar(select(func.count(User.id)))
                 storage_per_user = (
-                    (total_storage or 0) / max((user_count or 1), 1)
-                    if total_storage
-                    else 0
+                    (total_storage or 0) / max((user_count or 1), 1) if total_storage else 0
                 )
-                table.add_row(
-                    "Storage", "Total Storage", format_size(total_storage or 0), ""
-                )
-                table.add_row(
-                    "", "Storage per User", format_size(int(storage_per_user)), ""
-                )
+                table.add_row("Storage", "Total Storage", format_size(total_storage or 0), "")
+                table.add_row("", "Storage per User", format_size(int(storage_per_user)), "")
 
                 console.print(table)
 
                 # Performance recommendations
                 recommendations = []
                 if success_rate < 80:
-                    recommendations.append(
-                        "Consider reviewing document processing pipeline"
-                    )
+                    recommendations.append("Consider reviewing document processing pipeline")
                 if failure_rate > 10:
                     recommendations.append("High failure rate - check error logs")
                 if avg_tokens_per_message and avg_tokens_per_message > 1000:
-                    recommendations.append(
-                        "High token usage - consider response optimization"
-                    )
+                    recommendations.append("High token usage - consider response optimization")
                 if processing_docs and processing_docs > 10:
                     recommendations.append(
                         "Many documents in processing queue - check background workers"
@@ -571,12 +510,8 @@ def users(
                     table.add_column("Tokens", style="blue", width=12)
                     table.add_column("Avg Tokens/Msg", style="magenta", width=15)
 
-                    for i, (username, email, msg_count, total_tokens) in enumerate(
-                        users, 1
-                    ):
-                        avg_tokens = (
-                            (total_tokens or 0) / max(msg_count, 1) if msg_count else 0
-                        )
+                    for i, (username, email, msg_count, total_tokens) in enumerate(users, 1):
+                        avg_tokens = (total_tokens or 0) / max(msg_count, 1) if msg_count else 0
                         table.add_row(
                             str(i),
                             username,
@@ -610,12 +545,8 @@ def users(
                     table.add_column("Total Size", style="blue", width=12)
                     table.add_column("Avg Size", style="magenta", width=12)
 
-                    for i, (username, email, doc_count, total_size) in enumerate(
-                        users, 1
-                    ):
-                        avg_size = (
-                            (total_size or 0) / max(doc_count, 1) if doc_count else 0
-                        )
+                    for i, (username, email, doc_count, total_size) in enumerate(users, 1):
+                        avg_size = (total_size or 0) / max(doc_count, 1) if doc_count else 0
                         table.add_row(
                             str(i),
                             username,
@@ -652,9 +583,7 @@ def users(
                     table.add_column("Conversations", style="yellow", width=15)
                     table.add_column("Avg Msgs/Conv", style="blue", width=15)
 
-                    for i, (username, email, conv_count, avg_messages) in enumerate(
-                        users, 1
-                    ):
+                    for i, (username, email, conv_count, avg_messages) in enumerate(users, 1):
                         table.add_row(
                             str(i),
                             username,
@@ -754,9 +683,7 @@ def trends(
                         "%m-%d" if interval_days == 1 else "%m-%d to"
                     )
                     if interval_days > 1:
-                        period_label += " " + (period_end - timedelta(days=1)).strftime(
-                            "%m-%d"
-                        )
+                        period_label += " " + (period_end - timedelta(days=1)).strftime("%m-%d")
 
                     trends_table.add_row(
                         period_label,
@@ -773,9 +700,7 @@ def trends(
                 if intervals >= 2:
                     # Compare first and last periods
                     first_period_end = start_date + timedelta(days=interval_days)
-                    last_period_start = start_date + timedelta(
-                        days=(intervals - 1) * interval_days
-                    )
+                    last_period_start = start_date + timedelta(days=(intervals - 1) * interval_days)
 
                     first_messages = await db.scalar(
                         select(func.count(Message.id)).where(
@@ -793,9 +718,7 @@ def trends(
                     )
 
                     if first_messages and last_messages:
-                        growth_rate = (
-                            (last_messages - first_messages) / first_messages
-                        ) * 100
+                        growth_rate = ((last_messages - first_messages) / first_messages) * 100
                         growth_status = (
                             "📈 Growing"
                             if growth_rate > 0
@@ -821,9 +744,7 @@ def trends(
 
 @analytics_app.command()
 def export_report(
-    output_file: str = typer.Option(
-        "analytics_report", "--output", "-o", help="Output file path"
-    ),
+    output_file: str = typer.Option("analytics_report", "--output", "-o", help="Output file path"),
     format: str = typer.Option(
         "json", "--format", "-f", help="Export format: json, csv (appended to path)"
     ),
@@ -869,20 +790,13 @@ def export_report(
                     or 0,
                     "total_conversations": total_convs or 0,
                     "active_conversations": await db.scalar(
-                        select(func.count(Conversation.id)).where(
-                            Conversation.is_active
-                        )
+                        select(func.count(Conversation.id)).where(Conversation.is_active)
                     )
                     or 0,
                     "total_messages": total_messages or 0,
-                    "total_storage_bytes": await db.scalar(
-                        select(func.sum(Document.file_size))
-                    )
+                    "total_storage_bytes": await db.scalar(select(func.sum(Document.file_size)))
                     or 0,
-                    "total_tokens": await db.scalar(
-                        select(func.sum(Message.token_count))
-                    )
-                    or 0,
+                    "total_tokens": await db.scalar(select(func.sum(Message.token_count))) or 0,
                 }
 
                 # Export based on format
@@ -892,9 +806,7 @@ def export_report(
 
                     output_path = Path(output_file + ".json")
                     with open(output_path, "w", encoding="utf-8") as f:
-                        json.dump(
-                            report_data, f, indent=2, ensure_ascii=False, default=str
-                        )
+                        json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
 
                 elif format == "csv":
                     import csv

@@ -101,9 +101,7 @@ def get_pagination_params(
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
 ) -> PaginationParams:
     """Get pagination parameters dependency."""
-    return PaginationParams(
-        page=page, per_page=size, sort_by=sort_by, sort_order=sort_order
-    )
+    return PaginationParams(page=page, per_page=size, sort_by=sort_by, sort_order=sort_order)
 
 
 # Search parameters dependency

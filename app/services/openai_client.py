@@ -125,9 +125,7 @@ class OpenAIClient:
             if not chat_available:
                 logger.warning(f"Chat model {settings.openai_chat_model} not available")
             if not embedding_available:
-                logger.warning(
-                    f"Embedding model {settings.openai_embedding_model} not available"
-                )
+                logger.warning(f"Embedding model {settings.openai_embedding_model} not available")
 
             return chat_available and embedding_available
 
@@ -228,9 +226,7 @@ class OpenAIClient:
                 tool_executor = await get_unified_tool_executor()
                 unified_tools = await tool_executor.get_available_tools()
                 final_tools.extend(unified_tools)
-                logger.info(
-                    f"Added {len(unified_tools)} unified tools to chat completion"
-                )
+                logger.info(f"Added {len(unified_tools)} unified tools to chat completion")
             except Exception as e:
                 logger.warning(f"Failed to add unified tools: {e}")
 
@@ -283,19 +279,13 @@ class OpenAIClient:
 
         # Handle tool calls if present
         if message.tool_calls:
-            tool_calls_executed = await self._execute_unified_tool_calls(
-                message.tool_calls
-            )
+            tool_calls_executed = await self._execute_unified_tool_calls(message.tool_calls)
 
             # Handle based on tool handling mode
             if tool_handling_mode == ToolHandlingMode.RETURN_RESULTS:
                 # Mode 1: Return tool results as content
-                final_content = self._format_tool_results_as_content(
-                    tool_calls_executed
-                )
-                logger.info(
-                    "Returning tool results as content without further completion"
-                )
+                final_content = self._format_tool_results_as_content(tool_calls_executed)
+                logger.info("Returning tool results as content without further completion")
 
             elif tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS:
                 # Mode 2: Feed tool results back to OpenAI for final completion
@@ -307,12 +297,8 @@ class OpenAIClient:
                 )
                 final_content = final_completion["content"]
                 # Add the additional usage from the second completion
-                final_usage["prompt_tokens"] += final_completion["usage"][
-                    "prompt_tokens"
-                ]
-                final_usage["completion_tokens"] += final_completion["usage"][
-                    "completion_tokens"
-                ]
+                final_usage["prompt_tokens"] += final_completion["usage"]["prompt_tokens"]
+                final_usage["completion_tokens"] += final_completion["usage"]["completion_tokens"]
                 final_usage["total_tokens"] += final_completion["usage"]["total_tokens"]
                 logger.info("Completed with tool results fed back to OpenAI")
 
@@ -417,9 +403,7 @@ class OpenAIClient:
 
             # Execute any tool calls that were collected
             if tool_calls_data:
-                tool_calls_executed = await self._execute_unified_tool_calls(
-                    tool_calls_data
-                )
+                tool_calls_executed = await self._execute_unified_tool_calls(tool_calls_data)
                 for tool_result in tool_calls_executed:
                     yield {
                         "type": "tool_call",
@@ -479,9 +463,7 @@ class OpenAIClient:
             logger.error(f"Failed to execute unified tool calls: {e}")
             return []
 
-    def _format_tool_results_as_content(
-        self, tool_results: List[Dict[str, Any]]
-    ) -> str:
+    def _format_tool_results_as_content(self, tool_results: List[Dict[str, Any]]) -> str:
         """
         Format tool call results as human-readable content.
 
@@ -499,9 +481,7 @@ class OpenAIClient:
         content_parts = ["# Tool Execution Results\n"]
 
         for i, result in enumerate(tool_results, 1):
-            content_parts.append(
-                f"## Tool Call {i}: {result.get('tool_call_id', 'Unknown')}\n"
-            )
+            content_parts.append(f"## Tool Call {i}: {result.get('tool_call_id', 'Unknown')}\n")
 
             if result.get("success"):
                 content_parts.append("✅ **Status**: Success\n")
@@ -510,9 +490,7 @@ class OpenAIClient:
                     for content_item in result["content"]:
                         if isinstance(content_item, dict):
                             if content_item.get("type") == "text":
-                                content_parts.append(
-                                    f"```\n{content_item.get('text', '')}\n```\n"
-                                )
+                                content_parts.append(f"```\n{content_item.get('text', '')}\n```\n")
                             else:
                                 content_parts.append(
                                     f"```json\n{json.dumps(content_item, indent=2)}\n```\n"
@@ -527,9 +505,7 @@ class OpenAIClient:
                     content_parts.append(f"**Error**: {result['error']}\n")
 
             if result.get("execution_time_ms"):
-                content_parts.append(
-                    f"**Execution Time**: {result['execution_time_ms']:.2f}ms\n"
-                )
+                content_parts.append(f"**Execution Time**: {result['execution_time_ms']:.2f}ms\n")
 
             content_parts.append("\n---\n\n")
 
@@ -647,11 +623,7 @@ class OpenAIClient:
             else:
                 content_parts.append(str(content_item))
 
-        return (
-            "\n\n".join(content_parts)
-            if content_parts
-            else "Tool executed successfully."
-        )
+        return "\n\n".join(content_parts) if content_parts else "Tool executed successfully."
 
     @handle_api_errors("Embedding creation failed")
     async def create_embedding(
@@ -675,9 +647,7 @@ class OpenAIClient:
             raise ValueError("Text cannot be empty")
 
         # Check cache first
-        cache_key = make_cache_key(
-            "embedding", settings.openai_embedding_model, text.strip()
-        )
+        cache_key = make_cache_key("embedding", settings.openai_embedding_model, text.strip())
         cached_embedding = await embedding_cache.get(cache_key)
         if cached_embedding is not None:
             logger.debug("Using cached embedding")

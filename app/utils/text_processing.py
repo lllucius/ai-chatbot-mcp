@@ -37,9 +37,7 @@ class TextProcessor:
     streaming support and memory optimization for large documents.
     """
 
-    def __init__(
-        self, chunk_size: int = 1000, chunk_overlap: int = 200, max_memory_mb: int = 500
-    ):
+    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200, max_memory_mb: int = 500):
         """
         Initialize text processor.
 
@@ -442,9 +440,7 @@ class TextProcessor:
             "keywords": keywords,
         }
 
-    def truncate_text(
-        self, text: str, max_length: int, preserve_words: bool = True
-    ) -> str:
+    def truncate_text(self, text: str, max_length: int, preserve_words: bool = True) -> str:
         """
         Truncate text to specified length.
 

@@ -13,9 +13,7 @@ from fastapi import Request, Response
 from ..core.logging import get_component_logger
 from ..middleware.performance import record_request_metric
 from ..middleware.rate_limiting import rate_limit_middleware as _rate_limit_middleware
-from ..middleware.validation import (
-    validate_request_middleware as _validate_request_middleware,
-)
+from ..middleware.validation import validate_request_middleware as _validate_request_middleware
 
 logger = get_component_logger("middleware.core")
 

@@ -194,9 +194,7 @@ async def _log_response_content(response: Response, correlation_id: str):
             try:
                 # Handle different response types
                 if isinstance(response, StreamingResponse):
-                    response_details["body"] = (
-                        "<Streaming Response - Body not captured>"
-                    )
+                    response_details["body"] = "<Streaming Response - Body not captured>"
                 else:
                     body = response.body
                     if isinstance(body, bytes):

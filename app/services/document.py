@@ -91,9 +91,7 @@ class DocumentService(BaseService):
         )
         self.embedding_service = EmbeddingService(db)
 
-    async def create_document(
-        self, file: UploadFile, title: str, user_id: UUID
-    ) -> Document:
+    async def create_document(self, file: UploadFile, title: str, user_id: UUID) -> Document:
         """
         Create a new document record and initiate processing pipeline.
 
@@ -150,9 +148,7 @@ class DocumentService(BaseService):
                 temp_content = await file.read()
                 await file.seek(0)  # Reset file pointer
 
-                unique_filename = (
-                    f"{uuid.uuid4()}.{file.filename.split('.')[-1].lower()}"
-                )
+                unique_filename = f"{uuid.uuid4()}.{file.filename.split('.')[-1].lower()}"
                 temp_path = os.path.join("/tmp", unique_filename)
 
                 with open(temp_path, "wb") as temp_file:
@@ -205,11 +201,7 @@ class DocumentService(BaseService):
                     buffer.write(content)
             except OSError as e:
                 self.logger.error(
-                    "File write failed",
-                    extra={
-                        "error": str(e),
-                        "file_path": file_path
-                    }
+                    "File write failed", extra={"error": str(e), "file_path": file_path}
                 )
                 raise DocumentError(f"Failed to save file: {e}")
 
@@ -218,11 +210,7 @@ class DocumentService(BaseService):
                 file_info = self.file_processor.get_file_info(file_path)
             except Exception as e:
                 # If metadata extraction fails, continue with basic info
-                self.logger.warning("Metadata extraction failed",
-                    extra={
-                        "error": str(e)
-                    }
-                )
+                self.logger.warning("Metadata extraction failed", extra={"error": str(e)})
                 file_info = {"error": str(e)}
 
             # Create comprehensive document record
@@ -232,9 +220,7 @@ class DocumentService(BaseService):
                 file_path=file_path,
                 file_type=file_extension.lstrip("."),
                 file_size=len(content),
-                content_type=detected_mime_type
-                or file.content_type
-                or file_info.get("mime_type"),
+                content_type=detected_mime_type or file.content_type or file_info.get("mime_type"),
                 status=FileStatus.PENDING,
                 owner_id=user_id,
                 metainfo={
@@ -395,9 +381,7 @@ class DocumentService(BaseService):
             return status_info
 
         except Exception as e:
-            logger.error(
-                f"Failed to get processing status for document {document_id}: {e}"
-            )
+            logger.error(f"Failed to get processing status for document {document_id}: {e}")
             raise
 
     async def _process_document(self, document: Document):
@@ -412,9 +396,7 @@ class DocumentService(BaseService):
                 max_characters=settings.default_chunk_size,
             )
 
-            logger.info(
-                f"Extracted {len(chunks_data)} chunks for document {document.id}"
-            )
+            logger.info(f"Extracted {len(chunks_data)} chunks for document {document.id}")
 
             # Also extract full text for backward compatibility and statistics
             text_content = await self.file_processor.extract_text(
@@ -428,9 +410,7 @@ class DocumentService(BaseService):
             chunk_records = []
             for i, chunk_data in enumerate(chunks_data):
                 # Generate embedding for the chunk text
-                embedding = await self.embedding_service.generate_embedding(
-                    chunk_data["text"]
-                )
+                embedding = await self.embedding_service.generate_embedding(chunk_data["text"])
 
                 # Create chunk record with unstructured metadata
                 chunk_record = DocumentChunk(
@@ -498,9 +478,7 @@ class DocumentService(BaseService):
             NotFoundError: If document not found or access denied
         """
         result = await self.db.execute(
-            select(Document).where(
-                and_(Document.id == document_id, Document.owner_id == user_id)
-            )
+            select(Document).where(and_(Document.id == document_id, Document.owner_id == user_id))
         )
         document = result.scalar_one_or_none()
 
@@ -511,9 +489,7 @@ class DocumentService(BaseService):
 
     async def get_document_by_id(self, document_id: UUID) -> Optional[Document]:
         """Get document by ID without access control (internal use)."""
-        result = await self.db.execute(
-            select(Document).where(Document.id == document_id)
-        )
+        result = await self.db.execute(select(Document).where(Document.id == document_id))
         return result.scalar_one_or_none()
 
     async def list_documents(
@@ -639,16 +615,12 @@ class DocumentService(BaseService):
 
         # Count processed chunks
         chunks_result = await self.db.execute(
-            select(func.count(DocumentChunk.id)).where(
-                DocumentChunk.document_id == document_id
-            )
+            select(func.count(DocumentChunk.id)).where(DocumentChunk.document_id == document_id)
         )
         chunks_processed = chunks_result.scalar() or 0
 
         # Estimate total chunks based on file size
-        estimated_chunks = max(
-            1, document.file_size // (settings.default_chunk_size * 4)
-        )
+        estimated_chunks = max(1, document.file_size // (settings.default_chunk_size * 4))
 
         # Calculate progress
         if document.status == FileStatus.COMPLETED:
@@ -692,9 +664,7 @@ class DocumentService(BaseService):
             raise ValidationError("Document is currently being processed")
 
         # Delete existing chunks
-        await self.db.execute(
-            select(DocumentChunk).where(DocumentChunk.document_id == document_id)
-        )
+        await self.db.execute(select(DocumentChunk).where(DocumentChunk.document_id == document_id))
 
         # Reset document status
         document.status = "pending"
@@ -705,9 +675,7 @@ class DocumentService(BaseService):
         # Start processing
         return await self.start_processing(document_id)
 
-    async def get_download_info(
-        self, document_id: UUID, user_id: UUID
-    ) -> Tuple[str, str, str]:
+    async def get_download_info(self, document_id: UUID, user_id: UUID) -> Tuple[str, str, str]:
         """
         Get document download information.
 

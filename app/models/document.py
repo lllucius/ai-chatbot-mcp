@@ -67,9 +67,7 @@ class Document(BaseModelDB):
         String(500), nullable=False, doc="Document title or filename"
     )
 
-    filename: Mapped[str] = mapped_column(
-        String(255), nullable=False, doc="Original filename"
-    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False, doc="Original filename")
 
     file_path: Mapped[Optional[str]] = mapped_column(
         String(1000), nullable=True, doc="Path to stored file"
@@ -105,9 +103,7 @@ class Document(BaseModelDB):
         Text, nullable=True, doc="Extracted text content"
     )
 
-    summary: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, doc="AI-generated summary"
-    )
+    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True, doc="AI-generated summary")
 
     # Processing metadata
     chunk_count: Mapped[int] = mapped_column(
@@ -175,9 +171,7 @@ class DocumentChunk(BaseModelDB):
     __tablename__ = "document_chunks"
 
     # Content information
-    content: Mapped[str] = mapped_column(
-        Text, nullable=False, doc="Text content of the chunk"
-    )
+    content: Mapped[str] = mapped_column(Text, nullable=False, doc="Text content of the chunk")
 
     chunk_index: Mapped[int] = mapped_column(
         Integer, nullable=False, doc="Index of this chunk within the document"
@@ -192,14 +186,11 @@ class DocumentChunk(BaseModelDB):
     )
 
     # Vector embedding
-    if HAS_PGVECTOR:
-        embedding: Mapped[Optional[List[float]]] = mapped_column(
-            Vector(3072), nullable=True, doc="Vector embedding for semantic search"
-        )
-    else:
-        embedding: Mapped[Optional[str]] = mapped_column(
-            Text, nullable=True, doc="Vector embedding as JSON string for SQLite"
-        )
+    embedding: Mapped[Optional[List[float]]] = mapped_column(
+        Vector(3072) if HAS_PGVECTOR else Text,
+        nullable=True,
+        doc="Vector embedding for semantic search",
+    )
 
     embedding_model: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True, doc="Model used to generate embedding"

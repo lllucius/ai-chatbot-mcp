@@ -32,17 +32,13 @@ def list_profiles(
     search: Optional[str] = typer.Option(
         None, "--search", "-s", help="Search in name, title, and description"
     ),
-    detailed: bool = typer.Option(
-        False, "--detailed", "-d", help="Show detailed information"
-    ),
+    detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed information"),
 ):
     """List all LLM parameter profiles."""
 
     async def _list_profiles():
         try:
-            profiles = await LLMProfileService.list_profiles(
-                active_only=active_only, search=search
-            )
+            profiles = await LLMProfileService.list_profiles(active_only=active_only, search=search)
 
             if not profiles:
                 info_message("No LLM profiles found")
@@ -224,16 +220,12 @@ def add_profile(
         None, "--description", "-d", help="Profile description"
     ),
     set_default: bool = typer.Option(False, "--default", help="Set as default profile"),
-    inactive: bool = typer.Option(
-        False, "--inactive", help="Create profile in inactive state"
-    ),
+    inactive: bool = typer.Option(False, "--inactive", help="Create profile in inactive state"),
     # LLM Parameters
     temperature: Optional[float] = typer.Option(
         None, "--temperature", help="Temperature (0.0-2.0)"
     ),
-    top_p: Optional[float] = typer.Option(
-        None, "--top-p", help="Top-p nucleus sampling (0.0-1.0)"
-    ),
+    top_p: Optional[float] = typer.Option(None, "--top-p", help="Top-p nucleus sampling (0.0-1.0)"),
     top_k: Optional[int] = typer.Option(None, "--top-k", help="Top-k sampling"),
     repeat_penalty: Optional[float] = typer.Option(
         None, "--repeat-penalty", help="Repetition penalty"
@@ -244,18 +236,14 @@ def add_profile(
     max_new_tokens: Optional[int] = typer.Option(
         None, "--max-new-tokens", help="Maximum new tokens"
     ),
-    context_length: Optional[int] = typer.Option(
-        None, "--context-length", help="Context length"
-    ),
+    context_length: Optional[int] = typer.Option(None, "--context-length", help="Context length"),
     presence_penalty: Optional[float] = typer.Option(
         None, "--presence-penalty", help="Presence penalty (-2.0 to 2.0)"
     ),
     frequency_penalty: Optional[float] = typer.Option(
         None, "--frequency-penalty", help="Frequency penalty (-2.0 to 2.0)"
     ),
-    stop: Optional[str] = typer.Option(
-        None, "--stop", help="Stop sequences (JSON array)"
-    ),
+    stop: Optional[str] = typer.Option(None, "--stop", help="Stop sequences (JSON array)"),
 ):
     """Add a new LLM parameter profile."""
 
@@ -317,16 +305,12 @@ def add_profile(
 def update_profile(
     name: str = typer.Argument(..., help="Profile name"),
     title: Optional[str] = typer.Option(None, "--title", "-t", help="New title"),
-    description: Optional[str] = typer.Option(
-        None, "--description", "-d", help="New description"
-    ),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="New description"),
     # LLM Parameters
     temperature: Optional[float] = typer.Option(
         None, "--temperature", help="Temperature (0.0-2.0)"
     ),
-    top_p: Optional[float] = typer.Option(
-        None, "--top-p", help="Top-p nucleus sampling (0.0-1.0)"
-    ),
+    top_p: Optional[float] = typer.Option(None, "--top-p", help="Top-p nucleus sampling (0.0-1.0)"),
     top_k: Optional[int] = typer.Option(None, "--top-k", help="Top-k sampling"),
     repeat_penalty: Optional[float] = typer.Option(
         None, "--repeat-penalty", help="Repetition penalty"
@@ -337,18 +321,14 @@ def update_profile(
     max_new_tokens: Optional[int] = typer.Option(
         None, "--max-new-tokens", help="Maximum new tokens"
     ),
-    context_length: Optional[int] = typer.Option(
-        None, "--context-length", help="Context length"
-    ),
+    context_length: Optional[int] = typer.Option(None, "--context-length", help="Context length"),
     presence_penalty: Optional[float] = typer.Option(
         None, "--presence-penalty", help="Presence penalty (-2.0 to 2.0)"
     ),
     frequency_penalty: Optional[float] = typer.Option(
         None, "--frequency-penalty", help="Frequency penalty (-2.0 to 2.0)"
     ),
-    stop: Optional[str] = typer.Option(
-        None, "--stop", help="Stop sequences (JSON array)"
-    ),
+    stop: Optional[str] = typer.Option(None, "--stop", help="Stop sequences (JSON array)"),
     clear_stop: bool = typer.Option(False, "--clear-stop", help="Clear stop sequences"),
 ):
     """Update an existing LLM profile."""
@@ -416,18 +396,14 @@ def update_profile(
 @profile_app.command("remove")
 def remove_profile(
     name: str = typer.Argument(..., help="Profile name"),
-    confirm: bool = typer.Option(
-        False, "--confirm", "-y", help="Skip confirmation prompt"
-    ),
+    confirm: bool = typer.Option(False, "--confirm", "-y", help="Skip confirmation prompt"),
 ):
     """Remove an LLM profile."""
 
     async def _remove_profile():
         try:
             if not confirm:
-                confirmed = typer.confirm(
-                    f"Are you sure you want to remove profile '{name}'?"
-                )
+                confirmed = typer.confirm(f"Are you sure you want to remove profile '{name}'?")
                 if not confirmed:
                     info_message("Operation cancelled")
                     return
@@ -502,9 +478,7 @@ def deactivate_profile(name: str = typer.Argument(..., help="Profile name")):
 def clone_profile(
     source: str = typer.Argument(..., help="Source profile name"),
     new_name: str = typer.Argument(..., help="New profile name"),
-    new_title: Optional[str] = typer.Option(
-        None, "--title", "-t", help="New profile title"
-    ),
+    new_title: Optional[str] = typer.Option(None, "--title", "-t", help="New profile title"),
 ):
     """Clone an existing profile with a new name."""
 

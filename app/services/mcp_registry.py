@@ -58,16 +58,12 @@ class MCPRegistryService:
             # Trigger tool discovery for new enabled servers
             if is_enabled and auto_discover:
                 try:
-                    discovery_result = (
-                        await MCPRegistryService.discover_tools_from_server(name)
-                    )
+                    discovery_result = await MCPRegistryService.discover_tools_from_server(name)
                     logger.info(
                         f"Automatic tool discovery for new server {name}: {discovery_result}"
                     )
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to auto-discover tools for new server {name}: {e}"
-                    )
+                    logger.warning(f"Failed to auto-discover tools for new server {name}: {e}")
 
             return server
 
@@ -155,18 +151,14 @@ class MCPRegistryService:
                 name, was_enabled, True
             )
             if discovery_result:
-                logger.info(
-                    f"Automatic tool discovery triggered for {name}: {discovery_result}"
-                )
+                logger.info(f"Automatic tool discovery triggered for {name}: {discovery_result}")
 
         return True
 
     @staticmethod
     async def disable_server(name: str) -> bool:
         """Disable an MCP server."""
-        return (
-            await MCPRegistryService.update_server(name, is_enabled=False) is not None
-        )
+        return await MCPRegistryService.update_server(name, is_enabled=False) is not None
 
     @staticmethod
     async def update_connection_status(
@@ -200,9 +192,7 @@ class MCPRegistryService:
         """Register a tool for an MCP server."""
         async with AsyncSessionLocal() as db:
             # Get the server
-            server_result = await db.execute(
-                select(MCPServer).where(MCPServer.name == server_name)
-            )
+            server_result = await db.execute(select(MCPServer).where(MCPServer.name == server_name))
             server = server_result.scalar_one_or_none()
 
             if not server:
@@ -210,9 +200,7 @@ class MCPRegistryService:
                 return None
 
             # Check if tool already exists
-            existing_tool = await db.execute(
-                select(MCPTool).where(MCPTool.name == tool_name)
-            )
+            existing_tool = await db.execute(select(MCPTool).where(MCPTool.name == tool_name))
             existing_tool = existing_tool.scalar_one_or_none()
 
             if existing_tool:
@@ -293,9 +281,7 @@ class MCPRegistryService:
         """Disable a tool."""
         async with AsyncSessionLocal() as db:
             result = await db.execute(
-                update(MCPTool)
-                .where(MCPTool.name == tool_name)
-                .values(is_enabled=False)
+                update(MCPTool).where(MCPTool.name == tool_name).values(is_enabled=False)
             )
             await db.commit()
 
@@ -332,9 +318,7 @@ class MCPRegistryService:
             if server_name:
                 query = query.join(MCPServer).where(MCPServer.name == server_name)
 
-            result = await db.execute(
-                query.order_by(MCPTool.usage_count.desc()).limit(limit)
-            )
+            result = await db.execute(query.order_by(MCPTool.usage_count.desc()).limit(limit))
             tools = result.scalars().all()
 
             stats = []
@@ -360,9 +344,7 @@ class MCPRegistryService:
         """Discover tools from an MCP server and update the registry."""
         async with AsyncSessionLocal() as db:
             # Get the server
-            server_result = await db.execute(
-                select(MCPServer).where(MCPServer.name == server_name)
-            )
+            server_result = await db.execute(select(MCPServer).where(MCPServer.name == server_name))
             server = server_result.scalar_one_or_none()
 
             if not server:
@@ -379,9 +361,7 @@ class MCPRegistryService:
 
                 # Create a temporary client to discover tools
                 client_service = FastMCPClientService()
-                discovered_tools = await client_service.discover_tools(
-                    server.url, server.timeout
-                )
+                discovered_tools = await client_service.discover_tools(server.url, server.timeout)
 
                 new_tools = 0
                 updated_tools = 0
@@ -419,14 +399,14 @@ class MCPRegistryService:
                             logger.info(f"Discovered new tool: {tool_name}")
 
                     except Exception as e:
-                        error_msg = f"Failed to process tool {tool_info.get('name', 'unknown')}: {e}"
+                        error_msg = (
+                            f"Failed to process tool {tool_info.get('name', 'unknown')}: {e}"
+                        )
                         errors.append(error_msg)
                         logger.error(error_msg)
 
                 # Update server connection status
-                await MCPRegistryService.update_connection_status(
-                    server_name, True, False
-                )
+                await MCPRegistryService.update_connection_status(server_name, True, False)
 
                 await db.commit()
 
@@ -449,9 +429,7 @@ class MCPRegistryService:
                 logger.error(error_msg)
 
                 # Update server connection status
-                await MCPRegistryService.update_connection_status(
-                    server_name, False, True
-                )
+                await MCPRegistryService.update_connection_status(server_name, False, True)
 
                 return {
                     "success": False,
@@ -478,9 +456,7 @@ class MCPRegistryService:
             discovery_results = []
 
             for server in servers:
-                result = await MCPRegistryService.discover_tools_from_server(
-                    server.name
-                )
+                result = await MCPRegistryService.discover_tools_from_server(server.name)
                 discovery_results.append(result)
 
                 # Small delay between discoveries to avoid overwhelming servers
@@ -495,9 +471,7 @@ class MCPRegistryService:
         """Automatically discover tools when a server is enabled or re-enabled."""
         if not was_enabled and is_enabled:
             # Server was just enabled - discover tools
-            logger.info(
-                f"Server {server_name} was enabled, starting automatic tool discovery"
-            )
+            logger.info(f"Server {server_name} was enabled, starting automatic tool discovery")
             return await MCPRegistryService.discover_tools_from_server(server_name)
 
         return None

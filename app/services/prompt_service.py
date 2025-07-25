@@ -185,9 +185,7 @@ class PromptService(BaseService):
             await self._bulk_update(Prompt, [], {"is_default": False})
 
             # Set the new default
-            result = await self._bulk_update(
-                Prompt, [Prompt.name == name], {"is_default": True}
-            )
+            result = await self._bulk_update(Prompt, [Prompt.name == name], {"is_default": True})
 
             if result > 0:
                 self._log_operation_success(operation, name=name)
@@ -205,9 +203,7 @@ class PromptService(BaseService):
         self._log_operation_start(operation, name=name)
 
         try:
-            result = await self._bulk_update(
-                Prompt, [Prompt.name == name], {"is_active": True}
-            )
+            result = await self._bulk_update(Prompt, [Prompt.name == name], {"is_active": True})
 
             if result > 0:
                 self._log_operation_success(operation, name=name)
@@ -232,9 +228,7 @@ class PromptService(BaseService):
 
             was_default = prompt.is_default
 
-            result = await self._bulk_update(
-                Prompt, [Prompt.name == name], {"is_active": False}
-            )
+            result = await self._bulk_update(Prompt, [Prompt.name == name], {"is_active": False})
 
             if result > 0:
                 # If we deactivated the default prompt, assign a new default
@@ -278,9 +272,7 @@ class PromptService(BaseService):
 
     async def get_all_tags(self) -> List[str]:
         """Get all available tags."""
-        result = await self.db.execute(
-            select(Prompt.tags).where(Prompt.tags.isnot(None))
-        )
+        result = await self.db.execute(select(Prompt.tags).where(Prompt.tags.isnot(None)))
         all_tags = set()
         for row in result.all():
             if row[0]:
@@ -292,9 +284,7 @@ class PromptService(BaseService):
         """Get prompt usage statistics."""
         # Total counts
         total_prompts = await self.db.scalar(select(func.count(Prompt.id)))
-        active_prompts = await self.db.scalar(
-            select(func.count(Prompt.id)).where(Prompt.is_active)
-        )
+        active_prompts = await self.db.scalar(select(func.count(Prompt.id)).where(Prompt.is_active))
 
         # Most used prompts
         most_used = await self.db.execute(

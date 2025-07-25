@@ -89,24 +89,16 @@ class UserResponse(BaseModel):
 class RegisterRequest(BaseModel):
     """User registration request model - matches app/schemas/auth.py RegisterRequest."""
 
-    username: str = Field(
-        ..., min_length=3, max_length=50, description="Unique username"
-    )
+    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
     email: EmailStr = Field(..., description="Valid email address")
-    password: str = Field(
-        ..., min_length=8, max_length=100, description="Strong password"
-    )
-    full_name: Optional[str] = Field(
-        None, max_length=255, description="Full display name"
-    )
+    password: str = Field(..., min_length=8, max_length=100, description="Strong password")
+    full_name: Optional[str] = Field(None, max_length=255, description="Full display name")
 
 
 class LoginRequest(BaseModel):
     """User login request model - matches app/schemas/auth.py LoginRequest."""
 
-    username: str = Field(
-        ..., min_length=3, max_length=50, description="Username or email"
-    )
+    username: str = Field(..., min_length=3, max_length=50, description="Username or email")
     password: str = Field(..., min_length=8, max_length=100, description="Password")
 
 
@@ -201,9 +193,7 @@ class ConversationResponse(BaseModel):
     message_count: int = Field(0, description="Number of messages")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-    last_message_at: Optional[datetime] = Field(
-        None, description="Last message timestamp"
-    )
+    last_message_at: Optional[datetime] = Field(None, description="Last message timestamp")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
 
     model_config = {"from_attributes": True}
@@ -234,9 +224,7 @@ class MessageResponse(BaseModel):
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
-    tool_call_results: Optional[Dict[str, Any]] = Field(
-        None, description="Tool call results"
-    )
+    tool_call_results: Optional[Dict[str, Any]] = Field(None, description="Tool call results")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
     created_at: datetime = Field(..., description="Creation timestamp")
 
@@ -260,30 +248,18 @@ class DocumentSearchRequest(BaseModel):
     """Document search request model - matches app/schemas/document.py DocumentSearchRequest."""
 
     query: str = Field(..., min_length=1, description="Search query")
-    limit: Optional[int] = Field(
-        10, ge=1, le=100, description="Maximum number of results"
-    )
-    threshold: Optional[float] = Field(
-        0.7, ge=0.0, le=1.0, description="Similarity threshold"
-    )
-    algorithm: str = Field(
-        "hybrid", description="Search algorithm: vector, text, hybrid, mmr"
-    )
-    document_ids: Optional[List[UUID]] = Field(
-        None, description="Specific document IDs to search"
-    )
+    limit: Optional[int] = Field(10, ge=1, le=100, description="Maximum number of results")
+    threshold: Optional[float] = Field(0.7, ge=0.0, le=1.0, description="Similarity threshold")
+    algorithm: str = Field("hybrid", description="Search algorithm: vector, text, hybrid, mmr")
+    document_ids: Optional[List[UUID]] = Field(None, description="Specific document IDs to search")
     file_types: Optional[List[str]] = Field(None, description="File types to include")
 
 
 class ChatRequest(BaseModel):
     """Chat message request model - matches app/schemas/conversation.py ChatRequest."""
 
-    user_message: str = Field(
-        ..., min_length=1, max_length=10000, description="User message"
-    )
-    conversation_id: Optional[UUID] = Field(
-        None, description="Existing conversation ID"
-    )
+    user_message: str = Field(..., min_length=1, max_length=10000, description="User message")
+    conversation_id: Optional[UUID] = Field(None, description="Existing conversation ID")
     conversation_title: Optional[str] = Field(
         None, max_length=500, description="New conversation title"
     )
@@ -293,9 +269,7 @@ class ChatRequest(BaseModel):
         default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
         description="How to handle tool call results: return_results or complete_with_results",
     )
-    rag_documents: Optional[List[UUID]] = Field(
-        None, description="Specific document IDs for RAG"
-    )
+    rag_documents: Optional[List[UUID]] = Field(None, description="Specific document IDs for RAG")
 
     # Registry integration fields
     prompt_name: Optional[str] = Field(
@@ -309,12 +283,8 @@ class ChatRequest(BaseModel):
     )
 
     # Legacy fields for backward compatibility (deprecated)
-    max_tokens: Optional[int] = Field(
-        None, description="Max tokens (deprecated - use profile)"
-    )
-    temperature: Optional[float] = Field(
-        None, description="Temperature (deprecated - use profile)"
-    )
+    max_tokens: Optional[int] = Field(None, description="Max tokens (deprecated - use profile)")
+    temperature: Optional[float] = Field(None, description="Temperature (deprecated - use profile)")
 
 
 class ChatResponse(BaseResponse):
@@ -422,9 +392,7 @@ def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {k: v for k, v in (query or {}).items() if v is not None}
 
 
-def handle_response(
-    resp: requests.Response, url: str, cls: Optional[Type[T]] = None
-) -> Any:
+def handle_response(resp: requests.Response, url: str, cls: Optional[Type[T]] = None) -> Any:
     """
     Handle API response and raise ApiError on failure.
 
@@ -503,9 +471,7 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
     return url
 
 
-def fetch_all_pages(
-    fetch_page: Callable[[int, int], Any], per_page: int = 50
-) -> List[Any]:
+def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -> List[Any]:
     """
     Fetch all pages of paginated results.
 
@@ -662,9 +628,7 @@ class UsersClient:
         )
 
     def delete(self, user_id: UUID) -> BaseResponse:
-        return self.sdk._request(
-            f"/api/v1/users/{user_id}", BaseResponse, method="DELETE"
-        )
+        return self.sdk._request(f"/api/v1/users/{user_id}", BaseResponse, method="DELETE")
 
 
 class DocumentsClient:
@@ -709,9 +673,7 @@ class DocumentsClient:
         )
 
     def delete(self, document_id: UUID) -> BaseResponse:
-        return self.sdk._request(
-            f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE"
-        )
+        return self.sdk._request(f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE")
 
     def status(self, document_id: UUID) -> ProcessingStatusResponse:
         return self.sdk._request(
@@ -728,9 +690,7 @@ class DocumentsClient:
 
     def download(self, document_id: UUID) -> bytes:
         url = make_url(self.sdk.base_url, f"/api/v1/documents/{document_id}/download")
-        resp = self.sdk._session.get(
-            url, headers=build_headers(self.sdk.token), stream=True
-        )
+        resp = self.sdk._session.get(url, headers=build_headers(self.sdk.token), stream=True)
         if not resp.ok:
             raise ApiError(resp.status_code, resp.reason, url, resp.text)
         return resp.content
@@ -752,9 +712,7 @@ class ConversationsClient:
         self, page: int = 1, size: int = 20, active_only: Optional[bool] = None
     ) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size, "active_only": active_only})
-        return self.sdk._request(
-            "/api/v1/conversations/", ConversationResponse, params=params
-        )
+        return self.sdk._request("/api/v1/conversations/", ConversationResponse, params=params)
 
     def get(self, conversation_id: UUID) -> ConversationResponse:
         return self.sdk._request(
@@ -762,9 +720,7 @@ class ConversationsClient:
             ConversationResponse,
         )
 
-    def update(
-        self, conversation_id: UUID, data: ConversationUpdate
-    ) -> ConversationResponse:
+    def update(self, conversation_id: UUID, data: ConversationUpdate) -> ConversationResponse:
         return self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
@@ -779,9 +735,7 @@ class ConversationsClient:
             method="DELETE",
         )
 
-    def messages(
-        self, conversation_id: UUID, page: int = 1, size: int = 50
-    ) -> PaginatedResponse:
+    def messages(self, conversation_id: UUID, page: int = 1, size: int = 50) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size})
         return self.sdk._request(
             f"/api/v1/conversations/{conversation_id}/messages",
@@ -803,17 +757,14 @@ class ConversationsClient:
         url = make_url(self.sdk.base_url, "/api/v1/conversations/chat/stream")
         headers = build_headers(self.sdk.token)
         headers["Accept"] = "text/event-stream"
-        
+
         resp = self.sdk._session.post(
-            url, 
-            headers=headers, 
-            json=data.model_dump(mode="json"),
-            stream=True
+            url, headers=headers, json=data.model_dump(mode="json"), stream=True
         )
-        
+
         if not resp.ok:
             raise ApiError(resp.status_code, resp.reason or "", url, resp.text)
-        
+
         # Parse Server-Sent Events
         for line in resp.iter_lines(decode_unicode=True):
             if line.startswith("data: "):
@@ -835,15 +786,11 @@ class SearchClient:
 
     def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
         """Search across documents using various algorithms."""
-        return self.sdk._request(
-            "/api/v1/search/", dict, method="POST", json=data.model_dump()
-        )
+        return self.sdk._request("/api/v1/search/", dict, method="POST", json=data.model_dump())
 
     def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
         params = {"limit": limit}
-        return self.sdk._request(
-            f"/api/v1/search/similar/{chunk_id}", dict, params=params
-        )
+        return self.sdk._request(f"/api/v1/search/similar/{chunk_id}", dict, params=params)
 
     def suggestions(self, query: str, limit: int = 5) -> List[Any]:
         params = {"query": query, "limit": limit}
@@ -854,9 +801,7 @@ class SearchClient:
         return self.sdk._request("/api/v1/search/history", list, params=params)
 
     def clear_history(self) -> BaseResponse:
-        return self.sdk._request(
-            "/api/v1/search/history", BaseResponse, method="DELETE"
-        )
+        return self.sdk._request("/api/v1/search/history", BaseResponse, method="DELETE")
 
 
 class ToolsClient:
@@ -875,15 +820,11 @@ class ToolsClient:
 
     def enable_tool(self, tool_name: str) -> BaseResponse:
         """Enable a specific tool."""
-        return self.sdk._request(
-            f"/api/v1/tools/{tool_name}/enable", BaseResponse, method="POST"
-        )
+        return self.sdk._request(f"/api/v1/tools/{tool_name}/enable", BaseResponse, method="POST")
 
     def disable_tool(self, tool_name: str) -> BaseResponse:
         """Disable a specific tool."""
-        return self.sdk._request(
-            f"/api/v1/tools/{tool_name}/disable", BaseResponse, method="POST"
-        )
+        return self.sdk._request(f"/api/v1/tools/{tool_name}/disable", BaseResponse, method="POST")
 
     def get_tool_stats(self) -> Dict[str, Any]:
         """Get tool usage statistics."""
@@ -903,9 +844,7 @@ class PromptsClient:
         search: Optional[str] = None,
     ) -> Dict[str, Any]:
         """List all prompts with optional filtering."""
-        params = filter_query(
-            {"active_only": active_only, "category": category, "search": search}
-        )
+        params = filter_query({"active_only": active_only, "category": category, "search": search})
         return self.sdk._request("/api/v1/prompts/", dict, params=params)
 
     def get_prompt(self, prompt_name: str) -> PromptResponse:
@@ -926,9 +865,7 @@ class PromptsClient:
 
     def delete_prompt(self, prompt_name: str) -> BaseResponse:
         """Delete a prompt."""
-        return self.sdk._request(
-            f"/api/v1/prompts/{prompt_name}", BaseResponse, method="DELETE"
-        )
+        return self.sdk._request(f"/api/v1/prompts/{prompt_name}", BaseResponse, method="DELETE")
 
     def get_prompt_stats(self) -> Dict[str, Any]:
         """Get prompt usage statistics."""
@@ -961,9 +898,7 @@ class ProfilesClient:
             json=data.model_dump(),
         )
 
-    def update_profile(
-        self, profile_name: str, data: Dict[str, Any]
-    ) -> LLMProfileResponse:
+    def update_profile(self, profile_name: str, data: Dict[str, Any]) -> LLMProfileResponse:
         """Update an existing LLM profile."""
         return self.sdk._request(
             f"/api/v1/profiles/{profile_name}",
@@ -974,9 +909,7 @@ class ProfilesClient:
 
     def delete_profile(self, profile_name: str) -> BaseResponse:
         """Delete an LLM profile."""
-        return self.sdk._request(
-            f"/api/v1/profiles/{profile_name}", BaseResponse, method="DELETE"
-        )
+        return self.sdk._request(f"/api/v1/profiles/{profile_name}", BaseResponse, method="DELETE")
 
     def get_profile_stats(self) -> Dict[str, Any]:
         """Get LLM profile usage statistics."""

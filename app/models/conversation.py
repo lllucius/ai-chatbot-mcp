@@ -36,9 +36,7 @@ class Conversation(BaseModelDB):
     __tablename__ = "conversations"
 
     title: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True, nullable=False, index=True
-    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     message_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -96,15 +94,11 @@ class Message(BaseModelDB):
         index=True,
     )
     tool_calls: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
-    tool_call_results: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
+    tool_call_results: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
     metainfo: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    conversation: Mapped["Conversation"] = relationship(
-        "Conversation", back_populates="messages"
-    )
+    conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")
 
     # Indexes
     __table_args__ = (

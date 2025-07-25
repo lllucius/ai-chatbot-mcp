@@ -87,12 +87,8 @@ class ChatbotConfig(BaseSettings):
     )
 
     # Debug and Development
-    debug_mode: bool = Field(
-        default=False, description="Enable debug output and verbose logging"
-    )
-    request_timeout: int = Field(
-        default=120, description="Timeout for API requests in seconds"
-    )
+    debug_mode: bool = Field(default=False, description="Enable debug output and verbose logging")
+    request_timeout: int = Field(default=120, description="Timeout for API requests in seconds")
 
     model_config = {
         "env_prefix": "CHATBOT_",

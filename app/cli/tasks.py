@@ -21,14 +21,8 @@ from sqlalchemy import select
 
 from ..database import AsyncSessionLocal
 from ..models.document import Document, FileStatus
-from .base import (
-    async_command,
-    console,
-    error_message,
-    info_message,
-    success_message,
-    warning_message,
-)
+from .base import (async_command, console, error_message, info_message, success_message,
+                   warning_message)
 
 # Create the background tasks app
 tasks_app = typer.Typer(help="Background task management commands")
@@ -42,22 +36,16 @@ def status():
         try:
             # Check if Celery is running
             try:
-                result = subprocess.run(
-                    ["celery", "--version"], capture_output=True, text=True
-                )
+                result = subprocess.run(["celery", "--version"], capture_output=True, text=True)
 
                 if result.returncode == 0:
                     success_message(f"Celery available: {result.stdout.strip()}")
                 else:
-                    warning_message(
-                        "Celery not available - background processing may be limited"
-                    )
+                    warning_message("Celery not available - background processing may be limited")
                     info_message("Install Celery with: pip install celery")
                     return
             except FileNotFoundError:
-                warning_message(
-                    "Celery not found - background processing may be limited"
-                )
+                warning_message("Celery not found - background processing may be limited")
                 info_message("Install Celery with: pip install celery")
                 return
 
@@ -82,9 +70,7 @@ def status():
             if worker_result.returncode == 0:
                 try:
                     worker_data = (
-                        json.loads(worker_result.stdout)
-                        if worker_result.stdout.strip()
-                        else {}
+                        json.loads(worker_result.stdout) if worker_result.stdout.strip() else {}
                     )
                     if worker_data:
                         success_message("Background workers: Running")
@@ -95,17 +81,13 @@ def status():
 
                         for worker_name, tasks in worker_data.items():
                             if tasks:
-                                console.print(
-                                    f"  Worker {worker_name}: {len(tasks)} tasks"
-                                )
+                                console.print(f"  Worker {worker_name}: {len(tasks)} tasks")
                     else:
                         warning_message("No active workers found")
                 except json.JSONDecodeError:
                     warning_message("Could not parse worker status")
             else:
-                warning_message(
-                    "Could not check worker status - workers may not be running"
-                )
+                warning_message("Could not check worker status - workers may not be running")
 
             # Check Redis connection (if configured)
             try:
@@ -155,11 +137,7 @@ def workers():
                 return
 
             try:
-                stats_data = (
-                    json.loads(stats_result.stdout)
-                    if stats_result.stdout.strip()
-                    else {}
-                )
+                stats_data = json.loads(stats_result.stdout) if stats_result.stdout.strip() else {}
 
                 if not stats_data:
                     warning_message("No worker statistics available")
@@ -175,11 +153,7 @@ def workers():
 
                 for worker_name, stats in stats_data.items():
                     total_tasks = stats.get("total", {})
-                    completed = (
-                        sum(total_tasks.values())
-                        if isinstance(total_tasks, dict)
-                        else 0
-                    )
+                    completed = sum(total_tasks.values()) if isinstance(total_tasks, dict) else 0
 
                     load_avg = stats.get("rusage", {}).get("utime", 0)
                     memory_mb = (
@@ -189,11 +163,7 @@ def workers():
                     )
 
                     workers_table.add_row(
-                        (
-                            worker_name.split("@")[1]
-                            if "@" in worker_name
-                            else worker_name
-                        ),
+                        (worker_name.split("@")[1] if "@" in worker_name else worker_name),
                         "🟢 Active",
                         str(completed),
                         f"{load_avg:.2f}s",
@@ -334,9 +304,7 @@ def active():
 
             try:
                 active_data = (
-                    json.loads(active_result.stdout)
-                    if active_result.stdout.strip()
-                    else {}
+                    json.loads(active_result.stdout) if active_result.stdout.strip() else {}
                 )
 
                 if not active_data:
@@ -362,28 +330,18 @@ def active():
                         # Parse start time
                         time_start = task.get("time_start")
                         if time_start:
-                            started = datetime.fromtimestamp(time_start).strftime(
-                                "%H:%M:%S"
-                            )
+                            started = datetime.fromtimestamp(time_start).strftime("%H:%M:%S")
                         else:
                             started = "Unknown"
 
                         # Format args
                         args = task.get("args", [])
                         task.get("kwargs", {})
-                        args_str = (
-                            str(args)[:27] + "..." if len(str(args)) > 30 else str(args)
-                        )
+                        args_str = str(args)[:27] + "..." if len(str(args)) > 30 else str(args)
 
                         tasks_table.add_row(
-                            (
-                                worker_name.split("@")[1]
-                                if "@" in worker_name
-                                else worker_name
-                            ),
-                            task_name.split(".")[
-                                -1
-                            ],  # Show only last part of task name
+                            (worker_name.split("@")[1] if "@" in worker_name else worker_name),
+                            task_name.split(".")[-1],  # Show only last part of task name
                             task_id,
                             started,
                             args_str,
@@ -405,9 +363,7 @@ def active():
 def schedule(
     task_name: str = typer.Argument(..., help="Task name to schedule"),
     args: str = typer.Option("[]", "--args", "-a", help="Task arguments as JSON array"),
-    delay: int = typer.Option(
-        0, "--delay", "-d", help="Delay in seconds before execution"
-    ),
+    delay: int = typer.Option(0, "--delay", "-d", help="Delay in seconds before execution"),
     queue: str = typer.Option("celery", "--queue", "-q", help="Queue to submit to"),
 ):
     """Schedule a background task for execution."""
@@ -449,9 +405,7 @@ def schedule(
             app.config_from_object("app.services.background_processor:celery_config")
 
             if delay > 0:
-                result = app.send_task(
-                    full_task_name, args=task_args, countdown=delay, queue=queue
-                )
+                result = app.send_task(full_task_name, args=task_args, countdown=delay, queue=queue)
             else:
                 result = app.send_task(full_task_name, args=task_args, queue=queue)
 
@@ -565,12 +519,8 @@ def purge(
 
 @tasks_app.command()
 def monitor(
-    refresh: int = typer.Option(
-        5, "--refresh", "-r", help="Refresh interval in seconds"
-    ),
-    duration: int = typer.Option(
-        60, "--duration", "-d", help="Monitor duration in seconds"
-    ),
+    refresh: int = typer.Option(5, "--refresh", "-r", help="Refresh interval in seconds"),
+    duration: int = typer.Option(60, "--duration", "-d", help="Monitor duration in seconds"),
 ):
     """Monitor task queue in real-time."""
 
@@ -626,9 +576,7 @@ def monitor(
                                     if worker_result.stdout.strip()
                                     else {}
                                 )
-                                total_active = sum(
-                                    len(tasks) for tasks in active_data.values()
-                                )
+                                total_active = sum(len(tasks) for tasks in active_data.values())
                                 console.print(f"Active tasks: {total_active}")
                                 console.print(f"Workers: {len(active_data)}")
                             except json.JSONDecodeError:
@@ -660,9 +608,7 @@ def flower():
     def _start_flower():
         try:
             # Check if flower is available
-            result = subprocess.run(
-                ["flower", "--version"], capture_output=True, text=True
-            )
+            result = subprocess.run(["flower", "--version"], capture_output=True, text=True)
 
             if result.returncode != 0:
                 error_message("Flower not available. Install with: pip install flower")
@@ -673,9 +619,7 @@ def flower():
             console.print("Press Ctrl+C to stop")
 
             # Start flower
-            subprocess.run(
-                ["flower", "-A", "app.services.background_processor", "--port=5555"]
-            )
+            subprocess.run(["flower", "-A", "app.services.background_processor", "--port=5555"])
 
         except KeyboardInterrupt:
             info_message("Flower stopped")
@@ -698,33 +642,21 @@ def stats():
                 # Document processing statistics
                 total_docs = await db.scalar(select(func.count(Document.id)))
                 pending_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.PENDING
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.PENDING)
                 )
                 processing_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.PROCESSING
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.PROCESSING)
                 )
                 completed_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.COMPLETED
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.COMPLETED)
                 )
                 failed_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.status == FileStatus.FAILED
-                    )
+                    select(func.count(Document.id)).where(Document.status == FileStatus.FAILED)
                 )
 
                 # Processing rates
-                success_rate = (
-                    (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
-                )
-                failure_rate = (
-                    (failed_docs / max(total_docs, 1)) * 100 if total_docs else 0
-                )
+                success_rate = (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+                failure_rate = (failed_docs / max(total_docs, 1)) * 100 if total_docs else 0
 
                 # Recent activity (last 24 hours)
                 last_24h = datetime.now() - timedelta(hours=24)
@@ -778,35 +710,25 @@ def stats():
 
                 # Recent activity
                 stats_table.add_row("", "", "", "")  # Separator
-                stats_table.add_row(
-                    "Processed (24h)", str(recent_processed or 0), "", "📈 Recent"
-                )
-                stats_table.add_row(
-                    "Failed (24h)", str(recent_failed or 0), "", "📉 Recent"
-                )
+                stats_table.add_row("Processed (24h)", str(recent_processed or 0), "", "📈 Recent")
+                stats_table.add_row("Failed (24h)", str(recent_failed or 0), "", "📉 Recent")
 
                 console.print(stats_table)
 
                 # Performance indicators
                 performance_indicators = []
                 if success_rate > 95:
-                    performance_indicators.append(
-                        "🟢 Processing Success Rate: Excellent"
-                    )
+                    performance_indicators.append("🟢 Processing Success Rate: Excellent")
                 elif success_rate > 80:
                     performance_indicators.append("🟡 Processing Success Rate: Good")
                 else:
-                    performance_indicators.append(
-                        "🔴 Processing Success Rate: Needs Attention"
-                    )
+                    performance_indicators.append("🔴 Processing Success Rate: Needs Attention")
 
                 if pending_docs and pending_docs > 50:
                     performance_indicators.append("🟡 High number of pending documents")
 
                 if processing_docs and processing_docs > 10:
-                    performance_indicators.append(
-                        "🟡 Many documents currently processing"
-                    )
+                    performance_indicators.append("🟡 Many documents currently processing")
 
                 if performance_indicators:
                     performance_panel = Panel(

@@ -118,9 +118,7 @@ class BackgroundProcessor(BaseService):
 
         # Processing components
         self.file_processor = FileProcessor()
-        self.text_processor = TextProcessor(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap
-        )
+        self.text_processor = TextProcessor(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         self.embedding_service = EmbeddingService(db)
 
         # Worker task
@@ -344,9 +342,7 @@ class BackgroundProcessor(BaseService):
         await self._ensure_db_session()
 
         # Get document
-        result = await self.db.execute(
-            select(Document).where(Document.id == task.document_id)
-        )
+        result = await self.db.execute(select(Document).where(Document.id == task.document_id))
         document = result.scalar_one_or_none()
 
         if not document:
@@ -354,9 +350,7 @@ class BackgroundProcessor(BaseService):
 
         # Update document status
         await self.db.execute(
-            update(Document)
-            .where(Document.id == document.id)
-            .values(status=FileStatus.PROCESSING)
+            update(Document).where(Document.id == document.id).values(status=FileStatus.PROCESSING)
         )
         await self.db.commit()
 
@@ -400,9 +394,7 @@ class BackgroundProcessor(BaseService):
 
             for i, chunk in enumerate(chunks):
                 # Generate embedding
-                embedding = await self.embedding_service.generate_embedding(
-                    chunk.content
-                )
+                embedding = await self.embedding_service.generate_embedding(chunk.content)
 
                 # Create chunk record
                 chunk_record = DocumentChunk(
@@ -410,9 +402,7 @@ class BackgroundProcessor(BaseService):
                     chunk_index=chunk.chunk_index,
                     start_offset=chunk.start_char,
                     end_offset=chunk.end_char,
-                    token_count=len(
-                        chunk.content.split()
-                    ),  # Simple word count approximation
+                    token_count=len(chunk.content.split()),  # Simple word count approximation
                     embedding=embedding,
                     embedding_model=str(settings.openai_embedding_model),
                     language=text_stats.get("language"),
@@ -519,9 +509,7 @@ class BackgroundProcessor(BaseService):
                 "completed_at": task.completed_at,
             }
 
-            logger.error(
-                f"Task {task.task_id} permanently failed after {task.retries} retries"
-            )
+            logger.error(f"Task {task.task_id} permanently failed after {task.retries} retries")
 
     async def get_queue_status(self) -> Dict[str, Any]:
         """
@@ -535,8 +523,7 @@ class BackgroundProcessor(BaseService):
             "active_tasks": len(self.active_tasks),
             "max_concurrent_tasks": self.max_concurrent_tasks,
             "completed_tasks": len(self.task_results),
-            "worker_running": self._worker_task is not None
-            and not self._worker_task.done(),
+            "worker_running": self._worker_task is not None and not self._worker_task.done(),
         }
 
     async def cleanup_completed_tasks(self, max_age_hours: int = 24):
