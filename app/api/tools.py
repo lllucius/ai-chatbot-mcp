@@ -288,23 +288,14 @@ async def enable_tool(
     """
     log_api_call("enable_tool", user_id=current_user.id, tool_name=tool_name)
 
-    try:
-        success = await MCPRegistryService.enable_tool(tool_name)
+    success = await MCPRegistryService.enable_tool(tool_name)
 
-        if success:
-            return BaseResponse(success=True, message=f"Tool '{tool_name}' enabled successfully")
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tool '{tool_name}' not found",
-            )
-
-    except HTTPException:
-        raise
-    except Exception as e:
+    if success:
+        return BaseResponse(success=True, message=f"Tool '{tool_name}' enabled successfully")
+    else:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to enable tool: {str(e)}",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tool '{tool_name}' not found",
         )
 
 
@@ -321,23 +312,14 @@ async def disable_tool(
     """
     log_api_call("disable_tool", user_id=current_user.id, tool_name=tool_name)
 
-    try:
-        success = await MCPRegistryService.disable_tool(tool_name)
+    success = await MCPRegistryService.disable_tool(tool_name)
 
-        if success:
-            return BaseResponse(success=True, message=f"Tool '{tool_name}' disabled successfully")
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tool '{tool_name}' not found",
-            )
-
-    except HTTPException:
-        raise
-    except Exception as e:
+    if success:
+        return BaseResponse(success=True, message=f"Tool '{tool_name}' disabled successfully")
+    else:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to disable tool: {str(e)}",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tool '{tool_name}' not found",
         )
 
 

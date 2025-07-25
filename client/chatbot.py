@@ -248,7 +248,7 @@ class AIChatbotTerminal:
 
     def load_conversations(self):
         """Load and display conversation history with enhanced options."""
-        convos = self.sdk.conversations.list(page=1, size=10)
+        convos = self.sdk.conversations.list(page=1, size=10, active_only=False)
         if not convos.items:
             print("You have no previous conversations.")
             return False
@@ -301,7 +301,7 @@ class AIChatbotTerminal:
         try:
             # Get all conversations and filter by title (basic search)
             # In a real implementation, this could use full-text search
-            convos = self.sdk.conversations.list(page=1, size=50)
+            convos = self.sdk.conversations.list(page=1, size=50, active_only=False)
             matches = [c for c in convos.items if query.lower() in c.title.lower()]
 
             if not matches:
