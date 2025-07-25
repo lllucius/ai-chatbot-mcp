@@ -22,15 +22,8 @@ from sqlalchemy import desc, func, or_, select
 from ..database import AsyncSessionLocal
 from ..models.conversation import Conversation, Message
 from ..models.user import User
-from .base import (
-    async_command,
-    console,
-    error_message,
-    format_timestamp,
-    info_message,
-    success_message,
-    warning_message,
-)
+from .base import (async_command, console, error_message, format_timestamp, info_message,
+                   success_message, warning_message)
 
 # Create the conversation management app
 conversation_app = typer.Typer(help="Conversation management commands")
@@ -38,16 +31,10 @@ conversation_app = typer.Typer(help="Conversation management commands")
 
 @conversation_app.command()
 def list(
-    limit: int = typer.Option(
-        20, "--limit", "-l", help="Maximum number of conversations to show"
-    ),
+    limit: int = typer.Option(20, "--limit", "-l", help="Maximum number of conversations to show"),
     username: str = typer.Option(None, "--user", "-u", help="Filter by username"),
-    active_only: bool = typer.Option(
-        False, "--active-only", help="Show only active conversations"
-    ),
-    search: str = typer.Option(
-        None, "--search", "-s", help="Search in conversation title"
-    ),
+    active_only: bool = typer.Option(False, "--active-only", help="Show only active conversations"),
+    search: str = typer.Option(None, "--search", "-s", help="Search in conversation title"),
     sort_by: str = typer.Option(
         "updated", "--sort", help="Sort by: id, title, created, updated, messages"
     ),
@@ -62,9 +49,7 @@ def list(
 
                 # Apply filters
                 if username:
-                    user = await db.scalar(
-                        select(User).where(User.username == username)
-                    )
+                    user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")
                         return
@@ -75,9 +60,7 @@ def list(
 
                 if search:
                     search_pattern = f"%{search.lower()}%"
-                    query = query.where(
-                        func.lower(Conversation.title).like(search_pattern)
-                    )
+                    query = query.where(func.lower(Conversation.title).like(search_pattern))
 
                 # Add message count subquery
                 message_count_subquery = (
@@ -121,12 +104,8 @@ def list(
                 user_ids = [conv.user_id for conv in conversations if conv.user_id]
                 users = {}
                 if user_ids:
-                    user_result = await db.execute(
-                        select(User).where(User.id.in_(user_ids))
-                    )
-                    users = {
-                        user.id: user.username for user in user_result.scalars().all()
-                    }
+                    user_result = await db.execute(select(User).where(User.id.in_(user_ids)))
+                    users = {user.id: user.username for user in user_result.scalars().all()}
 
                 # Create table
                 table = Table(title=f"Conversations ({len(conversations)} found)")
@@ -145,9 +124,7 @@ def list(
                     message_count = message_counts.get(conv.id, 0)
                     status = "🟢 Active" if conv.is_active else "⚪ Inactive"
 
-                    title_display = (
-                        conv.title[:22] + "..." if len(conv.title) > 25 else conv.title
-                    )
+                    title_display = conv.title[:22] + "..." if len(conv.title) > 25 else conv.title
 
                     table.add_row(
                         str(conv.id),
@@ -169,12 +146,8 @@ def list(
 
 @conversation_app.command()
 def show(
-    conversation_id: str = typer.Argument(
-        ..., help="Conversation ID (UUID) to show details for"
-    ),
-    show_messages: bool = typer.Option(
-        False, "--messages", "-m", help="Show recent messages"
-    ),
+    conversation_id: str = typer.Argument(..., help="Conversation ID (UUID) to show details for"),
+    show_messages: bool = typer.Option(False, "--messages", "-m", help="Show recent messages"),
     message_limit: int = typer.Option(
         10, "--message-limit", help="Number of recent messages to show"
     ),
@@ -210,9 +183,7 @@ def show(
 
                 # Get message count
                 message_count = await db.scalar(
-                    select(func.count(Message.id)).where(
-                        Message.conversation_id == conversation_id
-                    )
+                    select(func.count(Message.id)).where(Message.conversation_id == conversation_id)
                 )
 
                 # Get first and last message times
@@ -238,9 +209,7 @@ def show(
                 table.add_row("ID", str(conversation.id))
                 table.add_row("Title", conversation.title)
                 table.add_row("User", user.username if user else "System")
-                table.add_row(
-                    "Status", "🟢 Active" if conversation.is_active else "⚪ Inactive"
-                )
+                table.add_row("Status", "🟢 Active" if conversation.is_active else "⚪ Inactive")
                 table.add_row("Messages", str(message_count or 0))
                 table.add_row("Created", format_timestamp(conversation.created_at))
                 table.add_row("Updated", format_timestamp(conversation.updated_at))
@@ -273,14 +242,10 @@ def show(
                         .order_by(desc(Message.created_at))
                         .limit(message_limit)
                     )
-                    messages = list(
-                        reversed(messages_result.scalars().all())
-                    )  # Show oldest first
+                    messages = list(reversed(messages_result.scalars().all()))  # Show oldest first
 
                     if messages:
-                        message_table = Table(
-                            title=f"Recent Messages (last {len(messages)})"
-                        )
+                        message_table = Table(title=f"Recent Messages (last {len(messages)})")
                         message_table.add_column("Time", width=12)
                         message_table.add_column("Role", width=10)
                         message_table.add_column("Content", width=60)
@@ -294,9 +259,7 @@ def show(
                             }.get(msg.role, "white")
 
                             content_preview = (
-                                msg.content[:57] + "..."
-                                if len(msg.content) > 60
-                                else msg.content
+                                msg.content[:57] + "..." if len(msg.content) > 60 else msg.content
                             )
 
                             message_table.add_row(
@@ -323,9 +286,7 @@ def export(
         "-o",
         help="Output file path (default: conversation_{id}.json)",
     ),
-    format: str = typer.Option(
-        "json", "--format", "-f", help="Export format: json, txt, csv"
-    ),
+    format: str = typer.Option("json", "--format", "-f", help="Export format: json, txt, csv"),
 ):
     """Export a conversation to a file."""
 
@@ -354,9 +315,7 @@ def export(
                 # Get user info
                 user = None
                 if conversation.user_id:
-                    user = await db.scalar(
-                        select(User).where(User.id == conversation.user_id)
-                    )
+                    user = await db.scalar(select(User).where(User.id == conversation.user_id))
 
                 # Get all messages
                 messages_result = await db.execute(
@@ -367,9 +326,7 @@ def export(
                 messages = messages_result.scalars().all()
 
                 # Determine output file
-                current_output_file = (
-                    output_file or f"conversation_{conversation_id}.{format}"
-                )
+                current_output_file = output_file or f"conversation_{conversation_id}.{format}"
                 output_path = Path(current_output_file)
 
                 # Export based on format
@@ -480,9 +437,7 @@ def import_conversation(
                         import uuid
 
                         target_user_id = uuid.UUID(user_id)
-                        user = await db.scalar(
-                            select(User).where(User.id == target_user_id)
-                        )
+                        user = await db.scalar(select(User).where(User.id == target_user_id))
                         if not user:
                             error_message(f"User with ID {user_id} not found")
                             return
@@ -553,9 +508,7 @@ def import_conversation(
                 table.add_row("Title", new_conversation.title)
                 table.add_row("User ID", str(target_user_id))
                 table.add_row("Messages", str(len(imported_messages)))
-                table.add_row(
-                    "Status", "Active" if new_conversation.is_active else "Inactive"
-                )
+                table.add_row("Status", "Active" if new_conversation.is_active else "Inactive")
 
                 console.print(table)
 
@@ -597,9 +550,7 @@ def delete(
 
                 # Get message count
                 message_count = await db.scalar(
-                    select(func.count(Message.id)).where(
-                        Message.conversation_id == conversation_id
-                    )
+                    select(func.count(Message.id)).where(Message.conversation_id == conversation_id)
                 )
 
                 console.print("\n[bold red]This will permanently delete:[/bold red]")
@@ -610,18 +561,14 @@ def delete(
                 if not force:
                     from rich.prompt import Confirm
 
-                    if not Confirm.ask(
-                        "Are you sure you want to delete this conversation?"
-                    ):
+                    if not Confirm.ask("Are you sure you want to delete this conversation?"):
                         warning_message("Deletion cancelled")
                         return
 
                 # Delete messages first
                 if message_count:
                     await db.execute(
-                        Message.__table__.delete().where(
-                            Message.conversation_id == conversation_id
-                        )
+                        Message.__table__.delete().where(Message.conversation_id == conversation_id)
                     )
 
                 # Delete conversation
@@ -656,9 +603,7 @@ def archive(
             try:
                 # Find conversations to archive
                 cutoff_date = datetime.now() - timedelta(days=older_than)
-                query = select(Conversation).where(
-                    Conversation.updated_at < cutoff_date
-                )
+                query = select(Conversation).where(Conversation.updated_at < cutoff_date)
 
                 if inactive_only:
                     # Only archive already inactive conversations, just update their status
@@ -690,9 +635,7 @@ def archive(
                 if not force:
                     from rich.prompt import Confirm
 
-                    if not Confirm.ask(
-                        f"Archive these {len(conversations)} conversations?"
-                    ):
+                    if not Confirm.ask(f"Archive these {len(conversations)} conversations?"):
                         warning_message("Archiving cancelled")
                         return
 
@@ -733,9 +676,7 @@ def search(
                 base_query = select(Conversation, Message).join(Message, isouter=True)
 
                 if username:
-                    user = await db.scalar(
-                        select(User).where(User.username == username)
-                    )
+                    user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")
                         return
@@ -753,9 +694,7 @@ def search(
                 rows = result.all()
 
                 if not rows:
-                    warning_message(
-                        f"No conversations or messages found matching '{query}'"
-                    )
+                    warning_message(f"No conversations or messages found matching '{query}'")
                     return
 
                 # Group results by conversation
@@ -786,24 +725,14 @@ def search(
                     if title_matches:
                         table.add_row(
                             str(conv_id),
-                            (
-                                conv.title[:27] + "..."
-                                if len(conv.title) > 30
-                                else conv.title
-                            ),
+                            (conv.title[:27] + "..." if len(conv.title) > 30 else conv.title),
                             "Title",
                             "Title contains search term",
                         )
 
                     # Show matching messages
-                    for msg in messages[
-                        :3
-                    ]:  # Show up to 3 matching messages per conversation
-                        preview = (
-                            msg.content[:47] + "..."
-                            if len(msg.content) > 50
-                            else msg.content
-                        )
+                    for msg in messages[:3]:  # Show up to 3 matching messages per conversation
+                        preview = msg.content[:47] + "..." if len(msg.content) > 50 else msg.content
                         table.add_row(str(conv_id), "", f"{msg.role.title()}", preview)
 
                 console.print(table)
@@ -831,9 +760,7 @@ def stats():
 
                 # Message statistics
                 total_messages = await db.scalar(select(func.count(Message.id)))
-                avg_messages_per_conv = (
-                    total_messages / max(total_convs, 1) if total_convs else 0
-                )
+                avg_messages_per_conv = total_messages / max(total_convs, 1) if total_convs else 0
 
                 # Recent activity
                 last_7_days = datetime.now() - timedelta(days=7)
@@ -843,9 +770,7 @@ def stats():
                     )
                 )
                 recent_messages = await db.scalar(
-                    select(func.count(Message.id)).where(
-                        Message.created_at >= last_7_days
-                    )
+                    select(func.count(Message.id)).where(Message.created_at >= last_7_days)
                 )
 
                 # User distribution
@@ -865,9 +790,7 @@ def stats():
 
                 # Token statistics
                 total_tokens = await db.scalar(select(func.sum(Message.token_count)))
-                avg_tokens_per_msg = await db.scalar(
-                    select(func.avg(Message.token_count))
-                )
+                avg_tokens_per_msg = await db.scalar(select(func.avg(Message.token_count)))
 
                 # Create statistics table
                 table = Table(title="Conversation Statistics")
@@ -891,9 +814,7 @@ def stats():
                     str(total_messages or 0),
                     f"Avg per conv: {avg_messages_per_conv:.1f}",
                 )
-                table.add_row(
-                    "Users with Conversations", str(users_with_convs or 0), ""
-                )
+                table.add_row("Users with Conversations", str(users_with_convs or 0), "")
 
                 # Recent activity
                 table.add_row("", "", "")  # Separator

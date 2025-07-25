@@ -255,10 +255,7 @@ async def initialize_default_data():
         success_count += 1
 
     total_created = (
-        success_count
-        + sample_prompts_count
-        + sample_profiles_count
-        + sample_servers_count
+        success_count + sample_prompts_count + sample_profiles_count + sample_servers_count
     )
 
     logger.info(f"Default data initialization complete - {total_created} items created")

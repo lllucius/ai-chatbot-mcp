@@ -57,9 +57,7 @@ class DocumentResponse(BaseSchema):
 class DocumentUpdate(BaseSchema):
     """Schema for document updates."""
 
-    title: Optional[str] = Field(
-        None, min_length=1, max_length=500, description="New title"
-    )
+    title: Optional[str] = Field(None, min_length=1, max_length=500, description="New title")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Updated metainfo")
 
     model_config = {
@@ -83,9 +81,7 @@ class DocumentChunkResponse(BaseSchema):
     token_count: int = Field(..., description="Number of tokens")
     document_id: UUID = Field(..., description="Parent document ID")
     document_title: Optional[str] = Field(None, description="Document title")
-    similarity_score: Optional[float] = Field(
-        None, description="Similarity score (for search)"
-    )
+    similarity_score: Optional[float] = Field(None, description="Similarity score (for search)")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
     created_at: datetime = Field(..., description="Creation timestamp")
 
@@ -113,9 +109,7 @@ class DocumentChunkResponse(BaseSchema):
 class DocumentSearchRequest(SearchParams):
     """Schema for document search requests."""
 
-    document_ids: Optional[List[UUID]] = Field(
-        None, description="Specific document IDs to search"
-    )
+    document_ids: Optional[List[UUID]] = Field(None, description="Specific document IDs to search")
     file_types: Optional[List[str]] = Field(None, description="File types to include")
 
     @field_validator("file_types")
@@ -149,9 +143,7 @@ class DocumentUploadResponse(BaseResponse):
 
     document: DocumentResponse = Field(..., description="Uploaded document information")
     task_id: Optional[str] = Field(None, description="Background processing task ID")
-    auto_processing: bool = Field(
-        False, description="Whether auto-processing was enabled"
-    )
+    auto_processing: bool = Field(False, description="Whether auto-processing was enabled")
 
 
 class ProcessingStatusResponse(BaseResponse):
@@ -160,9 +152,7 @@ class ProcessingStatusResponse(BaseResponse):
     document_id: UUID = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")
     chunk_count: int = Field(0, description="Number of chunks created")
-    processing_time: Optional[float] = Field(
-        None, description="Processing time in seconds"
-    )
+    processing_time: Optional[float] = Field(None, description="Processing time in seconds")
     error_message: Optional[str] = Field(None, description="Error message if failed")
     created_at: datetime = Field(..., description="Document creation time")
 

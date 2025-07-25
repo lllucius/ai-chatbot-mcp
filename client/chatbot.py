@@ -25,41 +25,39 @@ from typing import Optional
 # Try to import readline for command history support
 try:
     import readline
+
     READLINE_AVAILABLE = True
 except ImportError:
     READLINE_AVAILABLE = False
 
-from client.ai_chatbot_sdk import (
-    AIChatbotSDK,
-    ApiError,
-    ChatRequest,
-    ConversationCreate,
-    DocumentSearchRequest,
-)
+from client.ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest, ConversationCreate,
+                                   DocumentSearchRequest)
 from client.config import ChatbotConfig, get_default_token_file, load_config
 
 # --- UTILITIES ---
+
 
 def setup_readline():
     """Configure readline for command history and editing features."""
     if not READLINE_AVAILABLE:
         return
-    
+
     # Set up history file
     history_file = os.path.expanduser("~/.ai_chatbot_history")
     try:
         readline.read_history_file(history_file)
     except FileNotFoundError:
         pass  # History file doesn't exist yet
-    
+
     # Configure readline
     readline.parse_and_bind("tab: complete")
     readline.parse_and_bind('"\\e[A": history-search-backward')  # Up arrow
-    readline.parse_and_bind('"\\e[B": history-search-forward')   # Down arrow
+    readline.parse_and_bind('"\\e[B": history-search-forward')  # Down arrow
     readline.set_history_length(1000)
-    
+
     # Save history on exit
     import atexit
+
     atexit.register(lambda: readline.write_history_file(history_file))
 
 
@@ -243,14 +241,10 @@ class AIChatbotTerminal:
         if not title:
             title = "Untitled Conversation"
 
-        convo = self.sdk.conversations.create(
-            ConversationCreate(is_active=True, title=title)
-        )
+        convo = self.sdk.conversations.create(ConversationCreate(is_active=True, title=title))
         self.conversation_id = convo.id
         self.conversation_title = convo.title
-        print(
-            f"Started new conversation: {self.conversation_title} (ID: {self.conversation_id})\n"
-        )
+        print(f"Started new conversation: {self.conversation_title} (ID: {self.conversation_id})\n")
 
     def load_conversations(self):
         """Load and display conversation history with enhanced options."""
@@ -318,9 +312,7 @@ class AIChatbotTerminal:
             for i, conv in enumerate(matches, 1):
                 print(f"  [{i}] {conv.title} ({conv.message_count} messages)")
 
-            choice = input_prompt(
-                "Select conversation [1-N] or press Enter to cancel: "
-            ).strip()
+            choice = input_prompt("Select conversation [1-N] or press Enter to cancel: ").strip()
             if not choice:
                 return False
 
@@ -359,12 +351,8 @@ class AIChatbotTerminal:
 
             for msg in msgs.items:
                 role = "You" if msg.role == "user" else "AI"
-                timestamp = (
-                    msg.created_at.strftime("%H:%M:%S") if msg.created_at else ""
-                )
-                content = (
-                    msg.content[:200] + "..." if len(msg.content) > 200 else msg.content
-                )
+                timestamp = msg.created_at.strftime("%H:%M:%S") if msg.created_at else ""
+                content = msg.content[:200] + "..." if len(msg.content) > 200 else msg.content
                 print(f"[{timestamp}] {role}: {content}\n")
 
             print("-" * 60)
@@ -546,11 +534,7 @@ class AIChatbotTerminal:
         print()
 
         # Toggle RAG
-        rag_input = (
-            input_prompt(f"Enable RAG [{self.config.default_use_rag}]: ")
-            .strip()
-            .lower()
-        )
+        rag_input = input_prompt(f"Enable RAG [{self.config.default_use_rag}]: ").strip().lower()
         if rag_input in ["true", "yes", "y", "1"]:
             self.config.default_use_rag = True
         elif rag_input in ["false", "no", "n", "0"]:
@@ -558,9 +542,7 @@ class AIChatbotTerminal:
 
         # Toggle Tools
         tools_input = (
-            input_prompt(f"Enable Tools [{self.config.default_use_tools}]: ")
-            .strip()
-            .lower()
+            input_prompt(f"Enable Tools [{self.config.default_use_tools}]: ").strip().lower()
         )
         if tools_input in ["true", "yes", "y", "1"]:
             self.config.default_use_tools = True
@@ -569,9 +551,7 @@ class AIChatbotTerminal:
 
         # Toggle Streaming
         streaming_input = (
-            input_prompt(f"Enable Streaming [{self.config.enable_streaming}]: ")
-            .strip()
-            .lower()
+            input_prompt(f"Enable Streaming [{self.config.enable_streaming}]: ").strip().lower()
         )
         if streaming_input in ["true", "yes", "y", "1"]:
             self.config.enable_streaming = True
@@ -660,9 +640,7 @@ class AIChatbotTerminal:
                     for profile in profiles["profiles"]:
                         status = "*" if profile["name"] == self.current_profile else " "
                         default = " (default)" if profile.get("is_default") else ""
-                        print(
-                            f" {status} {profile['name']}: {profile['title']}{default}"
-                        )
+                        print(f" {status} {profile['name']}: {profile['title']}{default}")
                 else:
                     print("No profiles available.")
 
@@ -711,9 +689,7 @@ class AIChatbotTerminal:
         try:
             if action == "list":
                 tools = self.sdk.tools.list_tools()
-                print(
-                    f"Available Tools ({tools.enabled_count}/{tools.total_count} enabled):"
-                )
+                print(f"Available Tools ({tools.enabled_count}/{tools.total_count} enabled):")
                 for tool in tools.available_tools:
                     status = "✓" if tool.is_enabled else "✗"
                     print(f" {status} {tool.name}: {tool.description[:60]}...")
@@ -762,12 +738,8 @@ class AIChatbotTerminal:
                     for doc in docs.items:
                         status = doc.processing_status
                         size_mb = doc.file_size / 1024 / 1024
-                        print(
-                            f"  {doc.title} ({doc.file_type}, {size_mb:.1f}MB, {status})"
-                        )
-                        print(
-                            f"    ID: {str(doc.id)[:8]}... | Chunks: {doc.chunk_count}"
-                        )
+                        print(f"  {doc.title} ({doc.file_type}, {size_mb:.1f}MB, {status})")
+                        print(f"    ID: {str(doc.id)[:8]}... | Chunks: {doc.chunk_count}")
                 else:
                     print("No documents found.")
 
@@ -781,9 +753,7 @@ class AIChatbotTerminal:
                     return
                 try:
                     with open(file_path, "rb") as f:
-                        result = self.sdk.documents.upload(
-                            f, title=os.path.basename(file_path)
-                        )
+                        result = self.sdk.documents.upload(f, title=os.path.basename(file_path))
                     print(f"Uploaded: {result.document.title}")
                     print(f"Processing status: {result.document.processing_status}")
                 except Exception as e:
@@ -796,7 +766,7 @@ class AIChatbotTerminal:
                 query = parts[2]
                 try:
                     results = self.sdk.search.search(
-                        DocumentSearchRequest(query=query, page=1, per_page=10)
+                        DocumentSearchRequest(query=query, limit=10)
                     )
                     if results.get("results"):
                         print(f"Found {len(results['results'])} results for '{query}':")
@@ -854,9 +824,7 @@ class AIChatbotTerminal:
                         "id": str(msg.id),
                         "role": msg.role,
                         "content": msg.content,
-                        "created_at": (
-                            msg.created_at.isoformat() if msg.created_at else None
-                        ),
+                        "created_at": (msg.created_at.isoformat() if msg.created_at else None),
                         "token_count": msg.token_count,
                     }
                 )
@@ -895,7 +863,7 @@ def main(config_file: Optional[str] = None):
     try:
         # Set up readline for command history
         setup_readline()
-        
+
         # Load configuration
         config = load_config(config_file)
 
@@ -926,9 +894,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="AI Chatbot Terminal Client")
-    parser.add_argument(
-        "--config", type=str, help="Path to configuration file (.env format)"
-    )
+    parser.add_argument("--config", type=str, help="Path to configuration file (.env format)")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 
     args = parser.parse_args()

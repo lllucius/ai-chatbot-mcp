@@ -115,9 +115,7 @@ class DevelopmentFormatter(logging.Formatter):
 
         # Base format - use timezone-aware datetime
         timestamp = datetime.fromtimestamp(record.created, UTC).strftime("%H:%M:%S")
-        base_format = (
-            f"{timestamp} {colored_level:<15} {record.name:<20} {record.getMessage()}"
-        )
+        base_format = f"{timestamp} {colored_level:<15} {record.name:<20} {record.getMessage()}"
 
         # Add correlation ID if available
         correlation_id = getattr(record, "correlation_id", None)
@@ -192,9 +190,7 @@ class PerformanceLogger:
     def __init__(self, logger: logging.Logger):
         self.logger = logger
 
-    def log_operation(
-        self, operation: str, duration: float, success: bool = True, **kwargs
-    ):
+    def log_operation(self, operation: str, duration: float, success: bool = True, **kwargs):
         """
         Log an operation with performance metrics.
 
@@ -252,9 +248,7 @@ class OperationTimer:
         duration = time.time() - self.start_time
         self.success = exc_type is None
 
-        self.perf_logger.log_operation(
-            self.operation, duration, self.success, **self.context
-        )
+        self.perf_logger.log_operation(self.operation, duration, self.success, **self.context)
 
         return False  # Don't suppress exceptions
 
@@ -536,9 +530,7 @@ class LoggingService:
         if self._context_filter:
             self._context_filter.set_operation(operation)
 
-    def log_structured(
-        self, logger: logging.Logger, level: str, message: str, **kwargs
-    ):
+    def log_structured(self, logger: logging.Logger, level: str, message: str, **kwargs):
         """
         Log a message with structured data.
 

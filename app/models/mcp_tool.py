@@ -57,9 +57,7 @@ class MCPTool(BaseModelDB):
         nullable=False,
         doc="Foreign key to the MCP server",
     )
-    description: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, doc="Tool description"
-    )
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, doc="Tool description")
     parameters: Mapped[Optional[dict]] = mapped_column(
         JSON, nullable=True, doc="Tool parameters schema"
     )
@@ -124,9 +122,7 @@ class MCPTool(BaseModelDB):
             else:
                 # Running average calculation
                 total_duration = self.average_duration_ms * (self.usage_count - 1)
-                self.average_duration_ms = int(
-                    (total_duration + duration_ms) / self.usage_count
-                )
+                self.average_duration_ms = int((total_duration + duration_ms) / self.usage_count)
 
     def __repr__(self) -> str:
         """Return string representation of MCPTool model."""

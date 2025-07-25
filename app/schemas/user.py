@@ -35,9 +35,7 @@ class UserBase(BaseSchema):
         description="Unique username",
     )
     email: EmailStr = Field(description="User email address")
-    full_name: Optional[str] = Field(
-        default=None, max_length=100, description="User's full name"
-    )
+    full_name: Optional[str] = Field(default=None, max_length=100, description="User's full name")
 
     @field_validator("username")
     @classmethod
@@ -77,17 +75,11 @@ class UserCreate(UserBase):
 class UserUpdate(BaseSchema):
     """Schema for updating a user."""
 
-    model_config = ConfigDict(
-        from_attributes=True, validate_assignment=True, extra="ignore"
-    )
+    model_config = ConfigDict(from_attributes=True, validate_assignment=True, extra="ignore")
 
     email: Optional[EmailStr] = Field(default=None, description="New email address")
-    full_name: Optional[str] = Field(
-        default=None, max_length=100, description="Updated full name"
-    )
-    is_active: Optional[bool] = Field(
-        default=None, description="Whether user is active"
-    )
+    full_name: Optional[str] = Field(default=None, max_length=100, description="Updated full name")
+    is_active: Optional[bool] = Field(default=None, description="Whether user is active")
 
 
 class UserPasswordUpdate(BaseSchema):
@@ -157,18 +149,10 @@ class UserDetailResponse(BaseResponse):
 class UserSearchParams(PaginationParams):
     """Search parameters for user queries."""
 
-    username: Optional[str] = Field(
-        default=None, description="Filter by username (partial match)"
-    )
-    email: Optional[str] = Field(
-        default=None, description="Filter by email (partial match)"
-    )
-    is_active: Optional[bool] = Field(
-        default=None, description="Filter by active status"
-    )
-    is_superuser: Optional[bool] = Field(
-        default=None, description="Filter by superuser status"
-    )
+    username: Optional[str] = Field(default=None, description="Filter by username (partial match)")
+    email: Optional[str] = Field(default=None, description="Filter by email (partial match)")
+    is_active: Optional[bool] = Field(default=None, description="Filter by active status")
+    is_superuser: Optional[bool] = Field(default=None, description="Filter by superuser status")
 
 
 class UserStatsResponse(BaseSchema):

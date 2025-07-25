@@ -18,22 +18,16 @@ from ..services.mcp_registry import MCPRegistryService
 from .base import console, error_message, info_message, success_message, warning_message
 
 # Create the MCP management app
-mcp_app = typer.Typer(
-    help="🔌 MCP server and tool management commands", rich_markup_mode="rich"
-)
+mcp_app = typer.Typer(help="🔌 MCP server and tool management commands", rich_markup_mode="rich")
 
 
 @mcp_app.command("list-servers")
 def list_servers(
-    enabled_only: bool = typer.Option(
-        False, "--enabled-only", help="Show only enabled servers"
-    ),
+    enabled_only: bool = typer.Option(False, "--enabled-only", help="Show only enabled servers"),
     connected_only: bool = typer.Option(
         False, "--connected-only", help="Show only connected servers"
     ),
-    detailed: bool = typer.Option(
-        False, "--detailed", "-d", help="Show detailed information"
-    ),
+    detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed information"),
 ):
     """List all registered MCP servers."""
 
@@ -82,9 +76,7 @@ def list_servers(
                 table.add_column("Errors")
 
                 for server in servers:
-                    status = (
-                        "🟢 Connected" if server.is_connected else "🔴 Disconnected"
-                    )
+                    status = "🟢 Connected" if server.is_connected else "🔴 Disconnected"
                     enabled = "✅ Yes" if server.is_enabled else "❌ No"
 
                     table.add_row(
@@ -113,9 +105,7 @@ def add_server(
     ),
     transport: str = typer.Option("http", "--transport", "-t", help="Transport type"),
     timeout: int = typer.Option(30, "--timeout", help="Connection timeout in seconds"),
-    disabled: bool = typer.Option(
-        False, "--disabled", help="Create server in disabled state"
-    ),
+    disabled: bool = typer.Option(False, "--disabled", help="Create server in disabled state"),
     skip_discovery: bool = typer.Option(
         False, "--skip-discovery", help="Skip automatic tool discovery"
     ),
@@ -149,15 +139,9 @@ def add_server(
 def update_server(
     name: str = typer.Argument(..., help="Server name"),
     url: Optional[str] = typer.Option(None, "--url", help="New URL"),
-    description: Optional[str] = typer.Option(
-        None, "--description", "-d", help="New description"
-    ),
-    transport: Optional[str] = typer.Option(
-        None, "--transport", "-t", help="New transport type"
-    ),
-    timeout: Optional[int] = typer.Option(
-        None, "--timeout", help="New timeout in seconds"
-    ),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="New description"),
+    transport: Optional[str] = typer.Option(None, "--transport", "-t", help="New transport type"),
+    timeout: Optional[int] = typer.Option(None, "--timeout", help="New timeout in seconds"),
 ):
     """Update an MCP server configuration."""
 
@@ -192,18 +176,14 @@ def update_server(
 @mcp_app.command("remove-server")
 def remove_server(
     name: str = typer.Argument(..., help="Server name"),
-    confirm: bool = typer.Option(
-        False, "--confirm", "-y", help="Skip confirmation prompt"
-    ),
+    confirm: bool = typer.Option(False, "--confirm", "-y", help="Skip confirmation prompt"),
 ):
     """Remove an MCP server registration."""
 
     async def _remove_server():
         try:
             if not confirm:
-                confirmed = typer.confirm(
-                    f"Are you sure you want to remove server '{name}'?"
-                )
+                confirmed = typer.confirm(f"Are you sure you want to remove server '{name}'?")
                 if not confirmed:
                     info_message("Operation cancelled")
                     return
@@ -231,9 +211,7 @@ def enable_server(
 
     async def _enable_server():
         try:
-            success = await MCPRegistryService.enable_server(
-                name, auto_discover=not skip_discovery
-            )
+            success = await MCPRegistryService.enable_server(name, auto_discover=not skip_discovery)
             if success:
                 success_message(f"Enabled MCP server: {name}")
                 if not skip_discovery:
@@ -267,15 +245,9 @@ def disable_server(name: str = typer.Argument(..., help="Server name")):
 
 @mcp_app.command("list-tools")
 def list_tools(
-    server: Optional[str] = typer.Option(
-        None, "--server", "-s", help="Filter by server name"
-    ),
-    enabled_only: bool = typer.Option(
-        False, "--enabled-only", help="Show only enabled tools"
-    ),
-    detailed: bool = typer.Option(
-        False, "--detailed", "-d", help="Show detailed information"
-    ),
+    server: Optional[str] = typer.Option(None, "--server", "-s", help="Filter by server name"),
+    enabled_only: bool = typer.Option(False, "--enabled-only", help="Show only enabled tools"),
+    detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed information"),
 ):
     """List all registered MCP tools."""
 
@@ -293,9 +265,7 @@ def list_tools(
                 for tool in tools:
                     enabled_color = "green" if tool.is_enabled else "yellow"
                     success_rate = (
-                        f"{tool.success_rate:.1f}%"
-                        if tool.usage_count > 0
-                        else "No usage"
+                        f"{tool.success_rate:.1f}%" if tool.usage_count > 0 else "No usage"
                     )
 
                     panel_content = f"""
@@ -329,9 +299,7 @@ def list_tools(
                 for tool in tools:
                     enabled = "✅ Yes" if tool.is_enabled else "❌ No"
                     success_rate = (
-                        f"{tool.success_rate:.1f}%"
-                        if tool.usage_count > 0
-                        else "No usage"
+                        f"{tool.success_rate:.1f}%" if tool.usage_count > 0 else "No usage"
                     )
                     last_used = (
                         tool.last_used_at.strftime("%Y-%m-%d %H:%M")
@@ -394,18 +362,14 @@ def disable_tool(tool_name: str = typer.Argument(..., help="Tool name")):
 
 @mcp_app.command("stats")
 def show_stats(
-    server: Optional[str] = typer.Option(
-        None, "--server", "-s", help="Filter by server name"
-    ),
+    server: Optional[str] = typer.Option(None, "--server", "-s", help="Filter by server name"),
     limit: int = typer.Option(10, "--limit", "-l", help="Number of tools to show"),
 ):
     """Show MCP tool usage statistics."""
 
     async def _show_stats():
         try:
-            stats = await MCPRegistryService.get_tool_stats(
-                server_name=server, limit=limit
-            )
+            stats = await MCPRegistryService.get_tool_stats(server_name=server, limit=limit)
 
             if not stats:
                 info_message("No tool statistics available")
@@ -425,9 +389,7 @@ def show_stats(
                 status = "✅ Enabled" if stat["is_enabled"] else "❌ Disabled"
                 success_rate = f"{stat['success_rate']:.1f}%"
                 avg_duration = (
-                    f"{stat['average_duration_ms']}ms"
-                    if stat["average_duration_ms"]
-                    else "N/A"
+                    f"{stat['average_duration_ms']}ms" if stat["average_duration_ms"] else "N/A"
                 )
 
                 table.add_row(

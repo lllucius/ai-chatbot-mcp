@@ -34,7 +34,7 @@ API Endpoints Integration:
 
 import logging
 from time import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import and_, func, select
@@ -54,18 +54,18 @@ class LRUCache:
     """A simple LRU cache for query embeddings."""
 
     def __init__(self, capacity=128):
-        self.cache: Dict[str, Tuple[float, list]] = {}
+        self.cache: Dict[str, Tuple[float, List[float]]] = {}
         self.order: List[str] = []
         self.capacity = capacity
 
-    def get(self, key):
+    def get(self, key: str) -> Optional[List[float]]:
         if key in self.cache:
             self.order.remove(key)
             self.order.insert(0, key)
             return self.cache[key][1]
         return None
 
-    def set(self, key, value):
+    def set(self, key: str, value: List[float]) -> None:
         if key in self.cache:
             self.order.remove(key)
         elif len(self.order) >= self.capacity:
@@ -117,7 +117,7 @@ class SearchService(BaseService):
         super().__init__(db, "search_service")
         self.embedding_service = EmbeddingService(db)
 
-    async def get_query_embedding(self, query: str):
+    async def get_query_embedding(self, query: str) -> Optional[List[float]]:
         """Returns embedding for query, using cache for performance."""
         cached = embedding_cache.get(query)
         if cached is not None:
@@ -236,9 +236,7 @@ class SearchService(BaseService):
             select(DocumentChunk, rank_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
             .where(Document.owner_id == user_id)
-            .where(
-                func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query)
-            )
+            .where(func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query))
         )
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))
@@ -293,9 +291,7 @@ class SearchService(BaseService):
                 "methods": ["vector"],
                 **result.search_meta,
             }
-            combined_results[chunk_id].similarity_score = (
-                result.similarity_score or 0
-            ) * 0.7
+            combined_results[chunk_id].similarity_score = (result.similarity_score or 0) * 0.7
 
         for result in text_results:
             chunk_id = result.id
@@ -310,9 +306,7 @@ class SearchService(BaseService):
 
         results = list(combined_results.values())
         results.sort(key=lambda x: x.similarity_score or 0, reverse=True)
-        filtered_results = [
-            r for r in results if (r.similarity_score or 0) >= request.threshold
-        ]
+        filtered_results = [r for r in results if (r.similarity_score or 0) >= request.threshold]
         return filtered_results[: request.limit]
 
     async def _mmr_search(

@@ -165,16 +165,12 @@ def with_tool_caching(
                     f"Cache hit for {func.__name__}",
                     extra={
                         "function": func.__name__,
-                        "cache_key": (
-                            cache_key[:50] + "..." if len(cache_key) > 50 else cache_key
-                        ),
+                        "cache_key": (cache_key[:50] + "..." if len(cache_key) > 50 else cache_key),
                     },
                 )
 
                 # Handle cached failures
-                if isinstance(cached_result, dict) and cached_result.get(
-                    "_cached_failure"
-                ):
+                if isinstance(cached_result, dict) and cached_result.get("_cached_failure"):
                     raise Exception(cached_result["error"])
 
                 return cached_result
@@ -190,9 +186,7 @@ def with_tool_caching(
                     f"Cache miss for {func.__name__}, result cached",
                     extra={
                         "function": func.__name__,
-                        "cache_key": (
-                            cache_key[:50] + "..." if len(cache_key) > 50 else cache_key
-                        ),
+                        "cache_key": (cache_key[:50] + "..." if len(cache_key) > 50 else cache_key),
                     },
                 )
 
@@ -206,9 +200,7 @@ def with_tool_caching(
                         "error": str(e),
                         "error_type": type(e).__name__,
                     }
-                    await api_response_cache.set(
-                        cache_key, cached_failure, ttl=failure_ttl
-                    )
+                    await api_response_cache.set(cache_key, cached_failure, ttl=failure_ttl)
 
                     logger.debug(
                         f"Cached failure for {func.__name__}",
@@ -276,9 +268,7 @@ def with_structured_logging(
                 execution_time = (time.time() - start_time) * 1000
 
                 # Update log context with success info
-                log_context.update(
-                    {"success": True, "execution_time_ms": execution_time}
-                )
+                log_context.update({"success": True, "execution_time_ms": execution_time})
 
                 # Add result if requested (with size limits)
                 if log_result:
@@ -289,9 +279,7 @@ def with_structured_logging(
 
                 # Log exit
                 if log_exit:
-                    logger.info(
-                        f"Exiting {func.__name__} successfully", extra=log_context
-                    )
+                    logger.info(f"Exiting {func.__name__} successfully", extra=log_context)
 
                 return result
 
@@ -310,9 +298,7 @@ def with_structured_logging(
 
                 # Log error exit
                 if log_exit:
-                    logger.error(
-                        f"Exiting {func.__name__} with error", extra=log_context
-                    )
+                    logger.error(f"Exiting {func.__name__} with error", extra=log_context)
 
                 raise
 

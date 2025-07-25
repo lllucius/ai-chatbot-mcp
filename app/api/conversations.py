@@ -20,21 +20,11 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-    StreamCompleteResponse,
-    StreamContentResponse,
-    StreamEndResponse,
-    StreamErrorResponse,
-    StreamStartResponse,
-    StreamToolCallResponse,
-)
+from ..schemas.conversation import (ChatRequest, ChatResponse, ConversationCreate,
+                                    ConversationResponse, ConversationStats, ConversationUpdate,
+                                    MessageResponse, StreamCompleteResponse, StreamContentResponse,
+                                    StreamEndResponse, StreamErrorResponse, StreamStartResponse,
+                                    StreamToolCallResponse)
 from ..services.conversation import ConversationService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -60,13 +50,9 @@ async def create_conversation(
 
     Creates a new conversation thread for the current user.
     """
-    log_api_call(
-        "create_conversation", user_id=str(current_user.id), title=request.title
-    )
+    log_api_call("create_conversation", user_id=str(current_user.id), title=request.title)
 
-    conversation = await conversation_service.create_conversation(
-        request, current_user.id
-    )
+    conversation = await conversation_service.create_conversation(request, current_user.id)
     return ConversationResponse.model_validate(conversation)
 
 
@@ -97,9 +83,7 @@ async def list_conversations(
         user_id=current_user.id, page=page, size=size, active_only=active_only
     )
 
-    conversation_responses = [
-        ConversationResponse.model_validate(conv) for conv in conversations
-    ]
+    conversation_responses = [ConversationResponse.model_validate(conv) for conv in conversations]
 
     return PaginatedResponse.create(
         items=conversation_responses,
@@ -129,9 +113,7 @@ async def get_conversation(
         conversation_id=str(conversation_id),
     )
 
-    conversation = await conversation_service.get_conversation(
-        conversation_id, current_user.id
-    )
+    conversation = await conversation_service.get_conversation(conversation_id, current_user.id)
     return ConversationResponse.model_validate(conversation)
 
 
@@ -178,21 +160,15 @@ async def delete_conversation(
         conversation_id=str(conversation_id),
     )
 
-    success = await conversation_service.delete_conversation(
-        conversation_id, current_user.id
-    )
+    success = await conversation_service.delete_conversation(conversation_id, current_user.id)
 
     if success:
         return BaseResponse(success=True, message="Conversation deleted successfully")
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
 
-@router.get(
-    "/{conversation_id}/messages", response_model=PaginatedResponse[MessageResponse]
-)
+@router.get("/{conversation_id}/messages", response_model=PaginatedResponse[MessageResponse])
 @handle_api_errors("Failed to retrieve messages")
 async def get_messages(
     conversation_id: UUID,
@@ -288,7 +264,7 @@ async def chat_stream(
 
     Returns a Server-Sent Events (SSE) stream of the AI response as it's generated,
     providing real-time feedback to the user.
-    
+
     Returns:
         StreamingResponse: Server-sent events stream with typed response objects
     """
@@ -306,32 +282,31 @@ async def chat_stream(
 
         try:
             # Process chat request with streaming
-            async for chunk in conversation_service.process_chat_stream(
-                request, current_user.id
-            ):
+            async for chunk in conversation_service.process_chat_stream(request, current_user.id):
                 if chunk.get("type") == "content":
                     # Stream content chunks
-                    content_event = StreamContentResponse(
-                        content=chunk.get("content", "")
-                    )
+                    content_event = StreamContentResponse(content=chunk.get("content", ""))
                     yield f"data: {json.dumps(content_event.model_dump())}\n\n"
                 elif chunk.get("type") == "tool_call":
                     # Stream tool call information
                     tool_event = StreamToolCallResponse(
-                        tool=chunk.get("tool"),
-                        result=chunk.get("result")
+                        tool=chunk.get("tool"), result=chunk.get("result")
                     )
                     yield f"data: {json.dumps(tool_event.model_dump())}\n\n"
                 elif chunk.get("type") == "complete":
                     # Send completion event with full response
                     response_data = chunk.get("response", {})
-                    
+
                     # Convert Pydantic objects to dictionaries
                     if "ai_message" in response_data:
-                        response_data["ai_message"] = response_data["ai_message"].model_dump(mode='json')
+                        response_data["ai_message"] = response_data["ai_message"].model_dump(
+                            mode="json"
+                        )
                     if "conversation" in response_data:
-                        response_data["conversation"] = response_data["conversation"].model_dump(mode='json')
-                    
+                        response_data["conversation"] = response_data["conversation"].model_dump(
+                            mode="json"
+                        )
+
                     complete_event = StreamCompleteResponse(response=response_data)
                     yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
                     break

@@ -54,9 +54,7 @@ class ToolExecutionStrategy(ABC):
     """Abstract base class for tool execution strategies."""
 
     @abstractmethod
-    async def execute_tool(
-        self, tool_call: ToolCall, max_retries: int = 3
-    ) -> ToolResult:
+    async def execute_tool(self, tool_call: ToolCall, max_retries: int = 3) -> ToolResult:
         """Execute a single tool call."""
         pass
 
@@ -77,9 +75,7 @@ class FastMCPToolStrategy(ToolExecutionStrategy):
     def __init__(self, mcp_client):
         self.mcp_client = mcp_client
 
-    async def execute_tool(
-        self, tool_call: ToolCall, max_retries: int = 3
-    ) -> ToolResult:
+    async def execute_tool(self, tool_call: ToolCall, max_retries: int = 3) -> ToolResult:
         """Execute a FastMCP tool call with retry logic."""
         import time
 
@@ -87,9 +83,7 @@ class FastMCPToolStrategy(ToolExecutionStrategy):
 
         try:
             # Call the MCP tool
-            result = await self.mcp_client.call_tool(
-                tool_call.name, tool_call.arguments
-            )
+            result = await self.mcp_client.call_tool(tool_call.name, tool_call.arguments)
 
             execution_time = (time.time() - start_time) * 1000
 
@@ -155,9 +149,7 @@ class UnifiedToolExecutor:
                 logger.info("FastMCP tool strategy initialized")
 
             self._initialized = True
-            logger.info(
-                f"UnifiedToolExecutor initialized with {len(self.strategies)} strategies"
-            )
+            logger.info(f"UnifiedToolExecutor initialized with {len(self.strategies)} strategies")
 
         except Exception as e:
             logger.error(f"Failed to initialize UnifiedToolExecutor: {e}")
@@ -200,9 +192,7 @@ class UnifiedToolExecutor:
         # Determine provider and strategy
         provider = tool_call.provider or self._determine_provider(tool_call.name)
         if provider not in self.strategies:
-            raise ExternalServiceError(
-                f"No strategy available for provider: {provider}"
-            )
+            raise ExternalServiceError(f"No strategy available for provider: {provider}")
 
         strategy = self.strategies[provider]
 
@@ -235,9 +225,7 @@ class UnifiedToolExecutor:
 
                 # Cache successful results
                 if use_cache and cache_key and result.success:
-                    await api_response_cache.set(
-                        cache_key, result.__dict__, ttl=cache_ttl
-                    )
+                    await api_response_cache.set(cache_key, result.__dict__, ttl=cache_ttl)
 
                 return result
 
@@ -303,9 +291,7 @@ class UnifiedToolExecutor:
         if parallel_execution:
             # Execute tools in parallel
             tasks = [
-                self.execute_tool_call(
-                    tool_call, max_retries=max_retries, use_cache=use_cache
-                )
+                self.execute_tool_call(tool_call, max_retries=max_retries, use_cache=use_cache)
                 for tool_call in tool_calls
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -390,9 +376,10 @@ class UnifiedToolExecutor:
                     provider_type.value
                 ] = provider_health
             except Exception as e:
-                health_status["unified_tool_executor"]["providers"][
-                    provider_type.value
-                ] = {"status": "error", "error": str(e)}
+                health_status["unified_tool_executor"]["providers"][provider_type.value] = {
+                    "status": "error",
+                    "error": str(e),
+                }
 
         return health_status
 

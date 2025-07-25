@@ -95,9 +95,7 @@ def organize_imports(imports: List[str]) -> List[str]:
     local_imports = []
 
     for import_line in imports:
-        if import_line.strip().startswith("from ") or import_line.strip().startswith(
-            "import "
-        ):
+        if import_line.strip().startswith("from ") or import_line.strip().startswith("import "):
             if any(module in import_line for module in STANDARD_LIBRARY_MODULES):
                 standard_imports.append(import_line)
             elif any(module in import_line for module in THIRD_PARTY_MODULES):

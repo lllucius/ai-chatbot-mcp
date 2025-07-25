@@ -23,14 +23,8 @@ from ..models.user import User
 from ..services.auth import AuthService
 from ..services.user import UserService
 from ..utils.security import get_password_hash
-from .base import (
-    async_command,
-    console,
-    error_message,
-    format_timestamp,
-    success_message,
-    warning_message,
-)
+from .base import (async_command, console, error_message, format_timestamp, success_message,
+                   warning_message)
 
 # Create the user management app
 user_app = typer.Typer(help="User management commands")
@@ -43,12 +37,8 @@ def create(
     password: str = typer.Option(
         None, "--password", "-p", help="Password (will prompt if not provided)"
     ),
-    full_name: str = typer.Option(
-        None, "--full-name", "-n", help="Full name of the user"
-    ),
-    superuser: bool = typer.Option(
-        False, "--superuser", "-s", help="Create as superuser"
-    ),
+    full_name: str = typer.Option(None, "--full-name", "-n", help="Full name of the user"),
+    superuser: bool = typer.Option(False, "--superuser", "-s", help="Create as superuser"),
     active: bool = typer.Option(True, "--active/--inactive", help="User active status"),
 ):
     """
@@ -124,9 +114,7 @@ def create(
                 await db.refresh(user)
 
                 user_type = "superuser" if superuser else "user"
-                success_message(
-                    f"{user_type.title()} '{username}' created successfully"
-                )
+                success_message(f"{user_type.title()} '{username}' created successfully")
 
                 # Display user info
                 table = Table(title="Created User")
@@ -151,18 +139,10 @@ def create(
 
 @user_app.command()
 def list(
-    limit: int = typer.Option(
-        20, "--limit", "-l", help="Maximum number of users to show"
-    ),
-    active_only: bool = typer.Option(
-        False, "--active-only", help="Show only active users"
-    ),
-    superusers_only: bool = typer.Option(
-        False, "--superusers-only", help="Show only superusers"
-    ),
-    search: str = typer.Option(
-        None, "--search", "-s", help="Search by username or email"
-    ),
+    limit: int = typer.Option(20, "--limit", "-l", help="Maximum number of users to show"),
+    active_only: bool = typer.Option(False, "--active-only", help="Show only active users"),
+    superusers_only: bool = typer.Option(False, "--superusers-only", help="Show only superusers"),
+    search: str = typer.Option(None, "--search", "-s", help="Search by username or email"),
     sort_by: str = typer.Option(
         "created", "--sort", help="Sort by: id, username, email, created, updated"
     ),
@@ -274,9 +254,7 @@ def show(
                 )
 
                 conv_count = await db.scalar(
-                    select(func.count(Conversation.id)).where(
-                        Conversation.user_id == user.id
-                    )
+                    select(func.count(Conversation.id)).where(Conversation.user_id == user.id)
                 )
 
                 # User details table
@@ -326,9 +304,7 @@ def delete(
                     select(func.count(Document.id)).where(Document.owner_id == user.id)
                 )
                 conv_count = await db.scalar(
-                    select(func.count(Conversation.id)).where(
-                        Conversation.user_id == user.id
-                    )
+                    select(func.count(Conversation.id)).where(Conversation.user_id == user.id)
                 )
 
                 console.print("\n[bold red]This will permanently delete:[/bold red]")
@@ -540,13 +516,9 @@ def stats():
             try:
                 # Basic user counts
                 total_users = await db.scalar(select(func.count(User.id)))
-                active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active)
-                )
+                active_users = await db.scalar(select(func.count(User.id)).where(User.is_active))
                 inactive_users = total_users - active_users
-                superusers = await db.scalar(
-                    select(func.count(User.id)).where(User.is_superuser)
-                )
+                superusers = await db.scalar(select(func.count(User.id)).where(User.is_superuser))
 
                 # Recent registrations
                 last_7_days = datetime.now() - timedelta(days=7)

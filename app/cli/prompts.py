@@ -15,13 +15,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..services.prompt_service import PromptService
-from .base import (
-    console,
-    error_message,
-    get_service_context,
-    info_message,
-    success_message,
-)
+from .base import console, error_message, get_service_context, info_message, success_message
 
 # Create the prompt management app
 prompt_app = typer.Typer(help="📝 Prompt management commands", rich_markup_mode="rich")
@@ -32,15 +26,11 @@ def list_prompts(
     active_only: bool = typer.Option(
         True, "--active-only/--include-inactive", help="Show only active prompts"
     ),
-    category: Optional[str] = typer.Option(
-        None, "--category", "-c", help="Filter by category"
-    ),
+    category: Optional[str] = typer.Option(None, "--category", "-c", help="Filter by category"),
     search: Optional[str] = typer.Option(
         None, "--search", "-s", help="Search in name, title, content, and tags"
     ),
-    detailed: bool = typer.Option(
-        False, "--detailed", "-d", help="Show detailed information"
-    ),
+    detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed information"),
 ):
     """List all prompts."""
 
@@ -101,9 +91,7 @@ def list_prompts(
                         status += " (DEFAULT)"
 
                     last_used = (
-                        prompt.last_used_at.strftime("%Y-%m-%d")
-                        if prompt.last_used_at
-                        else "Never"
+                        prompt.last_used_at.strftime("%Y-%m-%d") if prompt.last_used_at else "Never"
                     )
 
                     table.add_row(
@@ -180,9 +168,7 @@ def add_prompt(
     category: Optional[str] = typer.Option(None, "--category", help="Prompt category"),
     tags: Optional[str] = typer.Option(None, "--tags", help="Comma-separated tags"),
     set_default: bool = typer.Option(False, "--default", help="Set as default prompt"),
-    inactive: bool = typer.Option(
-        False, "--inactive", help="Create prompt in inactive state"
-    ),
+    inactive: bool = typer.Option(False, "--inactive", help="Create prompt in inactive state"),
 ):
     """Add a new prompt."""
 
@@ -220,14 +206,10 @@ def update_prompt(
     name: str = typer.Argument(..., help="Prompt name"),
     title: Optional[str] = typer.Option(None, "--title", "-t", help="New title"),
     content: Optional[str] = typer.Option(None, "--content", "-c", help="New content"),
-    description: Optional[str] = typer.Option(
-        None, "--description", "-d", help="New description"
-    ),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="New description"),
     category: Optional[str] = typer.Option(None, "--category", help="New category"),
     tags: Optional[str] = typer.Option(None, "--tags", help="New comma-separated tags"),
-    clear_category: bool = typer.Option(
-        False, "--clear-category", help="Clear category"
-    ),
+    clear_category: bool = typer.Option(False, "--clear-category", help="Clear category"),
     clear_tags: bool = typer.Option(False, "--clear-tags", help="Clear tags"),
 ):
     """Update an existing prompt."""
@@ -247,9 +229,7 @@ def update_prompt(
             if clear_category:
                 updates["category"] = None
             if tags is not None:
-                updates["tags"] = [
-                    tag.strip() for tag in tags.split(",") if tag.strip()
-                ]
+                updates["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
             if clear_tags:
                 updates["tags"] = []
 
@@ -272,18 +252,14 @@ def update_prompt(
 @prompt_app.command("remove")
 def remove_prompt(
     name: str = typer.Argument(..., help="Prompt name"),
-    confirm: bool = typer.Option(
-        False, "--confirm", "-y", help="Skip confirmation prompt"
-    ),
+    confirm: bool = typer.Option(False, "--confirm", "-y", help="Skip confirmation prompt"),
 ):
     """Remove a prompt."""
 
     async def _remove_prompt():
         try:
             if not confirm:
-                confirmed = typer.confirm(
-                    f"Are you sure you want to remove prompt '{name}'?"
-                )
+                confirmed = typer.confirm(f"Are you sure you want to remove prompt '{name}'?")
                 if not confirmed:
                     info_message("Operation cancelled")
                     return

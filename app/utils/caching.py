@@ -62,9 +62,7 @@ class SimpleCache:
             # Enforce max size with LRU-like behavior
             if len(self._cache) >= self.max_size:
                 # Remove oldest item
-                oldest_key = min(
-                    self._cache.keys(), key=lambda k: self._cache[k]["created_at"]
-                )
+                oldest_key = min(self._cache.keys(), key=lambda k: self._cache[k]["created_at"])
                 del self._cache[oldest_key]
 
             expires_at = time.time() + (ttl or self.default_ttl)
@@ -95,9 +93,7 @@ class SimpleCache:
         async with self._lock:
             current_time = time.time()
             expired_keys = [
-                key
-                for key, item in self._cache.items()
-                if current_time > item["expires_at"]
+                key for key, item in self._cache.items() if current_time > item["expires_at"]
             ]
 
             for key in expired_keys:
@@ -192,9 +188,7 @@ async def start_cache_cleanup_task():
                 ]:
                     removed = await cache.cleanup_expired()
                     if removed > 0:
-                        logger.info(
-                            f"Cleaned up {removed} expired items from {cache_name} cache"
-                        )
+                        logger.info(f"Cleaned up {removed} expired items from {cache_name} cache")
 
             except Exception as e:
                 logger.error(f"Cache cleanup failed: {e}")

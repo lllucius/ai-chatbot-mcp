@@ -7,7 +7,7 @@ different parameter profiles for language model interactions.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import JSON, Boolean, Float, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -111,10 +111,10 @@ class LLMProfile(BaseModelDB):
     frequency_penalty: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, doc="Frequency penalty (-2.0 to 2.0)"
     )
-    stop: Mapped[Optional[list]] = mapped_column(
+    stop: Mapped[Optional[List[str]]] = mapped_column(
         JSON, nullable=True, doc="Stop sequences as JSON list"
     )
-    other_params: Mapped[Optional[dict]] = mapped_column(
+    other_params: Mapped[Optional[Dict[str, Any]]] = mapped_column(
         JSON, nullable=True, doc="Additional model-specific parameters"
     )
 
@@ -154,7 +154,7 @@ class LLMProfile(BaseModelDB):
             >>> params
             {"temperature": 0.7, "max_tokens": 1000}
         """
-        params = {}
+        params: Dict[str, Any] = {}
 
         if self.temperature is not None:
             params["temperature"] = self.temperature

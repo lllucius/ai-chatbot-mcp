@@ -27,8 +27,8 @@ class BaseSchema(BaseModel):
         validate_assignment=True,
         # Allow extra fields in input (but don't include in output)
         extra="ignore",
-        # Serialize by alias
-        ser_by_alias=True,
+        # Serialize by alias (removed in v2)
+        # serialize_as_any=True,
     )
 
 

@@ -52,21 +52,15 @@ class SuccessResponse(BaseResponse):
     """Standard success response."""
 
     success: bool = Field(default=True, description="Always true for success responses")
-    data: Optional[Dict[str, Any]] = Field(
-        default=None, description="Response data payload"
-    )
+    data: Optional[Dict[str, Any]] = Field(default=None, description="Response data payload")
 
 
 class ErrorResponse(BaseResponse):
     """Standard error response."""
 
     success: bool = Field(default=False, description="Always false for error responses")
-    error_code: Optional[str] = Field(
-        default=None, description="Machine-readable error code"
-    )
-    details: Optional[Dict[str, Any]] = Field(
-        default=None, description="Additional error details"
-    )
+    error_code: Optional[str] = Field(default=None, description="Machine-readable error code")
+    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
 
 
 class ValidationErrorResponse(ErrorResponse):
@@ -85,9 +79,7 @@ class HealthCheckResponse(BaseResponse):
 
     status: str = Field(description="Overall health status")
     version: str = Field(description="Application version")
-    timestamp: datetime = Field(
-        default_factory=utcnow, description="Health check timestamp"
-    )
+    timestamp: datetime = Field(default_factory=utcnow, description="Health check timestamp")
     components: Optional[Dict[str, Any]] = Field(
         default=None, description="Individual component health statuses"
     )
@@ -113,9 +105,7 @@ class FileUploadResponse(BaseResponse):
     file_id: Optional[str] = Field(default=None, description="Generated file ID")
     file_size: int = Field(description="File size in bytes")
     content_type: Optional[str] = Field(default=None, description="MIME content type")
-    upload_url: Optional[str] = Field(
-        default=None, description="URL where file was uploaded"
-    )
+    upload_url: Optional[str] = Field(default=None, description="URL where file was uploaded")
 
 
 class BulkOperationResponse(BaseResponse):
@@ -159,27 +149,15 @@ class MetricsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     cpu_usage: Optional[float] = Field(default=None, description="CPU usage percentage")
-    memory_usage: Optional[float] = Field(
-        default=None, description="Memory usage percentage"
-    )
-    disk_usage: Optional[float] = Field(
-        default=None, description="Disk usage percentage"
-    )
+    memory_usage: Optional[float] = Field(default=None, description="Memory usage percentage")
+    disk_usage: Optional[float] = Field(default=None, description="Disk usage percentage")
     active_connections: Optional[int] = Field(
         default=None, description="Active database connections"
     )
-    request_count: Optional[int] = Field(
-        default=None, description="Total request count"
-    )
-    error_rate: Optional[float] = Field(
-        default=None, description="Error rate percentage"
-    )
-    response_time: Optional[float] = Field(
-        default=None, description="Average response time in ms"
-    )
-    timestamp: datetime = Field(
-        default_factory=utcnow, description="Metrics collection timestamp"
-    )
+    request_count: Optional[int] = Field(default=None, description="Total request count")
+    error_rate: Optional[float] = Field(default=None, description="Error rate percentage")
+    response_time: Optional[float] = Field(default=None, description="Average response time in ms")
+    timestamp: datetime = Field(default_factory=utcnow, description="Metrics collection timestamp")
 
     def model_dump_json(self, **kwargs):
         """Custom JSON serialization with datetime handling."""
@@ -276,9 +254,5 @@ class SearchParams(PaginationParams):
         pattern="^(vector|text|hybrid|mmr)$",
         description="Search algorithm to use",
     )
-    threshold: Optional[float] = Field(
-        default=0.7, ge=0.0, le=1.0, description="Threshold to use"
-    )
-    filters: Optional[Dict[str, Any]] = Field(
-        default=None, description="Additional search filters"
-    )
+    threshold: Optional[float] = Field(default=0.7, ge=0.0, le=1.0, description="Threshold to use")
+    filters: Optional[Dict[str, Any]] = Field(default=None, description="Additional search filters")

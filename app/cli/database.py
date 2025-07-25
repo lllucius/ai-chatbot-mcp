@@ -19,14 +19,8 @@ from sqlalchemy import text
 
 from ..config import settings
 from ..database import AsyncSessionLocal
-from .base import (
-    async_command,
-    console,
-    error_message,
-    info_message,
-    success_message,
-    warning_message,
-)
+from .base import (async_command, console, error_message, info_message, success_message,
+                   warning_message)
 
 # Create the database management app
 database_app = typer.Typer(help="Database management commands")
@@ -51,9 +45,7 @@ def init(
             success_message("Database initialized successfully")
 
             if not skip_default_data:
-                info_message(
-                    "Default data (prompts, profiles, servers) has been created"
-                )
+                info_message("Default data (prompts, profiles, servers) has been created")
 
             # Show created tables
             async with AsyncSessionLocal() as db:
@@ -220,9 +212,7 @@ def tables():
                     )
 
                 console.print(table)
-                console.print(
-                    f"\n[bold]Total rows across all tables:[/bold] {total_rows:,}"
-                )
+                console.print(f"\n[bold]Total rows across all tables:[/bold] {total_rows:,}")
 
         except Exception as e:
             error_message(f"Failed to list tables: {e}")
@@ -248,9 +238,7 @@ def migrations():
             )
 
             if result.returncode != 0:
-                error_message(
-                    "Alembic not available. Install with: pip install alembic"
-                )
+                error_message("Alembic not available. Install with: pip install alembic")
                 return
 
             # Get current revision
@@ -302,9 +290,7 @@ def migrations():
 
 @database_app.command()
 def upgrade(
-    revision: str = typer.Option(
-        "head", "--revision", "-r", help="Target revision (default: head)"
-    )
+    revision: str = typer.Option("head", "--revision", "-r", help="Target revision (default: head)")
 ):
     """Run database migrations to upgrade schema."""
 
@@ -389,12 +375,8 @@ def downgrade(
 @database_app.command()
 def backup(
     output_file: str = typer.Option(None, "--output", "-o", help="Backup file path"),
-    schema_only: bool = typer.Option(
-        False, "--schema-only", help="Backup schema only (no data)"
-    ),
-    data_only: bool = typer.Option(
-        False, "--data-only", help="Backup data only (no schema)"
-    ),
+    schema_only: bool = typer.Option(False, "--schema-only", help="Backup schema only (no data)"),
+    data_only: bool = typer.Option(False, "--data-only", help="Backup data only (no schema)"),
 ):
     """Create a database backup."""
 
@@ -403,9 +385,7 @@ def backup(
             # Generate backup filename if not provided
             if not output_file:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                backup_type = (
-                    "schema" if schema_only else "data" if data_only else "full"
-                )
+                backup_type = "schema" if schema_only else "data" if data_only else "full"
                 filename = f"backup_{backup_type}_{timestamp}.sql"
             else:
                 filename = output_file
@@ -567,18 +547,14 @@ def vacuum():
                     warning_message("No user tables found to vacuum")
                     return
 
-                info_message(
-                    f"Found {len(all_tables)} tables to vacuum: {', '.join(all_tables)}"
-                )
+                info_message(f"Found {len(all_tables)} tables to vacuum: {', '.join(all_tables)}")
 
                 # VACUUM each table
                 vacuumed_count = 0
                 for table_name in all_tables:
                     try:
                         # Execute VACUUM outside of transaction
-                        await conn.execute(
-                            text("COMMIT")
-                        )  # End any existing transaction
+                        await conn.execute(text("COMMIT"))  # End any existing transaction
                         await conn.execute(text(f'VACUUM ANALYZE "{table_name}"'))
                         info_message(f"Vacuumed table: {table_name}")
                         vacuumed_count += 1
@@ -663,9 +639,7 @@ def analyze():
                 total_db_size = size_data[1] if size_data else 1
                 for row in table_sizes.fetchall():
                     schema, table_name, size_pretty, size_bytes = row
-                    percentage = (
-                        (size_bytes / total_db_size) * 100 if total_db_size > 0 else 0
-                    )
+                    percentage = (size_bytes / total_db_size) * 100 if total_db_size > 0 else 0
                     table_table.add_row(table_name, size_pretty, f"{percentage:.1f}%")
 
                 console.print(table_table)
@@ -710,9 +684,7 @@ def analyze():
 @database_app.command()
 def query(
     sql: str = typer.Argument(..., help="SQL query to execute"),
-    limit: int = typer.Option(
-        100, "--limit", "-l", help="Limit results (for SELECT queries)"
-    ),
+    limit: int = typer.Option(100, "--limit", "-l", help="Limit results (for SELECT queries)"),
 ):
     """Execute a custom SQL query."""
 
@@ -755,11 +727,7 @@ def query(
                     # Add rows
                     for row in rows[:50]:  # Limit to 50 rows for display
                         row_values = [
-                            (
-                                str(value)[:50] + "..."
-                                if len(str(value)) > 50
-                                else str(value)
-                            )
+                            (str(value)[:50] + "..." if len(str(value)) > 50 else str(value))
                             for value in row[:10]
                         ]
                         results_table.add_row(*row_values)

@@ -115,9 +115,7 @@ class FastMCPClientService:
         await self._parse_server_configs()
 
         if not self.servers:
-            logger.warning(
-                "No MCP servers found in registry - cannot initialize MCP clients"
-            )
+            logger.warning("No MCP servers found in registry - cannot initialize MCP clients")
             self.is_initialized = False
             return
 
@@ -131,9 +129,7 @@ class FastMCPClientService:
                     successful_connections += 1
                     logger.info(f"✅ Connected to MCP server (HTTP): {server_name}")
                 except Exception as e:
-                    logger.error(
-                        f"❌ Failed to connect to MCP server {server_name}: {e}"
-                    )
+                    logger.error(f"❌ Failed to connect to MCP server {server_name}: {e}")
                     # Don't fail completely - continue with other servers
 
             # Discover available tools from connected clients
@@ -177,9 +173,7 @@ class FastMCPClientService:
                 )
 
         except asyncio.TimeoutError:
-            logger.error(
-                f"Timeout connecting to MCP server {server_name} after {server.timeout}s"
-            )
+            logger.error(f"Timeout connecting to MCP server {server_name} after {server.timeout}s")
             # Update connection status in registry
             await MCPRegistryService.update_connection_status(
                 server_name, False, increment_errors=True
@@ -231,9 +225,7 @@ class FastMCPClientService:
                             tool_name_attr = tool_info.get(
                                 "name", f"unknown_tool_{len(server_tools)}"
                             )
-                            tool_desc = tool_info.get(
-                                "description", f"Tool from {server_name}"
-                            )
+                            tool_desc = tool_info.get("description", f"Tool from {server_name}")
                             tool_schema = tool_info.get("inputSchema", None)
                         else:
                             logger.warning(
@@ -322,16 +314,12 @@ class FastMCPClientService:
                         )
                         logger.info(f"Auto-registered server: {server_name}")
                     except Exception as e:
-                        logger.warning(
-                            f"Failed to auto-register server {server_name}: {e}"
-                        )
+                        logger.warning(f"Failed to auto-register server {server_name}: {e}")
 
             # Update connection status for registered servers
             for server_name in self.servers.keys():
                 is_connected = server_name in self.clients
-                await MCPRegistryService.update_connection_status(
-                    server_name, is_connected
-                )
+                await MCPRegistryService.update_connection_status(server_name, is_connected)
 
         except Exception as e:
             logger.warning(f"Failed to sync servers with registry: {e}")
@@ -389,9 +377,7 @@ class FastMCPClientService:
 
             # Check if server is enabled in registry
             if tool_from_registry:
-                server = await MCPRegistryService.get_server(
-                    tool_from_registry.server.name
-                )
+                server = await MCPRegistryService.get_server(tool_from_registry.server.name)
                 if server and not server.is_enabled:
                     raise ExternalServiceError(
                         f"Server '{tool_from_registry.server.name}' is disabled"
@@ -422,9 +408,7 @@ class FastMCPClientService:
         try:
             # Call the tool using FastMCP
             async with client:
-                result = await client.call_tool(
-                    name=original_tool_name, arguments=parameters
-                )
+                result = await client.call_tool(name=original_tool_name, arguments=parameters)
             success = True
         except Exception:
             success = False
@@ -434,9 +418,7 @@ class FastMCPClientService:
             if record_usage and tool_from_registry:
                 try:
                     duration_ms = int((time.time() - start_time) * 1000)
-                    await MCPRegistryService.record_tool_usage(
-                        tool_name, success, duration_ms
-                    )
+                    await MCPRegistryService.record_tool_usage(tool_name, success, duration_ms)
                 except Exception as e:
                     logger.warning(f"Failed to record tool usage: {e}")
 
@@ -453,9 +435,7 @@ class FastMCPClientService:
         if hasattr(result, "content") and result.content:
             for content_item in result.content:
                 if hasattr(content_item, "text"):
-                    formatted_result["content"].append(
-                        {"type": "text", "text": content_item.text}
-                    )
+                    formatted_result["content"].append({"type": "text", "text": content_item.text})
                 elif hasattr(content_item, "data"):
                     formatted_result["content"].append(
                         {
@@ -504,9 +484,7 @@ class FastMCPClientService:
         if not formatted_result["content"]:
             formatted_result["content"].append({"type": "text", "text": str(result)})
 
-        logger.info(
-            f"Tool '{tool_name}' executed successfully on server '{server_name}'"
-        )
+        logger.info(f"Tool '{tool_name}' executed successfully on server '{server_name}'")
 
         return formatted_result
 
@@ -522,9 +500,7 @@ class FastMCPClientService:
         except Exception:
             return str(result)
 
-    async def get_available_tools(
-        self, enabled_only: bool = False
-    ) -> Dict[str, Dict[str, Any]]:
+    async def get_available_tools(self, enabled_only: bool = False) -> Dict[str, Dict[str, Any]]:
         """
         Get available tools, optionally filtering by enabled status from registry.
 
@@ -546,9 +522,7 @@ class FastMCPClientService:
         from .mcp_registry import MCPRegistryService
 
         try:
-            registry_tools = await MCPRegistryService.list_tools(
-                enabled_only=enabled_only
-            )
+            registry_tools = await MCPRegistryService.list_tools(enabled_only=enabled_only)
 
             # Convert to the format expected by the client
             available_tools = {}
@@ -591,9 +565,7 @@ class FastMCPClientService:
         """
         return self.tools.get(tool_name)
 
-    async def get_tools_for_openai(
-        self, enabled_only: bool = False
-    ) -> List[Dict[str, Any]]:
+    async def get_tools_for_openai(self, enabled_only: bool = False) -> List[Dict[str, Any]]:
         """
         Get tools formatted for OpenAI function calling, with optional registry filtering.
 
@@ -620,9 +592,7 @@ class FastMCPClientService:
         return openai_tools
 
     @handle_api_errors("MCP tool calls execution failed")
-    async def execute_tool_calls(
-        self, tool_calls: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def execute_tool_calls(self, tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Execute multiple tool calls from OpenAI function calling.
 
@@ -633,9 +603,7 @@ class FastMCPClientService:
             list: Results from tool executions
         """
         if not self.is_initialized:
-            raise ExternalServiceError(
-                "MCP client not initialized - cannot execute tool calls"
-            )
+            raise ExternalServiceError("MCP client not initialized - cannot execute tool calls")
 
         results = []
         for tool_call in tool_calls:
@@ -646,15 +614,11 @@ class FastMCPClientService:
                 result = await self.call_tool(function_name, function_args)
                 results.append(result)
             except Exception as e:
-                logger.error(
-                    f"Failed to execute tool call {tool_call.get('id', 'unknown')}: {e}"
-                )
+                logger.error(f"Failed to execute tool call {tool_call.get('id', 'unknown')}: {e}")
                 results.append(
                     {
                         "tool_call_id": tool_call.get("id", "unknown"),
-                        "function_name": tool_call.get("function", {}).get(
-                            "name", "unknown"
-                        ),
+                        "function_name": tool_call.get("function", {}).get("name", "unknown"),
                         "success": False,
                         "error": str(e),
                     }
@@ -684,9 +648,7 @@ class FastMCPClientService:
                 # Try to ping the server by listing tools
                 await asyncio.wait_for(client.list_tools(), timeout=5)
 
-                tools_count = len(
-                    [t for t in self.tools.values() if t["server"] == server_name]
-                )
+                tools_count = len([t for t in self.tools.values() if t["server"] == server_name])
 
                 health_status["server_status"][server_name] = {
                     "status": "healthy",
@@ -787,10 +749,7 @@ class FastMCPClientService:
                 # Handle different response formats
                 if hasattr(resources_response, "resources"):
                     resources_list = resources_response.resources
-                elif (
-                    isinstance(resources_response, dict)
-                    and "resources" in resources_response
-                ):
+                elif isinstance(resources_response, dict) and "resources" in resources_response:
                     resources_list = resources_response["resources"]
                 elif isinstance(resources_response, list):
                     resources_list = resources_response

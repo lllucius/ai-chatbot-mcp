@@ -62,9 +62,7 @@ async def list_profiles(
                     "is_active": p.is_active,
                     "parameters": p.to_openai_params(),
                     "usage_count": p.usage_count,
-                    "last_used_at": (
-                        p.last_used_at.isoformat() if p.last_used_at else None
-                    ),
+                    "last_used_at": (p.last_used_at.isoformat() if p.last_used_at else None),
                     "created_at": p.created_at.isoformat(),
                 }
                 for p in profiles
@@ -97,9 +95,7 @@ async def get_profile_details(
 
     Returns the complete profile parameters, metadata, and usage statistics.
     """
-    log_api_call(
-        "get_profile_details", user_id=current_user.id, profile_name=profile_name
-    )
+    log_api_call("get_profile_details", user_id=current_user.id, profile_name=profile_name)
 
     try:
         profile = await profile_service.get_profile(profile_name)
@@ -162,17 +158,13 @@ async def set_default_profile(
 
     Only available to superusers.
     """
-    log_api_call(
-        "set_default_profile", user_id=current_user.id, profile_name=profile_name
-    )
+    log_api_call("set_default_profile", user_id=current_user.id, profile_name=profile_name)
 
     try:
         success = await profile_service.set_default_profile(profile_name)
 
         if success:
-            return BaseResponse(
-                success=True, message=f"Profile '{profile_name}' set as default"
-            )
+            return BaseResponse(success=True, message=f"Profile '{profile_name}' set as default")
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -23,17 +23,8 @@ from ..database import AsyncSessionLocal
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..models.user import User
 from ..services.document import DocumentService
-from .base import (
-    async_command,
-    console,
-    error_message,
-    format_size,
-    format_timestamp,
-    info_message,
-    progress_context,
-    success_message,
-    warning_message,
-)
+from .base import (async_command, console, error_message, format_size, format_timestamp,
+                   info_message, progress_context, success_message, warning_message)
 
 
 def get_content_type(filename: str) -> str:
@@ -49,15 +40,11 @@ document_app = typer.Typer(help="Document management commands")
 @document_app.command()
 def upload(
     file_path: str = typer.Argument(..., help="Path to the file to upload"),
-    title: str = typer.Option(
-        None, "--title", "-t", help="Document title (defaults to filename)"
-    ),
+    title: str = typer.Option(None, "--title", "-t", help="Document title (defaults to filename)"),
     username: str = typer.Option(
         None, "--user", "-u", help="Username of document owner (defaults to system)"
     ),
-    process_now: bool = typer.Option(
-        False, "--process", "-p", help="Process document immediately"
-    ),
+    process_now: bool = typer.Option(False, "--process", "-p", help="Process document immediately"),
 ):
     """Upload a document for processing."""
 
@@ -79,18 +66,14 @@ def upload(
                 # Get or create system user if no username provided
                 user_id = None
                 if username:
-                    user = await db.scalar(
-                        select(User).where(User.username == username)
-                    )
+                    user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")
                         return
                     user_id = user.id
                 else:
                     # Look for system user or create one
-                    system_user = await db.scalar(
-                        select(User).where(User.username == "system")
-                    )
+                    system_user = await db.scalar(select(User).where(User.username == "system"))
                     if not system_user:
                         # Create a system user
                         from ..services.user import UserService
@@ -163,9 +146,7 @@ def upload(
 
 @document_app.command()
 def list(
-    limit: int = typer.Option(
-        20, "--limit", "-l", help="Maximum number of documents to show"
-    ),
+    limit: int = typer.Option(20, "--limit", "-l", help="Maximum number of documents to show"),
     status: str = typer.Option(
         None,
         "--status",
@@ -196,9 +177,7 @@ def list(
                         return
 
                 if username:
-                    user = await db.scalar(
-                        select(User).where(User.username == username)
-                    )
+                    user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")
                         return
@@ -247,12 +226,8 @@ def list(
                 user_ids = [doc.owner_id for doc in documents if doc.owner_id]
                 users = {}
                 if user_ids:
-                    user_result = await db.execute(
-                        select(User).where(User.id.in_(user_ids))
-                    )
-                    users = {
-                        user.id: user.username for user in user_result.scalars().all()
-                    }
+                    user_result = await db.execute(select(User).where(User.id.in_(user_ids)))
+                    users = {user.id: user.username for user in user_result.scalars().all()}
 
                 for doc in documents:
                     status_icon = {
@@ -262,18 +237,12 @@ def list(
                         FileStatus.FAILED: "❌",
                     }.get(doc.status, "❓")
 
-                    owner_name = (
-                        users.get(doc.owner_id, "System") if doc.owner_id else "System"
-                    )
+                    owner_name = users.get(doc.owner_id, "System") if doc.owner_id else "System"
 
                     table.add_row(
                         str(doc.id),
                         doc.title[:18] + "..." if len(doc.title) > 20 else doc.title,
-                        (
-                            doc.filename[:13] + "..."
-                            if len(doc.filename) > 15
-                            else doc.filename
-                        ),
+                        (doc.filename[:13] + "..." if len(doc.filename) > 15 else doc.filename),
                         format_size(doc.file_size),
                         f"{status_icon} {doc.status.value.title()}",
                         owner_name,
@@ -290,9 +259,7 @@ def list(
 
 @document_app.command()
 def show(
-    document_id: str = typer.Argument(
-        ..., help="Document ID (UUID) to show details for"
-    ),
+    document_id: str = typer.Argument(..., help="Document ID (UUID) to show details for"),
 ):
     """Show detailed information about a specific document."""
 
@@ -368,9 +335,7 @@ def show(
 
                     for chunk in chunks:
                         preview = (
-                            chunk.content[:57] + "..."
-                            if len(chunk.content) > 60
-                            else chunk.content
+                            chunk.content[:57] + "..." if len(chunk.content) > 60 else chunk.content
                         )
                         chunk_table.add_row(
                             str(chunk.chunk_index), preview, str(chunk.token_count or 0)
@@ -404,9 +369,7 @@ def delete(
                     error_message(f"Invalid UUID format: {document_id}")
                     return
 
-                document = await db.scalar(
-                    select(Document).where(Document.id == document_id)
-                )
+                document = await db.scalar(select(Document).where(Document.id == document_id))
 
                 if not document:
                     error_message(f"Document with ID {document_id} not found")
@@ -428,9 +391,7 @@ def delete(
                 if not force:
                     from rich.prompt import Confirm
 
-                    if not Confirm.ask(
-                        "Are you sure you want to delete this document?"
-                    ):
+                    if not Confirm.ask("Are you sure you want to delete this document?"):
                         warning_message("Deletion cancelled")
                         return
 
@@ -475,9 +436,7 @@ def reprocess(
                     error_message(f"Invalid UUID format: {document_id}")
                     return
 
-                document = await db.scalar(
-                    select(Document).where(Document.id == document_id)
-                )
+                document = await db.scalar(select(Document).where(Document.id == document_id))
 
                 if not document:
                     error_message(f"Document with ID {document_id} not found")
@@ -488,9 +447,7 @@ def reprocess(
                 # Reset status and clear existing chunks
                 document.status = FileStatus.PENDING
                 await db.execute(
-                    DocumentChunk.__table__.delete().where(
-                        DocumentChunk.document_id == document_id
-                    )
+                    DocumentChunk.__table__.delete().where(DocumentChunk.document_id == document_id)
                 )
                 await db.commit()
 
@@ -499,9 +456,7 @@ def reprocess(
                 await db.commit()
 
                 success_message(f"Document '{document.title}' queued for reprocessing")
-                info_message(
-                    f"Monitor status with: manage documents show {document_id}"
-                )
+                info_message(f"Monitor status with: manage documents show {document_id}")
 
             except Exception as e:
                 error_message(f"Failed to reprocess document: {e}")
@@ -534,9 +489,7 @@ def search(
                 )
 
                 # Use system user ID for search (since CLI doesn't have user context)
-                system_user = await db.scalar(
-                    select(User).where(User.username == "system")
-                )
+                system_user = await db.scalar(select(User).where(User.username == "system"))
                 if not system_user:
                     # Create system user if not exists
                     from ..services.user import UserService
@@ -572,17 +525,11 @@ def search(
                 for result in results:
                     # Truncate content for display
                     content_preview = (
-                        result.content[:57] + "..."
-                        if len(result.content) > 60
-                        else result.content
+                        result.content[:57] + "..." if len(result.content) > 60 else result.content
                     )
                     content_preview = content_preview.replace("\n", " ")
 
-                    score = (
-                        f"{result.similarity_score:.3f}"
-                        if result.similarity_score
-                        else "N/A"
-                    )
+                    score = f"{result.similarity_score:.3f}" if result.similarity_score else "N/A"
                     doc_title = result.document_title or "Unknown"
 
                     table.add_row(
@@ -626,16 +573,12 @@ def stats():
                 # Recent uploads
                 last_7_days = datetime.now() - timedelta(days=7)
                 recent_docs = await db.scalar(
-                    select(func.count(Document.id)).where(
-                        Document.created_at >= last_7_days
-                    )
+                    select(func.count(Document.id)).where(Document.created_at >= last_7_days)
                 )
 
                 # Chunk statistics
                 total_chunks = await db.scalar(select(func.count(DocumentChunk.id)))
-                avg_chunks_per_doc = (
-                    total_chunks / max(total_docs, 1) if total_docs else 0
-                )
+                avg_chunks_per_doc = total_chunks / max(total_docs, 1) if total_docs else 0
 
                 # Create statistics table
                 table = Table(title="Document Statistics")
@@ -671,13 +614,9 @@ def stats():
                     }.get(status, "❓")
 
                     percentage = (
-                        f"{count / max(total_docs or 1, 1) * 100:.1f}%"
-                        if total_docs
-                        else "0%"
+                        f"{count / max(total_docs or 1, 1) * 100:.1f}%" if total_docs else "0%"
                     )
-                    table.add_row(
-                        f"{status_icon} {status.value.title()}", str(count), percentage
-                    )
+                    table.add_row(f"{status_icon} {status.value.title()}", str(count), percentage)
 
                 console.print(table)
 
@@ -689,12 +628,8 @@ def stats():
 
 @document_app.command()
 def cleanup(
-    status: str = typer.Option(
-        "failed", "--status", "-s", help="Status of documents to clean up"
-    ),
-    older_than: int = typer.Option(
-        30, "--older-than", help="Days old to consider for cleanup"
-    ),
+    status: str = typer.Option("failed", "--status", "-s", help="Status of documents to clean up"),
+    older_than: int = typer.Option(30, "--older-than", help="Days old to consider for cleanup"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
 ):
     """Clean up old or failed documents."""
@@ -726,18 +661,14 @@ def cleanup(
                 documents = result.scalars().all()
 
                 if not documents:
-                    info_message(
-                        f"No {status} documents older than {older_than} days found"
-                    )
+                    info_message(f"No {status} documents older than {older_than} days found")
                     return
 
                 console.print(
                     f"\n[bold yellow]Found {len(documents)} {status} documents to clean up:[/bold yellow]"
                 )
                 for doc in documents[:10]:  # Show first 10
-                    console.print(
-                        f"  • {doc.title} (ID: {doc.id}, Size: {format_size(doc.size)})"
-                    )
+                    console.print(f"  • {doc.title} (ID: {doc.id}, Size: {format_size(doc.size)})")
 
                 if len(documents) > 10:
                     console.print(f"  ... and {len(documents) - 10} more")
