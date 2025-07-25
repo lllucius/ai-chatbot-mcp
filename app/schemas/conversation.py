@@ -77,7 +77,7 @@ class ConversationResponse(ConversationBase):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -144,7 +144,7 @@ class MessageResponse(MessageBase):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -262,7 +262,7 @@ class ConversationStats(BaseSchema):
         None, description="Most recent activity"
     )
 
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}}
 
 
 # Streaming response models

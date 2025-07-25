@@ -328,9 +328,9 @@ async def chat_stream(
                     
                     # Convert Pydantic objects to dictionaries
                     if "ai_message" in response_data:
-                        response_data["ai_message"] = response_data["ai_message"].model_dump()
+                        response_data["ai_message"] = response_data["ai_message"].model_dump(mode='json')
                     if "conversation" in response_data:
-                        response_data["conversation"] = response_data["conversation"].model_dump()
+                        response_data["conversation"] = response_data["conversation"].model_dump(mode='json')
                     
                     complete_event = StreamCompleteResponse(response=response_data)
                     yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
