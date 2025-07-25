@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from ..schemas.common import BaseResponse, PaginatedResponse, PaginationParams
+from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.conversation import (
     ChatRequest,
     ChatResponse,
@@ -95,11 +95,11 @@ async def list_conversations(
         ConversationResponse.model_validate(conv) for conv in conversations
     ]
 
-    return PaginatedResponse(
+    return PaginatedResponse.create(
         items=conversation_responses,
-        pagination=PaginationParams(page=page, per_page=size),
+        page=page,
+        size=size,
         total=total,
-        success=True,
         message="Conversations retrieved successfully",
     )
 
@@ -214,11 +214,11 @@ async def get_messages(
 
     message_responses = [MessageResponse.model_validate(msg) for msg in messages]
 
-    return PaginatedResponse(
+    return PaginatedResponse.create(
         items=message_responses,
-        pagination=PaginationParams(page=page, per_page=size),
+        page=page,
+        size=size,
         total=total,
-        success=True,
         message="Messages retrieved successfully",
     )
 
@@ -246,7 +246,7 @@ async def chat(
         "chat",
         user_id=str(current_user.id),
         conversation_id=str(request.conversation_id),
-        message_length=len(request.message),
+        message_length=len(request.user_message),
     )
 
     start_time = time.time()
@@ -287,7 +287,7 @@ async def chat_stream(
         "chat_stream",
         user_id=str(current_user.id),
         conversation_id=str(request.conversation_id),
-        message_length=len(request.message),
+        message_length=len(request.user_message),
     )
 
     async def generate_response():

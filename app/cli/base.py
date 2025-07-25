@@ -13,10 +13,10 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from ..database import AsyncSessionLocal
-from ..services.prompt_service import PromptService
-from ..services.llm_profile_service import LLMProfileService
-from ..services.user import UserService
 from ..services.conversation import ConversationService
+from ..services.llm_profile_service import LLMProfileService
+from ..services.prompt_service import PromptService
+from ..services.user import UserService
 
 console = Console()
 

@@ -20,14 +20,14 @@ from pydantic import BaseModel, EmailStr, Field
 class ApiError(Exception):
     """
     Exception raised when API requests fail.
-    
+
     Args:
         status: HTTP status code of the failed request.
         reason: HTTP reason phrase.
         url: The URL that was requested.
         body: Response body content.
     """
-    
+
     def __init__(self, status: int, reason: str, url: str, body: Any):
         super().__init__(f"HTTP {status} {reason}: {body}")
         self.status = status
@@ -58,6 +58,7 @@ class ToolHandlingMode(str, Enum):
 
 class BaseResponse(BaseModel):
     """Base response model for API responses."""
+
     success: bool
     message: str
     timestamp: Optional[str] = None
@@ -65,6 +66,7 @@ class BaseResponse(BaseModel):
 
 class Token(BaseModel):
     """Authentication token response model - matches app/schemas/auth.py Token."""
+
     access_token: str = Field(..., description="JWT access token")
     token_type: str = Field("bearer", description="Token type")
     expires_in: int = Field(..., description="Token expiration in seconds")
@@ -72,6 +74,7 @@ class Token(BaseModel):
 
 class UserResponse(BaseModel):
     """User profile response model - matches app/schemas/user.py UserResponse."""
+
     username: str = Field(..., description="Unique username")
     email: EmailStr = Field(..., description="User email address")
     id: UUID = Field(..., description="Unique user identifier")
@@ -85,31 +88,44 @@ class UserResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     """User registration request model - matches app/schemas/auth.py RegisterRequest."""
-    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+
+    username: str = Field(
+        ..., min_length=3, max_length=50, description="Unique username"
+    )
     email: EmailStr = Field(..., description="Valid email address")
-    password: str = Field(..., min_length=8, max_length=100, description="Strong password")
-    full_name: Optional[str] = Field(None, max_length=255, description="Full display name")
+    password: str = Field(
+        ..., min_length=8, max_length=100, description="Strong password"
+    )
+    full_name: Optional[str] = Field(
+        None, max_length=255, description="Full display name"
+    )
 
 
 class LoginRequest(BaseModel):
     """User login request model - matches app/schemas/auth.py LoginRequest."""
-    username: str = Field(..., min_length=3, max_length=50, description="Username or email")
+
+    username: str = Field(
+        ..., min_length=3, max_length=50, description="Username or email"
+    )
     password: str = Field(..., min_length=8, max_length=100, description="Password")
 
 
 class PasswordResetRequest(BaseModel):
     """Password reset request model."""
+
     email: str
 
 
 class PasswordResetConfirm(BaseModel):
     """Password reset confirmation model."""
+
     token: str
     new_password: str
 
 
 class UserUpdate(BaseModel):
     """User profile update request model."""
+
     email: Optional[str] = None
     full_name: Optional[str] = None
     is_active: Optional[bool] = None
@@ -117,12 +133,14 @@ class UserUpdate(BaseModel):
 
 class UserPasswordUpdate(BaseModel):
     """User password update request model."""
+
     current_password: str
     new_password: str
 
 
 class PaginationParams(BaseModel):
     """Pagination parameters for list requests."""
+
     page: int
     per_page: int
     sort_by: Optional[str] = None
@@ -131,6 +149,7 @@ class PaginationParams(BaseModel):
 
 class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated response wrapper model."""
+
     success: bool
     message: str
     items: List[Any]
@@ -140,6 +159,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 class DocumentResponse(BaseModel):
     """Document metadata response model - matches app/schemas/document.py DocumentResponse."""
+
     id: UUID = Field(..., description="Document ID")
     title: str = Field(..., description="Document title")
     filename: str = Field(..., description="Original filename")
@@ -158,6 +178,7 @@ class DocumentResponse(BaseModel):
 
 class DocumentUploadResponse(BaseResponse):
     """Document upload response model."""
+
     document: DocumentResponse
     processing_started: bool
     estimated_completion: Optional[str] = None
@@ -165,12 +186,14 @@ class DocumentUploadResponse(BaseResponse):
 
 class DocumentUpdate(BaseModel):
     """Document update request model."""
+
     title: Optional[str] = None
     metainfo: Optional[Dict[str, Any]] = None
 
 
 class ConversationResponse(BaseModel):
     """Conversation metadata response model - matches app/schemas/conversation.py ConversationResponse."""
+
     id: UUID = Field(..., description="Conversation ID")
     title: str = Field(..., description="Conversation title")
     is_active: bool = Field(True, description="Whether conversation is active")
@@ -178,7 +201,9 @@ class ConversationResponse(BaseModel):
     message_count: int = Field(0, description="Number of messages")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-    last_message_at: Optional[datetime] = Field(None, description="Last message timestamp")
+    last_message_at: Optional[datetime] = Field(
+        None, description="Last message timestamp"
+    )
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
 
     model_config = {"from_attributes": True}
@@ -186,6 +211,7 @@ class ConversationResponse(BaseModel):
 
 class ConversationCreate(BaseModel):
     """Conversation creation request model."""
+
     title: str
     is_active: Optional[bool] = True
     metainfo: Optional[Dict[str, Any]] = None
@@ -193,6 +219,7 @@ class ConversationCreate(BaseModel):
 
 class ConversationUpdate(BaseModel):
     """Conversation update request model."""
+
     title: Optional[str] = None
     is_active: Optional[bool] = None
     metainfo: Optional[Dict[str, Any]] = None
@@ -200,13 +227,16 @@ class ConversationUpdate(BaseModel):
 
 class MessageResponse(BaseModel):
     """Chat message response model - matches app/schemas/conversation.py MessageResponse."""
+
     id: UUID = Field(..., description="Message ID")
     role: str = Field(..., description="Message role")
     content: str = Field(..., description="Message content")
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
-    tool_call_results: Optional[Dict[str, Any]] = Field(None, description="Tool call results")
+    tool_call_results: Optional[Dict[str, Any]] = Field(
+        None, description="Tool call results"
+    )
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
     created_at: datetime = Field(..., description="Creation timestamp")
 
@@ -215,6 +245,7 @@ class MessageResponse(BaseModel):
 
 class ProcessingStatusResponse(BaseResponse):
     """Document processing status response model."""
+
     document_id: UUID
     status: str
     progress: float
@@ -227,39 +258,68 @@ class ProcessingStatusResponse(BaseResponse):
 
 class DocumentSearchRequest(BaseModel):
     """Document search request model - matches app/schemas/document.py DocumentSearchRequest."""
+
     query: str = Field(..., min_length=1, description="Search query")
-    limit: Optional[int] = Field(10, ge=1, le=100, description="Maximum number of results")
-    threshold: Optional[float] = Field(0.7, ge=0.0, le=1.0, description="Similarity threshold")
-    algorithm: str = Field("hybrid", description="Search algorithm: vector, text, hybrid, mmr")
-    document_ids: Optional[List[UUID]] = Field(None, description="Specific document IDs to search")
+    limit: Optional[int] = Field(
+        10, ge=1, le=100, description="Maximum number of results"
+    )
+    threshold: Optional[float] = Field(
+        0.7, ge=0.0, le=1.0, description="Similarity threshold"
+    )
+    algorithm: str = Field(
+        "hybrid", description="Search algorithm: vector, text, hybrid, mmr"
+    )
+    document_ids: Optional[List[UUID]] = Field(
+        None, description="Specific document IDs to search"
+    )
     file_types: Optional[List[str]] = Field(None, description="File types to include")
 
 
 class ChatRequest(BaseModel):
     """Chat message request model - matches app/schemas/conversation.py ChatRequest."""
-    user_message: str = Field(..., min_length=1, max_length=10000, description="User message")
-    conversation_id: Optional[UUID] = Field(None, description="Existing conversation ID")
-    conversation_title: Optional[str] = Field(None, max_length=500, description="New conversation title")
+
+    user_message: str = Field(
+        ..., min_length=1, max_length=10000, description="User message"
+    )
+    conversation_id: Optional[UUID] = Field(
+        None, description="Existing conversation ID"
+    )
+    conversation_title: Optional[str] = Field(
+        None, max_length=500, description="New conversation title"
+    )
     use_rag: bool = Field(True, description="Whether to use RAG for context")
     use_tools: bool = Field(True, description="Whether to enable tool calling")
     tool_handling_mode: ToolHandlingMode = Field(
         default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
         description="How to handle tool call results: return_results or complete_with_results",
     )
-    rag_documents: Optional[List[UUID]] = Field(None, description="Specific document IDs for RAG")
-    
+    rag_documents: Optional[List[UUID]] = Field(
+        None, description="Specific document IDs for RAG"
+    )
+
     # Registry integration fields
-    prompt_name: Optional[str] = Field(None, description="Name of prompt to use from prompt registry")
-    profile_name: Optional[str] = Field(None, description="Name of LLM profile to use from profile registry")
-    llm_profile: Optional[Dict[str, Any]] = Field(None, description="LLM profile object with parameter configuration")
+    prompt_name: Optional[str] = Field(
+        None, description="Name of prompt to use from prompt registry"
+    )
+    profile_name: Optional[str] = Field(
+        None, description="Name of LLM profile to use from profile registry"
+    )
+    llm_profile: Optional[Dict[str, Any]] = Field(
+        None, description="LLM profile object with parameter configuration"
+    )
 
     # Legacy fields for backward compatibility (deprecated)
-    max_tokens: Optional[int] = Field(None, description="Max tokens (deprecated - use profile)")
-    temperature: Optional[float] = Field(None, description="Temperature (deprecated - use profile)")
+    max_tokens: Optional[int] = Field(
+        None, description="Max tokens (deprecated - use profile)"
+    )
+    temperature: Optional[float] = Field(
+        None, description="Temperature (deprecated - use profile)"
+    )
 
 
 class ChatResponse(BaseResponse):
     """Chat response model with AI message - matches app/schemas/conversation.py ChatResponse."""
+
     ai_message: MessageResponse
     conversation: ConversationResponse
     response_time_ms: float
@@ -274,6 +334,7 @@ class ChatResponse(BaseResponse):
 
 class PromptResponse(BaseModel):
     """Prompt registry response model."""
+
     name: str = Field(..., description="Unique prompt name")
     title: str = Field(..., description="Human-readable title")
     description: Optional[str] = Field(None, description="Prompt description")
@@ -291,6 +352,7 @@ class PromptResponse(BaseModel):
 
 class PromptCreate(BaseModel):
     """Create prompt request model."""
+
     name: str = Field(..., description="Unique prompt name")
     title: str = Field(..., description="Human-readable title")
     description: Optional[str] = Field(None, description="Prompt description")
@@ -302,6 +364,7 @@ class PromptCreate(BaseModel):
 
 class LLMProfileResponse(BaseModel):
     """LLM profile registry response model."""
+
     name: str = Field(..., description="Unique profile name")
     title: str = Field(..., description="Human-readable title")
     description: Optional[str] = Field(None, description="Profile description")
@@ -318,6 +381,7 @@ class LLMProfileResponse(BaseModel):
 
 class LLMProfileCreate(BaseModel):
     """Create LLM profile request model."""
+
     name: str = Field(..., description="Unique profile name")
     title: str = Field(..., description="Human-readable title")
     description: Optional[str] = Field(None, description="Profile description")
@@ -328,6 +392,7 @@ class LLMProfileCreate(BaseModel):
 
 class ToolResponse(BaseModel):
     """MCP tool response model."""
+
     name: str = Field(..., description="Tool name")
     description: str = Field(..., description="Tool description")
     tool_schema: Dict[str, Any] = Field(..., description="Tool schema", alias="schema")
@@ -341,6 +406,7 @@ class ToolResponse(BaseModel):
 
 class ToolsListResponse(BaseResponse):
     """Tools list response model."""
+
     available_tools: List[ToolResponse] = Field([], description="Available MCP tools")
     openai_tools: List[Dict[str, Any]] = Field([], description="OpenAI-formatted tools")
     servers: List[Dict[str, Any]] = Field([], description="MCP servers status")
@@ -361,15 +427,15 @@ def handle_response(
 ) -> Any:
     """
     Handle API response and raise ApiError on failure.
-    
+
     Args:
         resp: The HTTP response object.
         url: The URL that was requested.
         cls: Optional type to deserialize response data into.
-        
+
     Returns:
         Parsed JSON response data, optionally deserialized to cls.
-        
+
     Raises:
         ApiError: If the response indicates an error.
     """
@@ -400,11 +466,11 @@ def build_headers(
 ) -> Dict[str, str]:
     """
     Build HTTP headers for API requests.
-    
+
     Args:
         token: Optional authentication token.
         content_type: Optional content type header value.
-        
+
     Returns:
         Dictionary of HTTP headers.
     """
@@ -419,12 +485,12 @@ def build_headers(
 def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> str:
     """
     Construct a URL with optional query parameters.
-    
+
     Args:
         base: Base URL.
         path: URL path to append.
         query: Optional query parameters.
-        
+
     Returns:
         Complete URL string.
     """
@@ -442,11 +508,11 @@ def fetch_all_pages(
 ) -> List[Any]:
     """
     Fetch all pages of paginated results.
-    
+
     Args:
         fetch_page: Function that takes page and per_page parameters.
         per_page: Number of items per page.
-        
+
     Returns:
         List of all items from all pages.
     """
@@ -466,7 +532,7 @@ def fetch_all_pages(
 
 class HealthClient:
     """Client for health check endpoints."""
-    
+
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
@@ -501,7 +567,7 @@ class HealthClient:
 
 class AuthClient:
     """Client for authentication operations."""
-    
+
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
@@ -515,9 +581,7 @@ class AuthClient:
 
     def login(self, username: str, password: str) -> Token:
         data = {"username": username, "password": password}
-        token = self.sdk._request(
-            "/api/v1/auth/login", Token, method="POST", json=data
-        )
+        token = self.sdk._request("/api/v1/auth/login", Token, method="POST", json=data)
         self.sdk.set_token(token.access_token)
         return token
 
@@ -526,9 +590,7 @@ class AuthClient:
 
     def logout(self) -> BaseResponse:
         """Logout current user and invalidate token."""
-        return self.sdk._request(
-            "/api/v1/auth/logout", BaseResponse, method="POST"
-        )
+        return self.sdk._request("/api/v1/auth/logout", BaseResponse, method="POST")
 
     def refresh(self) -> Token:
         """Refresh authentication token."""
@@ -633,14 +695,10 @@ class DocumentsClient:
         params = filter_query(
             {"page": page, "size": size, "file_type": file_type, "status": status}
         )
-        return self.sdk._request(
-            "/api/v1/documents/", DocumentResponse, params=params
-        )
+        return self.sdk._request("/api/v1/documents/", DocumentResponse, params=params)
 
     def get(self, document_id: UUID) -> DocumentResponse:
-        return self.sdk._request(
-            f"/api/v1/documents/{document_id}", DocumentResponse
-        )
+        return self.sdk._request(f"/api/v1/documents/{document_id}", DocumentResponse)
 
     def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
         return self.sdk._request(
@@ -669,9 +727,7 @@ class DocumentsClient:
         )
 
     def download(self, document_id: UUID) -> bytes:
-        url = make_url(
-            self.sdk.base_url, f"/api/v1/documents/{document_id}/download"
-        )
+        url = make_url(self.sdk.base_url, f"/api/v1/documents/{document_id}/download")
         resp = self.sdk._session.get(
             url, headers=build_headers(self.sdk.token), stream=True
         )
@@ -748,7 +804,7 @@ class ConversationsClient:
 
 class SearchClient:
     """Client for search operations."""
-    
+
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
@@ -766,9 +822,7 @@ class SearchClient:
 
     def suggestions(self, query: str, limit: int = 5) -> List[Any]:
         params = {"query": query, "limit": limit}
-        return self.sdk._request(
-            "/api/v1/search/suggestions", list, params=params
-        )
+        return self.sdk._request("/api/v1/search/suggestions", list, params=params)
 
     def history(self, limit: int = 10) -> List[Any]:
         params = {"limit": limit}
@@ -782,7 +836,7 @@ class SearchClient:
 
 class ToolsClient:
     """Client for MCP tools management."""
-    
+
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
@@ -813,22 +867,20 @@ class ToolsClient:
 
 class PromptsClient:
     """Client for prompt registry management."""
-    
+
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
     def list_prompts(
-        self, 
-        active_only: bool = True, 
-        category: Optional[str] = None, 
-        search: Optional[str] = None
+        self,
+        active_only: bool = True,
+        category: Optional[str] = None,
+        search: Optional[str] = None,
     ) -> Dict[str, Any]:
         """List all prompts with optional filtering."""
-        params = filter_query({
-            "active_only": active_only,
-            "category": category,
-            "search": search
-        })
+        params = filter_query(
+            {"active_only": active_only, "category": category, "search": search}
+        )
         return self.sdk._request("/api/v1/prompts/", dict, params=params)
 
     def get_prompt(self, prompt_name: str) -> PromptResponse:
@@ -844,10 +896,7 @@ class PromptsClient:
     def update_prompt(self, prompt_name: str, data: Dict[str, Any]) -> PromptResponse:
         """Update an existing prompt."""
         return self.sdk._request(
-            f"/api/v1/prompts/{prompt_name}", 
-            PromptResponse, 
-            method="PUT", 
-            json=data
+            f"/api/v1/prompts/{prompt_name}", PromptResponse, method="PUT", json=data
         )
 
     def delete_prompt(self, prompt_name: str) -> BaseResponse:
@@ -863,20 +912,15 @@ class PromptsClient:
 
 class ProfilesClient:
     """Client for LLM profile registry management."""
-    
+
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
     def list_profiles(
-        self, 
-        active_only: bool = True, 
-        search: Optional[str] = None
+        self, active_only: bool = True, search: Optional[str] = None
     ) -> Dict[str, Any]:
         """List all LLM profiles with optional filtering."""
-        params = filter_query({
-            "active_only": active_only,
-            "search": search
-        })
+        params = filter_query({"active_only": active_only, "search": search})
         return self.sdk._request("/api/v1/profiles/", dict, params=params)
 
     def get_profile(self, profile_name: str) -> LLMProfileResponse:
@@ -886,16 +930,21 @@ class ProfilesClient:
     def create_profile(self, data: LLMProfileCreate) -> LLMProfileResponse:
         """Create a new LLM profile."""
         return self.sdk._request(
-            "/api/v1/profiles/", LLMProfileResponse, method="POST", json=data.model_dump()
+            "/api/v1/profiles/",
+            LLMProfileResponse,
+            method="POST",
+            json=data.model_dump(),
         )
 
-    def update_profile(self, profile_name: str, data: Dict[str, Any]) -> LLMProfileResponse:
+    def update_profile(
+        self, profile_name: str, data: Dict[str, Any]
+    ) -> LLMProfileResponse:
         """Update an existing LLM profile."""
         return self.sdk._request(
-            f"/api/v1/profiles/{profile_name}", 
-            LLMProfileResponse, 
-            method="PUT", 
-            json=data
+            f"/api/v1/profiles/{profile_name}",
+            LLMProfileResponse,
+            method="PUT",
+            json=data,
         )
 
     def delete_profile(self, profile_name: str) -> BaseResponse:
@@ -915,11 +964,11 @@ class ProfilesClient:
 class AIChatbotSDK:
     """
     Main SDK class for AI Chatbot Platform API interactions.
-    
+
     Provides a comprehensive client for accessing all API endpoints including
     authentication, document management, conversations, search functionality,
     and registry-based features for prompts, LLM profiles, and MCP tools.
-    
+
     Features:
     - User authentication and management
     - Document upload, processing, and search
@@ -928,13 +977,13 @@ class AIChatbotSDK:
     - Prompt registry for consistent system prompts
     - LLM profile registry for parameter management
     - MCP tools integration and management
-    
+
     Args:
         base_url: Base URL of the AI Chatbot API.
         token: Optional authentication token.
         on_error: Optional error handler callback.
         session: Optional custom requests session.
-        
+
     Example:
         >>> sdk = AIChatbotSDK("http://localhost:8000")
         >>> token = sdk.auth.login("username", "password")
@@ -944,7 +993,7 @@ class AIChatbotSDK:
         ...     prompt_name="helpful_assistant"
         ... ))
     """
-    
+
     def __init__(
         self,
         base_url: str,
@@ -964,7 +1013,7 @@ class AIChatbotSDK:
         self.documents = DocumentsClient(self)
         self.conversations = ConversationsClient(self)
         self.search = SearchClient(self)
-        
+
         # New registry-based clients
         self.tools = ToolsClient(self)
         self.prompts = PromptsClient(self)

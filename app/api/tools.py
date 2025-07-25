@@ -257,7 +257,11 @@ async def refresh_tools(
         total_updated = sum(
             r.get("updated_tools", 0) for r in results if r.get("success")
         )
-        failed_servers = [r.get("server") for r in results if not r.get("success")]
+        failed_servers = [
+            str(r.get("server"))
+            for r in results
+            if not r.get("success") and r.get("server") is not None
+        ]
 
         message = (
             f"Tools refreshed successfully: {total_new} new, {total_updated} updated"

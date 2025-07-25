@@ -82,7 +82,9 @@ def list_servers(
                 table.add_column("Errors")
 
                 for server in servers:
-                    status = "🟢 Connected" if server.is_connected else "🔴 Disconnected"
+                    status = (
+                        "🟢 Connected" if server.is_connected else "🔴 Disconnected"
+                    )
                     enabled = "✅ Yes" if server.is_enabled else "❌ No"
 
                     table.add_row(

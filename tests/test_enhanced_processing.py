@@ -17,8 +17,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.services.background_processor import (BackgroundProcessor,
-                                               ProcessingTask, TaskStatus)
+from app.services.background_processor import (
+    BackgroundProcessor,
+    ProcessingTask,
+    TaskStatus,
+)
 from app.utils.enhanced_document_processor import DocumentProcessor
 from app.utils.standard_logging import set_correlation_id, setup_logging
 
@@ -316,8 +319,8 @@ class TestIntegratedWorkflow:
             temp_path = f.name
 
         try:
-            # Initialize components
-            processor = DocumentProcessor(config={})
+            # Initialize components - not used yet due to TODO items below
+            # DocumentProcessor(config={})
 
             # TODO: These methods don't exist in DocumentProcessor
             # Test format detection
@@ -337,6 +340,7 @@ class TestIntegratedWorkflow:
             # stats = processor.get_text_statistics(processed)
             # assert stats["word_count"] > 0
             # assert stats["character_count"] > 0
+            pass  # Placeholder since actual tests are commented out
 
         finally:
             Path(temp_path).unlink()

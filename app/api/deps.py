@@ -6,7 +6,7 @@ including authentication, pagination, and service injection.
 
 """
 
-from typing import Generator, Optional
+from typing import Optional
 
 from fastapi import Depends, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..models.user import User
+from ..schemas.common import PaginationParams
 from ..services.auth import AuthService
 from ..services.conversation import ConversationService
 from ..services.document import DocumentService
@@ -93,44 +94,16 @@ async def get_embedding_service(db: AsyncSession = Depends(get_db)) -> Embedding
 
 
 # Pagination dependencies
-class PaginationParams:
-    """Pagination parameters dependency."""
-
-    def __init__(
-        self,
-        page: int = Query(1, ge=1, description="Page number"),
-        size: int = Query(20, ge=1, le=100, description="Items per page"),
-        sort_by: Optional[str] = Query(None, description="Sort field"),
-        sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
-    ):
-        self.page = page
-        self.size = size
-        self.sort_by = sort_by
-        self.sort_order = sort_order
-
-    @property
-    def offset(self) -> int:
-        """Calculate offset for database queries."""
-        return (self.page - 1) * self.size
-
-    @property
-    def limit(self) -> int:
-        """Get limit for database queries."""
-        return self.size
-
-
-def get_pagination_params() -> Generator[PaginationParams, None, None]:
+def get_pagination_params(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    sort_by: Optional[str] = Query(None),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+) -> PaginationParams:
     """Get pagination parameters dependency."""
-
-    def _get_pagination_params(
-        page: int = Query(1, ge=1),
-        size: int = Query(20, ge=1, le=100),
-        sort_by: Optional[str] = Query(None),
-        sort_order: str = Query("desc", regex="^(asc|desc)$"),
-    ) -> PaginationParams:
-        return PaginationParams(page, size, sort_by, sort_order)
-
-    return _get_pagination_params
+    return PaginationParams(
+        page=page, per_page=size, sort_by=sort_by, sort_order=sort_order
+    )
 
 
 # Search parameters dependency
@@ -150,15 +123,11 @@ class SearchParams:
         self.threshold = threshold
 
 
-def get_search_params() -> Generator[SearchParams, None, None]:
+def get_search_params(
+    q: str = Query(..., min_length=1),
+    algorithm: str = Query("hybrid", regex="^(vector|text|hybrid|mmr)$"),
+    limit: int = Query(10, ge=1, le=50),
+    threshold: float = Query(0.7, ge=0.0, le=1.0),
+) -> SearchParams:
     """Get search parameters dependency."""
-
-    def _get_search_params(
-        q: str = Query(..., min_length=1),
-        algorithm: str = Query("hybrid", regex="^(vector|text|hybrid|mmr)$"),
-        limit: int = Query(10, ge=1, le=50),
-        threshold: float = Query(0.7, ge=0.0, le=1.0),
-    ) -> SearchParams:
-        return SearchParams(q, algorithm, limit, threshold)
-
-    return _get_search_params
+    return SearchParams(q, algorithm, limit, threshold)

@@ -60,10 +60,10 @@ async def search_documents(
 
     return DocumentSearchResponse(
         success=True,
-        message=f"Search completed using {request.algorithm} algorithm",
+        message=f"Search completed using {request.algorithm or 'hybrid'} algorithm",
         results=results,
-        query=request.query,
-        algorithm=request.algorithm,
+        query=request.query or "",
+        algorithm=request.algorithm or "hybrid",
         total_results=len(results),
         search_time_ms=search_time_ms,
     )

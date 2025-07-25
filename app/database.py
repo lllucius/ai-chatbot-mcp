@@ -9,7 +9,6 @@ import asyncio
 import logging
 import sys
 import traceback
-
 from typing import AsyncGenerator
 
 from sqlalchemy import text

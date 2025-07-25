@@ -343,9 +343,11 @@ def show_config():
         ("LOG_LEVEL", settings.log_level, "Logging level"),
         (
             "DATABASE_URL",
-            settings.database_url[:50] + "..."
-            if len(settings.database_url) > 50
-            else settings.database_url,
+            (
+                settings.database_url[:50] + "..."
+                if len(settings.database_url) > 50
+                else settings.database_url
+            ),
             "Database connection",
         ),
         ("OPENAI_BASE_URL", settings.openai_base_url, "OpenAI API base URL"),
@@ -459,16 +461,20 @@ def migrate():
         "[cyan]python manage.py quickstart[/cyan]",
         title="🚀 Migration Notice",
         border_style="bright_yellow",
-        padding=(1, 2)
+        padding=(1, 2),
     )
     console.print(migration_notice)
 
 
 if __name__ == "__main__":
     # Show migration notice by default
-    console.print("[yellow]⚠️ You are using the deprecated CLI. Use 'python manage.py' instead.[/yellow]")
-    console.print("[dim]Run 'python scripts/manage.py migrate' for more information.[/dim]\n")
-    
+    console.print(
+        "[yellow]⚠️ You are using the deprecated CLI. Use 'python manage.py' instead.[/yellow]"
+    )
+    console.print(
+        "[dim]Run 'python scripts/manage.py migrate' for more information.[/dim]\n"
+    )
+
     try:
         app()
     except Exception as e:

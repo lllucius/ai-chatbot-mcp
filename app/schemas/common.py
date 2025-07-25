@@ -219,6 +219,17 @@ class PaginationParams(BaseModel):
     sort_order: Optional[str] = Field(
         default="asc", pattern="^(asc|desc)$", description="Sort order: asc or desc"
     )
+    total: Optional[int] = Field(default=None, description="Total number of items")
+
+    @property
+    def offset(self) -> int:
+        """Calculate offset for database queries."""
+        return (self.page - 1) * self.per_page
+
+    @property
+    def limit(self) -> int:
+        """Get limit for database queries."""
+        return self.per_page
 
 
 class PaginatedResponse(BaseResponse, Generic[T]):
@@ -235,7 +246,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
             success=True,
             message=message,
             items=items,
-            pagination=PaginationParams(page=page, per_page=size),
+            pagination=PaginationParams(page=page, per_page=size, total=total),
         )
 
 
@@ -264,9 +275,6 @@ class SearchParams(PaginationParams):
         default="hybrid",
         pattern="^(vector|text|hybrid|mmr)$",
         description="Search algorithm to use",
-    )
-    limit: Optional[int] = Field(
-        default=10, ge=1, le=50, description="Number of results to return"
     )
     threshold: Optional[float] = Field(
         default=0.7, ge=0.0, le=1.0, description="Threshold to use"

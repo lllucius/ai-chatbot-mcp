@@ -38,7 +38,7 @@ Be professional but friendly in your responses.""",
             description="Default prompt for general AI assistant interactions",
             is_default=True,
             category="general",
-            tags=["assistant", "general", "helpful"]
+            tags=["assistant", "general", "helpful"],
         )
         print(f"✅ Created default prompt: {default_prompt.name}")
     except Exception as e:
@@ -63,7 +63,7 @@ async def create_sample_prompts():
 Provide constructive feedback with specific suggestions for improvement.""",
             "description": "Specialized prompt for code review tasks",
             "category": "development",
-            "tags": ["code", "review", "development", "programming"]
+            "tags": ["code", "review", "development", "programming"],
         },
         {
             "name": "creative_writing",
@@ -80,7 +80,7 @@ Provide constructive feedback with specific suggestions for improvement.""",
 Be encouraging and provide detailed, actionable suggestions to improve their writing.""",
             "description": "Assistant for creative writing and storytelling",
             "category": "creative",
-            "tags": ["writing", "creative", "storytelling", "literature"]
+            "tags": ["writing", "creative", "storytelling", "literature"],
         },
         {
             "name": "technical_documentation",
@@ -97,10 +97,10 @@ Be encouraging and provide detailed, actionable suggestions to improve their wri
 Focus on making complex technical concepts accessible and actionable.""",
             "description": "Specialized assistant for technical documentation",
             "category": "documentation",
-            "tags": ["documentation", "technical", "writing", "guides"]
-        }
+            "tags": ["documentation", "technical", "writing", "guides"],
+        },
     ]
-    
+
     for prompt_data in sample_prompts:
         try:
             prompt = await PromptService.create_prompt(**prompt_data)
@@ -121,7 +121,7 @@ async def create_default_llm_profile():
             top_p=0.9,
             max_tokens=2000,
             presence_penalty=0.0,
-            frequency_penalty=0.0
+            frequency_penalty=0.0,
         )
         print(f"✅ Created default LLM profile: {default_profile.name}")
     except Exception as e:
@@ -139,7 +139,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.95,
             "max_tokens": 3000,
             "presence_penalty": 0.5,
-            "frequency_penalty": 0.3
+            "frequency_penalty": 0.3,
         },
         {
             "name": "precise",
@@ -149,7 +149,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.8,
             "max_tokens": 1500,
             "presence_penalty": 0.0,
-            "frequency_penalty": 0.0
+            "frequency_penalty": 0.0,
         },
         {
             "name": "concise",
@@ -159,7 +159,7 @@ async def create_sample_llm_profiles():
             "top_p": 0.85,
             "max_tokens": 500,
             "presence_penalty": 0.2,
-            "frequency_penalty": 0.1
+            "frequency_penalty": 0.1,
         },
         {
             "name": "detailed",
@@ -169,10 +169,10 @@ async def create_sample_llm_profiles():
             "top_p": 0.9,
             "max_tokens": 4000,
             "presence_penalty": 0.1,
-            "frequency_penalty": 0.0
-        }
+            "frequency_penalty": 0.0,
+        },
     ]
-    
+
     for profile_data in sample_profiles:
         try:
             profile = await LLMProfileService.create_profile(**profile_data)
@@ -189,24 +189,24 @@ async def create_sample_mcp_servers():
             "url": "http://localhost:9001/mcp",
             "description": "File system operations and management",
             "transport": "http",
-            "timeout": 30
+            "timeout": 30,
         },
         {
             "name": "web_search",
             "url": "http://localhost:9002/mcp",
             "description": "Web search and information retrieval",
             "transport": "http",
-            "timeout": 45
+            "timeout": 45,
         },
         {
             "name": "database",
             "url": "http://localhost:9003/mcp",
             "description": "Database query and management tools",
             "transport": "http",
-            "timeout": 60
-        }
+            "timeout": 60,
+        },
     ]
-    
+
     for server_data in sample_servers:
         try:
             server = await MCPRegistryService.create_server(**server_data)
@@ -219,21 +219,21 @@ async def main():
     """Main setup function."""
     print("🚀 Setting up default data for AI Chatbot Platform registries...")
     print()
-    
+
     print("📝 Creating default and sample prompts...")
     await create_default_prompt()
     await create_sample_prompts()
     print()
-    
+
     print("🎛️ Creating default and sample LLM profiles...")
     await create_default_llm_profile()
     await create_sample_llm_profiles()
     print()
-    
+
     print("🔌 Creating sample MCP server registrations...")
     await create_sample_mcp_servers()
     print()
-    
+
     print("✨ Setup complete! You can now test the registry functionality:")
     print("  • python manage.py prompts list")
     print("  • python manage.py profiles list")

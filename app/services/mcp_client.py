@@ -19,8 +19,8 @@ from fastmcp.client import StreamableHttpTransport
 
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
-from ..utils.api_errors import handle_api_errors
 from ..core.logging import get_api_logger
+from ..utils.api_errors import handle_api_errors
 from ..utils.tool_middleware import RetryConfig, tool_operation
 
 logger = get_api_logger("mcp_client")

@@ -434,18 +434,18 @@ class LLMProfileService(BaseService):
             if presence_penalty is not None and (
                 presence_penalty < -2.0 or presence_penalty > 2.0
             ):
-                errors[
-                    "presence_penalty"
-                ] = "presence_penalty must be between -2.0 and 2.0"
+                errors["presence_penalty"] = (
+                    "presence_penalty must be between -2.0 and 2.0"
+                )
 
         if "frequency_penalty" in parameters:
             frequency_penalty = parameters["frequency_penalty"]
             if frequency_penalty is not None and (
                 frequency_penalty < -2.0 or frequency_penalty > 2.0
             ):
-                errors[
-                    "frequency_penalty"
-                ] = "frequency_penalty must be between -2.0 and 2.0"
+                errors["frequency_penalty"] = (
+                    "frequency_penalty must be between -2.0 and 2.0"
+                )
 
         return errors
 

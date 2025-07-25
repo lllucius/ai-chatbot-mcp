@@ -29,14 +29,14 @@ from .api import (
 )
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
+from .core.logging import get_component_logger, setup_logging
 from .database import close_db, init_db
-from .core.logging import setup_logging, get_component_logger
 from .middleware import (
-    logging_middleware,
     debug_content_middleware,
+    logging_middleware,
+    rate_limiting_middleware,
     timing_middleware,
     validation_middleware,
-    rate_limiting_middleware,
 )
 from .middleware.performance import start_system_monitoring
 from .middleware.rate_limiting import start_rate_limiter_cleanup

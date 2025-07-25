@@ -24,7 +24,7 @@ class TestLLMProfileService:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
 
-            profile = await LLMProfileService.create_profile(
+            await LLMProfileService.create_profile(
                 name="test_profile",
                 title="Test Profile",
                 description="Test profile description",
@@ -105,7 +105,7 @@ class TestLLMProfileService:
                     mock_get.return_value = source_profile
                     mock_create.return_value = AsyncMock()
 
-                    cloned = await LLMProfileService.clone_profile(
+                    await LLMProfileService.clone_profile(
                         source_name="original",
                         new_name="cloned",
                         new_title="Cloned Profile",
