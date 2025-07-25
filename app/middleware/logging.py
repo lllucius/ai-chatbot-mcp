@@ -157,7 +157,7 @@ async def _log_request_content(request: Request, correlation_id: str):
 
         # Format and log request
         logger.debug(
-            "📥 DEBUG REQUEST DETAILS",
+            f"📤 DEBUG REQUEST DETAILS\n{json.dumps(request_details, indent=4)}",
             extra={
                 "extra_fields": {
                     "debug_type": "request",
@@ -221,7 +221,7 @@ async def _log_response_content(response: Response, correlation_id: str):
 
         # Format and log response
         logger.debug(
-            "📤 DEBUG RESPONSE DETAILS",
+            f"📤 DEBUG RESPONSE DETAILS\n{json.dumps(response_details, indent=4)}",
             extra={
                 "extra_fields": {
                     "debug_type": "response",
