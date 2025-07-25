@@ -8,7 +8,7 @@ including authentication, document management, conversation handling, and search
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, Generic, Iterator, List, Optional, Type, TypeVar
 from uuid import UUID
 
 import requests
@@ -797,6 +797,31 @@ class ConversationsClient:
             method="POST",
             json=data.model_dump(mode="json"),
         )
+
+    def chat_stream(self, data: ChatRequest) -> Iterator[str]:
+        """Send a message and get streaming AI response."""
+        url = make_url(self.sdk.base_url, "/api/v1/conversations/chat/stream")
+        headers = build_headers(self.sdk.token)
+        headers["Accept"] = "text/event-stream"
+        
+        resp = self.sdk._session.post(
+            url, 
+            headers=headers, 
+            json=data.model_dump(mode="json"),
+            stream=True
+        )
+        
+        if not resp.ok:
+            raise ApiError(resp.status_code, resp.reason or "", url, resp.text)
+        
+        # Parse Server-Sent Events
+        for line in resp.iter_lines(decode_unicode=True):
+            if line.startswith("data: "):
+                data_content = line[6:]  # Remove "data: " prefix
+                if data_content.strip() == "[DONE]":
+                    break
+                if data_content.strip():
+                    yield data_content
 
     def stats(self) -> Dict[str, Any]:
         return self.sdk._request("/api/v1/conversations/stats")
