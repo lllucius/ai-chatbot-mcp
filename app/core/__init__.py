@@ -15,6 +15,7 @@ from .exceptions import (
     NotFoundError,
     ValidationError,
 )
+from .logging import StructuredLogger, get_logger, setup_logging
 from .tool_executor import (
     ToolCall,
     ToolProvider,
@@ -22,8 +23,6 @@ from .tool_executor import (
     UnifiedToolExecutor,
     get_unified_tool_executor,
 )
-
-from .logging import StructuredLogger, get_logger, setup_logging
 
 __all__ = [
     "ChatbotPlatformException",

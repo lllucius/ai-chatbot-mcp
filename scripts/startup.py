@@ -27,21 +27,25 @@ logger = logging.getLogger(__name__)
 async def create_default_admin():
     """Create default admin user if it doesn't exist, using environment variables."""
     import os
-    
+
     admin_username = os.getenv("ADMIN_USERNAME")
-    admin_email = os.getenv("ADMIN_EMAIL") 
+    admin_email = os.getenv("ADMIN_EMAIL")
     admin_password = os.getenv("ADMIN_PASSWORD")
-    
+
     if not all([admin_username, admin_email, admin_password]):
-        logger.warning("⚠️  Admin user creation skipped - set ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD environment variables to create default admin")
+        logger.warning(
+            "⚠️  Admin user creation skipped - set ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD environment variables to create default admin"
+        )
         return None
-        
+
     async with AsyncSessionLocal() as db:
         try:
             # Check if admin user already exists
             from sqlalchemy import select
 
-            result = await db.execute(select(User).where(User.username == admin_username))
+            result = await db.execute(
+                select(User).where(User.username == admin_username)
+            )
             existing_admin = result.scalar_one_or_none()
 
             if existing_admin:
@@ -119,9 +123,7 @@ async def check_openai_connection():
                 )
                 return True
             else:
-                logger.warning(
-                    "⚠️  OpenAI API connection failed - models not available"
-                )
+                logger.warning("⚠️  OpenAI API connection failed - models not available")
                 return False
         else:
             error_msg = health_result.get("error", "Unknown error")
@@ -172,7 +174,9 @@ async def check_fastmcp_services():
         for server_name, status in health.get("server_status", {}).items():
             if status.get("status") == "healthy":
                 server_tools_count = status.get("tools_count", 0)
-                logger.info(f"   ✅ {server_name}: {server_tools_count} tools available")
+                logger.info(
+                    f"   ✅ {server_name}: {server_tools_count} tools available"
+                )
             else:
                 error = status.get("error", "Unknown error")
                 logger.warning(f"   ❌ {server_name}: {error}")
@@ -186,9 +190,7 @@ async def check_fastmcp_services():
                 required_server not in server_status
                 or server_status[required_server].get("status") != "healthy"
             ):
-                logger.warning(
-                    f"⚠️  Required server '{required_server}' is not healthy"
-                )
+                logger.warning(f"⚠️  Required server '{required_server}' is not healthy")
 
         return True
 

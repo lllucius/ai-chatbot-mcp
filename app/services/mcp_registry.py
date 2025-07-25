@@ -13,10 +13,10 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, select, update
 from sqlalchemy.orm import selectinload
 
+from ..core.logging import get_api_logger
 from ..database import AsyncSessionLocal
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..core.logging import get_api_logger
 
 logger = get_api_logger("mcp_registry")
 

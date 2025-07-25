@@ -8,14 +8,13 @@ migrations from model changes.
 
 import asyncio
 import sys
-from pathlib import Path
 from logging.config import fileConfig
+from pathlib import Path
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
-
-from alembic import context
 
 # Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -38,6 +37,7 @@ target_metadata = None
 # Import your model's MetaData object here for auto-generation support
 try:
     from app.database import Base
+
     target_metadata = Base.metadata
 except ImportError:
     # Fallback if the import fails
@@ -77,7 +77,7 @@ def run_migrations_offline() -> None:
 def do_run_migrations(connection: Connection) -> None:
     """Run migrations with a database connection."""
     context.configure(
-        connection=connection, 
+        connection=connection,
         target_metadata=target_metadata,
         compare_type=True,
         compare_server_default=True,

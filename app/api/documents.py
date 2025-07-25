@@ -76,6 +76,7 @@ async def upload_document(
         )
 
     return DocumentUploadResponse(
+        success=True,
         message="Document uploaded successfully",
         document=DocumentResponse.model_validate(document),
         task_id=task_id,
@@ -174,7 +175,7 @@ async def delete_document(
         return BaseResponse(success=True, message="document deleted successfully")
     else:
         raise HTTPException(
-            status_code=status.http_404_not_found, detail="document not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="document not found"
         )
 
 
@@ -196,11 +197,13 @@ async def get_processing_status(
     """
     if task_id:
         # Enhanced processing status with task details
-        status_info = await service.get_processing_status(document_id, task_id)
+        status_info = await service.get_processing_status(str(document_id), task_id)
         message = "Enhanced processing status retrieved"
     else:
         # Basic processing status
-        status_info = await service.get_processing_status(document_id, user.id)
+        status_info = await service.get_processing_status(
+            str(document_id), str(user.id)
+        )
         message = "Processing status retrieved"
 
     return ProcessingStatusResponse(success=True, message=message, **status_info)

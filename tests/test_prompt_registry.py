@@ -22,7 +22,7 @@ class TestPromptService:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
 
-            prompt = await PromptService.create_prompt(
+            await PromptService.create_prompt(
                 name="test_prompt",
                 title="Test Prompt",
                 content="You are a test assistant.",

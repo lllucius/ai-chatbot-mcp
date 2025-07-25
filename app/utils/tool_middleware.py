@@ -11,8 +11,8 @@ import functools
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional, Tuple, Type
 
-from ..utils.caching import api_response_cache, make_cache_key
 from ..core.logging import get_component_logger
+from ..utils.caching import api_response_cache, make_cache_key
 
 logger = get_component_logger("tool_middleware")
 

@@ -30,6 +30,7 @@ Features:
 # Add the app directory to the Python path
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 import typer
@@ -45,6 +46,7 @@ from app.cli.mcp import mcp_app
 from app.cli.profiles import profile_app
 from app.cli.prompts import prompt_app
 from app.cli.tasks import tasks_app
+
 # Import CLI modules
 from app.cli.users import user_app
 
@@ -52,26 +54,32 @@ from app.cli.users import user_app
 app = typer.Typer(
     help="🚀 AI Chatbot Platform - Comprehensive Management CLI",
     context_settings={"help_option_names": ["-h", "--help"]},
-    rich_markup_mode="rich"
+    rich_markup_mode="rich",
 )
 
 # Add sub-applications
 app.add_typer(user_app, name="users", help="👥 User management commands")
-app.add_typer(document_app, name="documents", help="📄 Document management commands")  
-app.add_typer(conversation_app, name="conversations", help="💬 Conversation management commands")
-app.add_typer(analytics_app, name="analytics", help="📊 Analytics and reporting commands")
+app.add_typer(document_app, name="documents", help="📄 Document management commands")
+app.add_typer(
+    conversation_app, name="conversations", help="💬 Conversation management commands"
+)
+app.add_typer(
+    analytics_app, name="analytics", help="📊 Analytics and reporting commands"
+)
 app.add_typer(database_app, name="database", help="🗄️ Database management commands")
 app.add_typer(tasks_app, name="tasks", help="⚙️ Background task management commands")
 app.add_typer(mcp_app, name="mcp", help="🔌 MCP server and tool management commands")
 app.add_typer(prompt_app, name="prompts", help="📝 Prompt management commands")
-app.add_typer(profile_app, name="profiles", help="🎛️ LLM parameter profile management commands")
+app.add_typer(
+    profile_app, name="profiles", help="🎛️ LLM parameter profile management commands"
+)
 
 
 @app.command()
 def version():
     """Show version information."""
     from app.config import settings
-    
+
     version_info = Panel(
         f"[bold]AI Chatbot Platform Management CLI[/bold]\n\n"
         f"Application Version: [green]{settings.app_version}[/green]\n"
@@ -81,7 +89,7 @@ def version():
         f"Background Tasks: [magenta]Celery[/magenta]",
         title="📋 Version Information",
         border_style="bright_blue",
-        padding=(1, 2)
+        padding=(1, 2),
     )
     console.print(version_info)
 
@@ -89,92 +97,133 @@ def version():
 @app.command()
 def health():
     """Perform comprehensive system health check."""
-    
+
     import asyncio
 
     from sqlalchemy import func, select, text
 
     from app.database import AsyncSessionLocal
     from app.models.user import User
-    
+
     async def _health_check():
         health_status = {
             "database": False,
             "pgvector": False,
             "models": False,
-            "config": False
+            "config": False,
         }
-        
+
         try:
             # Database connection test
             async with AsyncSessionLocal() as db:
                 await db.execute(select(func.count(User.id)))
                 health_status["database"] = True
-                
+
                 # Check pgvector extension
-                vector_check = await db.execute(text("""
+                vector_check = await db.execute(
+                    text(
+                        """
                     SELECT EXISTS(
                         SELECT 1 FROM pg_extension WHERE extname = 'vector'
                     )
-                """))
+                """
+                    )
+                )
                 health_status["pgvector"] = vector_check.scalar()
-                
+
                 # Check if tables exist
-                tables_check = await db.execute(text("""
+                tables_check = await db.execute(
+                    text(
+                        """
                     SELECT COUNT(*) FROM information_schema.tables 
                     WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-                """))
+                """
+                    )
+                )
                 health_status["models"] = tables_check.scalar() > 0
-                
+
         except Exception as e:
             console.print(f"[red]Database health check failed: {e}[/red]")
-        
+
         # Configuration check
         from app.config import settings
+
         required_settings = ["database_url", "secret_key", "openai_api_key"]
-        config_ok = all(getattr(settings, setting, None) for setting in required_settings)
+        config_ok = all(
+            getattr(settings, setting, None) for setting in required_settings
+        )
         health_status["config"] = config_ok
-        
+
         # Display results
         results = []
-        
+
         # Database
         db_status = "🟢 Connected" if health_status["database"] else "🔴 Failed"
-        results.append(Panel(f"Connection: {db_status}", title="Database", border_style="green" if health_status["database"] else "red"))
-        
+        results.append(
+            Panel(
+                f"Connection: {db_status}",
+                title="Database",
+                border_style="green" if health_status["database"] else "red",
+            )
+        )
+
         # pgvector
-        vector_status = "🟢 Available" if health_status["pgvector"] else "🟡 Not installed"
-        results.append(Panel(f"Extension: {vector_status}", title="Vector Search", border_style="green" if health_status["pgvector"] else "yellow"))
-        
+        vector_status = (
+            "🟢 Available" if health_status["pgvector"] else "🟡 Not installed"
+        )
+        results.append(
+            Panel(
+                f"Extension: {vector_status}",
+                title="Vector Search",
+                border_style="green" if health_status["pgvector"] else "yellow",
+            )
+        )
+
         # Models
         models_status = "🟢 Ready" if health_status["models"] else "🔴 Missing"
-        results.append(Panel(f"Tables: {models_status}", title="Data Models", border_style="green" if health_status["models"] else "red"))
-        
+        results.append(
+            Panel(
+                f"Tables: {models_status}",
+                title="Data Models",
+                border_style="green" if health_status["models"] else "red",
+            )
+        )
+
         # Config
         config_status = "🟢 Valid" if health_status["config"] else "🔴 Invalid"
-        results.append(Panel(f"Settings: {config_status}", title="Configuration", border_style="green" if health_status["config"] else "red"))
-        
-        console.print(Panel(
-            "System Health Check Results", 
-            title="🏥 Health Status",
-            border_style="bright_blue"
-        ))
+        results.append(
+            Panel(
+                f"Settings: {config_status}",
+                title="Configuration",
+                border_style="green" if health_status["config"] else "red",
+            )
+        )
+
+        console.print(
+            Panel(
+                "System Health Check Results",
+                title="🏥 Health Status",
+                border_style="bright_blue",
+            )
+        )
         console.print(Columns(results, equal=True))
-        
+
         # Overall status
         overall_healthy = all(health_status.values())
         if overall_healthy:
             success_message("System is healthy and ready to use!")
         else:
-            console.print("\n[yellow]⚠️ Some components need attention. Check the results above.[/yellow]")
-    
+            console.print(
+                "\n[yellow]⚠️ Some components need attention. Check the results above.[/yellow]"
+            )
+
     asyncio.run(_health_check())
 
 
 @app.command()
 def quickstart():
     """Show quick start guide and common commands."""
-    
+
     quickstart_guide = """
 [bold]🚀 AI Chatbot Platform Management CLI - Quick Start[/bold]
 
@@ -251,19 +300,21 @@ def quickstart():
    • Use [cyan]python manage.py [module] --help[/cyan] for module-specific commands
    • Each command has detailed help with [cyan]--help[/cyan]
 """
-    
-    console.print(Panel(
-        quickstart_guide,
-        title="🚀 Quick Start Guide",
-        border_style="bright_green",
-        padding=(1, 2)
-    ))
+
+    console.print(
+        Panel(
+            quickstart_guide,
+            title="🚀 Quick Start Guide",
+            border_style="bright_green",
+            padding=(1, 2),
+        )
+    )
 
 
-@app.command() 
+@app.command()
 def examples():
     """Show practical usage examples for common tasks."""
-    
+
     examples_text = """
 [bold]📚 Practical Usage Examples[/bold]
 
@@ -399,30 +450,34 @@ def examples():
    python manage.py database backup --output $BACKUP_FILE
    echo "Backup created: $BACKUP_FILE"
 """
-    
-    console.print(Panel(
-        examples_text,
-        title="📚 Usage Examples",
-        border_style="bright_cyan",
-        padding=(1, 2)
-    ))
+
+    console.print(
+        Panel(
+            examples_text,
+            title="📚 Usage Examples",
+            border_style="bright_cyan",
+            padding=(1, 2),
+        )
+    )
 
 
 @app.command()
 def status():
     """Show overall system status summary."""
-    
+
     import asyncio
     from datetime import datetime
-    
+
     async def _system_status():
-        console.print(Panel(
-            f"[bold]AI Chatbot Platform System Status[/bold]\n"
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            title="🖥️ System Status",
-            border_style="bright_blue"
-        ))
-        
+        console.print(
+            Panel(
+                f"[bold]AI Chatbot Platform System Status[/bold]\n"
+                f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}",
+                title="🖥️ System Status",
+                border_style="bright_blue",
+            )
+        )
+
         try:
             from sqlalchemy import func, select
 
@@ -430,47 +485,51 @@ def status():
             from app.models.conversation import Conversation
             from app.models.document import Document, FileStatus
             from app.models.user import User
-            
+
             async with AsyncSessionLocal() as db:
                 # Quick stats
                 total_users = await db.scalar(select(func.count(User.id)))
                 active_users = await db.scalar(
-                    select(func.count(User.id)).where(User.is_active == True)
+                    select(func.count(User.id)).where(User.is_active)
                 )
-                
+
                 total_docs = await db.scalar(select(func.count(Document.id)))
                 completed_docs = await db.scalar(
-                    select(func.count(Document.id)).where(Document.status == FileStatus.COMPLETED)
+                    select(func.count(Document.id)).where(
+                        Document.status == FileStatus.COMPLETED
+                    )
                 )
-                
+
                 total_convs = await db.scalar(select(func.count(Conversation.id)))
-                
+
                 # Create status panels
                 user_panel = Panel(
                     f"Total: [green]{total_users or 0}[/green]\n"
                     f"Active: [blue]{active_users or 0}[/blue]",
                     title="👥 Users",
-                    border_style="green"
+                    border_style="green",
                 )
-                
+
                 doc_panel = Panel(
                     f"Total: [green]{total_docs or 0}[/green]\n"
                     f"Processed: [blue]{completed_docs or 0}[/blue]",
-                    title="📄 Documents", 
-                    border_style="blue"
+                    title="📄 Documents",
+                    border_style="blue",
                 )
-                
+
                 conv_panel = Panel(
                     f"Total: [green]{total_convs or 0}[/green]",
                     title="💬 Conversations",
-                    border_style="yellow"
+                    border_style="yellow",
                 )
-                
+
                 console.print(Columns([user_panel, doc_panel, conv_panel]))
-                
+
                 # System health indicators
-                processing_rate = (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
-                
+                processing_rate = (
+                    (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+                )
+
                 status_indicators = []
                 if processing_rate > 90:
                     status_indicators.append("🟢 Document Processing: Excellent")
@@ -478,23 +537,23 @@ def status():
                     status_indicators.append("🟡 Document Processing: Good")
                 else:
                     status_indicators.append("🔴 Document Processing: Needs Attention")
-                
+
                 if total_users and total_users > 0:
                     status_indicators.append("🟢 User System: Active")
                 else:
                     status_indicators.append("🟡 User System: No users registered")
-                
+
                 health_panel = Panel(
                     "\n".join(status_indicators),
                     title="🔋 Health Indicators",
-                    border_style="cyan"
+                    border_style="cyan",
                 )
                 console.print(health_panel)
-                
+
         except Exception as e:
             console.print(f"[red]Error getting system status: {e}[/red]")
             info_message("Use 'python manage.py health' for detailed diagnostics")
-    
+
     asyncio.run(_system_status())
 
 

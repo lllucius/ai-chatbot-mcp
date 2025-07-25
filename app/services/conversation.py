@@ -43,8 +43,8 @@ from ..schemas.conversation import (
 from ..schemas.document import DocumentSearchRequest
 from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
-from ..services.mcp_client import get_mcp_client
 from ..services.llm_profile_service import LLMProfileService
+from ..services.mcp_client import get_mcp_client
 from ..services.openai_client import OpenAIClient
 from ..services.prompt_service import PromptService
 from ..services.search import SearchService

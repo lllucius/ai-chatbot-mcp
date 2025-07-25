@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Dict, List
 
 import psutil
-from unstructured.partition.auto import partition
 from unstructured.chunking.title import chunk_by_title
+from unstructured.partition.auto import partition
 
 from ..core.exceptions import DocumentError, ValidationError
 

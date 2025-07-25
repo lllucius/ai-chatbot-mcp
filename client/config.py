@@ -15,113 +15,100 @@ from pydantic_settings import BaseSettings
 class ChatbotConfig(BaseSettings):
     """
     Configuration settings for the AI Chatbot Terminal Client.
-    
+
     Settings can be provided via:
     - Environment variables (prefixed with CHATBOT_)
     - Configuration file (.env or specified file)
     - Command line arguments (when using CLI)
-    
+
     Example:
         # Via environment variables
         export CHATBOT_API_URL="http://localhost:8000"
         export CHATBOT_USERNAME="admin"
-        
+
         # Via .env file
         CHATBOT_API_URL=http://localhost:8000
         CHATBOT_USERNAME=admin
     """
-    
+
     # API Configuration
     api_url: str = Field(
-        default="http://localhost:8000",
-        description="Base URL of the AI Chatbot API"
+        default="http://localhost:8000", description="Base URL of the AI Chatbot API"
     )
-    
+
     # Authentication
     username: Optional[str] = Field(
         default=None,
-        description="Username for authentication (will prompt if not provided)"
+        description="Username for authentication (will prompt if not provided)",
     )
     password: Optional[str] = Field(
         default=None,
-        description="Password for authentication (will prompt if not provided)"
+        description="Password for authentication (will prompt if not provided)",
     )
     token_file: Optional[str] = Field(
-        default=None,
-        description="File to store authentication token for reuse"
+        default=None, description="File to store authentication token for reuse"
     )
-    
-    # Default Chat Settings  
+
+    # Default Chat Settings
     default_use_rag: bool = Field(
-        default=True,
-        description="Enable RAG by default for new conversations"
+        default=True, description="Enable RAG by default for new conversations"
     )
     default_use_tools: bool = Field(
-        default=True,
-        description="Enable tools by default for new conversations"
+        default=True, description="Enable tools by default for new conversations"
     )
     default_prompt_name: Optional[str] = Field(
-        default=None,
-        description="Default prompt to use from registry"
+        default=None, description="Default prompt to use from registry"
     )
     default_profile_name: Optional[str] = Field(
-        default=None,
-        description="Default LLM profile to use from registry"
+        default=None, description="Default LLM profile to use from registry"
     )
-    
+
     # UI Preferences
     spinner_enabled: bool = Field(
-        default=True,
-        description="Show loading spinner during AI responses"
+        default=True, description="Show loading spinner during AI responses"
     )
     auto_title: bool = Field(
         default=True,
-        description="Automatically generate conversation titles if not provided"
+        description="Automatically generate conversation titles if not provided",
     )
     max_history_display: int = Field(
-        default=50,
-        description="Maximum number of messages to display in history"
+        default=50, description="Maximum number of messages to display in history"
     )
-    
+
     # Advanced Features
     enable_streaming: bool = Field(
-        default=False,
-        description="Enable streaming responses (if supported by API)"
+        default=False, description="Enable streaming responses (if supported by API)"
     )
     save_conversations: bool = Field(
-        default=True,
-        description="Automatically save conversations locally"
+        default=True, description="Automatically save conversations locally"
     )
     conversation_backup_dir: Optional[str] = Field(
-        default=None,
-        description="Directory to save conversation backups"
+        default=None, description="Directory to save conversation backups"
     )
-    
+
     # Debug and Development
     debug_mode: bool = Field(
-        default=False,
-        description="Enable debug output and verbose logging"
+        default=False, description="Enable debug output and verbose logging"
     )
     request_timeout: int = Field(
-        default=120,
-        description="Timeout for API requests in seconds"
+        default=120, description="Timeout for API requests in seconds"
     )
-    
+
     model_config = {
         "env_prefix": "CHATBOT_",
         "env_file": ".env",
         "env_file_encoding": "utf-8",
-        "case_sensitive": False
+        "case_sensitive": False,
     }
 
 
 def load_config(config_file: Optional[str] = None) -> ChatbotConfig:
     """
     Load configuration from environment variables and optional config file.
-    
+
     Args:
         config_file: Optional path to configuration file (.env format)
-        
+
     Returns:
         Loaded configuration object
     """

@@ -219,6 +219,17 @@ class PaginationParams(BaseModel):
     sort_order: Optional[str] = Field(
         default="asc", pattern="^(asc|desc)$", description="Sort order: asc or desc"
     )
+    total: Optional[int] = Field(default=None, description="Total number of items")
+
+    @property
+    def offset(self) -> int:
+        """Calculate offset for database queries."""
+        return (self.page - 1) * self.per_page
+
+    @property
+    def limit(self) -> int:
+        """Get limit for database queries."""
+        return self.per_page
 
 
 class PaginatedResponse(BaseResponse, Generic[T]):
@@ -235,7 +246,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
             success=True,
             message=message,
             items=items,
-            pagination=PaginationParams(page=page, per_page=size),
+            pagination=PaginationParams(page=page, per_page=size, total=total),
         )
 
 

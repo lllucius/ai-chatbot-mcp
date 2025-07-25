@@ -9,7 +9,7 @@ for development and production environments.
 Features:
 - Unified logging configuration
 - Structured JSON logging for production
-- Human-readable format for development  
+- Human-readable format for development
 - Correlation IDs for request tracing
 - Performance metrics integration
 - Context filters for user and operation tracking
@@ -24,7 +24,7 @@ import sys
 import time
 import traceback
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Optional
 

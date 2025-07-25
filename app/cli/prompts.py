@@ -18,9 +18,9 @@ from ..services.prompt_service import PromptService
 from .base import (
     console,
     error_message,
+    get_service_context,
     info_message,
     success_message,
-    get_service_context,
 )
 
 # Create the prompt management app

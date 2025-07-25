@@ -22,7 +22,7 @@ class TestMCPRegistryService:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
 
-            server = await MCPRegistryService.create_server(
+            await MCPRegistryService.create_server(
                 name="test_server",
                 url="http://localhost:9000/mcp",
                 description="Test server",
@@ -68,7 +68,7 @@ class TestMCPRegistryService:
                 None,  # Tool doesn't exist
             ]
 
-            tool = await MCPRegistryService.register_tool(
+            await MCPRegistryService.register_tool(
                 server_name="test_server",
                 tool_name="test_server_tool",
                 original_name="tool",
