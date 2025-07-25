@@ -22,6 +22,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+# Try to import readline for command history support
+try:
+    import readline
+    READLINE_AVAILABLE = True
+except ImportError:
+    READLINE_AVAILABLE = False
+
 from client.ai_chatbot_sdk import (
     AIChatbotSDK,
     ApiError,
@@ -33,10 +40,32 @@ from client.config import ChatbotConfig, get_default_token_file, load_config
 
 # --- UTILITIES ---
 
+def setup_readline():
+    """Configure readline for command history and editing features."""
+    if not READLINE_AVAILABLE:
+        return
+    
+    # Set up history file
+    history_file = os.path.expanduser("~/.ai_chatbot_history")
+    try:
+        readline.read_history_file(history_file)
+    except FileNotFoundError:
+        pass  # History file doesn't exist yet
+    
+    # Configure readline
+    readline.parse_and_bind("tab: complete")
+    readline.parse_and_bind('"\\e[A": history-search-backward')  # Up arrow
+    readline.parse_and_bind('"\\e[B": history-search-forward')   # Down arrow
+    readline.set_history_length(1000)
+    
+    # Save history on exit
+    import atexit
+    atexit.register(lambda: readline.write_history_file(history_file))
+
 
 def input_prompt(prompt: str) -> str:
     """
-    Get user input with graceful handling of EOF.
+    Get user input with graceful handling of EOF and readline support for command history.
 
     Args:
         prompt: The input prompt to display.
@@ -353,6 +382,7 @@ class AIChatbotTerminal:
         print(f"  Profile: {self.current_profile or 'Default'}")
         print(f"  RAG: {'Enabled' if self.config.default_use_rag else 'Disabled'}")
         print(f"  Tools: {'Enabled' if self.config.default_use_tools else 'Disabled'}")
+        print(f"  Streaming: {'Enabled' if self.config.enable_streaming else 'Disabled'}")
         print()
 
         print("Type your message. /help for commands. /exit or Ctrl+D to quit.\n")
@@ -377,27 +407,37 @@ class AIChatbotTerminal:
                 profile_name=self.current_profile,
             )
 
-            # Show spinner if enabled
-            spinner_thread = None
-            if self.config.spinner_enabled:
-                spinner_thread, running = spinner("AI is thinking")
-
             try:
-                resp = self.sdk.conversations.chat(chat_req)
+                if self.config.enable_streaming:
+                    # Use streaming response
+                    print("AI: ", end="", flush=True)
+                    full_response = ""
+                    for chunk in self.sdk.conversations.chat_stream(chat_req):
+                        print(chunk, end="", flush=True)
+                        full_response += chunk
+                    print("\n")  # Add newline after streaming is complete
+                else:
+                    # Show spinner if enabled and not streaming
+                    spinner_thread = None
+                    if self.config.spinner_enabled:
+                        spinner_thread, running = spinner("AI is thinking")
+
+                    try:
+                        resp = self.sdk.conversations.chat(chat_req)
+                        ai_msg = resp.ai_message.content
+                        print(f"AI: {ai_msg}\n")
+
+                        # Update conversation id/title in case of new conversation
+                        self.conversation_id = resp.conversation.id
+                        self.conversation_title = resp.conversation.title
+                    finally:
+                        if spinner_thread:
+                            running[0] = False
+                            spinner_thread.join()
+
             except Exception as e:
                 print(f"Error: {e}")
                 continue
-            finally:
-                if spinner_thread:
-                    running[0] = False
-                    spinner_thread.join()
-
-            ai_msg = resp.ai_message.content
-            print(f"AI: {ai_msg}\n")
-
-            # Update conversation id/title in case of new conversation
-            self.conversation_id = resp.conversation.id
-            self.conversation_title = resp.conversation.title
 
     def handle_command(self, cmd: str):
         """Handle special commands during chat with enhanced functionality."""
@@ -488,6 +528,7 @@ class AIChatbotTerminal:
         print(f"Current Profile: {self.current_profile or 'Default'}")
         print(f"RAG Enabled: {self.config.default_use_rag}")
         print(f"Tools Enabled: {self.config.default_use_tools}")
+        print(f"Streaming Enabled: {self.config.enable_streaming}")
         print(f"Spinner Enabled: {self.config.spinner_enabled}")
         print(f"Auto Title: {self.config.auto_title}")
         print(f"Max History Display: {self.config.max_history_display}")
@@ -519,6 +560,17 @@ class AIChatbotTerminal:
             self.config.default_use_tools = True
         elif tools_input in ["false", "no", "n", "0"]:
             self.config.default_use_tools = False
+
+        # Toggle Streaming
+        streaming_input = (
+            input_prompt(f"Enable Streaming [{self.config.enable_streaming}]: ")
+            .strip()
+            .lower()
+        )
+        if streaming_input in ["true", "yes", "y", "1"]:
+            self.config.enable_streaming = True
+        elif streaming_input in ["false", "no", "n", "0"]:
+            self.config.enable_streaming = False
 
         # Max history
         history_input = input_prompt(
@@ -738,7 +790,7 @@ class AIChatbotTerminal:
                 query = parts[2]
                 try:
                     results = self.sdk.search.search(
-                        DocumentSearchRequest(q=query, page=1, per_page=10)
+                        DocumentSearchRequest(query=query, page=1, per_page=10)
                     )
                     if results.get("results"):
                         print(f"Found {len(results['results'])} results for '{query}':")
@@ -835,6 +887,9 @@ def main(config_file: Optional[str] = None):
         config_file: Optional path to configuration file.
     """
     try:
+        # Set up readline for command history
+        setup_readline()
+        
         # Load configuration
         config = load_config(config_file)
 

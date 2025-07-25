@@ -150,7 +150,7 @@ class EmbeddingService:
                 indices_chunk = text_indices[
                     chunk_start : chunk_start + self.batch_size
                 ]
-                embeddings = await self.openai_client.generate_embeddings_batch(chunk)
+                embeddings = await self.openai_client.create_embeddings_batch(chunk)
                 for j, embedding in enumerate(embeddings):
                     idx = indices_chunk[j]
                     cleaned = chunk[j]
