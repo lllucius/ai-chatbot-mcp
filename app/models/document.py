@@ -8,15 +8,8 @@ including document metadata and text chunks for vector search.
 
 import uuid
 from enum import Enum
+from pgvector.sqlalchemy import Vector
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-# Import pgvector only for PostgreSQL compatibility
-try:
-    from pgvector.sqlalchemy import Vector
-
-    HAS_PGVECTOR = True
-except ImportError:
-    HAS_PGVECTOR = False
 
 from sqlalchemy import JSON
 from sqlalchemy import Enum as SQLEnum
@@ -187,7 +180,7 @@ class DocumentChunk(BaseModelDB):
 
     # Vector embedding
     embedding: Mapped[Optional[List[float]]] = mapped_column(
-        Vector(3072) if HAS_PGVECTOR else Text,
+        Vector(3072),
         nullable=True,
         doc="Vector embedding for semantic search",
     )
@@ -231,10 +224,11 @@ class DocumentChunk(BaseModelDB):
         Index("idx_chunks_token_count", "token_count"),
         Index("idx_chunks_language", "language"),
         Index("idx_chunks_embedding_model", "embedding_model"),
-        # Vector search optimization (if using pgvector extensions)
-        # Note: Vector indexes should be created manually after table creation
-        # CREATE INDEX CONCURRENTLY idx_chunks_embedding_cosine ON document_chunks
-        # USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+        Index("idx_embedding_vector_cosine", "embedding",
+            postgresql_using="ivfflat",
+            postgresql_with={"lists": 100},
+            postgresql_ops={"embedding": "vector_cosine_ops"}
+        ),
     )
 
     def __repr__(self) -> str:

@@ -37,6 +37,7 @@ from time import time
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -184,7 +185,7 @@ class SearchService(BaseService):
         if not isinstance(embedding, list):
             raise SearchError(f"Invalid embedding type: {type(embedding)}, expected list")
 
-        distance_expr = DocumentChunk.embedding.op("<=>")(embedding).label("distance")
+        distance_expr = DocumentChunk.embedding.cosine_distance(embedding).label("distance")
         similarity_threshold = 1.0 - request.threshold
 
         # Pre-filter user_id before vector op!
@@ -194,8 +195,10 @@ class SearchService(BaseService):
             .where(Document.owner_id == user_id)
             .where(DocumentChunk.embedding.isnot(None))
         )
+
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))
+
         if request.file_types:
             query = query.where(Document.file_type.in_(request.file_types))
 
