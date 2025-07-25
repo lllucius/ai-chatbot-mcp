@@ -49,10 +49,11 @@ async def list_tools(
 
         # Get registry servers and their status
         servers = await MCPRegistryService.list_servers()
-        server_status = {}
+        server_status = []
 
         for server in servers:
-            server_status[server.name] = {
+            server_status.append({
+                "name": server.name,
                 "status": "connected" if server.is_connected else "disconnected",
                 "enabled": server.is_enabled,
                 "url": server.url,
@@ -69,26 +70,32 @@ async def list_tools(
                     else None
                 ),
                 "connection_errors": server.connection_errors,
-            }
+            })
 
-        # Get tool statistics
-        tool_stats = await MCPRegistryService.get_tool_stats(limit=20)
+        # Convert tools to the format expected by SDK
+        tool_responses = []
+        for tool_name, tool_data in available_tools.items():
+            tool_responses.append({
+                "name": tool_name,
+                "description": tool_data.get("description", ""),
+                "schema": tool_data.get("schema", {}),
+                "server_name": tool_data.get("server", "unknown"),
+                "is_enabled": tool_data.get("is_enabled", True),
+                "usage_count": tool_data.get("usage_count", 0),
+                "last_used_at": tool_data.get("last_used_at"),
+            })
 
+        # Return format expected by SDK ToolsListResponse
         return {
             "success": True,
-            "data": {
-                "tools": available_tools,
-                "openai_tools": openai_tools,
-                "servers": server_status,
-                "tool_statistics": tool_stats,
-                "total_tools": len(available_tools),
-                "enabled_tools": len(
-                    [t for t in available_tools.values() if t.get("is_enabled", True)]
-                ),
-                "total_servers": len(servers),
-                "enabled_servers": len([s for s in servers if s.is_enabled]),
-                "connected_servers": len([s for s in servers if s.is_connected]),
-            },
+            "message": f"Retrieved {len(available_tools)} tools from {len(servers)} servers",
+            "available_tools": tool_responses,
+            "openai_tools": openai_tools,
+            "servers": server_status,
+            "enabled_count": len(
+                [t for t in available_tools.values() if t.get("is_enabled", True)]
+            ),
+            "total_count": len(available_tools),
         }
 
     except Exception as e:

@@ -25,7 +25,7 @@ AI Integration:
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import and_, desc, func, select
@@ -448,7 +448,7 @@ class ConversationService(BaseService):
             logger.error(f"Chat processing failed: {e}")
             raise ValidationError(f"Chat processing failed: {e}")
 
-    async def process_chat_stream(self, request: ChatRequest, user_id: UUID):
+    async def process_chat_stream(self, request: ChatRequest, user_id: UUID) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Process chat request and generate streaming AI response.
 
@@ -458,6 +458,9 @@ class ConversationService(BaseService):
 
         Yields:
             dict: Stream chunks with response data
+        
+        Returns:
+            AsyncGenerator[Dict[str, Any], None]: Async generator of stream events
         """
         try:
             # Get or create conversation

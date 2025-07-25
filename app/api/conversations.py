@@ -28,6 +28,12 @@ from ..schemas.conversation import (
     ConversationStats,
     ConversationUpdate,
     MessageResponse,
+    StreamCompleteResponse,
+    StreamContentResponse,
+    StreamEndResponse,
+    StreamErrorResponse,
+    StreamStartResponse,
+    StreamToolCallResponse,
 )
 from ..services.conversation import ConversationService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -276,12 +282,15 @@ async def chat_stream(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> StreamingResponse:
     """
     Send a message and get a streaming AI response.
 
     Returns a Server-Sent Events (SSE) stream of the AI response as it's generated,
     providing real-time feedback to the user.
+    
+    Returns:
+        StreamingResponse: Server-sent events stream with typed response objects
     """
     log_api_call(
         "chat_stream",
@@ -292,25 +301,54 @@ async def chat_stream(
 
     async def generate_response():
         # Send initial event
-        yield f"data: {json.dumps({'type': 'start', 'message': 'Generating response...'})}\n\n"
+        start_event = StreamStartResponse(message="Generating response...")
+        yield f"data: {json.dumps(start_event.model_dump())}\n\n"
 
-        # Process chat request with streaming
-        async for chunk in conversation_service.process_chat_stream(
-            request, current_user.id
-        ):
-            if chunk.get("type") == "content":
-                # Stream content chunks
-                yield f"data: {json.dumps({'type': 'content', 'content': chunk.get('content', '')})}\n\n"
-            elif chunk.get("type") == "tool_call":
-                # Stream tool call information
-                yield f"data: {json.dumps({'type': 'tool_call', 'tool': chunk.get('tool'), 'result': chunk.get('result')})}\n\n"
-            elif chunk.get("type") == "complete":
-                # Send completion event with full response
-                yield f"data: {json.dumps({'type': 'complete', 'response': chunk.get('response')})}\n\n"
-                break
+        try:
+            # Process chat request with streaming
+            async for chunk in conversation_service.process_chat_stream(
+                request, current_user.id
+            ):
+                if chunk.get("type") == "content":
+                    # Stream content chunks
+                    content_event = StreamContentResponse(
+                        content=chunk.get("content", "")
+                    )
+                    yield f"data: {json.dumps(content_event.model_dump())}\n\n"
+                elif chunk.get("type") == "tool_call":
+                    # Stream tool call information
+                    tool_event = StreamToolCallResponse(
+                        tool=chunk.get("tool"),
+                        result=chunk.get("result")
+                    )
+                    yield f"data: {json.dumps(tool_event.model_dump())}\n\n"
+                elif chunk.get("type") == "complete":
+                    # Send completion event with full response
+                    response_data = chunk.get("response", {})
+                    
+                    # Convert Pydantic objects to dictionaries
+                    if "ai_message" in response_data:
+                        response_data["ai_message"] = response_data["ai_message"].model_dump()
+                    if "conversation" in response_data:
+                        response_data["conversation"] = response_data["conversation"].model_dump()
+                    
+                    complete_event = StreamCompleteResponse(response=response_data)
+                    yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
+                    break
+                elif chunk.get("type") == "error":
+                    # Send error event
+                    error_event = StreamErrorResponse(error=chunk.get("error", "Unknown error"))
+                    yield f"data: {json.dumps(error_event.model_dump())}\n\n"
+                    break
+
+        except Exception as e:
+            # Send error event for any unhandled exceptions
+            error_event = StreamErrorResponse(error=str(e))
+            yield f"data: {json.dumps(error_event.model_dump())}\n\n"
 
         # Send end event
-        yield f"data: {json.dumps({'type': 'end'})}\n\n"
+        end_event = StreamEndResponse()
+        yield f"data: {json.dumps(end_event.model_dump())}\n\n"
 
     return StreamingResponse(
         generate_response(),
