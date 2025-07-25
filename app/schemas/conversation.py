@@ -77,7 +77,7 @@ class ConversationResponse(ConversationBase):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -144,7 +144,7 @@ class MessageResponse(MessageBase):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat()},
+        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)},
         "json_schema_extra": {
             "example": {
                 "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
@@ -262,4 +262,47 @@ class ConversationStats(BaseSchema):
         None, description="Most recent activity"
     )
 
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}}
+
+
+# Streaming response models
+class StreamStartResponse(BaseSchema):
+    """Schema for stream start event."""
+    
+    type: str = Field("start", description="Event type")
+    message: str = Field(..., description="Start message")
+
+
+class StreamContentResponse(BaseSchema):
+    """Schema for stream content event."""
+    
+    type: str = Field("content", description="Event type")
+    content: str = Field(..., description="Content chunk")
+
+
+class StreamToolCallResponse(BaseSchema):
+    """Schema for stream tool call event."""
+    
+    type: str = Field("tool_call", description="Event type")
+    tool: Optional[Dict[str, Any]] = Field(None, description="Tool information")
+    result: Optional[Dict[str, Any]] = Field(None, description="Tool result")
+
+
+class StreamCompleteResponse(BaseSchema):
+    """Schema for stream complete event."""
+    
+    type: str = Field("complete", description="Event type")
+    response: Dict[str, Any] = Field(..., description="Complete response data")
+
+
+class StreamEndResponse(BaseSchema):
+    """Schema for stream end event."""
+    
+    type: str = Field("end", description="Event type")
+
+
+class StreamErrorResponse(BaseSchema):
+    """Schema for stream error event."""
+    
+    type: str = Field("error", description="Event type")
+    error: str = Field(..., description="Error message")

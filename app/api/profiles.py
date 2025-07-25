@@ -49,32 +49,32 @@ async def list_profiles(
             active_only=active_only, search=search, page=page, size=size
         )
 
+        # Return format expected by SDK - direct profiles list
         return {
             "success": True,
-            "data": {
-                "profiles": [
-                    {
-                        "name": p.name,
-                        "title": p.title,
-                        "description": p.description,
-                        "is_default": p.is_default,
-                        "is_active": p.is_active,
-                        "parameters": p.to_openai_params(),
-                        "usage_count": p.usage_count,
-                        "last_used_at": (
-                            p.last_used_at.isoformat() if p.last_used_at else None
-                        ),
-                        "created_at": p.created_at.isoformat(),
-                    }
-                    for p in profiles
-                ],
-                "total": total,
-                "page": page,
-                "size": size,
-                "filters": {
-                    "active_only": active_only,
-                    "search": search,
-                },
+            "message": f"Retrieved {len(profiles)} profiles",
+            "profiles": [
+                {
+                    "name": p.name,
+                    "title": p.title,
+                    "description": p.description,
+                    "is_default": p.is_default,
+                    "is_active": p.is_active,
+                    "parameters": p.to_openai_params(),
+                    "usage_count": p.usage_count,
+                    "last_used_at": (
+                        p.last_used_at.isoformat() if p.last_used_at else None
+                    ),
+                    "created_at": p.created_at.isoformat(),
+                }
+                for p in profiles
+            ],
+            "total": total,
+            "page": page,
+            "size": size,
+            "filters": {
+                "active_only": active_only,
+                "search": search,
             },
         }
 
