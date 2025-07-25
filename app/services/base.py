@@ -95,7 +95,9 @@ class BaseService(ABC):
 
         # Additional validation can be added here by subclasses
 
-    def _validate_input(self, input_data: dict, required_fields: list = None) -> dict:
+    def _validate_input(
+        self, input_data: dict, required_fields: Optional[List[str]] = None
+    ) -> dict:
         """
         Validate input data for service operations.
 
@@ -117,7 +119,7 @@ class BaseService(ABC):
         return input_data
 
     async def _get_by_id(
-        self, model: Type[ModelType], entity_id: UUID, error_message: str = None
+        self, model: Type[ModelType], entity_id: UUID, error_message: Optional[str] = None
     ) -> ModelType:
         """
         Get an entity by ID with standardized error handling.
@@ -147,7 +149,7 @@ class BaseService(ABC):
         model: Type[ModelType],
         field_name: str,
         field_value: Any,
-        error_message: str = None,
+        error_message: Optional[str] = None,
     ) -> ModelType:
         """
         Get an entity by a specific field with standardized error handling.
@@ -179,7 +181,7 @@ class BaseService(ABC):
     async def _list_with_filters(
         self,
         model: Type[ModelType],
-        filters: List[Any] = None,
+        filters: Optional[List[Any]] = None,
         page: int = 1,
         size: int = 20,
         order_by: Any = None,
@@ -229,7 +231,7 @@ class BaseService(ABC):
         model: Type[ModelType],
         search_fields: List[str],
         search_term: str,
-        additional_filters: List[Any] = None,
+        additional_filters: Optional[List[Any]] = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[List[ModelType], int]:

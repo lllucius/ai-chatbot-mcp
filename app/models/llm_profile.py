@@ -154,7 +154,7 @@ class LLMProfile(BaseModelDB):
             >>> params
             {"temperature": 0.7, "max_tokens": 1000}
         """
-        params = {}
+        params: Dict[str, Any] = {}
 
         if self.temperature is not None:
             params["temperature"] = self.temperature

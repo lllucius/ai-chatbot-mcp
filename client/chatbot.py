@@ -766,7 +766,7 @@ class AIChatbotTerminal:
                 query = parts[2]
                 try:
                     results = self.sdk.search.search(
-                        DocumentSearchRequest(query=query, page=1, per_page=10)
+                        DocumentSearchRequest(query=query, limit=10)
                     )
                     if results.get("results"):
                         print(f"Found {len(results['results'])} results for '{query}':")

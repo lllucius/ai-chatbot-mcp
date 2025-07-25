@@ -367,7 +367,7 @@ class TextProcessor:
         words = [word for word in words if word not in stop_words]
 
         # Count word frequencies
-        word_freq = {}
+        word_freq: Dict[str, int] = {}
         for word in words:
             word_freq[word] = word_freq.get(word, 0) + 1
 
