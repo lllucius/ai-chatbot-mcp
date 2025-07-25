@@ -205,7 +205,11 @@ class DocumentService(BaseService):
                     buffer.write(content)
             except OSError as e:
                 self.logger.error(
-                    "File write failed", error=str(e), file_path=file_path
+                    "File write failed",
+                    extra={
+                        "error": str(e),
+                        "file_path": file_path
+                    }
                 )
                 raise DocumentError(f"Failed to save file: {e}")
 
@@ -214,7 +218,11 @@ class DocumentService(BaseService):
                 file_info = self.file_processor.get_file_info(file_path)
             except Exception as e:
                 # If metadata extraction fails, continue with basic info
-                self.logger.warning("Metadata extraction failed", error=str(e))
+                self.logger.warning("Metadata extraction failed",
+                    extra={
+                        "error": str(e)
+                    }
+                )
                 file_info = {"error": str(e)}
 
             # Create comprehensive document record

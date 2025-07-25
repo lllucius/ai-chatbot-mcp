@@ -411,10 +411,16 @@ class AIChatbotTerminal:
                 if self.config.enable_streaming:
                     # Use streaming response
                     print("AI: ", end="", flush=True)
-                    full_response = ""
                     for chunk in self.sdk.conversations.chat_stream(chat_req):
-                        print(chunk, end="", flush=True)
-                        full_response += chunk
+                        chunk = json.loads(chunk)
+                        match chunk["type"]:
+                            case "start":
+                                print(chunk["message"], end="\n", flush=True)
+                            case "content":
+                                print(chunk["content"], end="", flush=True)
+                            case _:
+                                print(chunk, end="", flush=True)
+
                     print("\n")  # Add newline after streaming is complete
                 else:
                     # Show spinner if enabled and not streaming

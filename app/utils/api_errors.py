@@ -63,8 +63,10 @@ def handle_api_errors(
                 if log_errors:
                     logger.warning(
                         f"Validation error in {func.__name__}",
-                        error=str(e),
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -77,8 +79,10 @@ def handle_api_errors(
                 if log_errors:
                     logger.warning(
                         f"Authentication error in {func.__name__}",
-                        error=str(e),
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -92,8 +96,10 @@ def handle_api_errors(
                 if log_errors:
                     logger.warning(
                         f"Authorization error in {func.__name__}",
-                        error=str(e),
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -106,8 +112,10 @@ def handle_api_errors(
                 if log_errors:
                     logger.info(
                         f"Resource not found in {func.__name__}",
-                        error=str(e),
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -120,14 +128,16 @@ def handle_api_errors(
                 if log_errors:
                     logger.error(
                         f"Service error in {func.__name__}",
-                        error=str(e),
-                        error_type=type(e).__name__,
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=_format_error_response(
-                        str(e), e.error_code, include_details
+                        str(e), getattr(e, "error_code", "SERVICE_ERROR"), include_details
                     ),
                 )
 
@@ -135,9 +145,11 @@ def handle_api_errors(
                 if log_errors:
                     logger.error(
                         f"External service error in {func.__name__}",
-                        error=str(e),
-                        error_type=type(e).__name__,
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                            "endpoint": func.__name__,
+                        },
                     )
                 # Map external service errors to appropriate HTTP status
                 status_code = (
@@ -157,14 +169,19 @@ def handle_api_errors(
                 if log_errors:
                     logger.error(
                         f"Application error in {func.__name__}",
-                        error=str(e),
-                        error_code=e.error_code,
-                        endpoint=func.__name__,
+                        extra={
+                            "error": str(e),
+                            "error_code": getattr(e, "error_code", "PLATFORM_ERROR"),
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=_format_error_response(
-                        e.message, e.error_code, include_details, e.details
+                        getattr(e, "message", str(e)),
+                        getattr(e, "error_code", "PLATFORM_ERROR"),
+                        include_details,
+                        getattr(e, "details", None),
                     ),
                 )
 
@@ -173,10 +190,12 @@ def handle_api_errors(
                 if log_errors:
                     logger.error(
                         f"Unexpected error in {func.__name__}",
-                        error=str(e),
-                        error_type=type(e).__name__,
-                        endpoint=func.__name__,
                         exc_info=True,
+                        extra={
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                            "endpoint": func.__name__,
+                        },
                     )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -260,4 +279,7 @@ def log_api_call(operation: str, **kwargs):
         operation: Name of the API operation
         **kwargs: Additional context data
     """
-    logger.info(f"API call: {operation}", operation=operation, **kwargs)
+    logger.info(
+        f"API call: {operation}",
+        extra={"operation": operation, **kwargs}
+    )

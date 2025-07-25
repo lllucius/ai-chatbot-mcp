@@ -328,7 +328,7 @@ class OpenAIClient:
             "tool_calls_executed": tool_calls_executed,
             "finish_reason": response.choices[0].finish_reason,
             "usage": final_usage,
-            "tool_handling_mode": tool_handling_mode.value,
+            "tool_handling_mode": tool_handling_mode,
         }
 
         return result
