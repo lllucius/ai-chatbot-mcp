@@ -493,7 +493,9 @@ def performance():
                 table.add_row(
                     "Storage", "Total Storage", format_size(total_storage or 0), ""
                 )
-                table.add_row("", "Storage per User", format_size(int(storage_per_user)), "")
+                table.add_row(
+                    "", "Storage per User", format_size(int(storage_per_user)), ""
+                )
 
                 console.print(table)
 
