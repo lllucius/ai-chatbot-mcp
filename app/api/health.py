@@ -7,7 +7,7 @@ including database connectivity, external services, and system metrics.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
@@ -67,7 +67,7 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
         "database": await _check_database_health(db),
         "cache": await _check_cache_health(),
         "openai": await _check_openai_health(),
-        "fastmcp": await _check_fastmcp_health(),
+        "fastmcp": await _check_fastmcp_health(db),
         "timestamp": utcnow(),
         "overall_status": "healthy",
     }
@@ -259,11 +259,9 @@ async def _check_openai_health() -> Dict[str, Any]:
         }
 
 
-async def _check_fastmcp_health() -> Dict[str, Any]:
+async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, Any]:
     """Check FastMCP services health with enhanced registry integration."""
     try:
-        from ..services.mcp_client import get_mcp_client
-
         if not settings.mcp_enabled:
             return {
                 "status": "warning",
@@ -271,10 +269,20 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
                 "enabled": False,
             }
 
-        mcp_client = await get_mcp_client()
-        health_result = await mcp_client.health_check()
+        # Import here to avoid circular imports
+        from ..database import AsyncSessionLocal
+        from ..services.mcp_client import get_mcp_client
 
-        if not health_result.get("fastmcp_available"):
+        # Use provided db session or create a new one
+        if db:
+            mcp_client = await get_mcp_client(db)
+            health_result = await mcp_client.health_check(db)
+        else:
+            async with AsyncSessionLocal() as session:
+                mcp_client = await get_mcp_client(session)
+                health_result = await mcp_client.health_check(session)
+
+        if not health_result.mcp_available:
             return {
                 "status": "warning",
                 "message": "FastMCP library not available (optional)",
@@ -283,10 +291,10 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
             }
 
         # Get registry-specific information
-        registry_info = health_result.get("registry", {})
+        registry_info = health_result.registry_stats or {}
         total_servers = registry_info.get("total_servers", 0)
         enabled_servers = registry_info.get("enabled_servers", 0)
-        connected_servers = health_result.get("connected_servers", 0)
+        connected_servers = health_result.healthy_servers
 
         if connected_servers == 0:
             status = "warning"
@@ -309,8 +317,8 @@ async def _check_fastmcp_health() -> Dict[str, Any]:
             "connected_servers": connected_servers,
             "enabled_servers": enabled_servers,
             "total_servers": total_servers,
-            "initialized": health_result.get("initialized", False),
-            "server_status": health_result.get("server_status", {}),
+            "initialized": health_result.initialized,
+            "server_status": health_result.server_status,
             "tools_count": registry_info.get("enabled_tools", 0),
         }
 
