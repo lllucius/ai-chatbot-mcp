@@ -1,8 +1,8 @@
 """
 Base API client and utilities for the API-based CLI.
 
-This module provides the core API client functionality, authentication handling,
-console utilities, and common functions used across all CLI modules.
+This module provides the core API client functionality using the AI Chatbot SDK,
+authentication handling, console utilities, and common functions used across all CLI modules.
 """
 
 import json
@@ -10,9 +10,11 @@ import os
 from typing import Any, Dict, Optional, Union
 from pathlib import Path
 
-import httpx
 from rich.console import Console
 from rich.panel import Panel
+
+# Import the SDK
+from client.ai_chatbot_sdk import AIChatbotSDK, ApiError
 
 # Initialize Rich console
 console = Console()
@@ -24,99 +26,53 @@ TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
 
 
 class APIClient:
-    """HTTP client for API interactions."""
+    """SDK-based client for API interactions."""
     
     def __init__(self, base_url: str = API_BASE_URL, timeout: int = API_TIMEOUT):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._token: Optional[str] = None
+        self._sdk = AIChatbotSDK(base_url=self.base_url)
         
     def set_token(self, token: str):
         """Set authentication token."""
-        self._token = token
+        self._sdk.set_token(token)
         
-    def _get_headers(self) -> Dict[str, str]:
-        """Get request headers including authentication."""
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-        
-        if self._token:
-            headers["Authorization"] = f"Bearer {self._token}"
-            
-        return headers
+    def get_sdk(self) -> AIChatbotSDK:
+        """Get the underlying SDK instance."""
+        return self._sdk
     
-    async def _request(
-        self, 
-        method: str, 
-        endpoint: str, 
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        files: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Dict[str, Any]]:
-        """Make HTTP request to API."""
-        url = f"{self.base_url}{endpoint}"
-        
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                if files:
-                    # For file uploads, don't set Content-Type header
-                    headers = {k: v for k, v in self._get_headers().items() if k != "Content-Type"}
-                    response = await client.request(
-                        method=method,
-                        url=url,
-                        headers=headers,
-                        data=data,
-                        files=files,
-                        params=params,
-                    )
-                else:
-                    response = await client.request(
-                        method=method,
-                        url=url,
-                        headers=self._get_headers(),
-                        json=data,
-                        params=params,
-                    )
-                
-                response.raise_for_status()
-                
-                # Handle different content types
-                content_type = response.headers.get("content-type", "")
-                if "application/json" in content_type:
-                    return response.json()
-                else:
-                    return {"content": response.text, "status_code": response.status_code}
-                    
-        except httpx.HTTPStatusError as e:
-            try:
-                error_detail = e.response.json().get("detail", str(e))
-            except:
-                error_detail = str(e)
-            raise APIError(f"API request failed: {error_detail}", status_code=e.response.status_code)
-        except httpx.ConnectError:
-            raise APIError(f"Cannot connect to API server at {self.base_url}. Is the server running?")
-        except httpx.TimeoutException:
-            raise APIError(f"API request timed out after {self.timeout} seconds")
-        except Exception as e:
-            raise APIError(f"API request failed: {str(e)}")
-    
+    # Legacy methods for backward compatibility
     async def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        """Make GET request."""
-        return await self._request("GET", endpoint, params=params)
+        """Make GET request using SDK."""
+        try:
+            return self._sdk._request(endpoint, params=params)
+        except ApiError as e:
+            raise APIError(str(e), status_code=e.status)
     
     async def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None, files: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        """Make POST request."""
-        return await self._request("POST", endpoint, data=data, files=files)
+        """Make POST request using SDK."""
+        try:
+            if files:
+                # Handle file uploads
+                return self._sdk._request(endpoint, method="POST", files=files, data=data)
+            else:
+                return self._sdk._request(endpoint, method="POST", json=data)
+        except ApiError as e:
+            raise APIError(str(e), status_code=e.status)
     
     async def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        """Make PUT request."""
-        return await self._request("PUT", endpoint, data=data)
+        """Make PUT request using SDK."""
+        try:
+            return self._sdk._request(endpoint, method="PUT", json=data)
+        except ApiError as e:
+            raise APIError(str(e), status_code=e.status)
     
     async def delete(self, endpoint: str) -> Optional[Dict[str, Any]]:
-        """Make DELETE request."""
-        return await self._request("DELETE", endpoint)
+        """Make DELETE request using SDK."""
+        try:
+            return self._sdk._request(endpoint, method="DELETE")
+        except ApiError as e:
+            raise APIError(str(e), status_code=e.status)
 
 
 class APIError(Exception):
@@ -258,6 +214,22 @@ def get_client_with_auth() -> APIClient:
         raise typer.Exit(1)
     
     return client
+
+def get_sdk_with_auth() -> AIChatbotSDK:
+    """Get authenticated SDK instance."""
+    from api_cli.auth import get_auth_manager
+    
+    auth_manager = get_auth_manager()
+    
+    if auth_manager.has_token():
+        token = auth_manager.get_token()
+        sdk = AIChatbotSDK(base_url=API_BASE_URL)
+        sdk.set_token(token)
+        return sdk
+    else:
+        error_message("Not authenticated. Please run 'python api_manage.py login' first.")
+        import typer
+        raise typer.Exit(1)
 
 
 # Environment and configuration helpers
