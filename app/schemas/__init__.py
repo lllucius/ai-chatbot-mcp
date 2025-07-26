@@ -16,6 +16,12 @@ from .conversation import (ChatRequest, ChatResponse, ConversationCreate, Conver
 from .document import (DocumentChunkResponse, DocumentResponse, DocumentSearchRequest,
                        DocumentUpdate, DocumentUploadResponse, ProcessingStatusResponse)
 from .llm_profile import LLMProfileCreate, LLMProfileListResponse, LLMProfileResponse, LLMProfileUpdate
+from .mcp import (MCPServerCreateSchema, MCPServerUpdateSchema, MCPServerSchema, 
+                 MCPToolCreateSchema, MCPToolUpdateSchema, MCPToolSchema,
+                 MCPToolExecutionRequestSchema, MCPToolExecutionResultSchema,
+                 MCPToolUsageStatsSchema, MCPDiscoveryRequestSchema, MCPDiscoveryResultSchema,
+                 MCPHealthStatusSchema, MCPConnectionStatusSchema, MCPBatchUsageSchema,
+                 MCPListFiltersSchema, OpenAIToolSchema, MCPOpenAIToolsResponseSchema)
 from .prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
 from .user import UserPasswordUpdate, UserResponse, UserStatsResponse, UserUpdate
 
@@ -50,6 +56,24 @@ __all__ = [
     "LLMProfileCreate",
     "LLMProfileUpdate",
     "LLMProfileListResponse",
+    # MCP schemas
+    "MCPServerCreateSchema",
+    "MCPServerUpdateSchema", 
+    "MCPServerSchema",
+    "MCPToolCreateSchema",
+    "MCPToolUpdateSchema",
+    "MCPToolSchema",
+    "MCPToolExecutionRequestSchema",
+    "MCPToolExecutionResultSchema",
+    "MCPToolUsageStatsSchema",
+    "MCPDiscoveryRequestSchema",
+    "MCPDiscoveryResultSchema",
+    "MCPHealthStatusSchema",
+    "MCPConnectionStatusSchema",
+    "MCPBatchUsageSchema",
+    "MCPListFiltersSchema",
+    "OpenAIToolSchema",
+    "MCPOpenAIToolsResponseSchema",
     # Prompt schemas
     "PromptResponse",
     "PromptCreate",

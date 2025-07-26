@@ -14,6 +14,8 @@ from rich import box
 from rich.panel import Panel
 from rich.table import Table
 
+from ..database import AsyncSessionLocal
+from ..schemas.mcp import MCPServerCreateSchema, MCPListFiltersSchema
 from ..services.mcp_registry import MCPRegistryService
 from .base import console, error_message, info_message, success_message, warning_message
 
