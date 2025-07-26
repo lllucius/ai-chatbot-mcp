@@ -871,6 +871,14 @@ class PromptsClient:
         """Get prompt usage statistics."""
         return self.sdk._request("/api/v1/prompts/stats", dict)
 
+    def get_categories(self) -> Dict[str, Any]:
+        """Get prompt categories."""
+        return self.sdk._request("/api/v1/prompts/categories/", dict)
+
+    def set_default_prompt(self, prompt_name: str) -> BaseResponse:
+        """Set a prompt as the default."""
+        return self.sdk._request(f"/api/v1/prompts/{prompt_name}/set-default", BaseResponse, method="POST")
+
 
 class ProfilesClient:
     """Client for LLM profile registry management."""
@@ -915,6 +923,213 @@ class ProfilesClient:
         """Get LLM profile usage statistics."""
         return self.sdk._request("/api/v1/profiles/stats", dict)
 
+    def set_default_profile(self, profile_name: str) -> BaseResponse:
+        """Set a profile as the default."""
+        return self.sdk._request(f"/api/v1/profiles/{profile_name}/set-default", BaseResponse, method="POST")
+
+
+class AnalyticsClient:
+    """Client for analytics and reporting."""
+
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    def get_overview(self) -> Dict[str, Any]:
+        """Get system overview analytics."""
+        return self.sdk._request("/api/v1/analytics/overview", dict)
+
+    def get_usage(self, period: Optional[str] = None, detailed: bool = False) -> Dict[str, Any]:
+        """Get usage analytics."""
+        params = filter_query({"period": period, "detailed": detailed})
+        return self.sdk._request("/api/v1/analytics/usage", dict, params=params)
+
+    def get_performance(self) -> Dict[str, Any]:
+        """Get performance analytics."""
+        return self.sdk._request("/api/v1/analytics/performance", dict)
+
+    def get_users_analytics(self, top: Optional[int] = None, metric: Optional[str] = None) -> Dict[str, Any]:
+        """Get user analytics."""
+        params = filter_query({"top": top, "metric": metric})
+        return self.sdk._request("/api/v1/analytics/users", dict, params=params)
+
+    def get_trends(self) -> Dict[str, Any]:
+        """Get trend analytics."""
+        return self.sdk._request("/api/v1/analytics/trends", dict)
+
+    def export_report(self, output: Optional[str] = None, details: bool = False) -> Dict[str, Any]:
+        """Export analytics report."""
+        data = filter_query({"output": output, "details": details})
+        return self.sdk._request("/api/v1/analytics/export-report", dict, method="POST", json=data)
+
+
+class DatabaseClient:
+    """Client for database management operations."""
+
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    def init_database(self) -> BaseResponse:
+        """Initialize the database."""
+        return self.sdk._request("/api/v1/database/init", BaseResponse, method="POST")
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get database status."""
+        return self.sdk._request("/api/v1/database/status", dict)
+
+    def upgrade(self) -> BaseResponse:
+        """Run database migrations/upgrade."""
+        return self.sdk._request("/api/v1/database/upgrade", BaseResponse, method="POST")
+
+    def downgrade(self) -> BaseResponse:
+        """Downgrade database."""
+        return self.sdk._request("/api/v1/database/downgrade", BaseResponse, method="POST")
+
+    def backup(self, output: Optional[str] = None) -> BaseResponse:
+        """Create database backup."""
+        data = filter_query({"output": output})
+        return self.sdk._request("/api/v1/database/backup", BaseResponse, method="POST", json=data)
+
+    def restore(self, backup_file: str) -> BaseResponse:
+        """Restore database from backup."""
+        data = {"backup_file": backup_file}
+        return self.sdk._request("/api/v1/database/restore", BaseResponse, method="POST", json=data)
+
+    def get_tables(self) -> Dict[str, Any]:
+        """Get database tables information."""
+        return self.sdk._request("/api/v1/database/tables", dict)
+
+    def vacuum(self) -> BaseResponse:
+        """Vacuum database."""
+        return self.sdk._request("/api/v1/database/vacuum", BaseResponse, method="POST")
+
+    def get_migrations(self) -> Dict[str, Any]:
+        """Get migration status."""
+        return self.sdk._request("/api/v1/database/migrations", dict)
+
+    def query(self, sql: str) -> Dict[str, Any]:
+        """Execute custom query."""
+        data = {"sql": sql}
+        return self.sdk._request("/api/v1/database/query", dict, method="POST", json=data)
+
+    def validate(self) -> Dict[str, Any]:
+        """Validate database schema."""
+        return self.sdk._request("/api/v1/database/validate", dict, method="POST")
+
+
+class TasksClient:
+    """Client for background task management."""
+
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get task system status."""
+        return self.sdk._request("/api/v1/tasks/status", dict)
+
+    def get_workers(self) -> Dict[str, Any]:
+        """Get worker status."""
+        return self.sdk._request("/api/v1/tasks/workers", dict)
+
+    def get_queue(self) -> Dict[str, Any]:
+        """Get queue information."""
+        return self.sdk._request("/api/v1/tasks/queue", dict)
+
+    def get_active(self) -> Dict[str, Any]:
+        """Get active tasks."""
+        return self.sdk._request("/api/v1/tasks/active", dict)
+
+    def schedule_task(self, task_name: str, **kwargs) -> BaseResponse:
+        """Schedule a task."""
+        data = {"task_name": task_name, **kwargs}
+        return self.sdk._request("/api/v1/tasks/schedule", BaseResponse, method="POST", json=data)
+
+    def retry_failed(self) -> BaseResponse:
+        """Retry failed tasks."""
+        return self.sdk._request("/api/v1/tasks/retry-failed", BaseResponse, method="POST")
+
+    def purge_queue(self) -> BaseResponse:
+        """Purge task queue."""
+        return self.sdk._request("/api/v1/tasks/purge", BaseResponse, method="POST")
+
+    def monitor(self, refresh: Optional[int] = None, duration: Optional[int] = None) -> Dict[str, Any]:
+        """Monitor tasks."""
+        params = filter_query({"refresh": refresh, "duration": duration})
+        return self.sdk._request("/api/v1/tasks/monitor", dict, params=params)
+
+
+class AdminClient:
+    """Client for admin operations across different resources."""
+
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    # User admin operations
+    def promote_user(self, user_id: UUID) -> BaseResponse:
+        """Promote user to superuser."""
+        return self.sdk._request(f"/api/v1/admin/users/{user_id}/promote", BaseResponse, method="POST")
+
+    def demote_user(self, user_id: UUID) -> BaseResponse:
+        """Demote user from superuser."""
+        return self.sdk._request(f"/api/v1/admin/users/{user_id}/demote", BaseResponse, method="POST")
+
+    def activate_user(self, user_id: UUID) -> BaseResponse:
+        """Activate user account."""
+        return self.sdk._request(f"/api/v1/admin/users/{user_id}/activate", BaseResponse, method="POST")
+
+    def deactivate_user(self, user_id: UUID) -> BaseResponse:
+        """Deactivate user account."""
+        return self.sdk._request(f"/api/v1/admin/users/{user_id}/deactivate", BaseResponse, method="POST")
+
+    def reset_user_password(self, user_id: UUID, new_password: Optional[str] = None) -> BaseResponse:
+        """Reset user password."""
+        data = filter_query({"new_password": new_password})
+        return self.sdk._request(f"/api/v1/admin/users/{user_id}/reset-password", BaseResponse, method="POST", json=data)
+
+    def get_user_stats(self) -> Dict[str, Any]:
+        """Get user statistics."""
+        return self.sdk._request("/api/v1/admin/users/stats", dict)
+
+    # Document admin operations
+    def get_document_stats(self) -> Dict[str, Any]:
+        """Get document statistics."""
+        return self.sdk._request("/api/v1/admin/documents/stats", dict)
+
+    def cleanup_documents(self, older_than: Optional[int] = None, status: Optional[str] = None) -> BaseResponse:
+        """Cleanup old documents."""
+        data = filter_query({"older_than": older_than, "status": status})
+        return self.sdk._request("/api/v1/admin/documents/cleanup", BaseResponse, method="POST", json=data)
+
+    def bulk_reprocess_documents(self, document_ids: Optional[List[UUID]] = None) -> BaseResponse:
+        """Bulk reprocess documents."""
+        data = filter_query({"document_ids": [str(id) for id in document_ids] if document_ids else None})
+        return self.sdk._request("/api/v1/admin/documents/bulk-reprocess", BaseResponse, method="POST", json=data)
+
+    def search_documents_advanced(self, **kwargs) -> Dict[str, Any]:
+        """Advanced document search."""
+        return self.sdk._request("/api/v1/admin/documents/search/advanced", dict, params=kwargs)
+
+    # Conversation admin operations
+    def get_conversation_stats(self) -> Dict[str, Any]:
+        """Get conversation statistics."""
+        return self.sdk._request("/api/v1/admin/conversations/stats", dict)
+
+    def search_conversations(self, **kwargs) -> Dict[str, Any]:
+        """Search conversations."""
+        return self.sdk._request("/api/v1/admin/conversations/search", dict, params=kwargs)
+
+    def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
+        """Export conversation."""
+        return self.sdk._request(f"/api/v1/admin/conversations/{conversation_id}/export", dict)
+
+    def import_conversations(self, data: Dict[str, Any]) -> BaseResponse:
+        """Import conversations."""
+        return self.sdk._request("/api/v1/admin/conversations/import", BaseResponse, method="POST", json=data)
+
+    def archive_conversations(self, older_than: Optional[int] = None) -> BaseResponse:
+        """Archive old conversations."""
+        data = filter_query({"older_than": older_than})
+        return self.sdk._request("/api/v1/admin/conversations/archive", BaseResponse, method="POST", json=data)
+
 
 # --- MAIN SDK CLASS ---
 
@@ -935,6 +1150,10 @@ class AIChatbotSDK:
     - Prompt registry for consistent system prompts
     - LLM profile registry for parameter management
     - MCP tools integration and management
+    - Analytics and reporting
+    - Database management
+    - Background task management
+    - Admin operations
 
     Args:
         base_url: Base URL of the AI Chatbot API.
@@ -972,10 +1191,16 @@ class AIChatbotSDK:
         self.conversations = ConversationsClient(self)
         self.search = SearchClient(self)
 
-        # New registry-based clients
+        # Registry-based clients
         self.tools = ToolsClient(self)
         self.prompts = PromptsClient(self)
         self.profiles = ProfilesClient(self)
+
+        # Management clients
+        self.analytics = AnalyticsClient(self)
+        self.database = DatabaseClient(self)
+        self.tasks = TasksClient(self)
+        self.admin = AdminClient(self)
 
     def set_token(self, token: Optional[str]) -> None:
         """Set authentication token for API requests."""

@@ -1,387 +1,578 @@
 """
 Document management commands for the API-based CLI.
 
-This module provides document management functionality through API calls.
+This module provides all document management functionality through the SDK,
+including upload, processing, search, and maintenance operations.
 """
 
-import asyncio
-import typer
+import os
 from pathlib import Path
-from .base import get_client_with_auth, handle_api_response, console, error_message
+from typing import Optional, List
+from uuid import UUID
+
+import typer
+from rich.table import Table
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
+from client.ai_chatbot_sdk import DocumentUpdate, DocumentSearchRequest, ApiError
+from .base import (
+    console, 
+    error_message, 
+    success_message, 
+    info_message,
+    get_sdk_with_auth,
+    display_key_value_pairs,
+    confirm_action,
+    format_timestamp,
+    format_file_size
+)
 
 document_app = typer.Typer(help="📄 Document management commands")
 
 
 @document_app.command()
 def upload(
-    file_path: str = typer.Argument(..., help="Path to file to upload"),
-    title: str = typer.Option(None, "--title", help="Document title"),
-    auto_process: bool = typer.Option(True, "--process/--no-process", help="Auto-process document"),
-    user: str = typer.Option(None, "--user", help="Username to upload as (admin only)"),
+    file_path: str = typer.Argument(..., help="Path to the file to upload"),
+    title: Optional[str] = typer.Option(None, "--title", help="Custom title for the document"),
+    user: Optional[str] = typer.Option(None, "--user", help="Username to upload as (admin only)"),
+    process: bool = typer.Option(True, "--process/--no-process", help="Start processing immediately"),
 ):
-    """Upload a document for processing."""
+    """Upload a document for processing with comprehensive validation."""
     
-    async def _upload_document():
-        if not Path(file_path).exists():
+    try:
+        sdk = get_sdk_with_auth()
+        
+        # Validate file path
+        file_path_obj = Path(file_path)
+        if not file_path_obj.exists():
             error_message(f"File not found: {file_path}")
             return
         
-        client = get_client_with_auth()
+        if not file_path_obj.is_file():
+            error_message(f"Path is not a file: {file_path}")
+            return
         
-        try:
-            # Prepare file and form data
+        # Check file size
+        file_size = file_path_obj.stat().st_size
+        info_message(f"Uploading file: {file_path_obj.name} ({format_file_size(file_size)})")
+        
+        # Open file and upload
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Uploading document...", total=None)
+            
             with open(file_path, "rb") as f:
-                files = {"file": (Path(file_path).name, f, "application/octet-stream")}
-                data = {
-                    "title": title or Path(file_path).stem,
-                    "auto_process": str(auto_process).lower()
-                }
-                
-                response = await client.post("/api/v1/documents/upload", data=data, files=files)
-                handle_api_response(response, "document upload")
+                result = sdk.documents.upload(f, title=title or file_path_obj.name)
+            
+            progress.update(task, description="Upload complete!")
         
-        except Exception as e:
-            error_message(f"Failed to upload document: {str(e)}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_upload_document())
+        success_message(f"Document uploaded successfully")
+        
+        # Display document info
+        doc = result.document
+        doc_info = {
+            "ID": str(doc.id),
+            "Title": doc.title,
+            "Filename": doc.filename,
+            "File Type": doc.file_type.upper(),
+            "File Size": format_file_size(doc.file_size),
+            "Processing Status": doc.processing_status.title(),
+            "Processing Started": "Yes" if result.processing_started else "No",
+            "Created": format_timestamp(doc.created_at.isoformat() if doc.created_at else "")
+        }
+        
+        display_key_value_pairs(doc_info, "Document Uploaded")
+        
+        if result.processing_started:
+            info_message("Document processing has started. Use 'status' command to check progress.")
+        
+    except ApiError as e:
+        error_message(f"Failed to upload document: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
 
 
 @document_app.command()
 def list(
-    status: str = typer.Option(None, "--status", help="Filter by status"),
-    user: str = typer.Option(None, "--user", help="Filter by username"),
-    limit: int = typer.Option(20, "--limit", help="Maximum number to show"),
+    page: int = typer.Option(1, "--page", "-p", help="Page number"),
+    size: int = typer.Option(20, "--size", "-s", help="Items per page"),
+    status: Optional[str] = typer.Option(None, "--status", help="Filter by processing status"),
+    file_type: Optional[str] = typer.Option(None, "--file-type", help="Filter by file type"),
+    user: Optional[str] = typer.Option(None, "--user", help="Filter by user (admin only)"),
 ):
-    """List documents with filtering options."""
+    """List documents with comprehensive filtering and detailed display."""
     
-    async def _list_documents():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            params = {"limit": limit}
-            if status:
-                params["status"] = status
-            if user:
-                params["user"] = user
-            
-            response = await client.get("/api/v1/documents/", params=params)
-            data = handle_api_response(response, "listing documents")
-            
-            if data and "items" in data:
-                from rich.table import Table
-                
-                documents = data["items"]
-                table = Table(title=f"Documents ({len(documents)} shown)")
-                table.add_column("Title", style="cyan")
-                table.add_column("Status", style="white")
-                table.add_column("Size", style="green")
-                table.add_column("Created", style="dim")
-                
-                from .base import format_file_size, format_timestamp
-                
-                for doc in documents:
-                    status_color = {
-                        "completed": "green",
-                        "failed": "red", 
-                        "processing": "yellow",
-                        "pending": "blue"
-                    }.get(doc.get("status", ""), "white")
-                    
-                    table.add_row(
-                        doc.get("title", ""),
-                        f"[{status_color}]{doc.get('status', '')}[/{status_color}]",
-                        format_file_size(doc.get("file_size", 0)),
-                        format_timestamp(doc.get("created_at", ""))
-                    )
-                
-                console.print(table)
+        # Get documents using SDK
+        documents_response = sdk.documents.list(
+            page=page,
+            size=size,
+            status=status,
+            file_type=file_type
+        )
         
-        except Exception as e:
-            error_message(f"Failed to list documents: {str(e)}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_list_documents())
+        if not documents_response.success:
+            error_message("Failed to retrieve documents")
+            return
+            
+        documents = documents_response.items
+        pagination = documents_response.pagination
+        
+        if not documents:
+            info_message("No documents found matching the criteria")
+            return
+        
+        # Create and display table
+        table = Table(title=f"Documents (Page {pagination.page} of {pagination.total} total)")
+        
+        table.add_column("ID", style="dim")
+        table.add_column("Title", style="cyan")
+        table.add_column("Type", style="blue")
+        table.add_column("Size", style="green")
+        table.add_column("Status", style="yellow")
+        table.add_column("Chunks", style="magenta")
+        table.add_column("Created", style="dim")
+        
+        for doc in documents:
+            status_style = "green" if doc.processing_status == "completed" else "yellow" if doc.processing_status == "processing" else "red"
+            
+            table.add_row(
+                str(doc.id)[:8] + "...",
+                doc.title[:40] + "..." if len(doc.title) > 40 else doc.title,
+                doc.file_type.upper(),
+                format_file_size(doc.file_size),
+                f"[{status_style}]{doc.processing_status.title()}[/{status_style}]",
+                str(doc.chunk_count),
+                format_timestamp(doc.created_at.isoformat() if doc.created_at else "")
+            )
+        
+        console.print(table)
+        
+        # Show pagination info
+        if pagination.total > size:
+            info_message(f"Showing {len(documents)} of {pagination.total} total documents")
+            
+    except ApiError as e:
+        error_message(f"Failed to list documents: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
 
 
 @document_app.command()
 def show(
-    document_id: str = typer.Argument(..., help="Document ID to show"),
+    document_id: str = typer.Argument(..., help="Document ID to display"),
 ):
-    """Show detailed information about a specific document."""
+    """Display detailed information about a specific document."""
     
-    async def _show_document():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
+        doc_uuid = UUID(document_id)
+        doc = sdk.documents.get(doc_uuid)
+        
+        # Display document information
+        doc_info = {
+            "ID": str(doc.id),
+            "Title": doc.title,
+            "Filename": doc.filename,
+            "File Type": doc.file_type.upper(),
+            "MIME Type": doc.mime_type or "Unknown",
+            "File Size": format_file_size(doc.file_size),
+            "Processing Status": doc.processing_status.title(),
+            "Chunk Count": str(doc.chunk_count),
+            "Owner ID": str(doc.owner_id),
+            "Created": format_timestamp(doc.created_at.isoformat() if doc.created_at else ""),
+            "Updated": format_timestamp(doc.updated_at.isoformat() if doc.updated_at else "")
+        }
+        
+        display_key_value_pairs(doc_info, f"Document Details")
+        
+        # Show metadata if available
+        if doc.metainfo:
+            console.print("\n[bold]Metadata:[/bold]")
+            for key, value in doc.metainfo.items():
+                console.print(f"  [cyan]{key}:[/cyan] {value}")
+        
+        # Get processing status
         try:
-            response = await client.get(f"/api/v1/documents/{document_id}")
-            data = handle_api_response(response, "getting document details")
+            status = sdk.documents.status(doc_uuid)
             
-            if data:
-                from rich.table import Table
-                from .base import format_file_size, format_timestamp
+            if status.status != "completed":
+                console.print(f"\n[bold]Processing Status:[/bold]")
+                console.print(f"  Status: {status.status.title()}")
+                console.print(f"  Progress: {status.progress:.1%}")
+                console.print(f"  Chunks Processed: {status.chunks_processed}/{status.total_chunks}")
                 
-                table = Table(title="Document Details")
-                table.add_column("Field", style="cyan")
-                table.add_column("Value", style="white")
-                
-                table.add_row("ID", str(data.get("id", "")))
-                table.add_row("Title", data.get("title", ""))
-                table.add_row("File Name", data.get("file_name", ""))
-                table.add_row("Status", data.get("status", ""))
-                table.add_row("File Size", format_file_size(data.get("file_size", 0)))
-                table.add_row("Created", format_timestamp(data.get("created_at", "")))
-                table.add_row("Updated", format_timestamp(data.get("updated_at", "")))
-                
-                if data.get("error_message"):
-                    table.add_row("Error", data["error_message"])
-                
-                console.print(table)
+                if status.error_message:
+                    console.print(f"  [red]Error: {status.error_message}[/red]")
+                    
+        except ApiError:
+            # Status endpoint might not be available
+            pass
         
-        except Exception as e:
-            error_message(f"Failed to show document: {str(e)}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_show_document())
-
-
-@document_app.command()
-def delete(
-    document_id: str = typer.Argument(..., help="Document ID to delete"),
-    force: bool = typer.Option(False, "--force", help="Skip confirmation"),
-):
-    """Delete a document and all its chunks."""
-    
-    async def _delete_document():
-        from .base import confirm_action
-        
-        if not force:
-            if not confirm_action("Are you sure you want to delete this document?"):
-                return
-        
-        client = get_client_with_auth()
-        
-        try:
-            response = await client.delete(f"/api/v1/documents/{document_id}")
-            handle_api_response(response, "document deletion")
-        
-        except Exception as e:
-            error_message(f"Failed to delete document: {str(e)}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_delete_document())
-
-
-@document_app.command()
-def reprocess(
-    document_id: str = typer.Argument(..., help="Document ID to reprocess"),
-):
-    """Reprocess a document (re-extract text and create new chunks)."""
-    
-    async def _reprocess_document():
-        client = get_client_with_auth()
-        
-        try:
-            response = await client.post(f"/api/v1/documents/{document_id}/reprocess")
-            handle_api_response(response, "document reprocessing")
-        
-        except Exception as e:
-            error_message(f"Failed to reprocess document: {str(e)}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_reprocess_document())
+    except ValueError:
+        error_message("Invalid document ID format")
+        raise typer.Exit(1)
+    except ApiError as e:
+        error_message(f"Failed to get document: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
 
 
 @document_app.command()
 def search(
     query: str = typer.Argument(..., help="Search query"),
-    limit: int = typer.Option(10, "--limit", help="Maximum results"),
-    threshold: float = typer.Option(0.7, "--threshold", help="Similarity threshold"),
+    algorithm: str = typer.Option("hybrid", "--algorithm", "-a", help="Search algorithm (vector/text/hybrid/mmr)"),
+    limit: int = typer.Option(10, "--limit", "-l", help="Maximum results to return"),
+    threshold: float = typer.Option(0.7, "--threshold", "-t", help="Similarity threshold"),
+    document_ids: Optional[List[str]] = typer.Option(None, "--document-id", help="Specific document IDs to search"),
 ):
-    """Search documents using semantic similarity."""
+    """Search across documents using various algorithms."""
     
-    async def _search_documents():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            data = {
-                "query": query,
-                "limit": limit,
-                "similarity_threshold": threshold
-            }
-            
-            response = await client.post("/api/v1/search/", data=data)
-            result = handle_api_response(response, "document search")
-            
-            if result and "results" in result:
-                from rich.table import Table
-                
-                results = result["results"]
-                table = Table(title=f"Search Results ({len(results)} found)")
-                table.add_column("Document", style="cyan")
-                table.add_column("Chunk", style="white")
-                table.add_column("Score", style="green")
-                table.add_column("Preview", style="dim")
-                
-                for res in results:
-                    chunk = res.get("chunk", {})
-                    doc = res.get("document", {})
-                    
-                    preview = chunk.get("content", "")[:100] + "..." if len(chunk.get("content", "")) > 100 else chunk.get("content", "")
-                    
-                    table.add_row(
-                        doc.get("title", ""),
-                        str(chunk.get("chunk_index", "")),
-                        f"{res.get('similarity_score', 0):.3f}",
-                        preview
-                    )
-                
-                console.print(table)
+        # Convert document IDs to UUIDs if provided
+        doc_uuids = None
+        if document_ids:
+            try:
+                doc_uuids = [UUID(doc_id) for doc_id in document_ids]
+            except ValueError:
+                error_message("Invalid document ID format")
+                return
         
-        except Exception as e:
-            error_message(f"Failed to search documents: {str(e)}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_search_documents())
+        # Create search request
+        search_request = DocumentSearchRequest(
+            query=query,
+            algorithm=algorithm,
+            limit=limit,
+            threshold=threshold,
+            document_ids=doc_uuids
+        )
+        
+        # Perform search
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Searching documents...", total=None)
+            
+            results = sdk.search.search(search_request)
+            
+            progress.update(task, description="Search complete!")
+        
+        if not results.get("success", True):
+            error_message("Search failed")
+            return
+        
+        search_results = results.get("results", [])
+        
+        if not search_results:
+            info_message("No documents found matching the search criteria")
+            return
+        
+        # Display results
+        console.print(f"\n[bold]Search Results for:[/bold] '{query}'")
+        console.print(f"[dim]Algorithm: {algorithm}, Threshold: {threshold}[/dim]\n")
+        
+        table = Table(title=f"Found {len(search_results)} results")
+        
+        table.add_column("Score", style="green")
+        table.add_column("Document", style="cyan")
+        table.add_column("Content", style="white")
+        table.add_column("Metadata", style="dim")
+        
+        for result in search_results:
+            score = f"{result.get('score', 0):.3f}"
+            doc_id = str(result.get('document_id', ''))[:8] + "..."
+            content = result.get('content', '')[:100] + "..." if len(result.get('content', '')) > 100 else result.get('content', '')
+            metadata = str(result.get('metadata', {}))[:50] + "..." if len(str(result.get('metadata', {}))) > 50 else str(result.get('metadata', {}))
+            
+            table.add_row(score, doc_id, content, metadata)
+        
+        console.print(table)
+        
+    except ApiError as e:
+        error_message(f"Search failed: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
 
 
 @document_app.command()
-def stats():
-    """Display document statistics and summary."""
+def status(
+    document_id: str = typer.Argument(..., help="Document ID to check status"),
+):
+    """Check document processing status."""
     
-    async def _show_stats():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            response = await client.get("/api/v1/admin/documents/stats")
-            data = handle_api_response(response, "getting document statistics")
+        doc_uuid = UUID(document_id)
+        status = sdk.documents.status(doc_uuid)
+        
+        # Display status information
+        status_info = {
+            "Document ID": str(status.document_id),
+            "Status": status.status.title(),
+            "Progress": f"{status.progress:.1%}",
+            "Chunks Processed": f"{status.chunks_processed}/{status.total_chunks}",
+        }
+        
+        if status.started_at:
+            status_info["Started At"] = format_timestamp(status.started_at)
             
-            if data:
-                from rich.panel import Panel
-                from rich.columns import Columns
-                from .base import format_file_size
-                
-                counts = data.get("counts_by_status", {})
-                storage = data.get("storage", {})
-                processing = data.get("processing", {})
-                
-                # Status counts
-                status_panel = Panel(
-                    f"Total: [white]{data.get('total_documents', 0)}[/white]\n"
-                    f"Completed: [green]{counts.get('completed', 0)}[/green]\n"
-                    f"Failed: [red]{counts.get('failed', 0)}[/red]\n"
-                    f"Processing: [yellow]{counts.get('processing', 0)}[/yellow]",
-                    title="📊 Status",
-                    border_style="cyan"
-                )
-                
-                # Storage info
-                storage_panel = Panel(
-                    f"Total Size: [green]{format_file_size(storage.get('total_size_bytes', 0))}[/green]\n"
-                    f"Avg Size: [blue]{format_file_size(storage.get('avg_file_size_bytes', 0))}[/blue]",
-                    title="💾 Storage",
-                    border_style="green"
-                )
-                
-                # Processing metrics
-                proc_panel = Panel(
-                    f"Success Rate: [green]{processing.get('success_rate', 0):.1f}%[/green]\n"
-                    f"Avg Time: [blue]{processing.get('avg_processing_time_seconds', 0):.1f}s[/blue]",
-                    title="⚡ Processing",
-                    border_style="yellow"
-                )
-                
-                console.print(Columns([status_panel, storage_panel, proc_panel]))
-                
-                # File types
-                file_types = data.get("file_types", [])
-                if file_types:
-                    from rich.table import Table
-                    
-                    table = Table(title="📁 File Types")
-                    table.add_column("Extension", style="cyan")
-                    table.add_column("Count", style="green")
-                    table.add_column("Size", style="blue")
-                    
-                    for ft in file_types[:5]:
-                        table.add_row(
-                            ft.get("extension", ""),
-                            str(ft.get("count", 0)),
-                            format_file_size(ft.get("total_size_bytes", 0))
-                        )
-                    
-                    console.print(table)
+        if status.completed_at:
+            status_info["Completed At"] = format_timestamp(status.completed_at)
+            
+        if status.error_message:
+            status_info["Error"] = status.error_message
         
-        except Exception as e:
-            error_message(f"Failed to get document statistics: {str(e)}")
-            raise typer.Exit(1)
+        display_key_value_pairs(status_info, "Processing Status")
+        
+    except ValueError:
+        error_message("Invalid document ID format")
+        raise typer.Exit(1)
+    except ApiError as e:
+        error_message(f"Failed to get status: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
+
+
+@document_app.command()
+def reprocess(
+    document_id: str = typer.Argument(..., help="Document ID to reprocess"),
+    confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
+):
+    """Reprocess a document."""
     
-    asyncio.run(_show_stats())
+    try:
+        sdk = get_sdk_with_auth()
+        
+        doc_uuid = UUID(document_id)
+        
+        # Get document info first
+        doc = sdk.documents.get(doc_uuid)
+        
+        # Confirm reprocessing
+        if not confirm:
+            if not confirm_action(f"Reprocess document '{doc.title}'? This will recreate all chunks."):
+                info_message("Reprocessing cancelled")
+                return
+        
+        # Start reprocessing
+        result = sdk.documents.reprocess(doc_uuid)
+        
+        if result.success:
+            success_message(f"Document '{doc.title}' reprocessing started")
+            info_message("Use 'status' command to monitor progress")
+        else:
+            error_message(f"Failed to start reprocessing: {result.message}")
+            
+    except ValueError:
+        error_message("Invalid document ID format")
+        raise typer.Exit(1)
+    except ApiError as e:
+        error_message(f"Failed to reprocess document: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
+
+
+@document_app.command()
+def delete(
+    document_id: str = typer.Argument(..., help="Document ID to delete"),
+    confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
+):
+    """Delete a document and all its chunks."""
+    
+    try:
+        sdk = get_sdk_with_auth()
+        
+        doc_uuid = UUID(document_id)
+        
+        # Get document info first
+        doc = sdk.documents.get(doc_uuid)
+        
+        # Confirm deletion
+        if not confirm:
+            if not confirm_action(f"Delete document '{doc.title}'? This action cannot be undone."):
+                info_message("Deletion cancelled")
+                return
+        
+        # Delete document
+        result = sdk.documents.delete(doc_uuid)
+        
+        if result.success:
+            success_message(f"Document '{doc.title}' deleted successfully")
+        else:
+            error_message(f"Failed to delete document: {result.message}")
+            
+    except ValueError:
+        error_message("Invalid document ID format")
+        raise typer.Exit(1)
+    except ApiError as e:
+        error_message(f"Failed to delete document: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
 
 
 @document_app.command()
 def cleanup(
-    status_filter: str = typer.Option("failed", "--status", help="Status to filter by"),
-    older_than: int = typer.Option(30, "--older-than", help="Days"),
-    dry_run: bool = typer.Option(True, "--dry-run/--execute", help="Dry run mode"),
+    older_than: Optional[int] = typer.Option(None, "--older-than", help="Remove documents older than N days"),
+    status: Optional[str] = typer.Option(None, "--status", help="Remove documents with specific status"),
+    confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
 ):
     """Clean up old or failed documents."""
     
-    async def _cleanup_documents():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            params = {
-                "status_filter": status_filter,
-                "older_than_days": older_than,
-                "dry_run": dry_run
-            }
+        # Confirm cleanup
+        if not confirm:
+            conditions = []
+            if older_than:
+                conditions.append(f"older than {older_than} days")
+            if status:
+                conditions.append(f"with status '{status}'")
             
-            response = await client.post("/api/v1/admin/documents/cleanup", params=params)
-            data = handle_api_response(response, "document cleanup")
+            condition_str = " and ".join(conditions) if conditions else "matching the criteria"
             
-            if data:
-                from rich.panel import Panel
-                from .base import format_file_size
-                
-                if dry_run:
-                    preview = data.get("preview", [])
-                    cleanup_panel = Panel(
-                        f"Would delete: [yellow]{data.get('total_count', 0)}[/yellow] documents\n"
-                        f"Total size: [blue]{format_file_size(data.get('total_size_bytes', 0))}[/blue]\n"
-                        f"Criteria: [dim]{status_filter}, older than {older_than} days[/dim]",
-                        title="🗑️ Cleanup Preview",
-                        border_style="yellow"
-                    )
-                    console.print(cleanup_panel)
-                    
-                    if preview:
-                        from rich.table import Table
-                        
-                        table = Table(title="Preview (first 10)")
-                        table.add_column("Title", style="cyan")
-                        table.add_column("Status", style="white")
-                        table.add_column("Size", style="green")
-                        
-                        for doc in preview:
-                            table.add_row(
-                                doc.get("title", ""),
-                                doc.get("status", ""),
-                                format_file_size(doc.get("file_size", 0))
-                            )
-                        
-                        console.print(table)
-                else:
-                    cleanup_panel = Panel(
-                        f"Deleted: [green]{data.get('deleted_count', 0)}[/green] documents\n"
-                        f"Size freed: [blue]{format_file_size(data.get('deleted_size_bytes', 0))}[/blue]",
-                        title="🗑️ Cleanup Complete",
-                        border_style="green"
-                    )
-                    console.print(cleanup_panel)
+            if not confirm_action(f"Clean up documents {condition_str}? This action cannot be undone."):
+                info_message("Cleanup cancelled")
+                return
         
-        except Exception as e:
-            error_message(f"Failed to cleanup documents: {str(e)}")
-            raise typer.Exit(1)
+        # Perform cleanup using admin endpoint
+        result = sdk.admin.cleanup_documents(older_than=older_than, status=status)
+        
+        if result.success:
+            success_message("Document cleanup completed")
+            info_message(result.message)
+        else:
+            error_message(f"Cleanup failed: {result.message}")
+            
+    except ApiError as e:
+        error_message(f"Failed to cleanup documents: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
+
+
+@document_app.command()
+def download(
+    document_id: str = typer.Argument(..., help="Document ID to download"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+):
+    """Download the original document file."""
     
-    asyncio.run(_cleanup_documents())
+    try:
+        sdk = get_sdk_with_auth()
+        
+        doc_uuid = UUID(document_id)
+        
+        # Get document info first
+        doc = sdk.documents.get(doc_uuid)
+        
+        # Download the file
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Downloading document...", total=None)
+            
+            file_content = sdk.documents.download(doc_uuid)
+            
+            progress.update(task, description="Download complete!")
+        
+        # Determine output path
+        if output:
+            output_path = Path(output)
+        else:
+            output_path = Path(doc.filename)
+        
+        # Write file
+        with open(output_path, "wb") as f:
+            f.write(file_content)
+        
+        success_message(f"Document downloaded to: {output_path}")
+        info_message(f"File size: {format_file_size(len(file_content))}")
+        
+    except ValueError:
+        error_message("Invalid document ID format")
+        raise typer.Exit(1)
+    except ApiError as e:
+        error_message(f"Failed to download document: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
+
+
+@document_app.command()
+def stats():
+    """Display document statistics and analytics."""
+    
+    try:
+        sdk = get_sdk_with_auth()
+        
+        # Get document statistics from admin endpoint
+        stats = sdk.admin.get_document_stats()
+        
+        # Display statistics
+        stats_info = {
+            "Total Documents": stats.get("total_documents", 0),
+            "Completed": stats.get("completed_documents", 0),
+            "Processing": stats.get("processing_documents", 0),
+            "Failed": stats.get("failed_documents", 0),
+            "Total Size": format_file_size(stats.get("total_size_bytes", 0)),
+            "Average Size": format_file_size(stats.get("avg_size_bytes", 0)),
+            "Success Rate": f"{stats.get('success_rate', 0):.1f}%"
+        }
+        
+        display_key_value_pairs(stats_info, "Document Statistics")
+        
+        # Show file type breakdown if available
+        file_types = stats.get("file_types", [])
+        if file_types:
+            console.print("\n[bold]File Types:[/bold]")
+            
+            table = Table()
+            table.add_column("Type", style="cyan")
+            table.add_column("Count", style="green")
+            table.add_column("Total Size", style="blue")
+            
+            for ft in file_types:
+                table.add_row(
+                    ft.get("type", "").upper(),
+                    str(ft.get("count", 0)),
+                    format_file_size(ft.get("total_size", 0))
+                )
+            
+            console.print(table)
+        
+    except ApiError as e:
+        error_message(f"Failed to get document statistics: {str(e)}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {str(e)}")
+        raise typer.Exit(1)
