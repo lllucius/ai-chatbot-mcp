@@ -72,28 +72,19 @@ class AuthManager:
         }
         
         try:
-            # Use form data for login
-            import httpx
-            async with httpx.AsyncClient(timeout=client.timeout) as http_client:
-                response = await http_client.post(
-                    f"{client.base_url}/api/v1/auth/login",
-                    data=login_data
-                )
-                response.raise_for_status()
-                return response.json()
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
+            # Use the SDK's auth method
+            sdk = client.get_sdk()
+            response = await sdk.login(username, password)
+            return response
+        except Exception as e:
+            # Parse and re-raise as APIError
+            error_msg = str(e)
+            if "401" in error_msg or "Unauthorized" in error_msg:
                 raise APIError("Invalid username or password")
-            elif e.response.status_code == 422:
+            elif "422" in error_msg or "validation" in error_msg.lower():
                 raise APIError("Invalid login request format")
             else:
-                try:
-                    error_detail = e.response.json().get("detail", str(e))
-                except:
-                    error_detail = str(e)
-                raise APIError(f"Login failed: {error_detail}")
-        except Exception as e:
-            raise APIError(f"Login request failed: {str(e)}")
+                raise APIError(f"Login failed: {error_msg}")
     
     async def logout(self):
         """Logout from API."""
@@ -104,7 +95,9 @@ class AuthManager:
         client.set_token(self._token)
         
         try:
-            await client.post("/api/v1/auth/logout")
+            # Use SDK method  
+            sdk = client.get_sdk()
+            sdk.logout()  # Sync method in SDK
         except Exception:
             # Continue with local logout even if API call fails
             pass
@@ -120,11 +113,13 @@ class AuthManager:
         client.set_token(self._token)
         
         try:
-            response = await client.get("/api/v1/users/me")
+            # Use SDK method
+            sdk = client.get_sdk()
+            response = sdk.get_current_user()  # Sync method in SDK
             if not response:
                 raise APIError("Failed to get user information")
             return response
-        except APIError:
+        except Exception as e:
             # Token might be expired, clear it
             self.clear_token()
             raise APIError("Authentication token is invalid or expired")
@@ -138,6 +133,10 @@ class AuthManager:
         client.set_token(self._token)
         
         try:
+            # Use SDK method if available, otherwise make direct API call
+            sdk = client.get_sdk()
+            
+            # Since SDK may not have a refresh method, fall back to API call
             response = await client.post("/api/v1/auth/refresh")
             if response and "access_token" in response:
                 self.save_token(response["access_token"])

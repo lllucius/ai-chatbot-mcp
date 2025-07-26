@@ -26,7 +26,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["mcp"])
 
 
-@router.get("/servers", response_model=BaseResponse[List[MCPServerSchema]])
+@router.get("/servers")
 @handle_api_errors("Failed to list MCP servers")
 async def list_servers(
     enabled_only: bool = Query(False, description="Show only enabled servers"),
@@ -46,14 +46,14 @@ async def list_servers(
     
     servers = await registry.list_servers(filters)
     
-    return BaseResponse(
-        success=True,
-        message=f"Retrieved {len(servers)} MCP servers",
-        data=servers
-    )
+    return {
+        "success": True,
+        "message": f"Retrieved {len(servers)} MCP servers",
+        "data": servers
+    }
 
 
-@router.post("/servers", response_model=BaseResponse[MCPServerSchema])
+@router.post("/servers")
 @handle_api_errors("Failed to create MCP server")
 async def create_server(
     server_data: MCPServerCreateSchema,
@@ -66,14 +66,14 @@ async def create_server(
     registry = MCPRegistryService(db)
     server = await registry.add_server(server_data)
     
-    return BaseResponse(
-        success=True,
-        message=f"MCP server '{server_data.name}' created successfully",
-        data=server
-    )
+    return {
+        "success": True,
+        "message": f"MCP server '{server_data.name}' created successfully",
+        "data": server
+    }
 
 
-@router.get("/servers/{server_name}", response_model=BaseResponse[MCPServerSchema])
+@router.get("/servers/{server_name}")
 @handle_api_errors("Failed to get MCP server")
 async def get_server(
     server_name: str,
@@ -92,14 +92,14 @@ async def get_server(
             detail=f"MCP server '{server_name}' not found"
         )
     
-    return BaseResponse(
-        success=True,
-        message=f"Retrieved MCP server '{server_name}'",
-        data=server
-    )
+    return {
+        "success": True,
+        "message": f"Retrieved MCP server '{server_name}'",
+        "data": server
+    }
 
 
-@router.patch("/servers/{server_name}", response_model=BaseResponse[MCPServerSchema])
+@router.patch("/servers/{server_name}")
 @handle_api_errors("Failed to update MCP server")
 async def update_server(
     server_name: str,
@@ -113,11 +113,11 @@ async def update_server(
     registry = MCPRegistryService(db)
     server = await registry.update_server(server_name, server_update)
     
-    return BaseResponse(
-        success=True,
-        message=f"MCP server '{server_name}' updated successfully",
-        data=server
-    )
+    return {
+        "success": True,
+        "message": f"MCP server '{server_name}' updated successfully",
+        "data": server
+    }
 
 
 @router.delete("/servers/{server_name}", response_model=BaseResponse)
@@ -139,7 +139,7 @@ async def delete_server(
     )
 
 
-@router.post("/servers/{server_name}/test", response_model=BaseResponse[MCPConnectionTestSchema])
+@router.post("/servers/{server_name}/test")
 @handle_api_errors("Failed to test MCP server connection")
 async def test_server_connection(
     server_name: str,
@@ -152,14 +152,14 @@ async def test_server_connection(
     registry = MCPRegistryService(db)
     test_result = await registry.test_connection(server_name)
     
-    return BaseResponse(
-        success=True,
-        message=f"Connection test completed for '{server_name}'",
-        data=test_result
-    )
+    return {
+        "success": True,
+        "message": f"Connection test completed for '{server_name}'",
+        "data": test_result
+    }
 
 
-@router.get("/tools", response_model=BaseResponse[List[MCPToolSchema]])
+@router.get("/tools")
 @handle_api_errors("Failed to list MCP tools")
 async def list_tools(
     server: Optional[str] = Query(None, description="Filter by server name"),
@@ -180,11 +180,11 @@ async def list_tools(
     
     tools = await registry.list_tools(filters)
     
-    return BaseResponse(
-        success=True,
-        message=f"Retrieved {len(tools)} MCP tools",
-        data=tools
-    )
+    return {
+        "success": True,
+        "message": f"Retrieved {len(tools)} MCP tools",
+        "data": tools
+    }
 
 
 @router.patch("/tools/{tool_name}/enable", response_model=BaseResponse)
@@ -227,7 +227,7 @@ async def disable_tool(
     )
 
 
-@router.get("/stats", response_model=BaseResponse[Dict[str, Any]])
+@router.get("/stats")
 @handle_api_errors("Failed to get MCP statistics")
 async def get_mcp_stats(
     current_user: User = Depends(get_current_superuser),
@@ -239,14 +239,14 @@ async def get_mcp_stats(
     registry = MCPRegistryService(db)
     stats = await registry.get_statistics()
     
-    return BaseResponse(
-        success=True,
-        message="MCP statistics retrieved successfully",
-        data=stats
-    )
+    return {
+        "success": True,
+        "message": "MCP statistics retrieved successfully",
+        "data": stats
+    }
 
 
-@router.post("/refresh", response_model=BaseResponse[Dict[str, Any]])
+@router.post("/refresh")
 @handle_api_errors("Failed to refresh MCP")
 async def refresh_mcp(
     server: Optional[str] = Query(None, description="Refresh specific server"),
@@ -269,11 +269,11 @@ async def refresh_mcp(
         servers_refreshed = result.get("servers_refreshed", 0)
         tools_discovered = result.get("tools_discovered", 0)
     
-    return BaseResponse(
-        success=True,
-        message="MCP refresh completed successfully",
-        data={
+    return {
+        "success": True,
+        "message": "MCP refresh completed successfully",
+        "data": {
             "servers_refreshed": servers_refreshed,
             "tools_discovered": tools_discovered,
         }
-    )
+    }
