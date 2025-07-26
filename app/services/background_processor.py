@@ -455,21 +455,37 @@ class BackgroundProcessor(BaseService):
             )
 
         except Exception as e:
-            # Update document status to failed
-            await self.db.execute(
-                update(Document)
-                .where(Document.id == document.id)
-                .values(
-                    status=FileStatus.FAILED,
-                    error_message=str(e),
-                    metainfo={
-                        **(document.metainfo or {}),
-                        "processing_error": str(e),
-                        "processing_failed_at": datetime.utcnow().isoformat(),
-                    },
-                )
+            # Log the error with full context
+            logger.error(
+                f"Document processing failed for document {document.id}: {str(e)}",
+                exc_info=True,
+                extra={
+                    "document_id": str(document.id),
+                    "task_id": task.task_id,
+                    "progress": task.progress,
+                    "processing_time": time.time() - start_time,
+                }
             )
-            await self.db.commit()
+
+            # Update document status to failed
+            try:
+                await self.db.execute(
+                    update(Document)
+                    .where(Document.id == document.id)
+                    .values(
+                        status=FileStatus.FAILED,
+                        metainfo={
+                            **(document.metainfo or {}),
+                            "processing_error": str(e),
+                            "processing_failed_at": datetime.utcnow().isoformat(),
+                            "processing_stage": "document_processing",
+                        },
+                    )
+                )
+                await self.db.commit()
+            except Exception as db_error:
+                logger.error(f"Failed to update document status to failed: {db_error}")
+
             raise
 
     async def _handle_task_error(self, task: ProcessingTask, error: Exception):
@@ -484,7 +500,16 @@ class BackgroundProcessor(BaseService):
         task.error_message = str(error)
 
         logger.error(
-            f"Task {task.task_id} failed (attempt {task.retries}/{task.max_retries}): {error}"
+            f"Task {task.task_id} failed (attempt {task.retries}/{task.max_retries}): {error}",
+            exc_info=True,
+            extra={
+                "task_id": task.task_id,
+                "document_id": str(task.document_id),
+                "task_type": task.task_type,
+                "retries": task.retries,
+                "max_retries": task.max_retries,
+                "error_message": str(error),
+            }
         )
 
         if task.retries < task.max_retries:
@@ -509,7 +534,16 @@ class BackgroundProcessor(BaseService):
                 "completed_at": task.completed_at,
             }
 
-            logger.error(f"Task {task.task_id} permanently failed after {task.retries} retries")
+            logger.error(
+                f"Task {task.task_id} permanently failed after {task.retries} retries",
+                extra={
+                    "task_id": task.task_id,
+                    "document_id": str(task.document_id),
+                    "task_type": task.task_type,
+                    "final_error": task.error_message,
+                    "total_retries": task.retries,
+                }
+            )
 
     async def get_queue_status(self) -> Dict[str, Any]:
         """

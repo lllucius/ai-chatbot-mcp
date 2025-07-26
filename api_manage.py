@@ -58,6 +58,7 @@ from api_cli.analytics import analytics_app
 from api_cli.conversations import conversation_app
 from api_cli.database import database_app
 from api_cli.documents import document_app
+from api_cli.mcp import mcp_app
 from api_cli.prompts import prompt_app
 from api_cli.profiles import profile_app
 from api_cli.tasks import tasks_app
@@ -81,6 +82,7 @@ app.add_typer(
 )
 app.add_typer(database_app, name="database", help="🗄️ Database management commands")
 app.add_typer(tasks_app, name="tasks", help="⚙️ Background task management commands")
+app.add_typer(mcp_app, name="mcp", help="🔌 MCP server and tool management commands")
 app.add_typer(prompt_app, name="prompts", help="📝 Prompt management commands")
 app.add_typer(
     profile_app, name="profiles", help="🎛️ LLM parameter profile management commands"
@@ -411,6 +413,13 @@ def quickstart():
    • List profiles: [cyan]python api_manage.py profiles list[/cyan]
    • Create profile: [cyan]python api_manage.py profiles add creative --temperature 1.0[/cyan]
 
+[yellow]10. MCP Server & Tool Management:[/yellow]
+   • List servers: [cyan]python api_manage.py mcp list-servers --detailed[/cyan]
+   • Add server: [cyan]python api_manage.py mcp add-server myserver http://localhost:9000/mcp[/cyan]
+   • Enable/disable server: [cyan]python api_manage.py mcp enable-server myserver[/cyan]
+   • List tools: [cyan]python api_manage.py mcp list-tools --enabled-only[/cyan]
+   • Tool statistics: [cyan]python api_manage.py mcp stats[/cyan]
+
 [green]💡 Pro Tips:[/green]
    • All commands work through the API - server must be running
    • Use [cyan]--help[/cyan] with any command for detailed options
@@ -437,17 +446,33 @@ def quickstart():
 def config():
     """Show current configuration and environment settings."""
     try:
-        # Load environment configuration
+        # Load environment configuration from main app .env file
         from dotenv import load_dotenv
-        load_dotenv()
+        import os
+        from pathlib import Path
+        
+        # Look for .env file in current directory first, then parent
+        env_file = Path(".env")
+        if not env_file.exists():
+            env_file = Path(__file__).parent / ".env"
+        
+        if env_file.exists():
+            load_dotenv(env_file)
+            info_message(f"Loaded configuration from: {env_file.absolute()}")
+        else:
+            warning_message("No .env file found, using environment variables only")
         
         # Get configuration values
         config_data = {
             "API Base URL": os.getenv("API_BASE_URL", "http://localhost:8000"),
+            "API Timeout": f"{os.getenv('API_TIMEOUT', '30')} seconds",
             "Authentication": "Token-based" if get_auth_manager().has_token() else "Not authenticated",
-            "Config File": os.getenv("CONFIG_FILE", ".env"),
+            "Config File": str(env_file.absolute()) if env_file.exists() else "Not found",
             "Debug Mode": os.getenv("DEBUG", "false"),
-            "Timeout": f"{os.getenv('API_TIMEOUT', '30')} seconds",
+            "Log Level": os.getenv("LOG_LEVEL", "INFO"),
+            "Database URL": os.getenv("DATABASE_URL", "Not set")[:50] + "..." if len(os.getenv("DATABASE_URL", "")) > 50 else os.getenv("DATABASE_URL", "Not set"),
+            "OpenAI Model": os.getenv("OPENAI_CHAT_MODEL", "Not set"),
+            "Admin Username": os.getenv("DEFAULT_ADMIN_USERNAME", "admin"),
         }
         
         # Create configuration table
@@ -466,6 +491,9 @@ def config():
             success_message("Authentication token is present and will be used for API calls.")
         else:
             info_message("No authentication token found. Use 'python api_manage.py login' to authenticate.")
+            # Show default admin credentials hint
+            admin_user = os.getenv("DEFAULT_ADMIN_USERNAME", "admin")
+            info_message(f"Default admin username: {admin_user}")
             
     except Exception as e:
         error_message(f"Failed to show configuration: {str(e)}")

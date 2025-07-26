@@ -14,6 +14,7 @@ from .database import router as database_router
 from .document_admin import router as document_admin_router
 from .documents import router as documents_router
 from .health import router as health_router
+from .mcp import router as mcp_router
 from .profiles import router as profiles_router
 from .prompts import router as prompts_router
 from .search import router as search_router
@@ -33,6 +34,7 @@ __all__ = [
     "search_router",
     "health_router",
     "tools_router",
+    "mcp_router",
     "prompts_router",
     "profiles_router",
     "analytics_router",
