@@ -201,7 +201,9 @@ def remove_server(
                     info_message("Operation cancelled")
                     return
 
-            success = await MCPRegistryService.delete_server(name)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                success = await registry.delete_server(name)
             if success:
                 success_message(f"Removed MCP server: {name}")
             else:
@@ -224,7 +226,9 @@ def enable_server(
 
     async def _enable_server():
         try:
-            success = await MCPRegistryService.enable_server(name, auto_discover=not skip_discovery)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                success = await registry.enable_server(name, auto_discover=not skip_discovery)
             if success:
                 success_message(f"Enabled MCP server: {name}")
                 if not skip_discovery:
@@ -244,7 +248,9 @@ def disable_server(name: str = typer.Argument(..., help="Server name")):
 
     async def _disable_server():
         try:
-            success = await MCPRegistryService.disable_server(name)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                success = await registry.disable_server(name)
             if success:
                 success_message(f"Disabled MCP server: {name}")
             else:
@@ -266,9 +272,13 @@ def list_tools(
 
     async def _list_tools():
         try:
-            tools = await MCPRegistryService.list_tools(
-                server_name=server, enabled_only=enabled_only
-            )
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                filters = MCPListFiltersSchema(
+                    server_name=server,
+                    enabled_only=enabled_only
+                )
+                tools = await registry.list_tools(filters)
 
             if not tools:
                 info_message("No MCP tools found")
@@ -343,7 +353,9 @@ def enable_tool(tool_name: str = typer.Argument(..., help="Tool name")):
 
     async def _enable_tool():
         try:
-            success = await MCPRegistryService.enable_tool(tool_name)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                success = await registry.enable_tool(tool_name)
             if success:
                 success_message(f"Enabled tool: {tool_name}")
             else:
@@ -361,7 +373,9 @@ def disable_tool(tool_name: str = typer.Argument(..., help="Tool name")):
 
     async def _disable_tool():
         try:
-            success = await MCPRegistryService.disable_tool(tool_name)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                success = await registry.disable_tool(tool_name)
             if success:
                 success_message(f"Disabled tool: {tool_name}")
             else:
@@ -382,7 +396,9 @@ def show_stats(
 
     async def _show_stats():
         try:
-            stats = await MCPRegistryService.get_tool_stats(server_name=server, limit=limit)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                stats = await registry.get_tool_stats(server_name=server, limit=limit)
 
             if not stats:
                 info_message("No tool statistics available")
@@ -450,7 +466,9 @@ def discover_tools(
 
             if all_servers:
                 info_message("Discovering tools from all enabled servers...")
-                results = await MCPRegistryService.discover_tools_all_servers()
+                async with AsyncSessionLocal() as db:
+                    registry = MCPRegistryService(db)
+                    results = await registry.discover_tools_all_servers()
 
                 if not results:
                     warning_message("No enabled servers found for tool discovery")
@@ -471,20 +489,20 @@ def discover_tools(
                 success_count = 0
 
                 for result in results:
-                    status = "✅ Success" if result["success"] else "❌ Failed"
-                    new_tools = result.get("new_tools", 0)
-                    updated_tools = result.get("updated_tools", 0)
-                    total_discovered = result.get("total_discovered", 0)
-                    errors = len(result.get("errors", []))
+                    status = "✅ Success" if result.success else "❌ Failed"
+                    new_tools = result.new_tools
+                    updated_tools = result.updated_tools
+                    total_discovered = result.total_discovered
+                    errors = len(result.errors) if result.errors else 0
 
-                    if result["success"]:
+                    if result.success:
                         success_count += 1
                         total_new += new_tools
                         total_updated += updated_tools
                         total_found += total_discovered
 
                     table.add_row(
-                        result["server"],
+                        result.server_name,
                         status,
                         str(new_tools),
                         str(updated_tools),
@@ -503,23 +521,25 @@ def discover_tools(
             else:
                 # Single server discovery
                 info_message(f"Discovering tools from server: {server}")
-                result = await MCPRegistryService.discover_tools_from_server(server)
+                async with AsyncSessionLocal() as db:
+                    registry = MCPRegistryService(db)
+                    result = await registry.discover_tools_from_server(server)
 
-                if result["success"]:
+                if result.success:
                     success_message(f"Tool discovery completed for {server}")
                     info_message(
-                        f"Results: {result['new_tools']} new tools, {result['updated_tools']} updated tools"
+                        f"Results: {result.new_tools} new tools, {result.updated_tools} updated tools"
                     )
 
-                    if result.get("errors"):
+                    if result.errors:
                         warning_message(
-                            f"Encountered {len(result['errors'])} errors during discovery"
+                            f"Encountered {len(result.errors)} errors during discovery"
                         )
-                        for error in result["errors"]:
+                        for error in result.errors:
                             console.print(f"  • {error}")
                 else:
                     error_message(
-                        f"Tool discovery failed for {server}: {result.get('error', 'Unknown error')}"
+                        f"Tool discovery failed for {server}: {result.error or 'Unknown error'}"
                     )
 
         except Exception as e:

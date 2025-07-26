@@ -15,6 +15,8 @@ from pathlib import Path
 # Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
+from app.database import AsyncSessionLocal
+from app.schemas.mcp import MCPServerCreateSchema
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_registry import MCPRegistryService
 from app.services.prompt_service import PromptService
@@ -207,12 +209,15 @@ async def create_sample_mcp_servers():
         },
     ]
 
-    for server_data in sample_servers:
-        try:
-            server = await MCPRegistryService.create_server(**server_data)
-            print(f"✅ Created sample MCP server: {server.name}")
-        except Exception as e:
-            print(f"❌ Failed to create server {server_data['name']}: {e}")
+    async with AsyncSessionLocal() as db:
+        registry = MCPRegistryService(db)
+        for server_data in sample_servers:
+            try:
+                server_schema = MCPServerCreateSchema(**server_data)
+                server = await registry.create_server(server_schema, auto_discover=False)
+                print(f"✅ Created sample MCP server: {server.name}")
+            except Exception as e:
+                print(f"❌ Failed to create server {server_data['name']}: {e}")
 
 
 async def main():
