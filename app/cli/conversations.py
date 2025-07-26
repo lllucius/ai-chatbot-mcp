@@ -39,7 +39,13 @@ def list(
         "updated", "--sort", help="Sort by: id, title, created, updated, messages"
     ),
 ):
-    """List conversations with filtering options."""
+    """
+    List conversations with filtering options.
+    
+    Provides conversation listing with support for filtering by user, activity status,
+    search terms, and sorting options. Uses explicit None checks for optional parameters
+    to prevent typer.Option objects from being passed to SQL queries.
+    """
 
     @async_command
     async def _list_conversations():
@@ -48,7 +54,7 @@ def list(
                 query = select(Conversation).join(User, isouter=True)
 
                 # Apply filters
-                if username:
+                if username is not None:
                     user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")
@@ -58,7 +64,7 @@ def list(
                 if active_only:
                     query = query.where(Conversation.is_active)
 
-                if search:
+                if search is not None:
                     search_pattern = f"%{search.lower()}%"
                     query = query.where(func.lower(Conversation.title).like(search_pattern))
 
@@ -663,7 +669,13 @@ def search(
     limit: int = typer.Option(10, "--limit", "-l", help="Maximum number of results"),
     username: str = typer.Option(None, "--user", "-u", help="Filter by username"),
 ):
-    """Search conversations and messages."""
+    """
+    Search conversations and messages.
+    
+    Performs search across conversation titles and message content with optional
+    user filtering. Uses explicit None checks for username parameter to prevent
+    typer.Option objects from being passed to SQL queries.
+    """
 
     @async_command
     async def _search_conversations():
@@ -675,7 +687,7 @@ def search(
                 # Base query
                 base_query = select(Conversation, Message).join(Message, isouter=True)
 
-                if username:
+                if username is not None:
                     user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")

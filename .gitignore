@@ -1,3 +1,6 @@
+# Temporary test files
+test_cli_fixes.py
+
 # Node
 node_modules/
 
