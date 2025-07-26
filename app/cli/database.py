@@ -698,11 +698,14 @@ def query(
                     error_message("Only SELECT queries are allowed for safety")
                     return
 
+                # Clean up the SQL (remove trailing semicolon if present)
+                sql_clean = sql.strip().rstrip(';')
+                
                 # Add LIMIT if not present
                 if "limit" not in query_lower and limit:
-                    sql_with_limit = f"{sql} LIMIT {limit}"
+                    sql_with_limit = f"{sql_clean} LIMIT {limit}"
                 else:
-                    sql_with_limit = sql
+                    sql_with_limit = sql_clean
 
                 info_message(f"Executing query: {sql_with_limit}")
 

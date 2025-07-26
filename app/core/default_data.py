@@ -17,10 +17,11 @@ from app.services.prompt_service import PromptService
 logger = logging.getLogger(__name__)
 
 
-async def create_default_prompt():
+async def create_default_prompt(db: AsyncSession):
     """Create a default prompt."""
     try:
-        default_prompt = await PromptService.create_prompt(
+        prompt_service = PromptService(db)
+        default_prompt = await prompt_service.create_prompt(
             name="default_assistant",
             title="Default AI Assistant",
             content="""You are a helpful, knowledgeable AI assistant. You provide accurate, helpful, and concise responses to user questions. When appropriate, you:
@@ -44,7 +45,7 @@ Be professional but friendly in your responses.""",
         return None
 
 
-async def create_sample_prompts():
+async def create_sample_prompts(db: AsyncSession):
     """Create sample prompts for different use cases."""
     sample_prompts = [
         {
@@ -100,10 +101,11 @@ Focus on making complex technical concepts accessible and actionable.""",
         },
     ]
 
+    prompt_service = PromptService(db)
     created_count = 0
     for prompt_data in sample_prompts:
         try:
-            prompt = await PromptService.create_prompt(**prompt_data)
+            prompt = await prompt_service.create_prompt(**prompt_data)
             logger.info(f"Created sample prompt: {prompt.name}")
             created_count += 1
         except Exception as e:
@@ -113,10 +115,11 @@ Focus on making complex technical concepts accessible and actionable.""",
     return created_count
 
 
-async def create_default_llm_profile():
+async def create_default_llm_profile(db: AsyncSession):
     """Create a default LLM profile."""
     try:
-        default_profile = await LLMProfileService.create_profile(
+        profile_service = LLMProfileService(db)
+        default_profile = await profile_service.create_profile(
             name="balanced",
             title="Balanced - General Purpose",
             description="Balanced parameters suitable for general conversation and tasks",
@@ -134,7 +137,7 @@ async def create_default_llm_profile():
         return None
 
 
-async def create_sample_llm_profiles():
+async def create_sample_llm_profiles(db: AsyncSession):
     """Create sample LLM profiles for different use cases."""
     sample_profiles = [
         {
@@ -179,10 +182,11 @@ async def create_sample_llm_profiles():
         },
     ]
 
+    profile_service = LLMProfileService(db)
     created_count = 0
     for profile_data in sample_profiles:
         try:
-            profile = await LLMProfileService.create_profile(**profile_data)
+            profile = await profile_service.create_profile(**profile_data)
             logger.info(f"Created sample LLM profile: {profile.name}")
             created_count += 1
         except Exception as e:
@@ -233,24 +237,24 @@ async def create_sample_mcp_servers(db: AsyncSession):
     return created_count
 
 
-async def initialize_default_data():
+async def initialize_default_data(db: AsyncSession):
     """Initialize all default data for the platform."""
     logger.info("Initializing default data for AI Chatbot Platform...")
 
     # Create default prompt
-    default_prompt = await create_default_prompt()
+    default_prompt = await create_default_prompt(db)
 
     # Create sample prompts
-    sample_prompts_count = await create_sample_prompts()
+    sample_prompts_count = await create_sample_prompts(db)
 
     # Create default LLM profile
-    default_profile = await create_default_llm_profile()
+    default_profile = await create_default_llm_profile(db)
 
     # Create sample LLM profiles
-    sample_profiles_count = await create_sample_llm_profiles()
+    sample_profiles_count = await create_sample_llm_profiles(db)
 
     # Create sample MCP servers
-    sample_servers_count = await create_sample_mcp_servers()
+    sample_servers_count = await create_sample_mcp_servers(db)
 
     # Summary
     success_count = 0

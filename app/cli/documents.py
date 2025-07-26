@@ -578,7 +578,7 @@ def stats():
 
                 # Chunk statistics
                 total_chunks = await db.scalar(select(func.count(DocumentChunk.id)))
-                avg_chunks_per_doc = total_chunks / max(total_docs, 1) if total_docs else 0
+                avg_chunks_per_doc = float(total_chunks or 0) / max(total_docs or 1, 1) if total_docs else 0
 
                 # Create statistics table
                 table = Table(title="Document Statistics")
@@ -600,7 +600,7 @@ def stats():
                 table.add_row(
                     "Recent (7 days)",
                     str(recent_docs or 0),
-                    f"{(recent_docs or 0) / max(total_docs or 1, 1) * 100:.1f}% of total",
+                    f"{float(recent_docs or 0) / max(total_docs or 1, 1) * 100:.1f}% of total",
                 )
 
                 # Status breakdown
@@ -614,7 +614,7 @@ def stats():
                     }.get(status, "❓")
 
                     percentage = (
-                        f"{count / max(total_docs or 1, 1) * 100:.1f}%" if total_docs else "0%"
+                        f"{float(count) / max(total_docs or 1, 1) * 100:.1f}%" if total_docs else "0%"
                     )
                     table.add_row(f"{status_icon} {status.value.title()}", str(count), percentage)
 

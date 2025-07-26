@@ -237,11 +237,12 @@ def update_prompt(
                 error_message("No updates specified")
                 return
 
-            prompt = await PromptService.update_prompt(name, **updates)
-            if prompt:
-                success_message(f"Updated prompt: {name}")
-            else:
-                error_message(f"Prompt not found: {name}")
+            async with get_service_context(PromptService) as prompt_service:
+                prompt = await prompt_service.update_prompt(name, **updates)
+                if prompt:
+                    success_message(f"Updated prompt: {name}")
+                else:
+                    error_message(f"Prompt not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to update prompt: {e}")
@@ -264,11 +265,12 @@ def remove_prompt(
                     info_message("Operation cancelled")
                     return
 
-            success = await PromptService.delete_prompt(name)
-            if success:
-                success_message(f"Removed prompt: {name}")
-            else:
-                error_message(f"Prompt not found: {name}")
+            async with get_service_context(PromptService) as prompt_service:
+                success = await prompt_service.delete_prompt(name)
+                if success:
+                    success_message(f"Removed prompt: {name}")
+                else:
+                    error_message(f"Prompt not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to remove prompt: {e}")
@@ -282,11 +284,12 @@ def set_default_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
     async def _set_default():
         try:
-            success = await PromptService.set_default_prompt(name)
-            if success:
-                success_message(f"Set default prompt: {name}")
-            else:
-                error_message(f"Prompt not found: {name}")
+            async with get_service_context(PromptService) as prompt_service:
+                success = await prompt_service.set_default_prompt(name)
+                if success:
+                    success_message(f"Set default prompt: {name}")
+                else:
+                    error_message(f"Prompt not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to set default prompt: {e}")
@@ -300,11 +303,12 @@ def activate_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
     async def _activate():
         try:
-            success = await PromptService.activate_prompt(name)
-            if success:
-                success_message(f"Activated prompt: {name}")
-            else:
-                error_message(f"Prompt not found: {name}")
+            async with get_service_context(PromptService) as prompt_service:
+                success = await prompt_service.activate_prompt(name)
+                if success:
+                    success_message(f"Activated prompt: {name}")
+                else:
+                    error_message(f"Prompt not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to activate prompt: {e}")
@@ -318,11 +322,12 @@ def deactivate_prompt(name: str = typer.Argument(..., help="Prompt name")):
 
     async def _deactivate():
         try:
-            success = await PromptService.deactivate_prompt(name)
-            if success:
-                success_message(f"Deactivated prompt: {name}")
-            else:
-                error_message(f"Prompt not found: {name}")
+            async with get_service_context(PromptService) as prompt_service:
+                success = await prompt_service.deactivate_prompt(name)
+                if success:
+                    success_message(f"Deactivated prompt: {name}")
+                else:
+                    error_message(f"Prompt not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to deactivate prompt: {e}")
@@ -336,15 +341,16 @@ def list_categories():
 
     async def _list_categories():
         try:
-            categories = await PromptService.get_categories()
+            async with get_service_context(PromptService) as prompt_service:
+                categories = await prompt_service.get_categories()
 
-            if not categories:
-                info_message("No categories found")
-                return
+                if not categories:
+                    info_message("No categories found")
+                    return
 
-            console.print("Available Categories:")
-            for category in categories:
-                console.print(f"  • {category}")
+                console.print("Available Categories:")
+                for category in categories:
+                    console.print(f"  • {category}")
 
         except Exception as e:
             error_message(f"Failed to list categories: {e}")
@@ -358,15 +364,16 @@ def list_tags():
 
     async def _list_tags():
         try:
-            tags = await PromptService.get_all_tags()
+            async with get_service_context(PromptService) as prompt_service:
+                tags = await prompt_service.get_all_tags()
 
-            if not tags:
-                info_message("No tags found")
-                return
+                if not tags:
+                    info_message("No tags found")
+                    return
 
-            console.print("Available Tags:")
-            for tag in tags:
-                console.print(f"  • {tag}")
+                console.print("Available Tags:")
+                for tag in tags:
+                    console.print(f"  • {tag}")
 
         except Exception as e:
             error_message(f"Failed to list tags: {e}")
@@ -380,7 +387,8 @@ def show_stats():
 
     async def _show_stats():
         try:
-            stats = await PromptService.get_prompt_stats()
+            async with get_service_context(PromptService) as prompt_service:
+                stats = await prompt_service.get_prompt_stats()
 
             # Overview panel
             overview_content = f"""

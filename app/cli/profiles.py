@@ -16,7 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..services.llm_profile_service import LLMProfileService
-from .base import console, error_message, info_message, success_message
+from .base import console, error_message, get_service_context, info_message, success_message
 
 # Create the LLM profile management app
 profile_app = typer.Typer(
@@ -38,7 +38,8 @@ def list_profiles(
 
     async def _list_profiles():
         try:
-            profiles = await LLMProfileService.list_profiles(active_only=active_only, search=search)
+            async with get_service_context(LLMProfileService) as profile_service:
+                profiles = await profile_service.list_profiles(active_only=active_only, search=search)
 
             if not profiles:
                 info_message("No LLM profiles found")
@@ -139,7 +140,8 @@ def show_profile(name: str = typer.Argument(..., help="Profile name")):
 
     async def _show_profile():
         try:
-            profile = await LLMProfileService.get_profile(name)
+            async with get_service_context(LLMProfileService) as profile_service:
+                profile = await profile_service.get_profile(name)
             if not profile:
                 error_message(f"Profile not found: {name}")
                 return
@@ -270,30 +272,31 @@ def add_profile(
                     error_message("Invalid JSON format for stop sequences")
                     return
 
-            # Validate parameters
-            errors = await LLMProfileService.validate_parameters(**parameters)
-            if errors:
-                error_message("Parameter validation errors:")
-                for param, error in errors.items():
-                    console.print(f"  • {param}: {error}")
-                return
+            async with get_service_context(LLMProfileService) as profile_service:
+                # Validate parameters
+                errors = await profile_service.validate_parameters(**parameters)
+                if errors:
+                    error_message("Parameter validation errors:")
+                    for param, error in errors.items():
+                        console.print(f"  • {param}: {error}")
+                    return
 
-            # Filter out None values
-            parameters = {k: v for k, v in parameters.items() if v is not None}
+                # Filter out None values
+                parameters = {k: v for k, v in parameters.items() if v is not None}
 
-            profile = await LLMProfileService.create_profile(
-                name=name,
-                title=title,
-                description=description,
-                is_default=set_default,
-                **parameters,
-            )
+                profile = await profile_service.create_profile(
+                    name=name,
+                    title=title,
+                    description=description,
+                    is_default=set_default,
+                    **parameters,
+                )
 
-            # Set active status
-            if inactive:
-                await LLMProfileService.deactivate_profile(name)
+                # Set active status
+                if inactive:
+                    await profile_service.deactivate_profile(name)
 
-            success_message(f"Added LLM profile: {profile.name}")
+                success_message(f"Added LLM profile: {profile.name}")
 
         except Exception as e:
             error_message(f"Failed to add profile: {e}")
@@ -367,25 +370,27 @@ def update_profile(
 
             # Filter and validate parameters
             param_updates = {k: v for k, v in param_updates.items() if v is not None}
-            if param_updates:
-                errors = await LLMProfileService.validate_parameters(**param_updates)
-                if errors:
-                    error_message("Parameter validation errors:")
-                    for param, error in errors.items():
-                        console.print(f"  • {param}: {error}")
+            
+            async with get_service_context(LLMProfileService) as profile_service:
+                if param_updates:
+                    errors = await profile_service.validate_parameters(**param_updates)
+                    if errors:
+                        error_message("Parameter validation errors:")
+                        for param, error in errors.items():
+                            console.print(f"  • {param}: {error}")
+                        return
+
+                    updates.update(param_updates)
+
+                if not updates:
+                    error_message("No updates specified")
                     return
 
-                updates.update(param_updates)
-
-            if not updates:
-                error_message("No updates specified")
-                return
-
-            profile = await LLMProfileService.update_profile(name, **updates)
-            if profile:
-                success_message(f"Updated LLM profile: {name}")
-            else:
-                error_message(f"Profile not found: {name}")
+                profile = await profile_service.update_profile(name, **updates)
+                if profile:
+                    success_message(f"Updated LLM profile: {name}")
+                else:
+                    error_message(f"Profile not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to update profile: {e}")
@@ -408,11 +413,12 @@ def remove_profile(
                     info_message("Operation cancelled")
                     return
 
-            success = await LLMProfileService.delete_profile(name)
-            if success:
-                success_message(f"Removed LLM profile: {name}")
-            else:
-                error_message(f"Profile not found: {name}")
+            async with get_service_context(LLMProfileService) as profile_service:
+                success = await profile_service.delete_profile(name)
+                if success:
+                    success_message(f"Removed LLM profile: {name}")
+                else:
+                    error_message(f"Profile not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to remove profile: {e}")
@@ -426,11 +432,12 @@ def set_default_profile(name: str = typer.Argument(..., help="Profile name")):
 
     async def _set_default():
         try:
-            success = await LLMProfileService.set_default_profile(name)
-            if success:
-                success_message(f"Set default LLM profile: {name}")
-            else:
-                error_message(f"Profile not found: {name}")
+            async with get_service_context(LLMProfileService) as profile_service:
+                success = await profile_service.set_default_profile(name)
+                if success:
+                    success_message(f"Set default LLM profile: {name}")
+                else:
+                    error_message(f"Profile not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to set default profile: {e}")
@@ -444,11 +451,12 @@ def activate_profile(name: str = typer.Argument(..., help="Profile name")):
 
     async def _activate():
         try:
-            success = await LLMProfileService.activate_profile(name)
-            if success:
-                success_message(f"Activated LLM profile: {name}")
-            else:
-                error_message(f"Profile not found: {name}")
+            async with get_service_context(LLMProfileService) as profile_service:
+                success = await profile_service.activate_profile(name)
+                if success:
+                    success_message(f"Activated LLM profile: {name}")
+                else:
+                    error_message(f"Profile not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to activate profile: {e}")
@@ -462,11 +470,12 @@ def deactivate_profile(name: str = typer.Argument(..., help="Profile name")):
 
     async def _deactivate():
         try:
-            success = await LLMProfileService.deactivate_profile(name)
-            if success:
-                success_message(f"Deactivated LLM profile: {name}")
-            else:
-                error_message(f"Profile not found: {name}")
+            async with get_service_context(LLMProfileService) as profile_service:
+                success = await profile_service.deactivate_profile(name)
+                if success:
+                    success_message(f"Deactivated LLM profile: {name}")
+                else:
+                    error_message(f"Profile not found: {name}")
 
         except Exception as e:
             error_message(f"Failed to deactivate profile: {e}")
@@ -484,9 +493,10 @@ def clone_profile(
 
     async def _clone_profile():
         try:
-            profile = await LLMProfileService.clone_profile(
-                source_name=source, new_name=new_name, new_title=new_title
-            )
+            async with get_service_context(LLMProfileService) as profile_service:
+                profile = await profile_service.clone_profile(
+                    source_name=source, new_name=new_name, new_title=new_title
+                )
 
             if profile:
                 success_message(f"Cloned profile '{source}' to '{new_name}'")
@@ -505,7 +515,8 @@ def show_stats():
 
     async def _show_stats():
         try:
-            stats = await LLMProfileService.get_profile_stats()
+            async with get_service_context(LLMProfileService) as profile_service:
+                stats = await profile_service.get_profile_stats()
 
             # Overview panel
             overview_content = f"""

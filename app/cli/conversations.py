@@ -333,7 +333,7 @@ def export(
                 if format == "json":
                     export_data = {
                         "conversation": {
-                            "id": conversation.id,
+                            "id": str(conversation.id),
                             "title": conversation.title,
                             "user": user.username if user else None,
                             "is_active": conversation.is_active,
@@ -343,7 +343,7 @@ def export(
                         },
                         "messages": [
                             {
-                                "id": msg.id,
+                                "id": str(msg.id),
                                 "role": msg.role,
                                 "content": msg.content,
                                 "token_count": msg.token_count,

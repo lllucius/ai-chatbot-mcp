@@ -58,7 +58,7 @@ def list_servers(
 [bold]Timeout:[/bold] {server.timeout}s
 [bold]Enabled:[/bold] [{enabled_color}]{server.is_enabled}[/{enabled_color}]
 [bold]Connected:[/bold] [{status_color}]{server.is_connected}[/{status_color}]
-[bold]Tools:[/bold] {len(server.tools)}
+[bold]Tools:[/bold] {server.tools_count or 0}
 [bold]Errors:[/bold] {server.connection_errors}
 [bold]Last Connected:[/bold] {server.last_connected_at or 'Never'}
 [bold]Description:[/bold] {server.description or 'No description'}
@@ -90,7 +90,7 @@ def list_servers(
                         server.url,
                         status,
                         enabled,
-                        str(len(server.tools)),
+                        str(server.tools_count or 0),
                         str(server.connection_errors),
                     )
 
