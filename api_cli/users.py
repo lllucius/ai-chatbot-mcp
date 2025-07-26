@@ -1,10 +1,11 @@
 """
-User management commands for the API-based CLI.
+Async user management commands for the API-based CLI.
 
-This module provides all user management functionality through the SDK,
-duplicating the functionality of the original CLI but using the SDK client.
+This module provides all user management functionality through the async SDK,
+duplicating the functionality of the original CLI but using the async SDK client.
 """
 
+import asyncio
 from typing import Optional
 from uuid import UUID
 
@@ -26,18 +27,35 @@ from .base import (
 user_app = typer.Typer(help="👥 User management commands")
 
 
+def async_command(f):
+    """Decorator to run async commands with asyncio.run()."""
+    def wrapper(*args, **kwargs):
+        return asyncio.run(f(*args, **kwargs))
+    return wrapper
+
+
 @user_app.command()
-def create(
+@async_command
+async def create(
     username: str = typer.Argument(..., help="Username for the new user"),
     email: str = typer.Argument(..., help="Email address for the new user"),
     password: Optional[str] = typer.Option(None, "--password", "-p", help="Password (will prompt if not provided)"),
     full_name: Optional[str] = typer.Option(None, "--full-name", help="Full name of the user"),
     superuser: bool = typer.Option(False, "--superuser", help="Create as superuser"),
 ):
-    """Create a new user account with comprehensive validation and setup."""
+    """
+    Create a new user account with comprehensive validation and setup.
+    
+    Args:
+        username: Username for the new user
+        email: Email address for the new user  
+        password: Password (will prompt if not provided)
+        full_name: Full name of the user
+        superuser: Whether to create as superuser
+    """
     
     try:
-        sdk = get_sdk_with_auth()
+        sdk = await get_sdk_with_auth()
         
         # Prompt for password if not provided
         if not password:
@@ -55,9 +73,29 @@ def create(
         )
         
         # Register the user
-        user = sdk.auth.register(register_data)
+        user = await sdk.auth.register(register_data)
         
         success_message(f"User '{username}' created successfully")
+        
+        # Display user details
+        user_info = {
+            "ID": str(user.id),
+            "Username": user.username,
+            "Email": user.email,
+            "Full Name": user.full_name or "Not set",
+            "Active": "Yes" if user.is_active else "No",
+            "Superuser": "Yes" if user.is_superuser else "No",
+            "Created": format_timestamp(user.created_at.isoformat()) if user.created_at else "Unknown"
+        }
+        
+        display_key_value_pairs(user_info, "User Details")
+        
+    except ApiError as e:
+        error_message(f"Failed to create user: {e}")
+        raise typer.Exit(1)
+    except Exception as e:
+        error_message(f"Unexpected error: {e}")
+        raise typer.Exit(1)
         
         # Display user info
         user_info = {
