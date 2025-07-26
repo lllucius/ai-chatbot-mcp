@@ -16,8 +16,10 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (auth_router, conversations_router, documents_router, health_router,
-                  profiles_router, prompts_router, search_router, tools_router, users_router)
+from .api import (analytics_router, auth_router, conversation_admin_router, conversations_router,
+                  database_router, document_admin_router, documents_router, health_router,
+                  profiles_router, prompts_router, search_router, tasks_router, tools_router,
+                  user_admin_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .core.logging import get_component_logger, setup_logging
@@ -284,10 +286,13 @@ app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
 
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
+app.include_router(user_admin_router, prefix="/api/v1/admin", tags=["user-admin"])
 
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
+app.include_router(document_admin_router, prefix="/api/v1/admin", tags=["document-admin"])
 
 app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["conversations"])
+app.include_router(conversation_admin_router, prefix="/api/v1/admin", tags=["conversation-admin"])
 
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 
@@ -297,6 +302,13 @@ app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
 app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
 
 app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"])
+
+# Management API routes
+app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
+
+app.include_router(database_router, prefix="/api/v1/database", tags=["database"])
+
+app.include_router(tasks_router, prefix="/api/v1/tasks", tags=["tasks"])
 
 
 # Root endpoint
