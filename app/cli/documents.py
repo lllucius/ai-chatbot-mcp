@@ -214,10 +214,10 @@ def list(
 
                 # Create table
                 table = Table(title=f"Documents ({len(documents)} found)")
-                table.add_column("ID", style="cyan", width=36)  # Width for full UUID
+                table.add_column("ID", style="cyan", width=41)  # Width for full UUID
                 table.add_column("Title", style="green", width=20)
                 table.add_column("Filename", style="blue", width=15)
-                table.add_column("Size", width=8)
+                table.add_column("Size", width=14)
                 table.add_column("Status", width=10)
                 table.add_column("Owner", width=10)
                 table.add_column("Created", width=12)
@@ -306,7 +306,7 @@ def show(
                 table.add_row("Title", document.title)
                 table.add_row("Filename", document.filename)
                 table.add_row("Content Type", document.content_type)
-                table.add_row("Size", format_size(document.size))
+                table.add_row("Size", format_size(document.file_size))
                 table.add_row("Status", f"{document.status.value.title()}")
                 table.add_row("Owner", owner.username if owner else "System")
                 table.add_row("Chunks", str(chunk_count or 0))
@@ -668,7 +668,7 @@ def cleanup(
                     f"\n[bold yellow]Found {len(documents)} {status} documents to clean up:[/bold yellow]"
                 )
                 for doc in documents[:10]:  # Show first 10
-                    console.print(f"  • {doc.title} (ID: {doc.id}, Size: {format_size(doc.size)})")
+                    console.print(f"  • {doc.title} (ID: {doc.id}, Size: {format_size(doc.file_size)})")
 
                 if len(documents) > 10:
                     console.print(f"  ... and {len(documents) - 10} more")

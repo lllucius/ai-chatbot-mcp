@@ -38,7 +38,7 @@ from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, SearchError
@@ -117,6 +117,23 @@ class SearchService(BaseService):
         """
         super().__init__(db, "search_service")
         self.embedding_service = EmbeddingService(db)
+        self.bm25_supported = None  # Initially unknown
+
+    async def check_bm25_support(self):
+        # Only check once
+        if self.bm25_supported is not None:
+            return self.bm25_supported
+        # Query pg_proc for a function named bm25 with (tsvector, tsquery) params
+        sql = """
+        SELECT EXISTS(
+            SELECT 1 FROM pg_proc 
+            WHERE proname = 'bm25'
+            AND proargtypes[0] = (SELECT oid FROM pg_type WHERE typname = 'tsvector')
+        );
+        """
+        result = await self.db.execute(text(sql))
+        self.bm25_supported = result.scalar() or False
+        return self.bm25_supported
 
     async def get_query_embedding(self, query: str) -> Optional[List[float]]:
         """Returns embedding for query, using cache for performance."""
@@ -244,15 +261,12 @@ class SearchService(BaseService):
         - Returns search_meta for each result.
         """
         ts_query = func.plainto_tsquery("english", request.query)
-        # Use BM25 if available, fallback to ts_rank_cd
-        try:
-            rank_expr = func.bm25("content_tsv", ts_query).label("rank")
-            bm25_supported = True
-        except Exception:
-            rank_expr = func.ts_rank_cd(
-                func.to_tsvector("english", DocumentChunk.content), ts_query
-            ).label("rank")
-            bm25_supported = False
+        # Check support for bm25
+        bm25_supported = await self.check_bm25_support()
+        if bm25_supported:
+            rank_expr = func.bm25(func.to_tsvector("english", DocumentChunk.content), ts_query).label("rank")
+        else:
+            rank_expr = func.ts_rank_cd(func.to_tsvector("english", DocumentChunk.content), ts_query).label("rank")
 
         query = (
             select(DocumentChunk, rank_expr)

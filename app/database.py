@@ -16,6 +16,7 @@ from sqlalchemy.exc import DisconnectionError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .config import settings
+from .core.default_data import initialize_default_data
 from .models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
@@ -45,14 +46,6 @@ def _get_engine_config():
                     },
                     "command_timeout": 30,
                 },
-            }
-        )
-    elif settings.database_url.startswith("sqlite"):
-        # SQLite-specific configuration
-        base_config.update(
-            {
-                "pool_pre_ping": True,
-                "connect_args": {"check_same_thread": False},
             }
         )
 
@@ -190,8 +183,6 @@ async def init_db(with_default_data: bool = True) -> None:
                 # Initialize default data if requested
                 if with_default_data:
                     try:
-                        from ..core.default_data import initialize_default_data
-
                         result = await initialize_default_data()
                         logger.info(
                             f"Default data initialized: {result['total_created']} items created"

@@ -224,11 +224,11 @@ class DocumentChunk(BaseModelDB):
         Index("idx_chunks_token_count", "token_count"),
         Index("idx_chunks_language", "language"),
         Index("idx_chunks_embedding_model", "embedding_model"),
-        Index("idx_embedding_vector_cosine", "embedding",
-            postgresql_using="ivfflat",
-            postgresql_with={"lists": 100},
-            postgresql_ops={"embedding": "vector_cosine_ops"}
-        ),
+        #Index("idx_embedding_vector_cosine", "embedding",
+        #    postgresql_using="ivfflat",
+        #    postgresql_with={"lists": 100},
+        #    postgresql_ops={"embedding": "vector_cosine_ops"}
+        #),
     )
 
     def __repr__(self) -> str:
