@@ -16,16 +16,18 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (analytics_router, auth_router, conversation_admin_router, conversations_router,
-                  database_router, document_admin_router, documents_router, health_router,
-                  mcp_router, profiles_router, prompts_router, search_router, tasks_router, 
-                  tools_router, user_admin_router, users_router)
+from .api import (analytics_router, auth_router, conversation_admin_router,
+                  conversations_router, database_router, document_admin_router,
+                  documents_router, health_router, mcp_router, profiles_router,
+                  prompts_router, search_router, tasks_router, tools_router,
+                  user_admin_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .core.logging import get_component_logger, setup_logging
 from .database import close_db, init_db
-from .middleware import (debug_content_middleware, logging_middleware, rate_limiting_middleware,
-                         timing_middleware, validation_middleware)
+from .middleware import (debug_content_middleware, logging_middleware,
+                         rate_limiting_middleware, timing_middleware,
+                         validation_middleware)
 from .middleware.performance import start_system_monitoring
 from .middleware.rate_limiting import start_rate_limiter_cleanup
 from .utils.caching import start_cache_cleanup_task
@@ -63,8 +65,8 @@ async def lifespan(app: FastAPI):
 
         # Start background document processor
         try:
-            from .services.background_processor import get_background_processor
             from .database import AsyncSessionLocal
+            from .services.background_processor import get_background_processor
 
             async with AsyncSessionLocal() as db:
                 await get_background_processor(db)
@@ -97,7 +99,8 @@ async def lifespan(app: FastAPI):
     try:
         # Shutdown background processor
         try:
-            from .services.background_processor import shutdown_background_processor
+            from .services.background_processor import \
+                shutdown_background_processor
 
             await shutdown_background_processor()
             logger.info("Background document processor shut down")

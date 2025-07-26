@@ -16,7 +16,8 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..services.llm_profile_service import LLMProfileService
-from .base import console, error_message, get_service_context, info_message, success_message
+from .base import (console, error_message, get_service_context, info_message,
+                   success_message)
 
 # Create the LLM profile management app
 profile_app = typer.Typer(

@@ -16,7 +16,7 @@ Refactored to:
 import asyncio
 import json
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from fastmcp import Client
 from fastmcp.client import StreamableHttpTransport
@@ -25,10 +25,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
-from ..schemas.mcp import (
-    MCPServerSchema, MCPToolSchema, MCPToolExecutionRequestSchema,
-    MCPToolExecutionResultSchema, MCPHealthStatusSchema, MCPListFiltersSchema
-)
+from ..schemas.mcp import (MCPHealthStatusSchema, MCPListFiltersSchema,
+                           MCPServerSchema, MCPToolExecutionRequestSchema,
+                           MCPToolExecutionResultSchema, MCPToolSchema)
 
 logger = get_api_logger("mcp_client")
 

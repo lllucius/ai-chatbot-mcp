@@ -6,27 +6,16 @@ This test suite validates all SDK functions and ensures proper pydantic
 validation and API integration.
 """
 
-import json
-import tempfile
-from io import BytesIO
-from typing import Dict, Any
-from unittest.mock import Mock, patch
 import uuid
+from io import BytesIO
+from unittest.mock import Mock, patch
 
 import pytest
-import requests
-from client.ai_chatbot_sdk import (
-    AIChatbotSDK,
-    ApiError,
-    ChatRequest,
-    ConversationCreate,
-    DocumentSearchRequest,
-    LLMProfileCreate,
-    LoginRequest,
-    PromptCreate,
-    RegisterRequest,
-    UserUpdate,
-)
+
+from client.ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest,
+                                   ConversationCreate, DocumentSearchRequest,
+                                   LLMProfileCreate, PromptCreate,
+                                   RegisterRequest, UserUpdate)
 
 
 class TestSDKInitialization:

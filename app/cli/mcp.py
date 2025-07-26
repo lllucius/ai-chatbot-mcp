@@ -15,9 +15,11 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..database import AsyncSessionLocal
-from ..schemas.mcp import MCPServerCreateSchema, MCPListFiltersSchema, MCPServerUpdateSchema
+from ..schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
+                           MCPServerUpdateSchema)
 from ..services.mcp_registry import MCPRegistryService
-from .base import console, error_message, info_message, success_message, warning_message
+from .base import (console, error_message, info_message, success_message,
+                   warning_message)
 
 # Create the MCP management app
 mcp_app = typer.Typer(help="🔌 MCP server and tool management commands", rich_markup_mode="rich")

@@ -14,9 +14,8 @@ Key Features:
 
 """
 
-import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +23,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.common import BaseResponse
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["analytics"])
@@ -53,10 +51,11 @@ async def get_system_overview(
     log_api_call("get_system_overview", user_id=str(current_user.id))
     
     from sqlalchemy import func, select
+
     from ..models.conversation import Conversation
     from ..models.document import Document, FileStatus
     from ..models.user import User as UserModel
-    
+
     # Get basic counts
     total_users = await db.scalar(select(func.count(UserModel.id)))
     active_users = await db.scalar(
@@ -144,10 +143,11 @@ async def get_usage_statistics(
     start_date = datetime.utcnow() - timedelta(days=days)
     
     from sqlalchemy import and_, func, select
+
     from ..models.conversation import Conversation, Message
     from ..models.document import Document
     from ..models.user import User as UserModel
-    
+
     # Get usage metrics for the period
     new_users = await db.scalar(
         select(func.count(UserModel.id)).where(UserModel.created_at >= start_date)
@@ -219,8 +219,9 @@ async def get_performance_metrics(
     log_api_call("get_performance_metrics", user_id=str(current_user.id))
     
     from sqlalchemy import func, select, text
+
     from ..models.document import Document, FileStatus
-    
+
     # Document processing performance
     processing_stats = await db.execute(
         select(
@@ -308,7 +309,8 @@ async def get_user_analytics(
     days = period_map[period]
     start_date = datetime.utcnow() - timedelta(days=days)
     
-    from sqlalchemy import and_, desc, func, select
+    from sqlalchemy import desc, func, select
+
     from ..models.conversation import Conversation, Message
     from ..models.document import Document
     from ..models.user import User as UserModel
@@ -408,10 +410,11 @@ async def get_usage_trends(
     start_date = datetime.utcnow() - timedelta(days=days)
     
     from sqlalchemy import and_, func, select
+
     from ..models.conversation import Message
     from ..models.document import Document
     from ..models.user import User as UserModel
-    
+
     # Daily trends
     daily_trends = []
     for i in range(days):

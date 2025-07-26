@@ -6,12 +6,10 @@ configuration with client-specific settings. It uses the same .env file as the
 main application for consistent configuration across all components.
 """
 
-import logging
-import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

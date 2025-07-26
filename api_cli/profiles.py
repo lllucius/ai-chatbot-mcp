@@ -5,7 +5,8 @@ This module provides LLM parameter profile management functionality through API 
 """
 
 import typer
-from .base import get_sdk_with_auth, console, error_message, success_message
+
+from .base import console, error_message, get_sdk_with_auth, success_message
 
 profile_app = typer.Typer(help="🎛️ LLM parameter profile management commands")
 
@@ -21,7 +22,6 @@ def list():
         
         if data:
             from rich.table import Table
-            from .base import format_timestamp
             
             profiles = data.get("items", []) if isinstance(data, dict) else data
             
@@ -63,10 +63,11 @@ def show(
         data = sdk.profiles.get_profile(profile_name)
         
         if data:
-            from rich.table import Table
             from rich.panel import Panel
+            from rich.table import Table
+
             from .base import format_timestamp
-            
+
             # Basic info
             table = Table(title="Profile Details")
             table.add_column("Field", style="cyan")
@@ -120,7 +121,7 @@ def add(
         sdk = get_sdk_with_auth()
         
         from client.ai_chatbot_sdk import LLMProfileCreate
-        
+
         # Build parameters
         parameters = {
             "model": model,
@@ -293,7 +294,7 @@ def clone(
         source = sdk.profiles.get_profile(source_profile)
         
         from client.ai_chatbot_sdk import LLMProfileCreate
-        
+
         # Create new profile with cloned data
         new_data = LLMProfileCreate(
             name=new_profile,
@@ -322,9 +323,9 @@ def stats():
         data = sdk.profiles.get_profile_stats()
         
         if data:
-            from rich.panel import Panel
             from rich.columns import Columns
-            
+            from rich.panel import Panel
+
             # Basic stats
             basic_panel = Panel(
                 f"Total Profiles: [green]{data.get('total_profiles', 0)}[/green]\n"

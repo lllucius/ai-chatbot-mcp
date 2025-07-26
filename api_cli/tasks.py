@@ -5,7 +5,8 @@ This module provides background task management functionality through API calls.
 """
 
 import typer
-from .base import get_sdk_with_auth, console, error_message, success_message
+
+from .base import console, error_message, get_sdk_with_auth
 
 tasks_app = typer.Typer(help="⚙️ Background task management commands")
 
@@ -304,7 +305,6 @@ def stats(
             data = handle_api_response(response, "getting task statistics")
             
             if data:
-                from rich.table import Table
                 from rich.panel import Panel
                 
                 doc_processing = data.get("document_processing", {})
@@ -348,9 +348,8 @@ def monitor():
             data = handle_api_response(response, "getting monitoring data")
             
             if data:
-                from rich.table import Table
-                from rich.panel import Panel
                 from rich.columns import Columns
+                from rich.panel import Panel
                 
                 system_status = data.get("system_status", {})
                 active_tasks = data.get("active_tasks", {})

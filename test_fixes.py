@@ -9,15 +9,17 @@ This script tests the specific issues mentioned in the problem statement:
 """
 
 import json
-import sys
 import os
+import sys
 from unittest.mock import Mock, patch
 
 # Add the project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from client.ai_chatbot_sdk import AIChatbotSDK, ToolsListResponse, ApiError
-from app.schemas.conversation import StreamCompleteResponse, MessageResponse, ConversationResponse
+from app.schemas.conversation import (ConversationResponse, MessageResponse,
+                                      StreamCompleteResponse)
+from client.ai_chatbot_sdk import AIChatbotSDK, ToolsListResponse
+
 
 def test_tools_list_response():
     """Test that tools list response can be parsed by SDK."""
@@ -146,7 +148,7 @@ def test_streaming_json_serialization():
         # Create mock Pydantic objects that would come from the service layer
         from datetime import datetime
         from uuid import uuid4
-        
+
         # Mock MessageResponse (this was causing the JSON serialization error)
         message_data = {
             "id": str(uuid4()),  # Convert to string

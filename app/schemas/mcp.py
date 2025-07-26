@@ -5,11 +5,10 @@ This module provides comprehensive Pydantic models for all MCP-related
 API operations, ensuring type safety and consistent validation.
 """
 
-import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from .base import BaseModelSchema
 

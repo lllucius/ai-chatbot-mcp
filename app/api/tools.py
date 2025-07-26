@@ -7,7 +7,7 @@ throughout for consistent API responses.
 
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,11 +16,8 @@ from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.mcp import (
-    MCPToolExecutionRequestSchema, MCPToolExecutionResultSchema,
-    MCPToolSchema, MCPServerSchema, MCPListFiltersSchema,
-    OpenAIToolSchema, MCPOpenAIToolsResponseSchema
-)
+from ..schemas.mcp import (MCPListFiltersSchema, MCPToolExecutionRequestSchema,
+                           OpenAIToolSchema)
 from ..services.mcp_client import get_mcp_client
 from ..services.mcp_registry import MCPRegistryService
 from ..utils.api_errors import handle_api_errors, log_api_call

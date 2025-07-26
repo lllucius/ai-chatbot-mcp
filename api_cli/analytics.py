@@ -5,7 +5,8 @@ This module provides analytics and reporting functionality through API calls.
 """
 
 import typer
-from .base import get_sdk_with_auth, console, error_message
+
+from .base import console, error_message, get_sdk_with_auth
 
 analytics_app = typer.Typer(help="📊 Analytics and reporting commands")
 
@@ -20,10 +21,9 @@ def overview():
         data = sdk.analytics.get_overview()
         
         if data:
-            from rich.table import Table
-            from rich.panel import Panel
             from rich.columns import Columns
-            
+            from rich.panel import Panel
+
             # Create overview panels
             users_data = data.get("users", {})
             docs_data = data.get("documents", {})

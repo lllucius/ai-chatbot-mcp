@@ -7,9 +7,6 @@ It shows how the new API CLI provides equivalent functionality to the original
 manage.py script but with enhanced features and API-based architecture.
 """
 
-import subprocess
-import sys
-from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel

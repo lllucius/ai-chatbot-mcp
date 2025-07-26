@@ -24,12 +24,11 @@ from sqlalchemy.orm import selectinload
 from ..core.logging import get_api_logger
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..schemas.mcp import (
-    MCPServerCreateSchema, MCPServerSchema, MCPServerUpdateSchema,
-    MCPToolCreateSchema, MCPToolSchema, MCPToolUpdateSchema,
-    MCPToolUsageStatsSchema, MCPDiscoveryResultSchema,
-    MCPListFiltersSchema
-)
+from ..schemas.mcp import (MCPDiscoveryResultSchema, MCPListFiltersSchema,
+                           MCPServerCreateSchema, MCPServerSchema,
+                           MCPServerUpdateSchema, MCPToolCreateSchema,
+                           MCPToolSchema, MCPToolUpdateSchema,
+                           MCPToolUsageStatsSchema)
 
 logger = get_api_logger("mcp_registry")
 
@@ -447,7 +446,7 @@ class MCPRegistryService:
         try:
             # Import the MCP client service for tool discovery
             from .mcp_client import get_mcp_client
-            
+
             # Get MCP client for discovery
             client_service = await get_mcp_client()
             discovered_tools = await client_service._discover_server_tools(server.url, server.timeout)

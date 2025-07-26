@@ -6,14 +6,11 @@ This script tests all major CLI commands and their functionality to ensure
 the API-based CLI provides equivalent functionality to the original manage.py.
 """
 
-import asyncio
 import json
-import os
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 # Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent))
@@ -332,7 +329,7 @@ class CLITester:
         with open("test_results.json", "w") as f:
             json.dump(self.test_results, f, indent=2)
         
-        console.print(f"\n[dim]Detailed results saved to test_results.json[/dim]")
+        console.print("\n[dim]Detailed results saved to test_results.json[/dim]")
 
 
 def main():

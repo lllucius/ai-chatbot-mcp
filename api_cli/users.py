@@ -12,17 +12,11 @@ from uuid import UUID
 import typer
 from rich.table import Table
 
-from client.ai_chatbot_sdk import RegisterRequest, UserUpdate, ApiError
-from .base import (
-    console, 
-    error_message, 
-    success_message, 
-    info_message,
-    get_sdk_with_auth,
-    display_key_value_pairs,
-    confirm_action,
-    format_timestamp
-)
+from client.ai_chatbot_sdk import ApiError, RegisterRequest
+
+from .base import (console, display_key_value_pairs, error_message,
+                   format_timestamp, get_sdk_with_auth, info_message,
+                   success_message)
 
 user_app = typer.Typer(help="👥 User management commands")
 

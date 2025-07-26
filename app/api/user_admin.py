@@ -13,7 +13,7 @@ Key Features:
 
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -322,10 +322,11 @@ async def get_user_statistics(
     
     try:
         from sqlalchemy import func, select
+
         from ..models.conversation import Conversation
         from ..models.document import Document
         from ..models.user import User as UserModel
-        
+
         # Basic user counts
         total_users = await db.scalar(select(func.count(UserModel.id)))
         active_users = await db.scalar(

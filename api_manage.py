@@ -37,14 +37,10 @@ Requirements:
 """
 
 import asyncio
-import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
@@ -52,15 +48,16 @@ from rich.table import Table
 # Add the app directory to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from api_cli.auth import get_auth_manager
-from api_cli.base import APIClient, console, error_message, info_message, success_message
 from api_cli.analytics import analytics_app
+from api_cli.auth import get_auth_manager
+from api_cli.base import (APIClient, console, error_message, info_message,
+                          success_message)
 from api_cli.conversations import conversation_app
 from api_cli.database import database_app
 from api_cli.documents import document_app
 from api_cli.mcp import mcp_app
-from api_cli.prompts import prompt_app
 from api_cli.profiles import profile_app
+from api_cli.prompts import prompt_app
 from api_cli.tasks import tasks_app
 from api_cli.users import user_app
 
@@ -447,10 +444,11 @@ def config():
     """Show current configuration and environment settings."""
     try:
         # Load environment configuration from main app .env file
-        from dotenv import load_dotenv
         import os
         from pathlib import Path
-        
+
+        from dotenv import load_dotenv
+
         # Look for .env file in current directory first, then parent
         env_file = Path(".env")
         if not env_file.exists():

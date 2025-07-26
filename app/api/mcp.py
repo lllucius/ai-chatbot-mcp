@@ -5,8 +5,7 @@ This module provides REST API endpoints for managing MCP servers and tools,
 providing the backend for the API-based CLI MCP commands.
 """
 
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,12 +14,9 @@ from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.mcp import (
-    MCPListFiltersSchema, MCPServerCreateSchema, MCPServerSchema,
-    MCPServerUpdateSchema, MCPToolSchema, MCPConnectionTestSchema
-)
+from ..schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
+                           MCPServerUpdateSchema)
 from ..services.mcp_registry import MCPRegistryService
-from ..services.mcp_client import get_mcp_client
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["mcp"])

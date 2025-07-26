@@ -37,7 +37,6 @@ from time import time
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
-from pgvector.sqlalchemy import Vector
 from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 

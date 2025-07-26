@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
-from ..schemas.mcp import MCPToolExecutionRequestSchema, MCPToolExecutionResultSchema, MCPListFiltersSchema
+from ..schemas.mcp import MCPListFiltersSchema, MCPToolExecutionRequestSchema
 from ..utils.api_errors import handle_api_errors
 from ..utils.caching import api_response_cache, make_cache_key
 

@@ -18,7 +18,8 @@ from ..database import get_db
 from ..middleware.performance import get_performance_stats
 from ..schemas.common import BaseResponse
 from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
+from ..utils.caching import (api_response_cache, embedding_cache,
+                             search_result_cache)
 from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)

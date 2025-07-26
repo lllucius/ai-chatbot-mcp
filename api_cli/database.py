@@ -5,7 +5,9 @@ This module provides database administration functionality through API calls.
 """
 
 import typer
-from .base import get_sdk_with_auth, console, error_message, success_message, confirm_action
+
+from .base import (confirm_action, console, error_message, get_sdk_with_auth,
+                   success_message)
 
 database_app = typer.Typer(help="🗄️ Database management commands")
 
@@ -105,9 +107,8 @@ def migrations():
             data = handle_api_response(response, "getting migration status")
             
             if data:
-                from rich.table import Table
                 from rich.panel import Panel
-                
+
                 # Show current status
                 status_panel = Panel(
                     f"Current Revision: [green]{data.get('current_revision', 'Unknown')}[/green]\n"
@@ -278,10 +279,10 @@ def analyze():
             data = handle_api_response(response, "database analysis")
             
             if data:
-                from rich.table import Table
-                from rich.panel import Panel
                 from rich.columns import Columns
-                
+                from rich.panel import Panel
+                from rich.table import Table
+
                 # Performance metrics
                 perf_metrics = data.get("performance_metrics", {})
                 perf_panel = Panel(

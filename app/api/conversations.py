@@ -20,10 +20,12 @@ from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.conversation import (ChatRequest, ChatResponse, ConversationCreate,
-                                    ConversationResponse, ConversationStats, ConversationUpdate,
-                                    MessageResponse, StreamCompleteResponse, StreamContentResponse,
-                                    StreamEndResponse, StreamErrorResponse, StreamStartResponse,
+from ..schemas.conversation import (ChatRequest, ChatResponse,
+                                    ConversationCreate, ConversationResponse,
+                                    ConversationStats, ConversationUpdate,
+                                    MessageResponse, StreamCompleteResponse,
+                                    StreamContentResponse, StreamEndResponse,
+                                    StreamErrorResponse, StreamStartResponse,
                                     StreamToolCallResponse)
 from ..services.conversation import ConversationService
 from ..utils.api_errors import handle_api_errors, log_api_call

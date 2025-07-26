@@ -140,7 +140,7 @@ class TestSDKIntegration:
     def test_base_module_import(self):
         """Test that the base module imports correctly."""
         try:
-            from api_cli.base import get_sdk_with_auth, APIClient
+            from api_cli.base import APIClient, get_sdk_with_auth
             assert get_sdk_with_auth is not None
             assert APIClient is not None
         except ImportError as e:

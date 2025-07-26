@@ -4,9 +4,11 @@ Conversation management commands for the API-based CLI.
 This module provides conversation management functionality through API calls.
 """
 
-import typer
 from pathlib import Path
-from .base import get_sdk_with_auth, console, error_message, success_message, confirm_action, format_timestamp
+
+import typer
+
+from .base import console, error_message, format_timestamp, get_sdk_with_auth
 
 conversation_app = typer.Typer(help="💬 Conversation management commands")
 
@@ -72,9 +74,9 @@ def show(
             
             if data:
                 from rich.table import Table
-                from rich.panel import Panel
+
                 from .base import format_timestamp
-                
+
                 # Conversation details
                 table = Table(title="Conversation Details")
                 table.add_column("Field", style="cyan")
@@ -282,6 +284,7 @@ def archive(
                     preview = data.get("preview", [])
                     if preview:
                         from rich.table import Table
+
                         from .base import format_timestamp
                         
                         table = Table(title="Preview (first 10)")
@@ -341,6 +344,7 @@ def search(
             
             if data:
                 from rich.table import Table
+
                 from .base import format_timestamp
                 
                 results = data.get("results", [])
@@ -388,8 +392,8 @@ def stats():
             data = handle_api_response(response, "getting conversation statistics")
             
             if data:
-                from rich.panel import Panel
                 from rich.columns import Columns
+                from rich.panel import Panel
                 
                 conversations = data.get("conversations", {})
                 messages = data.get("messages", {})

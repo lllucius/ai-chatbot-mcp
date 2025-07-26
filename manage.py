@@ -46,7 +46,6 @@ from app.cli.mcp import mcp_app
 from app.cli.profiles import profile_app
 from app.cli.prompts import prompt_app
 from app.cli.tasks import tasks_app
-
 # Import CLI modules
 from app.cli.users import user_app
 

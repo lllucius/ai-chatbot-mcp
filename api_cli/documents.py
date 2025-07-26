@@ -5,27 +5,19 @@ This module provides all document management functionality through the SDK,
 including upload, processing, search, and maintenance operations.
 """
 
-import os
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 from uuid import UUID
 
 import typer
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
-from client.ai_chatbot_sdk import DocumentUpdate, DocumentSearchRequest, ApiError
-from .base import (
-    console, 
-    error_message, 
-    success_message, 
-    info_message,
-    get_sdk_with_auth,
-    display_key_value_pairs,
-    confirm_action,
-    format_timestamp,
-    format_file_size
-)
+from client.ai_chatbot_sdk import ApiError, DocumentSearchRequest
+
+from .base import (confirm_action, console, display_key_value_pairs,
+                   error_message, format_file_size, format_timestamp,
+                   get_sdk_with_auth, info_message, success_message)
 
 document_app = typer.Typer(help="📄 Document management commands")
 
@@ -69,7 +61,7 @@ def upload(
             
             progress.update(task, description="Upload complete!")
         
-        success_message(f"Document uploaded successfully")
+        success_message("Document uploaded successfully")
         
         # Display document info
         doc = result.document
@@ -194,7 +186,7 @@ def show(
             "Updated": format_timestamp(doc.updated_at.isoformat() if doc.updated_at else "")
         }
         
-        display_key_value_pairs(doc_info, f"Document Details")
+        display_key_value_pairs(doc_info, "Document Details")
         
         # Show metadata if available
         if doc.metainfo:
@@ -207,7 +199,7 @@ def show(
             status = sdk.documents.status(doc_uuid)
             
             if status.status != "completed":
-                console.print(f"\n[bold]Processing Status:[/bold]")
+                console.print("\n[bold]Processing Status:[/bold]")
                 console.print(f"  Status: {status.status.title()}")
                 console.print(f"  Progress: {status.progress:.1%}")
                 console.print(f"  Chunks Processed: {status.chunks_processed}/{status.total_chunks}")

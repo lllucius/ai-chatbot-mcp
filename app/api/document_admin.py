@@ -14,8 +14,7 @@ Key Features:
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, func, or_, select

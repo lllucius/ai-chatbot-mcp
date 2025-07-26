@@ -10,7 +10,8 @@ requests and supports all the same features as the original synchronous version.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, Iterator, List, Optional, Type, TypeVar
+from typing import (Any, Callable, Dict, Generic, Iterator, List, Optional,
+                    Type, TypeVar)
 from uuid import UUID
 
 import httpx

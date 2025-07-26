@@ -8,10 +8,10 @@ This module tests the specific fixes made to address the chatbot issues:
 4. Streaming support in client
 """
 
-import pytest
-from unittest.mock import Mock, patch
 import os
-import tempfile
+from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestDocumentSearchFix:
@@ -20,7 +20,7 @@ class TestDocumentSearchFix:
     def test_document_search_request_validation(self):
         """Test that DocumentSearchRequest accepts 'query' parameter."""
         from client.ai_chatbot_sdk import DocumentSearchRequest
-        
+
         # This should work with the fixed parameter name
         req = DocumentSearchRequest(
             query="test search", 
@@ -64,9 +64,10 @@ class TestEmbeddingServiceFix:
     @patch('app.services.embedding.OpenAIClient')
     def test_embedding_service_calls_correct_method(self, mock_openai_class):
         """Test that EmbeddingService calls the correct method name."""
-        from app.services.embedding import EmbeddingService
         from sqlalchemy.ext.asyncio import AsyncSession
-        
+
+        from app.services.embedding import EmbeddingService
+
         # Mock the OpenAI client
         mock_client = Mock()
         mock_client.create_embeddings_batch = Mock(return_value=[[0.1, 0.2, 0.3]])
@@ -86,14 +87,14 @@ class TestReadlineSupport:
     def test_readline_import_available(self):
         """Test that readline import is handled gracefully."""
         from client.chatbot import READLINE_AVAILABLE
-        
+
         # Should be a boolean indicating availability
         assert isinstance(READLINE_AVAILABLE, bool)
 
     def test_setup_readline_no_error(self):
         """Test that setup_readline doesn't raise errors."""
         from client.chatbot import setup_readline
-        
+
         # Should not raise any exceptions
         setup_readline()
 
@@ -102,7 +103,7 @@ class TestReadlineSupport:
     def test_setup_readline_with_readline(self, mock_readline):
         """Test readline setup when readline is available."""
         from client.chatbot import setup_readline
-        
+
         # Mock readline methods
         mock_readline.read_history_file = Mock()
         mock_readline.parse_and_bind = Mock()
@@ -128,7 +129,7 @@ class TestStreamingSupport:
 
     def test_conversations_client_has_streaming(self):
         """Test that ConversationsClient has streaming method."""
-        from client.ai_chatbot_sdk import ConversationsClient, AIChatbotSDK
+        from client.ai_chatbot_sdk import AIChatbotSDK, ConversationsClient
         
         sdk = AIChatbotSDK("http://localhost:8000")
         client = ConversationsClient(sdk)
@@ -158,8 +159,9 @@ class TestStreamingSupport:
     @patch('client.ai_chatbot_sdk.requests.Session.post')
     def test_chat_stream_method(self, mock_post):
         """Test the chat_stream method functionality."""
-        from client.ai_chatbot_sdk import ConversationsClient, AIChatbotSDK, ChatRequest
-        
+        from client.ai_chatbot_sdk import (AIChatbotSDK, ChatRequest,
+                                           ConversationsClient)
+
         # Mock streaming response
         mock_response = Mock()
         mock_response.ok = True

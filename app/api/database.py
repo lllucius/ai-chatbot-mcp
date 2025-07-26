@@ -18,11 +18,10 @@ Security:
 - Query execution has built-in safety checks
 """
 
-import asyncio
 import os
 import subprocess
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
@@ -58,10 +57,9 @@ async def initialize_database(
     
     try:
         # Import models to ensure they're registered
-        from ..models import base, conversation, document, llm_profile, mcp_server, mcp_tool, prompt, user
-        
         # Create all tables
         from ..database import engine
+        from ..models import base
         async with engine.begin() as conn:
             # Install pgvector extension
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
@@ -413,7 +411,7 @@ async def create_database_backup(
         
         return {
             "success": True,
-            "message": f"Database backup created successfully",
+            "message": "Database backup created successfully",
             "output_file": output_file,
             "file_size": f"{file_size / 1024 / 1024:.2f} MB",
             "schema_only": schema_only,

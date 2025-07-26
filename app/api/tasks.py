@@ -16,7 +16,7 @@ Key Features:
 
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -392,9 +392,10 @@ async def retry_failed_tasks(
     log_api_call("retry_failed_tasks", user_id=str(current_user.id), task_name=task_name)
     
     try:
-        from sqlalchemy import and_, select
+        from sqlalchemy import select
+
         from ..models.document import Document, FileStatus
-        
+
         # Find failed documents that can be retried
         query = select(Document).where(Document.status == FileStatus.FAILED)
         
@@ -507,8 +508,9 @@ async def get_task_statistics(
         start_time = datetime.utcnow() - timedelta(hours=period_hours)
         
         from sqlalchemy import and_, func, select
+
         from ..models.document import Document, FileStatus
-        
+
         # Document processing statistics
         total_docs = await db.scalar(
             select(func.count(Document.id)).where(Document.created_at >= start_time)

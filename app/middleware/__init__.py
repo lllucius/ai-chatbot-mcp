@@ -6,7 +6,8 @@ Middleware is applied in the order of import, so the order in this file
 matters for the middleware stack.
 """
 
-from .core import rate_limiting_middleware, timing_middleware, validation_middleware
+from .core import (rate_limiting_middleware, timing_middleware,
+                   validation_middleware)
 from .logging import debug_content_middleware, logging_middleware
 
 __all__ = [

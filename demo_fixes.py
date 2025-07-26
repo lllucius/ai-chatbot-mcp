@@ -79,9 +79,8 @@ def demonstrate_fixes():
     print("   Fix: Added chat_stream method and streaming configuration")
     
     try:
-        from client.ai_chatbot_sdk import ConversationsClient, AIChatbotSDK
-        from client.config import ChatbotConfig
-        
+        from client.ai_chatbot_sdk import AIChatbotSDK, ConversationsClient
+
         # Check SDK streaming method
         sdk = AIChatbotSDK("http://localhost:8000")
         client = ConversationsClient(sdk)

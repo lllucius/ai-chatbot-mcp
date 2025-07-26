@@ -74,7 +74,7 @@ class AuthManager:
         try:
             # Use the SDK's auth method
             sdk = client.get_sdk()
-            response = await sdk.login(username, password)
+            response = await sdk.auth.login(username, password)
             return response
         except Exception as e:
             # Parse and re-raise as APIError
@@ -119,7 +119,7 @@ class AuthManager:
             if not response:
                 raise APIError("Failed to get user information")
             return response
-        except Exception as e:
+        except Exception:
             # Token might be expired, clear it
             self.clear_token()
             raise APIError("Authentication token is invalid or expired")

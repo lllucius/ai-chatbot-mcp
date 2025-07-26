@@ -7,18 +7,17 @@ authentication handling, console utilities, and common functions used across all
 All functions are async and use the async SDK for improved performance.
 """
 
-import asyncio
 import json
 import os
-from typing import Any, Dict, Optional, Union
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 from rich.console import Console
 from rich.panel import Panel
 
 # Import the async SDK and config
 from client.ai_chatbot_sdk import AIChatbotSDK, ApiError
-from client.config import ClientConfig, load_config
+from client.config import load_config
 
 # Initialize Rich console
 console = Console()
@@ -32,7 +31,7 @@ API_TIMEOUT = config.api_timeout
 TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
 
 
-class AsyncAPIClient:
+class APIClient:
     """
     Async SDK-based client for API interactions.
     
@@ -84,7 +83,7 @@ class AsyncAPIClient:
 
 
 # Global client instance (will be initialized per command)
-_current_client: Optional[AsyncAPIClient] = None
+_current_client: Optional[APIClient] = None
 
 
 async def get_sdk_with_auth() -> AIChatbotSDK:
@@ -102,7 +101,7 @@ async def get_sdk_with_auth() -> AIChatbotSDK:
     global _current_client
     
     if not _current_client:
-        _current_client = AsyncAPIClient()
+        _current_client = APIClient()
         await _current_client.__aenter__()
     
     # Load saved token

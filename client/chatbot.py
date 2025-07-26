@@ -8,14 +8,12 @@ advanced features like registry management, document handling, and configuration
 All API interactions are async for improved performance and responsiveness.
 """
 
-import asyncio
 import json
 import os
 import sys
 import threading
 import time
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 # Try to import readline for command history support
@@ -26,8 +24,8 @@ try:
 except ImportError:
     READLINE_AVAILABLE = False
 
-from client.ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest, ConversationCreate,
-                                   DocumentSearchRequest)
+from client.ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest,
+                                   ConversationCreate, DocumentSearchRequest)
 from client.config import ClientConfig, get_default_token_file, load_config
 
 # --- UTILITIES ---

@@ -5,7 +5,8 @@ This module provides prompt management functionality through API calls.
 """
 
 import typer
-from .base import get_sdk_with_auth, console, error_message, success_message
+
+from .base import console, error_message, get_sdk_with_auth, success_message
 
 prompt_app = typer.Typer(help="📝 Prompt management commands")
 
@@ -21,7 +22,6 @@ def list():
         
         if data:
             from rich.table import Table
-            from .base import format_timestamp
             
             prompts = data.get("items", []) if isinstance(data, dict) else data
             
@@ -60,8 +60,9 @@ def show(
         data = sdk.prompts.get_prompt(prompt_name)
         
         if data:
-            from rich.table import Table
             from rich.panel import Panel
+            from rich.table import Table
+
             from .base import format_timestamp
             
             table = Table(title="Prompt Details")
@@ -303,9 +304,9 @@ def stats():
         data = sdk.prompts.get_prompt_stats()
         
         if data:
-            from rich.panel import Panel
             from rich.columns import Columns
-            
+            from rich.panel import Panel
+
             # Basic stats
             basic_panel = Panel(
                 f"Total Prompts: [green]{data.get('total_prompts', 0)}[/green]\n"

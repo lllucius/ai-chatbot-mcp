@@ -6,13 +6,14 @@ registration, enablement, and usage tracking using the refactored
 dependency injection patterns and Pydantic schemas.
 """
 
-from unittest.mock import AsyncMock, patch
 import uuid
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.mcp import MCPServerCreateSchema, MCPToolCreateSchema, MCPListFiltersSchema
+from app.schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
+                             MCPToolCreateSchema)
 from app.services.mcp_registry import MCPRegistryService
 
 
@@ -265,9 +266,11 @@ class TestMCPClientIntegration:
     @pytest.mark.asyncio
     async def test_client_tool_execution_with_schemas(self):
         """Test tool execution using Pydantic schemas."""
+        from app.schemas.mcp import (MCPServerSchema,
+                                     MCPToolExecutionRequestSchema,
+                                     MCPToolSchema)
         from app.services.mcp_client import FastMCPClientService
-        from app.schemas.mcp import MCPToolExecutionRequestSchema, MCPToolSchema, MCPServerSchema
-        
+
         # Mock registry with tools
         mock_registry = AsyncMock()
         mock_server = MCPServerSchema(

@@ -6,14 +6,15 @@ This simulates the "/tools list" and "/profiles list" commands to ensure
 they work correctly with our fixes.
 """
 
-import sys
 import os
+import sys
 from unittest.mock import Mock, patch
 
 # Add the project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from client.ai_chatbot_sdk import AIChatbotSDK, ToolsListResponse
+
 
 def test_tools_list_command():
     """Test the '/tools list' command that was failing with validation error."""
@@ -90,7 +91,7 @@ def test_tools_list_command():
             
             print(f"  ✅ Successfully parsed tools response: {tools_result.message}")
             print(f"  ✅ Tools: {tools_result.enabled_count}/{tools_result.total_count} enabled")
-            print(f"  ✅ Available tools:")
+            print("  ✅ Available tools:")
             for tool in tools_result.available_tools:
                 status = "enabled" if tool.is_enabled else "disabled"
                 print(f"    • {tool.name}: {tool.description[:50]}... ({status})")
@@ -183,7 +184,7 @@ def test_profiles_list_command():
             profiles = profiles_result["profiles"]
             print(f"  ✅ Found {len(profiles)} profiles (was showing 'No profiles available')")
             print(f"  ✅ Response message: {profiles_result.get('message', 'N/A')}")
-            print(f"  ✅ Available profiles:")
+            print("  ✅ Available profiles:")
             
             for profile in profiles:
                 status_parts = []
