@@ -4,9 +4,8 @@ Database management commands for the API-based CLI.
 This module provides database administration functionality through API calls.
 """
 
-import asyncio
 import typer
-from .base import get_client_with_auth, handle_api_response, console, error_message, success_message, confirm_action
+from .base import get_sdk_with_auth, console, error_message, success_message, confirm_action
 
 database_app = typer.Typer(help="🗄️ Database management commands")
 
@@ -15,51 +14,44 @@ database_app = typer.Typer(help="🗄️ Database management commands")
 def init():
     """Initialize the database and create all tables."""
     
-    async def _init_database():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            response = await client.post("/api/v1/database/init")
-            handle_api_response(response, "database initialization")
-        
-        except Exception as e:
-            error_message(f"Failed to initialize database: {str(e)}")
-            raise typer.Exit(1)
+        result = sdk.database.init_database()
+        success_message("Database initialized successfully")
     
-    asyncio.run(_init_database())
+    except Exception as e:
+        error_message(f"Failed to initialize database: {str(e)}")
+        raise typer.Exit(1)
 
 
 @database_app.command()
 def status():
     """Show database connection status and basic information."""
     
-    async def _show_status():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            response = await client.get("/api/v1/database/status")
-            data = handle_api_response(response, "getting database status")
+        data = sdk.database.get_status()
+        
+        if data:
+            from rich.table import Table
             
-            if data:
-                from rich.table import Table
-                
-                table = Table(title="Database Status")
-                table.add_column("Property", style="cyan")
-                table.add_column("Value", style="white")
-                
-                table.add_row("Connection Status", data.get("connection_status", "Unknown"))
-                table.add_row("Database Version", data.get("database_version", "Unknown"))
-                table.add_row("Database Size", data.get("database_size", "Unknown"))
-                table.add_row("Table Count", str(data.get("table_count", 0)))
-                table.add_row("PGVector Installed", "Yes" if data.get("pgvector_installed") else "No")
-                
-                console.print(table)
-        
-        except Exception as e:
-            error_message(f"Failed to get database status: {str(e)}")
-            raise typer.Exit(1)
+            table = Table(title="Database Status")
+            table.add_column("Property", style="cyan")
+            table.add_column("Value", style="white")
+            
+            table.add_row("Connection Status", data.get("connection_status", "Unknown"))
+            table.add_row("Database Version", data.get("database_version", "Unknown"))
+            table.add_row("Database Size", data.get("database_size", "Unknown"))
+            table.add_row("Table Count", str(data.get("table_count", 0)))
+            table.add_row("PGVector Installed", "Yes" if data.get("pgvector_installed") else "No")
+            
+            console.print(table)
     
-    asyncio.run(_show_status())
+    except Exception as e:
+        error_message(f"Failed to get database status: {str(e)}")
+        raise typer.Exit(1)
 
 
 @database_app.command()

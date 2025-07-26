@@ -4,11 +4,9 @@ Conversation management commands for the API-based CLI.
 This module provides conversation management functionality through API calls.
 """
 
-import asyncio
-import json
 import typer
 from pathlib import Path
-from .base import get_client_with_auth, handle_api_response, console, error_message
+from .base import get_sdk_with_auth, console, error_message, success_message, confirm_action, format_timestamp
 
 conversation_app = typer.Typer(help="💬 Conversation management commands")
 
@@ -21,47 +19,40 @@ def list(
 ):
     """List conversations with filtering options."""
     
-    async def _list_conversations():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            params = {"limit": limit}
-            if user:
-                params["user"] = user
-            if active_only:
-                params["active_only"] = True
-            
-            response = await client.get("/api/v1/conversations/", params=params)
-            data = handle_api_response(response, "listing conversations")
-            
-            if data and "items" in data:
-                from rich.table import Table
-                from .base import format_timestamp
-                
-                conversations = data["items"]
-                table = Table(title=f"Conversations ({len(conversations)} shown)")
-                table.add_column("ID", style="cyan")
-                table.add_column("Title", style="white")
-                table.add_column("Messages", style="green")
-                table.add_column("Active", style="yellow")
-                table.add_column("Created", style="dim")
-                
-                for conv in conversations:
-                    table.add_row(
-                        str(conv.get("id", ""))[:8] + "...",
-                        conv.get("title", ""),
-                        str(conv.get("message_count", 0)),
-                        "Yes" if conv.get("is_active") else "No",
-                        format_timestamp(conv.get("created_at", ""))
-                    )
-                
-                console.print(table)
+        conversations_response = sdk.conversations.list(
+            page=1,
+            size=limit,
+            active_only=active_only if active_only else None
+        )
         
-        except Exception as e:
-            error_message(f"Failed to list conversations: {str(e)}")
-            raise typer.Exit(1)
+        if conversations_response and "items" in conversations_response:
+            from rich.table import Table
+            
+            conversations = conversations_response["items"]
+            table = Table(title=f"Conversations ({len(conversations)} shown)")
+            table.add_column("ID", style="cyan")
+            table.add_column("Title", style="white")
+            table.add_column("Messages", style="green")
+            table.add_column("Active", style="yellow")
+            table.add_column("Created", style="dim")
+            
+            for conv in conversations:
+                table.add_row(
+                    str(conv.get("id", ""))[:8] + "...",
+                    conv.get("title", ""),
+                    str(conv.get("message_count", 0)),
+                    "Yes" if conv.get("is_active") else "No",
+                    format_timestamp(conv.get("created_at", ""))
+                )
+            
+            console.print(table)
     
-    asyncio.run(_list_conversations())
+    except Exception as e:
+        error_message(f"Failed to list conversations: {str(e)}")
+        raise typer.Exit(1)
 
 
 @conversation_app.command()
