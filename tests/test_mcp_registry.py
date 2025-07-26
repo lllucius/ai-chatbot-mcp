@@ -25,12 +25,6 @@ class TestMCPRegistryService:
         # Mock database session
         mock_db = AsyncMock(spec=AsyncSession)
         
-        # Mock server model
-        mock_server = AsyncMock()
-        mock_server.id = uuid.uuid4()
-        mock_server.name = "test_server"
-        mock_server.url = "http://localhost:9000/mcp"
-        
         registry = MCPRegistryService(mock_db)
         
         server_data = MCPServerCreateSchema(
@@ -42,6 +36,23 @@ class TestMCPRegistryService:
         )
 
         with patch("app.services.mcp_registry.MCPServer") as mock_server_class:
+            # Create a mock server instance with all the required attributes
+            mock_server = AsyncMock()
+            mock_server.id = uuid.uuid4()
+            mock_server.name = "test_server"
+            mock_server.url = "http://localhost:9000/mcp"
+            mock_server.description = "Test server"
+            mock_server.transport = "http"
+            mock_server.timeout = 30
+            mock_server.config = {}
+            mock_server.is_enabled = True
+            mock_server.is_connected = False
+            mock_server.connection_errors = 0
+            mock_server.last_connected_at = None
+            mock_server.created_at = None
+            mock_server.updated_at = None
+            
+            # Configure the mock to return our mock server
             mock_server_class.return_value = mock_server
             
             result = await registry.create_server(server_data, auto_discover=False)
@@ -50,6 +61,10 @@ class TestMCPRegistryService:
             mock_db.add.assert_called_once()
             mock_db.commit.assert_called_once()
             mock_db.refresh.assert_called_once()
+            
+            # Verify the result is a valid schema
+            assert result.name == "test_server"
+            assert result.url == "http://localhost:9000/mcp"
 
     @pytest.mark.asyncio
     async def test_enable_disable_server(self):
