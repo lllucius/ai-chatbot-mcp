@@ -13,8 +13,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
+from ..schemas.mcp import MCPToolExecutionRequestSchema, MCPToolExecutionResultSchema, MCPListFiltersSchema
 from ..utils.api_errors import handle_api_errors
 from ..utils.caching import api_response_cache, make_cache_key
 
@@ -54,17 +57,17 @@ class ToolExecutionStrategy(ABC):
     """Abstract base class for tool execution strategies."""
 
     @abstractmethod
-    async def execute_tool(self, tool_call: ToolCall, max_retries: int = 3) -> ToolResult:
+    async def execute_tool(self, tool_call: ToolCall, max_retries: int = 3, db_session: Optional[AsyncSession] = None) -> ToolResult:
         """Execute a single tool call."""
         pass
 
     @abstractmethod
-    async def get_available_tools(self) -> List[Dict[str, Any]]:
+    async def get_available_tools(self, db_session: Optional[AsyncSession] = None) -> List[Dict[str, Any]]:
         """Get list of available tools."""
         pass
 
     @abstractmethod
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self, db_session: Optional[AsyncSession] = None) -> Dict[str, Any]:
         """Check health of the tool provider."""
         pass
 
@@ -75,22 +78,29 @@ class FastMCPToolStrategy(ToolExecutionStrategy):
     def __init__(self, mcp_client):
         self.mcp_client = mcp_client
 
-    async def execute_tool(self, tool_call: ToolCall, max_retries: int = 3) -> ToolResult:
+    async def execute_tool(self, tool_call: ToolCall, max_retries: int = 3, db_session: Optional[AsyncSession] = None) -> ToolResult:
         """Execute a FastMCP tool call with retry logic."""
         import time
 
         start_time = time.time()
 
         try:
-            # Call the MCP tool
-            result = await self.mcp_client.call_tool(tool_call.name, tool_call.arguments)
+            # Create tool execution request using new schema
+            request = MCPToolExecutionRequestSchema(
+                tool_name=tool_call.name,
+                parameters=tool_call.arguments,
+                record_usage=True
+            )
+            
+            # Call the MCP tool with new interface
+            result = await self.mcp_client.call_tool(request, db_session)
 
             execution_time = (time.time() - start_time) * 1000
 
             return ToolResult(
                 tool_call_id=tool_call.id,
-                success=result.get("success", True),
-                content=result.get("content", []),
+                success=result.success,
+                content=result.content,
                 provider=ToolProvider.FASTMCP,
                 execution_time_ms=execution_time,
             )
@@ -108,17 +118,42 @@ class FastMCPToolStrategy(ToolExecutionStrategy):
                 execution_time_ms=execution_time,
             )
 
-    async def get_available_tools(self) -> List[Dict[str, Any]]:
+    async def get_available_tools(self, db_session: Optional[AsyncSession] = None) -> List[Dict[str, Any]]:
         """Get available FastMCP tools."""
         if not self.mcp_client or not self.mcp_client.is_initialized:
             return []
-        return self.mcp_client.get_tools_for_openai()
+        
+        # Get tools from new interface with filters
+        filters = MCPListFiltersSchema(enabled_only=True)
+        tools = await self.mcp_client.get_available_tools(filters, db_session)
+        
+        # Convert to OpenAI format for compatibility
+        openai_tools = []
+        for tool in tools:
+            if tool.is_enabled and tool.server.is_enabled:
+                openai_tool = {
+                    "type": "function",
+                    "function": {
+                        "name": tool.name,
+                        "description": tool.description or f"Tool from {tool.server.name}",
+                        "parameters": tool.parameters or {"type": "object", "properties": {}}
+                    }
+                }
+                openai_tools.append(openai_tool)
+        
+        return openai_tools
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self, db_session: Optional[AsyncSession] = None) -> Dict[str, Any]:
         """Check FastMCP health."""
         if not self.mcp_client:
             return {"status": "unavailable", "provider": "fastmcp"}
-        return await self.mcp_client.health_check()
+        
+        health_result = await self.mcp_client.health_check(db_session)
+        
+        # Convert schema to dict for compatibility
+        if hasattr(health_result, 'model_dump'):
+            return health_result.model_dump()
+        return health_result
 
 
 class UnifiedToolExecutor:
@@ -135,12 +170,13 @@ class UnifiedToolExecutor:
         self.strategies: Dict[ToolProvider, ToolExecutionStrategy] = {}
         self._initialized = False
 
-    async def initialize(self, mcp_client=None):
+    async def initialize(self, mcp_client=None, db_session: Optional[AsyncSession] = None):
         """
         Initialize tool execution strategies.
 
         Args:
             mcp_client: FastMCP client instance for MCP tool execution
+            db_session: Database session for MCP operations
         """
         try:
             # Initialize FastMCP strategy if client provided
@@ -162,6 +198,7 @@ class UnifiedToolExecutor:
         max_retries: int = 3,
         use_cache: bool = True,
         cache_ttl: int = 300,
+        db_session: Optional[AsyncSession] = None,
     ) -> ToolResult:
         """
         Execute a single tool call with retry logic and caching.
@@ -171,6 +208,7 @@ class UnifiedToolExecutor:
             max_retries: Maximum number of retry attempts
             use_cache: Whether to use caching for results
             cache_ttl: Cache time-to-live in seconds
+            db_session: Database session for MCP operations
 
         Returns:
             ToolResult: Result of tool execution
@@ -210,7 +248,7 @@ class UnifiedToolExecutor:
                     },
                 )
 
-                result = await strategy.execute_tool(tool_call, max_retries=1)
+                result = await strategy.execute_tool(tool_call, max_retries=1, db_session=db_session)
 
                 # Log result
                 logger.info(
@@ -270,6 +308,7 @@ class UnifiedToolExecutor:
         max_retries: int = 3,
         use_cache: bool = True,
         parallel_execution: bool = True,
+        db_session: Optional[AsyncSession] = None,
     ) -> List[ToolResult]:
         """
         Execute multiple tool calls with optional parallel execution.
@@ -279,6 +318,7 @@ class UnifiedToolExecutor:
             max_retries: Maximum retry attempts per tool call
             use_cache: Whether to use caching
             parallel_execution: Whether to execute tools in parallel
+            db_session: Database session for MCP operations
 
         Returns:
             List[ToolResult]: Results of all tool executions
@@ -291,7 +331,7 @@ class UnifiedToolExecutor:
         if parallel_execution:
             # Execute tools in parallel
             tasks = [
-                self.execute_tool_call(tool_call, max_retries=max_retries, use_cache=use_cache)
+                self.execute_tool_call(tool_call, max_retries=max_retries, use_cache=use_cache, db_session=db_session)
                 for tool_call in tool_calls
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -317,19 +357,20 @@ class UnifiedToolExecutor:
             results = []
             for tool_call in tool_calls:
                 result = await self.execute_tool_call(
-                    tool_call, max_retries=max_retries, use_cache=use_cache
+                    tool_call, max_retries=max_retries, use_cache=use_cache, db_session=db_session
                 )
                 results.append(result)
             return results
 
     async def get_available_tools(
-        self, provider: Optional[ToolProvider] = None
+        self, provider: Optional[ToolProvider] = None, db_session: Optional[AsyncSession] = None
     ) -> List[Dict[str, Any]]:
         """
         Get available tools from all or specific providers.
 
         Args:
             provider: Specific provider to get tools from, or None for all
+            db_session: Database session for MCP operations
 
         Returns:
             List of available tools
@@ -344,7 +385,7 @@ class UnifiedToolExecutor:
 
         for provider_type, strategy in strategies_to_check.items():
             try:
-                tools = await strategy.get_available_tools()
+                tools = await strategy.get_available_tools(db_session)
                 # Add provider information to each tool
                 for tool in tools:
                     tool["provider"] = provider_type.value
@@ -355,9 +396,12 @@ class UnifiedToolExecutor:
         logger.info(f"Retrieved {len(all_tools)} available tools")
         return all_tools
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self, db_session: Optional[AsyncSession] = None) -> Dict[str, Any]:
         """
         Check health of all tool providers.
+
+        Args:
+            db_session: Database session for MCP operations
 
         Returns:
             Dict containing health status of all providers
@@ -371,7 +415,7 @@ class UnifiedToolExecutor:
 
         for provider_type, strategy in self.strategies.items():
             try:
-                provider_health = await strategy.health_check()
+                provider_health = await strategy.health_check(db_session)
                 health_status["unified_tool_executor"]["providers"][
                     provider_type.value
                 ] = provider_health
@@ -418,10 +462,12 @@ async def get_unified_tool_executor() -> UnifiedToolExecutor:
 
         # Initialize with available MCP client
         try:
+            from ..database import AsyncSessionLocal
             from ..services.mcp_client import get_mcp_client
-
-            mcp_client = await get_mcp_client()
-            await _unified_tool_executor.initialize(mcp_client=mcp_client)
+            
+            async with AsyncSessionLocal() as db_session:
+                mcp_client = await get_mcp_client(db_session)
+                await _unified_tool_executor.initialize(mcp_client=mcp_client, db_session=db_session)
         except Exception as e:
             logger.warning(f"Failed to initialize with MCP client: {e}")
             await _unified_tool_executor.initialize()

@@ -15,7 +15,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ..database import AsyncSessionLocal
-from ..schemas.mcp import MCPServerCreateSchema, MCPListFiltersSchema
+from ..schemas.mcp import MCPServerCreateSchema, MCPListFiltersSchema, MCPServerUpdateSchema
 from ..services.mcp_registry import MCPRegistryService
 from .base import console, error_message, info_message, success_message, warning_message
 
@@ -35,9 +35,13 @@ def list_servers(
 
     async def _list_servers():
         try:
-            servers = await MCPRegistryService.list_servers(
-                enabled_only=enabled_only, connected_only=connected_only
-            )
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                filters = MCPListFiltersSchema(
+                    enabled_only=enabled_only, 
+                    connected_only=connected_only
+                )
+                servers = await registry.list_servers(filters)
 
             if not servers:
                 info_message("No MCP servers found")
@@ -116,15 +120,19 @@ def add_server(
 
     async def _add_server():
         try:
-            server = await MCPRegistryService.create_server(
-                name=name,
-                url=url,
-                description=description,
-                transport=transport,
-                timeout=timeout,
-                is_enabled=not disabled,
-                auto_discover=not skip_discovery,
-            )
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                server_data = MCPServerCreateSchema(
+                    name=name,
+                    url=url,
+                    description=description,
+                    transport=transport,
+                    timeout=timeout,
+                    is_enabled=not disabled,
+                )
+                server = await registry.create_server(
+                    server_data, auto_discover=not skip_discovery
+                )
 
             success_message(f"Added MCP server: {server.name}")
 
@@ -163,7 +171,10 @@ def update_server(
                 error_message("No updates specified")
                 return
 
-            server = await MCPRegistryService.update_server(name, **updates)
+            async with AsyncSessionLocal() as db:
+                registry = MCPRegistryService(db)
+                update_data = MCPServerUpdateSchema(**updates)
+                server = await registry.update_server(name, update_data)
             if server:
                 success_message(f"Updated MCP server: {name}")
             else:
