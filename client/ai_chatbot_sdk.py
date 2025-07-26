@@ -1,9 +1,11 @@
 """
 AI Chatbot SDK - Python client library for the AI Chatbot Platform.
 
-This module provides a comprehensive SDK for interacting with the AI Chatbot Platform,
+This module provides a comprehensive async SDK for interacting with the AI Chatbot Platform,
 including authentication, document management, conversation handling, and search capabilities.
 
+All methods are async and should be called with await. The SDK uses httpx for async HTTP
+requests and supports all the same features as the original synchronous version.
 """
 
 from datetime import datetime
@@ -11,7 +13,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, Generic, Iterator, List, Optional, Type, TypeVar
 from uuid import UUID
 
-import requests
+import httpx
 from pydantic import BaseModel, EmailStr, Field
 
 # --- Exceptions ---
@@ -392,12 +394,12 @@ def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {k: v for k, v in (query or {}).items() if v is not None}
 
 
-def handle_response(resp: requests.Response, url: str, cls: Optional[Type[T]] = None) -> Any:
+async def handle_response(resp: httpx.Response, url: str, cls: Optional[Type[T]] = None) -> Any:
     """
     Handle API response and raise ApiError on failure.
 
     Args:
-        resp: The HTTP response object.
+        resp: The HTTP response object from httpx.
         url: The URL that was requested.
         cls: Optional type to deserialize response data into.
 
@@ -407,26 +409,26 @@ def handle_response(resp: requests.Response, url: str, cls: Optional[Type[T]] = 
     Raises:
         ApiError: If the response indicates an error.
     """
-    if not resp.ok:
+    if not resp.is_success:
         try:
             body = resp.json()
         except Exception:
             body = resp.text
-        raise ApiError(resp.status_code, resp.reason, url, body)
+        raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
-    json = resp.json()
+    json_data = resp.json()
     if cls:
-        if "items" in json:
-            r = PaginatedResponse(**json)
+        if "items" in json_data:
+            r = PaginatedResponse(**json_data)
             items = []
             for item in r.items:
                 items.append(cls(**item))
             r.items = items
-            json["items"] = items
+            json_data["items"] = items
 
             return r
-        return cls(**json)
-    return json
+        return cls(**json_data)
+    return json_data
 
 
 def build_headers(
@@ -471,7 +473,40 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
     return url
 
 
-def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -> List[Any]:
+async def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -> List[Any]:
+    """
+    Fetch all pages of paginated results asynchronously.
+
+    Args:
+        fetch_page: Async function that takes page and per_page parameters.
+        per_page: Number of items per page.
+
+    Returns:
+        List of all items from all pages.
+    """
+    all_items = []
+    page = 1
+
+    while True:
+        response = await fetch_page(page, per_page)
+        
+        if hasattr(response, "items"):
+            items = response.items
+        else:
+            items = response
+
+        if not items:
+            break
+
+        all_items.extend(items)
+
+        # Check if we got a full page - if not, we're done
+        if len(items) < per_page:
+            break
+
+        page += 1
+
+    return all_items
     """
     Fetch all pages of paginated results.
 
@@ -497,81 +532,86 @@ def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -
 
 
 class HealthClient:
-    """Client for health check endpoints."""
+    """Async client for health check endpoints."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def basic(self) -> BaseResponse:
+    async def basic(self) -> BaseResponse:
         """Get basic health status."""
-        return self.sdk._request("/api/v1/health/", BaseResponse)
+        return await self.sdk._request("/api/v1/health/", BaseResponse)
 
-    def detailed(self) -> Dict[str, Any]:
+    async def detailed(self) -> Dict[str, Any]:
         """Get detailed health status including system information."""
-        return self.sdk._request("/api/v1/health/detailed")
+        return await self.sdk._request("/api/v1/health/detailed")
 
-    def database(self) -> Dict[str, Any]:
+    async def database(self) -> Dict[str, Any]:
         """Check database connectivity status."""
-        return self.sdk._request("/api/v1/health/database")
+        return await self.sdk._request("/api/v1/health/database")
 
-    def services(self) -> Dict[str, Any]:
+    async def services(self) -> Dict[str, Any]:
         """Check external services status."""
-        return self.sdk._request("/api/v1/health/services")
+        return await self.sdk._request("/api/v1/health/services")
 
-    def metrics(self) -> Dict[str, Any]:
+    async def metrics(self) -> Dict[str, Any]:
         """Get system metrics and performance data."""
-        return self.sdk._request("/api/v1/health/metrics")
+        return await self.sdk._request("/api/v1/health/metrics")
 
-    def readiness(self) -> Dict[str, Any]:
+    async def readiness(self) -> Dict[str, Any]:
         """Check if the service is ready to accept requests."""
-        return self.sdk._request("/api/v1/health/readiness")
+        return await self.sdk._request("/api/v1/health/readiness")
 
-    def liveness(self) -> Dict[str, Any]:
+    async def liveness(self) -> Dict[str, Any]:
         """Check if the service is alive and responsive."""
-        return self.sdk._request("/api/v1/health/liveness")
+        return await self.sdk._request("/api/v1/health/liveness")
 
 
 class AuthClient:
-    """Client for authentication operations."""
+    """Async client for authentication operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def register(self, data: RegisterRequest) -> UserResponse:
-        return self.sdk._request(
+    async def register(self, data: RegisterRequest) -> UserResponse:
+        """Register a new user account."""
+        return await self.sdk._request(
             "/api/v1/auth/register",
             UserResponse,
             method="POST",
             json=data.model_dump(),
         )
 
-    def login(self, username: str, password: str) -> Token:
+    async def login(self, username: str, password: str) -> Token:
+        """Login with username and password."""
         data = {"username": username, "password": password}
-        token = self.sdk._request("/api/v1/auth/login", Token, method="POST", json=data)
+        token = await self.sdk._request("/api/v1/auth/login", Token, method="POST", json=data)
         self.sdk.set_token(token.access_token)
         return token
 
-    def me(self) -> UserResponse:
-        return self.sdk._request("/api/v1/auth/me", UserResponse)
+    async def me(self) -> UserResponse:
+        """Get current user profile information."""
+        return await self.sdk._request("/api/v1/auth/me", UserResponse)
 
-    def logout(self) -> BaseResponse:
+    async def logout(self) -> BaseResponse:
         """Logout current user and invalidate token."""
-        return self.sdk._request("/api/v1/auth/logout", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/auth/logout", BaseResponse, method="POST")
 
-    def refresh(self) -> Token:
+    async def refresh(self) -> Token:
         """Refresh authentication token."""
-        return self.sdk._request("/api/v1/auth/refresh", Token, method="POST")
+        return await self.sdk._request("/api/v1/auth/refresh", Token, method="POST")
 
-    def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
-        return self.sdk._request(
+    async def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
+        """Request password reset for a user."""
+        return await self.sdk._request(
             "/api/v1/auth/password-reset",
             BaseResponse,
             method="POST",
             json=data.model_dump(),
         )
 
-    def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
-        return self.sdk._request(
+    async def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
+        """Confirm password reset with token."""
+        return await self.sdk._request(
             "/api/v1/auth/password-reset/confirm",
             BaseResponse,
             method="POST",
@@ -583,23 +623,23 @@ class UsersClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def me(self) -> UserResponse:
-        return self.sdk._request("/api/v1/users/me", UserResponse)
+    async def me(self) -> UserResponse:
+        return await self.sdk._request("/api/v1/users/me", UserResponse)
 
-    def update_me(self, data: UserUpdate) -> UserResponse:
-        return self.sdk._request(
+    async def update_me(self, data: UserUpdate) -> UserResponse:
+        return await self.sdk._request(
             "/api/v1/users/me", UserResponse, method="PUT", json=data.model_dump()
         )
 
-    def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
-        return self.sdk._request(
+    async def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
+        return await self.sdk._request(
             "/api/v1/users/me/change-password",
             BaseResponse,
             method="POST",
             json=data.model_dump(),
         )
 
-    def list(
+    async def list(
         self,
         page: int = 1,
         size: int = 20,
@@ -614,34 +654,34 @@ class UsersClient:
                 "superuser_only": superuser_only,
             }
         )
-        return self.sdk._request("/api/v1/users/", UserResponse, params=params)
+        return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
-    def get(self, user_id: UUID) -> UserResponse:
-        return self.sdk._request(f"/api/v1/users/{user_id}", UserResponse)
+    async def get(self, user_id: UUID) -> UserResponse:
+        return await self.sdk._request(f"/api/v1/users/{user_id}", UserResponse)
 
-    def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
-        return self.sdk._request(
+    async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
+        return await self.sdk._request(
             f"/api/v1/users/{user_id}",
             UserResponse,
             method="PUT",
             json=data.model_dump(),
         )
 
-    def delete(self, user_id: UUID) -> BaseResponse:
-        return self.sdk._request(f"/api/v1/users/{user_id}", BaseResponse, method="DELETE")
+    async def delete(self, user_id: UUID) -> BaseResponse:
+        return await self.sdk._request(f"/api/v1/users/{user_id}", BaseResponse, method="DELETE")
 
 
 class DocumentsClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def upload(self, file, title: Optional[str] = None) -> DocumentUploadResponse:
+    async def upload(self, file, title: Optional[str] = None) -> DocumentUploadResponse:
         """Upload a new document for processing."""
         files = {"file": file}
         data = {}
         if title:
             data["title"] = title
-        return self.sdk._request(
+        return await self.sdk._request(
             "/api/v1/documents/upload",
             DocumentUploadResponse,
             method="POST",
@@ -649,7 +689,7 @@ class DocumentsClient:
             data=data,
         )
 
-    def list(
+    async def list(
         self,
         page: int = 1,
         size: int = 20,
@@ -659,36 +699,36 @@ class DocumentsClient:
         params = filter_query(
             {"page": page, "size": size, "file_type": file_type, "status": status}
         )
-        return self.sdk._request("/api/v1/documents/", DocumentResponse, params=params)
+        return await self.sdk._request("/api/v1/documents/", DocumentResponse, params=params)
 
-    def get(self, document_id: UUID) -> DocumentResponse:
-        return self.sdk._request(f"/api/v1/documents/{document_id}", DocumentResponse)
+    async def get(self, document_id: UUID) -> DocumentResponse:
+        return await self.sdk._request(f"/api/v1/documents/{document_id}", DocumentResponse)
 
-    def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
-        return self.sdk._request(
+    async def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
+        return await self.sdk._request(
             f"/api/v1/documents/{document_id}",
             DocumentResponse,
             method="PUT",
             json=data.model_dump(),
         )
 
-    def delete(self, document_id: UUID) -> BaseResponse:
-        return self.sdk._request(f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE")
+    async def delete(self, document_id: UUID) -> BaseResponse:
+        return await self.sdk._request(f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE")
 
-    def status(self, document_id: UUID) -> ProcessingStatusResponse:
-        return self.sdk._request(
+    async def status(self, document_id: UUID) -> ProcessingStatusResponse:
+        return await self.sdk._request(
             f"/api/v1/documents/{document_id}/status",
             ProcessingStatusResponse,
         )
 
-    def reprocess(self, document_id: UUID) -> BaseResponse:
-        return self.sdk._request(
+    async def reprocess(self, document_id: UUID) -> BaseResponse:
+        return await self.sdk._request(
             f"/api/v1/documents/{document_id}/reprocess",
             BaseResponse,
             method="POST",
         )
 
-    def download(self, document_id: UUID) -> bytes:
+    async def download(self, document_id: UUID) -> bytes:
         url = make_url(self.sdk.base_url, f"/api/v1/documents/{document_id}/download")
         resp = self.sdk._session.get(url, headers=build_headers(self.sdk.token), stream=True)
         if not resp.ok:
@@ -700,59 +740,59 @@ class ConversationsClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def create(self, data: ConversationCreate) -> ConversationResponse:
-        return self.sdk._request(
+    async def create(self, data: ConversationCreate) -> ConversationResponse:
+        return await self.sdk._request(
             "/api/v1/conversations/",
             ConversationResponse,
             method="POST",
             json=data.model_dump(mode="json"),
         )
 
-    def list(
+    async def list(
         self, page: int = 1, size: int = 20, active_only: Optional[bool] = None
     ) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size, "active_only": active_only})
-        return self.sdk._request("/api/v1/conversations/", ConversationResponse, params=params)
+        return await self.sdk._request("/api/v1/conversations/", ConversationResponse, params=params)
 
-    def get(self, conversation_id: UUID) -> ConversationResponse:
-        return self.sdk._request(
+    async def get(self, conversation_id: UUID) -> ConversationResponse:
+        return await self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
         )
 
-    def update(self, conversation_id: UUID, data: ConversationUpdate) -> ConversationResponse:
-        return self.sdk._request(
+    async def update(self, conversation_id: UUID, data: ConversationUpdate) -> ConversationResponse:
+        return await self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             ConversationResponse,
             method="PUT",
             json=data.model_dump(),
         )
 
-    def delete(self, conversation_id: UUID) -> BaseResponse:
-        return self.sdk._request(
+    async def delete(self, conversation_id: UUID) -> BaseResponse:
+        return await self.sdk._request(
             f"/api/v1/conversations/{conversation_id}",
             BaseResponse,
             method="DELETE",
         )
 
-    def messages(self, conversation_id: UUID, page: int = 1, size: int = 50) -> PaginatedResponse:
+    async def messages(self, conversation_id: UUID, page: int = 1, size: int = 50) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size})
-        return self.sdk._request(
+        return await self.sdk._request(
             f"/api/v1/conversations/{conversation_id}/messages",
             MessageResponse,
             params=params,
         )
 
-    def chat(self, data: ChatRequest) -> ChatResponse:
+    async def chat(self, data: ChatRequest) -> ChatResponse:
         """Send a message and get AI response."""
-        return self.sdk._request(
+        return await self.sdk._request(
             "/api/v1/conversations/chat",
             ChatResponse,
             method="POST",
             json=data.model_dump(mode="json"),
         )
 
-    def chat_stream(self, data: ChatRequest) -> Iterator[str]:
+    async def chat_stream(self, data: ChatRequest) -> Iterator[str]:
         """Send a message and get streaming AI response."""
         url = make_url(self.sdk.base_url, "/api/v1/conversations/chat/stream")
         headers = build_headers(self.sdk.token)
@@ -774,8 +814,8 @@ class ConversationsClient:
                 if data_content.strip():
                     yield data_content
 
-    def stats(self) -> Dict[str, Any]:
-        return self.sdk._request("/api/v1/conversations/stats")
+    async def stats(self) -> Dict[str, Any]:
+        return await self.sdk._request("/api/v1/conversations/stats")
 
 
 class SearchClient:
@@ -784,24 +824,24 @@ class SearchClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
+    async def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
         """Search across documents using various algorithms."""
-        return self.sdk._request("/api/v1/search/", dict, method="POST", json=data.model_dump())
+        return await self.sdk._request("/api/v1/search/", dict, method="POST", json=data.model_dump())
 
-    def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
+    async def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
         params = {"limit": limit}
-        return self.sdk._request(f"/api/v1/search/similar/{chunk_id}", dict, params=params)
+        return await self.sdk._request(f"/api/v1/search/similar/{chunk_id}", dict, params=params)
 
-    def suggestions(self, query: str, limit: int = 5) -> List[Any]:
+    async def suggestions(self, query: str, limit: int = 5) -> List[Any]:
         params = {"query": query, "limit": limit}
-        return self.sdk._request("/api/v1/search/suggestions", list, params=params)
+        return await self.sdk._request("/api/v1/search/suggestions", list, params=params)
 
-    def history(self, limit: int = 10) -> List[Any]:
+    async def history(self, limit: int = 10) -> List[Any]:
         params = {"limit": limit}
-        return self.sdk._request("/api/v1/search/history", list, params=params)
+        return await self.sdk._request("/api/v1/search/history", list, params=params)
 
-    def clear_history(self) -> BaseResponse:
-        return self.sdk._request("/api/v1/search/history", BaseResponse, method="DELETE")
+    async def clear_history(self) -> BaseResponse:
+        return await self.sdk._request("/api/v1/search/history", BaseResponse, method="DELETE")
 
 
 class ToolsClient:
@@ -810,25 +850,25 @@ class ToolsClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def list_tools(self) -> ToolsListResponse:
+    async def list_tools(self) -> ToolsListResponse:
         """List all available MCP tools with registry integration."""
-        return self.sdk._request("/api/v1/tools/", ToolsListResponse)
+        return await self.sdk._request("/api/v1/tools/", ToolsListResponse)
 
-    def get_tool(self, tool_name: str) -> ToolResponse:
+    async def get_tool(self, tool_name: str) -> ToolResponse:
         """Get details for a specific tool."""
-        return self.sdk._request(f"/api/v1/tools/{tool_name}", ToolResponse)
+        return await self.sdk._request(f"/api/v1/tools/{tool_name}", ToolResponse)
 
-    def enable_tool(self, tool_name: str) -> BaseResponse:
+    async def enable_tool(self, tool_name: str) -> BaseResponse:
         """Enable a specific tool."""
-        return self.sdk._request(f"/api/v1/tools/{tool_name}/enable", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/tools/{tool_name}/enable", BaseResponse, method="POST")
 
-    def disable_tool(self, tool_name: str) -> BaseResponse:
+    async def disable_tool(self, tool_name: str) -> BaseResponse:
         """Disable a specific tool."""
-        return self.sdk._request(f"/api/v1/tools/{tool_name}/disable", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/tools/{tool_name}/disable", BaseResponse, method="POST")
 
-    def get_tool_stats(self) -> Dict[str, Any]:
+    async def get_tool_stats(self) -> Dict[str, Any]:
         """Get tool usage statistics."""
-        return self.sdk._request("/api/v1/tools/stats", dict)
+        return await self.sdk._request("/api/v1/tools/stats", dict)
 
 
 class MCPClient:
@@ -838,7 +878,7 @@ class MCPClient:
         self.sdk = sdk
 
     # Server management methods
-    def list_servers(
+    async def list_servers(
         self,
         enabled_only: bool = False,
         connected_only: bool = False,
@@ -850,9 +890,9 @@ class MCPClient:
             "connected_only": connected_only,
             "detailed": detailed,
         })
-        return self.sdk._request("/api/v1/mcp/servers", dict, params=params)
+        return await self.sdk._request("/api/v1/mcp/servers", dict, params=params)
 
-    def add_server(
+    async def add_server(
         self,
         name: str,
         url: str,
@@ -868,34 +908,34 @@ class MCPClient:
             "enabled": enabled,
             "transport": transport,
         }
-        return self.sdk._request("/api/v1/mcp/servers", dict, method="POST", json=data)
+        return await self.sdk._request("/api/v1/mcp/servers", dict, method="POST", json=data)
 
-    def get_server(self, server_name: str) -> Dict[str, Any]:
+    async def get_server(self, server_name: str) -> Dict[str, Any]:
         """Get details for a specific server."""
-        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict)
+        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict)
 
-    def update_server(self, server_name: str, **kwargs) -> Dict[str, Any]:
+    async def update_server(self, server_name: str, **kwargs) -> Dict[str, Any]:
         """Update an MCP server."""
-        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict, method="PATCH", json=kwargs)
+        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict, method="PATCH", json=kwargs)
 
-    def remove_server(self, server_name: str) -> BaseResponse:
+    async def remove_server(self, server_name: str) -> BaseResponse:
         """Remove an MCP server."""
-        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}", BaseResponse, method="DELETE")
 
-    def enable_server(self, server_name: str) -> Dict[str, Any]:
+    async def enable_server(self, server_name: str) -> Dict[str, Any]:
         """Enable an MCP server."""
         return self.update_server(server_name, enabled=True)
 
-    def disable_server(self, server_name: str) -> Dict[str, Any]:
+    async def disable_server(self, server_name: str) -> Dict[str, Any]:
         """Disable an MCP server."""
         return self.update_server(server_name, enabled=False)
 
-    def test_server(self, server_name: str) -> Dict[str, Any]:
+    async def test_server(self, server_name: str) -> Dict[str, Any]:
         """Test connection to an MCP server."""
-        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}/test", dict, method="POST")
+        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}/test", dict, method="POST")
 
     # Tools management methods
-    def list_tools(
+    async def list_tools(
         self,
         server: Optional[str] = None,
         enabled_only: bool = False,
@@ -907,27 +947,27 @@ class MCPClient:
             "enabled_only": enabled_only,
             "detailed": detailed,
         })
-        return self.sdk._request("/api/v1/mcp/tools", dict, params=params)
+        return await self.sdk._request("/api/v1/mcp/tools", dict, params=params)
 
-    def enable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
+    async def enable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
         """Enable an MCP tool."""
         params = filter_query({"server": server})
-        return self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/enable", dict, method="PATCH", params=params)
+        return await self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/enable", dict, method="PATCH", params=params)
 
-    def disable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
+    async def disable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
         """Disable an MCP tool."""
         params = filter_query({"server": server})
-        return self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/disable", dict, method="PATCH", params=params)
+        return await self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/disable", dict, method="PATCH", params=params)
 
     # Statistics and refresh methods
-    def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> Dict[str, Any]:
         """Get MCP usage statistics."""
-        return self.sdk._request("/api/v1/mcp/stats", dict)
+        return await self.sdk._request("/api/v1/mcp/stats", dict)
 
-    def refresh(self, server: Optional[str] = None) -> Dict[str, Any]:
+    async def refresh(self, server: Optional[str] = None) -> Dict[str, Any]:
         """Refresh MCP server connections and tool discovery."""
         params = filter_query({"server": server})
-        return self.sdk._request("/api/v1/mcp/refresh", dict, method="POST", params=params)
+        return await self.sdk._request("/api/v1/mcp/refresh", dict, method="POST", params=params)
 
 
 class PromptsClient:
@@ -936,7 +976,7 @@ class PromptsClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def list_prompts(
+    async def list_prompts(
         self,
         active_only: bool = True,
         category: Optional[str] = None,
@@ -944,39 +984,39 @@ class PromptsClient:
     ) -> Dict[str, Any]:
         """List all prompts with optional filtering."""
         params = filter_query({"active_only": active_only, "category": category, "search": search})
-        return self.sdk._request("/api/v1/prompts/", dict, params=params)
+        return await self.sdk._request("/api/v1/prompts/", dict, params=params)
 
-    def get_prompt(self, prompt_name: str) -> PromptResponse:
+    async def get_prompt(self, prompt_name: str) -> PromptResponse:
         """Get a specific prompt by name."""
-        return self.sdk._request(f"/api/v1/prompts/{prompt_name}", PromptResponse)
+        return await self.sdk._request(f"/api/v1/prompts/{prompt_name}", PromptResponse)
 
-    def create_prompt(self, data: PromptCreate) -> PromptResponse:
+    async def create_prompt(self, data: PromptCreate) -> PromptResponse:
         """Create a new prompt."""
-        return self.sdk._request(
+        return await self.sdk._request(
             "/api/v1/prompts/", PromptResponse, method="POST", json=data.model_dump()
         )
 
-    def update_prompt(self, prompt_name: str, data: Dict[str, Any]) -> PromptResponse:
+    async def update_prompt(self, prompt_name: str, data: Dict[str, Any]) -> PromptResponse:
         """Update an existing prompt."""
-        return self.sdk._request(
+        return await self.sdk._request(
             f"/api/v1/prompts/{prompt_name}", PromptResponse, method="PUT", json=data
         )
 
-    def delete_prompt(self, prompt_name: str) -> BaseResponse:
+    async def delete_prompt(self, prompt_name: str) -> BaseResponse:
         """Delete a prompt."""
-        return self.sdk._request(f"/api/v1/prompts/{prompt_name}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/prompts/{prompt_name}", BaseResponse, method="DELETE")
 
-    def get_prompt_stats(self) -> Dict[str, Any]:
+    async def get_prompt_stats(self) -> Dict[str, Any]:
         """Get prompt usage statistics."""
-        return self.sdk._request("/api/v1/prompts/stats", dict)
+        return await self.sdk._request("/api/v1/prompts/stats", dict)
 
-    def get_categories(self) -> Dict[str, Any]:
+    async def get_categories(self) -> Dict[str, Any]:
         """Get prompt categories."""
-        return self.sdk._request("/api/v1/prompts/categories/", dict)
+        return await self.sdk._request("/api/v1/prompts/categories/", dict)
 
-    def set_default_prompt(self, prompt_name: str) -> BaseResponse:
+    async def set_default_prompt(self, prompt_name: str) -> BaseResponse:
         """Set a prompt as the default."""
-        return self.sdk._request(f"/api/v1/prompts/{prompt_name}/set-default", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/prompts/{prompt_name}/set-default", BaseResponse, method="POST")
 
 
 class ProfilesClient:
@@ -985,46 +1025,46 @@ class ProfilesClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def list_profiles(
+    async def list_profiles(
         self, active_only: bool = True, search: Optional[str] = None
     ) -> Dict[str, Any]:
         """List all LLM profiles with optional filtering."""
         params = filter_query({"active_only": active_only, "search": search})
-        return self.sdk._request("/api/v1/profiles/", dict, params=params)
+        return await self.sdk._request("/api/v1/profiles/", dict, params=params)
 
-    def get_profile(self, profile_name: str) -> LLMProfileResponse:
+    async def get_profile(self, profile_name: str) -> LLMProfileResponse:
         """Get a specific LLM profile by name."""
-        return self.sdk._request(f"/api/v1/profiles/{profile_name}", LLMProfileResponse)
+        return await self.sdk._request(f"/api/v1/profiles/{profile_name}", LLMProfileResponse)
 
-    def create_profile(self, data: LLMProfileCreate) -> LLMProfileResponse:
+    async def create_profile(self, data: LLMProfileCreate) -> LLMProfileResponse:
         """Create a new LLM profile."""
-        return self.sdk._request(
+        return await self.sdk._request(
             "/api/v1/profiles/",
             LLMProfileResponse,
             method="POST",
             json=data.model_dump(),
         )
 
-    def update_profile(self, profile_name: str, data: Dict[str, Any]) -> LLMProfileResponse:
+    async def update_profile(self, profile_name: str, data: Dict[str, Any]) -> LLMProfileResponse:
         """Update an existing LLM profile."""
-        return self.sdk._request(
+        return await self.sdk._request(
             f"/api/v1/profiles/{profile_name}",
             LLMProfileResponse,
             method="PUT",
             json=data,
         )
 
-    def delete_profile(self, profile_name: str) -> BaseResponse:
+    async def delete_profile(self, profile_name: str) -> BaseResponse:
         """Delete an LLM profile."""
-        return self.sdk._request(f"/api/v1/profiles/{profile_name}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/profiles/{profile_name}", BaseResponse, method="DELETE")
 
-    def get_profile_stats(self) -> Dict[str, Any]:
+    async def get_profile_stats(self) -> Dict[str, Any]:
         """Get LLM profile usage statistics."""
-        return self.sdk._request("/api/v1/profiles/stats", dict)
+        return await self.sdk._request("/api/v1/profiles/stats", dict)
 
-    def set_default_profile(self, profile_name: str) -> BaseResponse:
+    async def set_default_profile(self, profile_name: str) -> BaseResponse:
         """Set a profile as the default."""
-        return self.sdk._request(f"/api/v1/profiles/{profile_name}/set-default", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/profiles/{profile_name}/set-default", BaseResponse, method="POST")
 
 
 class AnalyticsClient:
@@ -1033,32 +1073,32 @@ class AnalyticsClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def get_overview(self) -> Dict[str, Any]:
+    async def get_overview(self) -> Dict[str, Any]:
         """Get system overview analytics."""
-        return self.sdk._request("/api/v1/analytics/overview", dict)
+        return await self.sdk._request("/api/v1/analytics/overview", dict)
 
-    def get_usage(self, period: Optional[str] = None, detailed: bool = False) -> Dict[str, Any]:
+    async def get_usage(self, period: Optional[str] = None, detailed: bool = False) -> Dict[str, Any]:
         """Get usage analytics."""
         params = filter_query({"period": period, "detailed": detailed})
-        return self.sdk._request("/api/v1/analytics/usage", dict, params=params)
+        return await self.sdk._request("/api/v1/analytics/usage", dict, params=params)
 
-    def get_performance(self) -> Dict[str, Any]:
+    async def get_performance(self) -> Dict[str, Any]:
         """Get performance analytics."""
-        return self.sdk._request("/api/v1/analytics/performance", dict)
+        return await self.sdk._request("/api/v1/analytics/performance", dict)
 
-    def get_users_analytics(self, top: Optional[int] = None, metric: Optional[str] = None) -> Dict[str, Any]:
+    async def get_users_analytics(self, top: Optional[int] = None, metric: Optional[str] = None) -> Dict[str, Any]:
         """Get user analytics."""
         params = filter_query({"top": top, "metric": metric})
-        return self.sdk._request("/api/v1/analytics/users", dict, params=params)
+        return await self.sdk._request("/api/v1/analytics/users", dict, params=params)
 
-    def get_trends(self) -> Dict[str, Any]:
+    async def get_trends(self) -> Dict[str, Any]:
         """Get trend analytics."""
-        return self.sdk._request("/api/v1/analytics/trends", dict)
+        return await self.sdk._request("/api/v1/analytics/trends", dict)
 
-    def export_report(self, output: Optional[str] = None, details: bool = False) -> Dict[str, Any]:
+    async def export_report(self, output: Optional[str] = None, details: bool = False) -> Dict[str, Any]:
         """Export analytics report."""
         data = filter_query({"output": output, "details": details})
-        return self.sdk._request("/api/v1/analytics/export-report", dict, method="POST", json=data)
+        return await self.sdk._request("/api/v1/analytics/export-report", dict, method="POST", json=data)
 
 
 class DatabaseClient:
@@ -1067,52 +1107,52 @@ class DatabaseClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def init_database(self) -> BaseResponse:
+    async def init_database(self) -> BaseResponse:
         """Initialize the database."""
-        return self.sdk._request("/api/v1/database/init", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/database/init", BaseResponse, method="POST")
 
-    def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> Dict[str, Any]:
         """Get database status."""
-        return self.sdk._request("/api/v1/database/status", dict)
+        return await self.sdk._request("/api/v1/database/status", dict)
 
-    def upgrade(self) -> BaseResponse:
+    async def upgrade(self) -> BaseResponse:
         """Run database migrations/upgrade."""
-        return self.sdk._request("/api/v1/database/upgrade", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/database/upgrade", BaseResponse, method="POST")
 
-    def downgrade(self) -> BaseResponse:
+    async def downgrade(self) -> BaseResponse:
         """Downgrade database."""
-        return self.sdk._request("/api/v1/database/downgrade", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/database/downgrade", BaseResponse, method="POST")
 
-    def backup(self, output: Optional[str] = None) -> BaseResponse:
+    async def backup(self, output: Optional[str] = None) -> BaseResponse:
         """Create database backup."""
         data = filter_query({"output": output})
-        return self.sdk._request("/api/v1/database/backup", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/database/backup", BaseResponse, method="POST", json=data)
 
-    def restore(self, backup_file: str) -> BaseResponse:
+    async def restore(self, backup_file: str) -> BaseResponse:
         """Restore database from backup."""
         data = {"backup_file": backup_file}
-        return self.sdk._request("/api/v1/database/restore", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/database/restore", BaseResponse, method="POST", json=data)
 
-    def get_tables(self) -> Dict[str, Any]:
+    async def get_tables(self) -> Dict[str, Any]:
         """Get database tables information."""
-        return self.sdk._request("/api/v1/database/tables", dict)
+        return await self.sdk._request("/api/v1/database/tables", dict)
 
-    def vacuum(self) -> BaseResponse:
+    async def vacuum(self) -> BaseResponse:
         """Vacuum database."""
-        return self.sdk._request("/api/v1/database/vacuum", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/database/vacuum", BaseResponse, method="POST")
 
-    def get_migrations(self) -> Dict[str, Any]:
+    async def get_migrations(self) -> Dict[str, Any]:
         """Get migration status."""
-        return self.sdk._request("/api/v1/database/migrations", dict)
+        return await self.sdk._request("/api/v1/database/migrations", dict)
 
-    def query(self, sql: str) -> Dict[str, Any]:
+    async def query(self, sql: str) -> Dict[str, Any]:
         """Execute custom query."""
         data = {"sql": sql}
-        return self.sdk._request("/api/v1/database/query", dict, method="POST", json=data)
+        return await self.sdk._request("/api/v1/database/query", dict, method="POST", json=data)
 
-    def validate(self) -> Dict[str, Any]:
+    async def validate(self) -> Dict[str, Any]:
         """Validate database schema."""
-        return self.sdk._request("/api/v1/database/validate", dict, method="POST")
+        return await self.sdk._request("/api/v1/database/validate", dict, method="POST")
 
 
 class TasksClient:
@@ -1121,39 +1161,39 @@ class TasksClient:
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> Dict[str, Any]:
         """Get task system status."""
-        return self.sdk._request("/api/v1/tasks/status", dict)
+        return await self.sdk._request("/api/v1/tasks/status", dict)
 
-    def get_workers(self) -> Dict[str, Any]:
+    async def get_workers(self) -> Dict[str, Any]:
         """Get worker status."""
-        return self.sdk._request("/api/v1/tasks/workers", dict)
+        return await self.sdk._request("/api/v1/tasks/workers", dict)
 
-    def get_queue(self) -> Dict[str, Any]:
+    async def get_queue(self) -> Dict[str, Any]:
         """Get queue information."""
-        return self.sdk._request("/api/v1/tasks/queue", dict)
+        return await self.sdk._request("/api/v1/tasks/queue", dict)
 
-    def get_active(self) -> Dict[str, Any]:
+    async def get_active(self) -> Dict[str, Any]:
         """Get active tasks."""
-        return self.sdk._request("/api/v1/tasks/active", dict)
+        return await self.sdk._request("/api/v1/tasks/active", dict)
 
-    def schedule_task(self, task_name: str, **kwargs) -> BaseResponse:
+    async def schedule_task(self, task_name: str, **kwargs) -> BaseResponse:
         """Schedule a task."""
         data = {"task_name": task_name, **kwargs}
-        return self.sdk._request("/api/v1/tasks/schedule", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/tasks/schedule", BaseResponse, method="POST", json=data)
 
-    def retry_failed(self) -> BaseResponse:
+    async def retry_failed(self) -> BaseResponse:
         """Retry failed tasks."""
-        return self.sdk._request("/api/v1/tasks/retry-failed", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/tasks/retry-failed", BaseResponse, method="POST")
 
-    def purge_queue(self) -> BaseResponse:
+    async def purge_queue(self) -> BaseResponse:
         """Purge task queue."""
-        return self.sdk._request("/api/v1/tasks/purge", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/tasks/purge", BaseResponse, method="POST")
 
-    def monitor(self, refresh: Optional[int] = None, duration: Optional[int] = None) -> Dict[str, Any]:
+    async def monitor(self, refresh: Optional[int] = None, duration: Optional[int] = None) -> Dict[str, Any]:
         """Monitor tasks."""
         params = filter_query({"refresh": refresh, "duration": duration})
-        return self.sdk._request("/api/v1/tasks/monitor", dict, params=params)
+        return await self.sdk._request("/api/v1/tasks/monitor", dict, params=params)
 
 
 class AdminClient:
@@ -1163,71 +1203,71 @@ class AdminClient:
         self.sdk = sdk
 
     # User admin operations
-    def promote_user(self, user_id: UUID) -> BaseResponse:
+    async def promote_user(self, user_id: UUID) -> BaseResponse:
         """Promote user to superuser."""
-        return self.sdk._request(f"/api/v1/admin/users/{user_id}/promote", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/promote", BaseResponse, method="POST")
 
-    def demote_user(self, user_id: UUID) -> BaseResponse:
+    async def demote_user(self, user_id: UUID) -> BaseResponse:
         """Demote user from superuser."""
-        return self.sdk._request(f"/api/v1/admin/users/{user_id}/demote", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/demote", BaseResponse, method="POST")
 
-    def activate_user(self, user_id: UUID) -> BaseResponse:
+    async def activate_user(self, user_id: UUID) -> BaseResponse:
         """Activate user account."""
-        return self.sdk._request(f"/api/v1/admin/users/{user_id}/activate", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/activate", BaseResponse, method="POST")
 
-    def deactivate_user(self, user_id: UUID) -> BaseResponse:
+    async def deactivate_user(self, user_id: UUID) -> BaseResponse:
         """Deactivate user account."""
-        return self.sdk._request(f"/api/v1/admin/users/{user_id}/deactivate", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/deactivate", BaseResponse, method="POST")
 
-    def reset_user_password(self, user_id: UUID, new_password: Optional[str] = None) -> BaseResponse:
+    async def reset_user_password(self, user_id: UUID, new_password: Optional[str] = None) -> BaseResponse:
         """Reset user password."""
         data = filter_query({"new_password": new_password})
-        return self.sdk._request(f"/api/v1/admin/users/{user_id}/reset-password", BaseResponse, method="POST", json=data)
+        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/reset-password", BaseResponse, method="POST", json=data)
 
-    def get_user_stats(self) -> Dict[str, Any]:
+    async def get_user_stats(self) -> Dict[str, Any]:
         """Get user statistics."""
-        return self.sdk._request("/api/v1/admin/users/stats", dict)
+        return await self.sdk._request("/api/v1/admin/users/stats", dict)
 
     # Document admin operations
-    def get_document_stats(self) -> Dict[str, Any]:
+    async def get_document_stats(self) -> Dict[str, Any]:
         """Get document statistics."""
-        return self.sdk._request("/api/v1/admin/documents/stats", dict)
+        return await self.sdk._request("/api/v1/admin/documents/stats", dict)
 
-    def cleanup_documents(self, older_than: Optional[int] = None, status: Optional[str] = None) -> BaseResponse:
+    async def cleanup_documents(self, older_than: Optional[int] = None, status: Optional[str] = None) -> BaseResponse:
         """Cleanup old documents."""
         data = filter_query({"older_than": older_than, "status": status})
-        return self.sdk._request("/api/v1/admin/documents/cleanup", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/admin/documents/cleanup", BaseResponse, method="POST", json=data)
 
-    def bulk_reprocess_documents(self, document_ids: Optional[List[UUID]] = None) -> BaseResponse:
+    async def bulk_reprocess_documents(self, document_ids: Optional[List[UUID]] = None) -> BaseResponse:
         """Bulk reprocess documents."""
         data = filter_query({"document_ids": [str(id) for id in document_ids] if document_ids else None})
-        return self.sdk._request("/api/v1/admin/documents/bulk-reprocess", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/admin/documents/bulk-reprocess", BaseResponse, method="POST", json=data)
 
-    def search_documents_advanced(self, **kwargs) -> Dict[str, Any]:
+    async def search_documents_advanced(self, **kwargs) -> Dict[str, Any]:
         """Advanced document search."""
-        return self.sdk._request("/api/v1/admin/documents/search/advanced", dict, params=kwargs)
+        return await self.sdk._request("/api/v1/admin/documents/search/advanced", dict, params=kwargs)
 
     # Conversation admin operations
-    def get_conversation_stats(self) -> Dict[str, Any]:
+    async def get_conversation_stats(self) -> Dict[str, Any]:
         """Get conversation statistics."""
-        return self.sdk._request("/api/v1/admin/conversations/stats", dict)
+        return await self.sdk._request("/api/v1/admin/conversations/stats", dict)
 
-    def search_conversations(self, **kwargs) -> Dict[str, Any]:
+    async def search_conversations(self, **kwargs) -> Dict[str, Any]:
         """Search conversations."""
-        return self.sdk._request("/api/v1/admin/conversations/search", dict, params=kwargs)
+        return await self.sdk._request("/api/v1/admin/conversations/search", dict, params=kwargs)
 
-    def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
+    async def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
         """Export conversation."""
-        return self.sdk._request(f"/api/v1/admin/conversations/{conversation_id}/export", dict)
+        return await self.sdk._request(f"/api/v1/admin/conversations/{conversation_id}/export", dict)
 
-    def import_conversations(self, data: Dict[str, Any]) -> BaseResponse:
+    async def import_conversations(self, data: Dict[str, Any]) -> BaseResponse:
         """Import conversations."""
-        return self.sdk._request("/api/v1/admin/conversations/import", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/admin/conversations/import", BaseResponse, method="POST", json=data)
 
-    def archive_conversations(self, older_than: Optional[int] = None) -> BaseResponse:
+    async def archive_conversations(self, older_than: Optional[int] = None) -> BaseResponse:
         """Archive old conversations."""
         data = filter_query({"older_than": older_than})
-        return self.sdk._request("/api/v1/admin/conversations/archive", BaseResponse, method="POST", json=data)
+        return await self.sdk._request("/api/v1/admin/conversations/archive", BaseResponse, method="POST", json=data)
 
 
 # --- MAIN SDK CLASS ---
@@ -1235,11 +1275,14 @@ class AdminClient:
 
 class AIChatbotSDK:
     """
-    Main SDK class for AI Chatbot Platform API interactions.
+    Main async SDK class for AI Chatbot Platform API interactions.
 
-    Provides a comprehensive client for accessing all API endpoints including
+    Provides a comprehensive async client for accessing all API endpoints including
     authentication, document management, conversations, search functionality,
     and registry-based features for prompts, LLM profiles, and MCP tools.
+
+    All methods are async and should be called with await. The SDK uses httpx
+    for async HTTP requests and can be used as an async context manager.
 
     Features:
     - User authentication and management
@@ -1258,16 +1301,17 @@ class AIChatbotSDK:
         base_url: Base URL of the AI Chatbot API.
         token: Optional authentication token.
         on_error: Optional error handler callback.
-        session: Optional custom requests session.
+        client: Optional custom httpx.AsyncClient instance.
+        timeout: Timeout for HTTP requests in seconds (default: 30).
 
     Example:
-        >>> sdk = AIChatbotSDK("http://localhost:8000")
-        >>> token = sdk.auth.login("username", "password")
-        >>> prompts = sdk.prompts.list_prompts()
-        >>> response = sdk.conversations.chat(ChatRequest(
-        ...     user_message="Hello!",
-        ...     prompt_name="helpful_assistant"
-        ... ))
+        >>> async with AIChatbotSDK("http://localhost:8000") as sdk:
+        ...     token = await sdk.auth.login("username", "password")
+        ...     prompts = await sdk.prompts.list_prompts()
+        ...     response = await sdk.conversations.chat(ChatRequest(
+        ...         user_message="Hello!",
+        ...         prompt_name="helpful_assistant"
+        ...     ))
     """
 
     def __init__(
@@ -1275,12 +1319,15 @@ class AIChatbotSDK:
         base_url: str,
         token: Optional[str] = None,
         on_error: Optional[Callable[[ApiError], None]] = None,
-        session: Optional[requests.Session] = None,
+        client: Optional[httpx.AsyncClient] = None,
+        timeout: float = 30.0,
     ):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.on_error = on_error
-        self._session = session or requests.Session()
+        self.timeout = timeout
+        self._client = client
+        self._own_client = client is None
 
         # Initialize all client endpoints
         self.health = HealthClient(self)
@@ -1302,6 +1349,17 @@ class AIChatbotSDK:
         self.tasks = TasksClient(self)
         self.admin = AdminClient(self)
 
+    async def __aenter__(self):
+        """Async context manager entry."""
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=self.timeout)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        if self._own_client and self._client:
+            await self._client.aclose()
+
     def set_token(self, token: Optional[str]) -> None:
         """Set authentication token for API requests."""
         self.token = token
@@ -1314,7 +1372,7 @@ class AIChatbotSDK:
         """Clear stored authentication token."""
         self.token = None
 
-    def _request(
+    async def _request(
         self,
         path: str,
         cls: Optional[Type[T]] = None,
@@ -1324,10 +1382,15 @@ class AIChatbotSDK:
         data: Optional[Dict[str, Any]] = None,
         files: Optional[Dict[str, Any]] = None,
     ) -> Any:
+        """Make an async HTTP request to the API."""
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=self.timeout)
+            
         url = make_url(self.base_url, path, params)
         headers = build_headers(self.token)
+        
         try:
-            resp = self._session.request(
+            resp = await self._client.request(
                 method=method,
                 url=url,
                 headers=headers,
@@ -1336,7 +1399,7 @@ class AIChatbotSDK:
                 data=data,
                 files=files,
             )
-            return handle_response(resp, url, cls)
+            return await handle_response(resp, url, cls)
         except ApiError as e:
             if self.on_error:
                 self.on_error(e)
