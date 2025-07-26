@@ -483,7 +483,7 @@ def search(
 
                 search_service = SearchService(db)
 
-                # Create search request
+                # Create search request - try vector first, fallback to text search
                 search_request = DocumentSearchRequest(
                     query=query, algorithm="vector", limit=limit, threshold=threshold
                 )
@@ -504,10 +504,22 @@ def search(
                     )
 
                 async with progress_context("Searching documents..."):
-                    # Perform search
-                    results = await search_service.search_documents(
-                        request=search_request, user_id=system_user.id
-                    )
+                    try:
+                        # Perform search with vector first
+                        results = await search_service.search_documents(
+                            request=search_request, user_id=system_user.id
+                        )
+                    except Exception as e:
+                        # If vector search fails, try text search as fallback
+                        warning_message(f"Vector search failed: {e}")
+                        info_message("Falling back to text search...")
+                        
+                        search_request = DocumentSearchRequest(
+                            query=query, algorithm="text", limit=limit, threshold=0.0
+                        )
+                        results = await search_service.search_documents(
+                            request=search_request, user_id=system_user.id
+                        )
 
                 if not results:
                     warning_message(

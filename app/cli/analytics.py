@@ -352,7 +352,8 @@ def performance():
                 )
 
                 # Average document size and processing metrics
-                avg_doc_size = await db.scalar(select(func.avg(Document.file_size)))
+                avg_doc_size_result = await db.scalar(select(func.avg(Document.file_size)))
+                avg_doc_size = float(avg_doc_size_result or 0)
                 total_chunks = await db.scalar(select(func.count(DocumentChunk.id)))
                 avg_chunks_per_doc = (
                     float(total_chunks or 0) / max((completed_docs or 1), 1) if completed_docs else 0
@@ -360,7 +361,7 @@ def performance():
 
                 # Conversation metrics
                 total_convs = await db.scalar(select(func.count(Conversation.id)))
-                avg_messages_per_conv = await db.scalar(
+                avg_messages_per_conv_result = await db.scalar(
                     select(
                         func.avg(
                             select(func.count(Message.id))
@@ -369,10 +370,12 @@ def performance():
                         )
                     )
                 )
+                avg_messages_per_conv = float(avg_messages_per_conv_result or 0)
 
                 # Token usage efficiency
                 total_tokens = await db.scalar(select(func.sum(Message.token_count)))
-                avg_tokens_per_message = await db.scalar(select(func.avg(Message.token_count)))
+                avg_tokens_per_message_result = await db.scalar(select(func.avg(Message.token_count)))
+                avg_tokens_per_message = float(avg_tokens_per_message_result or 0)
 
                 # Performance table
                 table = Table(title="System Performance Metrics")
@@ -432,12 +435,13 @@ def performance():
 
                 # Storage efficiency
                 table.add_row("", "", "", "")  # Separator
-                total_storage = await db.scalar(select(func.sum(Document.file_size)))
+                total_storage_result = await db.scalar(select(func.sum(Document.file_size)))
+                total_storage = float(total_storage_result or 0)
                 user_count = await db.scalar(select(func.count(User.id)))
                 storage_per_user = (
-                    float(total_storage or 0) / max((user_count or 1), 1) if total_storage else 0
+                    total_storage / max((user_count or 1), 1) if total_storage else 0
                 )
-                table.add_row("Storage", "Total Storage", format_size(total_storage or 0), "")
+                table.add_row("Storage", "Total Storage", format_size(int(total_storage)), "")
                 table.add_row("", "Storage per User", format_size(int(storage_per_user)), "")
 
                 console.print(table)

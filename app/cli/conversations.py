@@ -48,7 +48,7 @@ def list(
                 query = select(Conversation).join(User, isouter=True)
 
                 # Apply filters
-                if username:
+                if username is not None:
                     user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")
@@ -58,7 +58,7 @@ def list(
                 if active_only:
                     query = query.where(Conversation.is_active)
 
-                if search:
+                if search is not None:
                     search_pattern = f"%{search.lower()}%"
                     query = query.where(func.lower(Conversation.title).like(search_pattern))
 
@@ -675,7 +675,7 @@ def search(
                 # Base query
                 base_query = select(Conversation, Message).join(Message, isouter=True)
 
-                if username:
+                if username is not None:
                     user = await db.scalar(select(User).where(User.username == username))
                     if not user:
                         error_message(f"User '{username}' not found")

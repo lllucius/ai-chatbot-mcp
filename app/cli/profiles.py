@@ -39,7 +39,9 @@ def list_profiles(
     async def _list_profiles():
         try:
             async with get_service_context(LLMProfileService) as profile_service:
-                profiles = await profile_service.list_profiles(active_only=active_only, search=search)
+                profiles_result = await profile_service.list_profiles(active_only=active_only, search=search)
+                # list_profiles returns a tuple (List[LLMProfile], int)
+                profiles, total_count = profiles_result
 
             if not profiles:
                 info_message("No LLM profiles found")
