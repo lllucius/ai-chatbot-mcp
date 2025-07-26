@@ -34,7 +34,15 @@ def list_profiles(
     ),
     detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed information"),
 ):
-    """List all LLM parameter profiles."""
+    """
+    List all LLM parameter profiles.
+    
+    Displays LLM profiles with filtering options for active status and search terms.
+    Shows profile details including parameters, usage statistics, and status.
+    
+    The service returns a tuple (profiles, total_count) which is properly unpacked
+    to handle the list of profile objects correctly.
+    """
 
     async def _list_profiles():
         try:

@@ -325,7 +325,18 @@ def usage(
 
 @analytics_app.command()
 def performance():
-    """Show system performance metrics."""
+    """
+    Show system performance metrics.
+    
+    Displays comprehensive performance analytics including:
+    - Document processing success/failure rates 
+    - Conversation engagement metrics
+    - Token usage efficiency
+    - Storage utilization per user
+    
+    Includes performance recommendations based on computed metrics.
+    Handles Decimal to float conversion for PostgreSQL aggregate results.
+    """
 
     @async_command
     async def _performance_metrics():

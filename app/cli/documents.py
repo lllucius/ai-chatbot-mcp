@@ -472,7 +472,13 @@ def search(
         0.7, "--threshold", "-t", help="Similarity threshold (0.0-1.0)"
     ),
 ):
-    """Search documents using semantic similarity."""
+    """
+    Search documents using semantic similarity.
+    
+    Attempts vector search first, then falls back to text search if vector search
+    fails due to embedding service issues. This provides robust search functionality
+    even when embedding services are unavailable or misconfigured.
+    """
 
     @async_command
     async def _search_documents():
