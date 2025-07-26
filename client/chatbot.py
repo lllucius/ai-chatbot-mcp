@@ -1,18 +1,14 @@
 """
-AI Chatbot Terminal Client - Interactive command-line interface for the AI Chatbot Platform.
+AI Chatbot Terminal Client - Async interactive command-line interface for the AI Chatbot Platform.
 
 This module provides a terminal-based chat interface for interacting with the AI Chatbot
 Platform, supporting conversation management, authentication, real-time chat, and
 advanced features like registry management, document handling, and configuration.
 
+All API interactions are async for improved performance and responsiveness.
 """
 
-# Add the app directory to the Python path
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent))
-
+import asyncio
 import json
 import os
 import sys
@@ -32,7 +28,7 @@ except ImportError:
 
 from client.ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest, ConversationCreate,
                                    DocumentSearchRequest)
-from client.config import ChatbotConfig, get_default_token_file, load_config
+from client.config import ClientConfig, get_default_token_file, load_config
 
 # --- UTILITIES ---
 
@@ -139,18 +135,35 @@ class AIChatbotTerminal:
         config: Configuration object with all settings.
     """
 
-    def __init__(self, config: ChatbotConfig):
+    def __init__(self, config: ClientConfig):
+        """
+        Initialize the async chatbot terminal.
+        
+        Args:
+            config: Client configuration with all settings
+        """
         self.config = config
-        self.sdk = AIChatbotSDK(base_url=config.api_url)
+        self.sdk = None  # Will be initialized as async context manager
         self.conversation_id = None
         self.conversation_title = None
         self.token = None
         self.username = None
-        self.current_prompt = config.default_prompt_name
-        self.current_profile = config.default_profile_name
+        self.current_prompt = config.client_default_prompt_name
+        self.current_profile = config.client_default_profile_name
 
+    async def __aenter__(self):
+        """Async context manager entry - initialize SDK."""
+        self.sdk = AIChatbotSDK(base_url=self.config.api_base_url, timeout=self.config.api_timeout)
+        await self.sdk.__aenter__()
+        
         # Load saved token if available
-        self._load_saved_token()
+        await self._load_saved_token()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - cleanup SDK."""
+        if self.sdk:
+            await self.sdk.__aexit__(exc_type, exc_val, exc_tb)
 
     def _load_saved_token(self):
         """Load previously saved authentication token."""
