@@ -207,6 +207,21 @@ class MCPBatchUsageSchema(BaseModel):
     )
 
 
+class MCPConnectionTestSchema(BaseModel):
+    """Schema for MCP server connection test results."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    connected: bool = Field(..., description="Whether connection was successful")
+    server_name: str = Field(..., description="Server name")
+    response_time: Optional[int] = Field(None, description="Response time in milliseconds")
+    server_version: Optional[str] = Field(None, description="Server version if available")
+    capabilities: List[str] = Field(default_factory=list, description="Server capabilities")
+    tools_available: Optional[int] = Field(None, description="Number of tools available")
+    error: Optional[str] = Field(None, description="Error message if connection failed")
+    tested_at: datetime = Field(default_factory=datetime.utcnow, description="Test timestamp")
+
+
 class MCPListFiltersSchema(BaseModel):
     """Schema for list operation filters."""
     

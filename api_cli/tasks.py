@@ -4,9 +4,8 @@ Task management commands for the API-based CLI.
 This module provides background task management functionality through API calls.
 """
 
-import asyncio
 import typer
-from .base import get_client_with_auth, handle_api_response, console, error_message, success_message
+from .base import get_sdk_with_auth, console, error_message, success_message
 
 tasks_app = typer.Typer(help="⚙️ Background task management commands")
 
@@ -15,78 +14,70 @@ tasks_app = typer.Typer(help="⚙️ Background task management commands")
 def status():
     """Show background task system status."""
     
-    async def _show_status():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            response = await client.get("/api/v1/tasks/status")
-            data = handle_api_response(response, "getting task system status")
+        data = sdk.tasks.get_status()
+        
+        if data:
+            from rich.table import Table
             
-            if data:
-                from rich.table import Table
-                
-                table = Table(title="Task System Status")
-                table.add_column("Property", style="cyan")
-                table.add_column("Value", style="white")
-                
-                table.add_row("Broker Status", data.get("broker_status", "Unknown"))
-                table.add_row("Active Workers", str(data.get("active_workers", 0)))
-                table.add_row("Active Tasks", str(data.get("active_tasks", 0)))
-                table.add_row("Reserved Tasks", str(data.get("reserved_tasks", 0)))
-                table.add_row("System Status", data.get("system_status", "Unknown"))
-                
-                console.print(table)
-        
-        except Exception as e:
-            error_message(f"Failed to get task status: {str(e)}")
-            raise typer.Exit(1)
+            table = Table(title="Task System Status")
+            table.add_column("Property", style="cyan")
+            table.add_column("Value", style="white")
+            
+            table.add_row("Broker Status", data.get("broker_status", "Unknown"))
+            table.add_row("Active Workers", str(data.get("active_workers", 0)))
+            table.add_row("Active Tasks", str(data.get("active_tasks", 0)))
+            table.add_row("Reserved Tasks", str(data.get("reserved_tasks", 0)))
+            table.add_row("System Status", data.get("system_status", "Unknown"))
+            
+            console.print(table)
     
-    asyncio.run(_show_status())
+    except Exception as e:
+        error_message(f"Failed to get task status: {str(e)}")
+        raise typer.Exit(1)
 
 
 @tasks_app.command()
 def workers():
     """Show information about Celery workers."""
     
-    async def _show_workers():
-        client = get_client_with_auth()
+    try:
+        sdk = get_sdk_with_auth()
         
-        try:
-            response = await client.get("/api/v1/tasks/workers")
-            data = handle_api_response(response, "getting worker information")
+        data = sdk.tasks.get_workers()
+        
+        if data:
+            from rich.table import Table
             
-            if data:
-                from rich.table import Table
-                
-                workers = data.get("workers", [])
-                
-                table = Table(title=f"Celery Workers ({len(workers)} total)")
-                table.add_column("Name", style="cyan")
-                table.add_column("Status", style="white")
-                table.add_column("Pool", style="blue")
-                table.add_column("Processes", style="green")
-                table.add_column("Max Concurrency", style="yellow")
-                
-                for worker in workers:
-                    status_color = "green" if worker.get("status") == "online" else "red"
-                    table.add_row(
-                        worker.get("name", ""),
-                        f"[{status_color}]{worker.get('status', 'Unknown')}[/{status_color}]",
-                        worker.get("pool", ""),
-                        str(worker.get("processes", 0)),
-                        str(worker.get("max_concurrency", 0))
-                    )
-                
-                console.print(table)
-                
-                summary = f"Total: {data.get('total_workers', 0)}, Online: {data.get('online_workers', 0)}"
-                console.print(f"\n[dim]{summary}[/dim]")
-        
-        except Exception as e:
-            error_message(f"Failed to get worker information: {str(e)}")
-            raise typer.Exit(1)
+            workers = data.get("workers", [])
+            
+            table = Table(title=f"Celery Workers ({len(workers)} total)")
+            table.add_column("Name", style="cyan")
+            table.add_column("Status", style="white")
+            table.add_column("Pool", style="blue")
+            table.add_column("Processes", style="green")
+            table.add_column("Max Concurrency", style="yellow")
+            
+            for worker in workers:
+                status_color = "green" if worker.get("status") == "online" else "red"
+                table.add_row(
+                    worker.get("name", ""),
+                    f"[{status_color}]{worker.get('status', 'Unknown')}[/{status_color}]",
+                    worker.get("pool", ""),
+                    str(worker.get("processes", 0)),
+                    str(worker.get("max_concurrency", 0))
+                )
+            
+            console.print(table)
+            
+            summary = f"Total: {data.get('total_workers', 0)}, Online: {data.get('online_workers', 0)}"
+            console.print(f"\n[dim]{summary}[/dim]")
     
-    asyncio.run(_show_workers())
+    except Exception as e:
+        error_message(f"Failed to get worker information: {str(e)}")
+        raise typer.Exit(1)
 
 
 @tasks_app.command()

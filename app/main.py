@@ -18,8 +18,8 @@ from fastapi.responses import JSONResponse
 # Import API routers
 from .api import (analytics_router, auth_router, conversation_admin_router, conversations_router,
                   database_router, document_admin_router, documents_router, health_router,
-                  profiles_router, prompts_router, search_router, tasks_router, tools_router,
-                  user_admin_router, users_router)
+                  mcp_router, profiles_router, prompts_router, search_router, tasks_router, 
+                  tools_router, user_admin_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .core.logging import get_component_logger, setup_logging
@@ -61,6 +61,19 @@ async def lifespan(app: FastAPI):
         await start_system_monitoring()
         logger.info("Performance monitoring system initialized")
 
+        # Start background document processor
+        try:
+            from .services.background_processor import get_background_processor
+            from .database import AsyncSessionLocal
+
+            async with AsyncSessionLocal() as db:
+                await get_background_processor(db)
+            logger.info("Background document processor initialized and started")
+        except Exception as e:
+            logger.error(f"Background document processor initialization failed: {e}")
+            # This is critical for document processing, log error but continue
+            raise
+
         # Initialize FastMCP and UnifiedToolExecutor
         try:
             from .core.tool_executor import get_unified_tool_executor
@@ -82,6 +95,15 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down AI Chatbot Platform...")
     try:
+        # Shutdown background processor
+        try:
+            from .services.background_processor import shutdown_background_processor
+
+            await shutdown_background_processor()
+            logger.info("Background document processor shut down")
+        except Exception as e:
+            logger.warning(f"Background processor shutdown failed: {e}")
+
         # Cleanup UnifiedToolExecutor and MCP
         try:
             from .core.tool_executor import cleanup_unified_tool_executor
@@ -297,6 +319,8 @@ app.include_router(conversation_admin_router, prefix="/api/v1/admin", tags=["con
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 
 app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
+
+app.include_router(mcp_router, prefix="/api/v1/mcp", tags=["mcp"])
 
 # Registry-based API routes
 app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
