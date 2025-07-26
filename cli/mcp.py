@@ -6,10 +6,13 @@ through the API-based command line interface using the AI Chatbot SDK.
 All commands are async.
 """
 
-from async_typer import AsyncTyper
-from typer import Option, Argument
 from typing import Optional
-from .base import get_sdk_with_auth, console, error_message, info_message, success_message, warning_message
+
+from async_typer import AsyncTyper
+from typer import Argument, Option
+
+from .base import (console, error_message, get_sdk_with_auth, info_message,
+                   success_message, warning_message)
 
 mcp_app = AsyncTyper(help="🔌 MCP server and tool management commands", rich_markup_mode="rich")
 

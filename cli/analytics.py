@@ -4,10 +4,12 @@ Analytics and reporting commands for the API-based CLI.
 All commands use async/await and the async SDK client.
 """
 
+from typing import Optional
+
 from async_typer import AsyncTyper
 from typer import Option
-from typing import Optional
-from .base import get_sdk_with_auth, console, error_message, success_message, info_message
+
+from .base import console, error_message, get_sdk_with_auth, success_message
 
 analytics_app = AsyncTyper(help="📊 Analytics and reporting commands")
 

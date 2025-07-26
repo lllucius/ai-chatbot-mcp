@@ -5,24 +5,19 @@ This module provides all user management functionality through the async SDK,
 duplicating the functionality of the original CLI but using the async SDK client.
 """
 
-from async_typer import AsyncTyper
-from typer import Option, Argument
 from typing import Optional
 from uuid import UUID
-from rich.table import Table
-from rich.prompt import Prompt
 
-from client.ai_chatbot_sdk import RegisterRequest, UserUpdate, ApiError
-from .base import (
-    console,
-    error_message,
-    success_message,
-    info_message,
-    get_sdk_with_auth,
-    display_key_value_pairs,
-    confirm_action,
-    format_timestamp
-)
+from async_typer import AsyncTyper
+from rich.prompt import Prompt
+from rich.table import Table
+from typer import Argument, Option
+
+from client.ai_chatbot_sdk import ApiError, RegisterRequest
+
+from .base import (console, display_key_value_pairs, error_message,
+                   format_timestamp, get_sdk_with_auth, info_message,
+                   success_message)
 
 user_app = AsyncTyper(help="👥 User management commands")
 

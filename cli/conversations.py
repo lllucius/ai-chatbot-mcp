@@ -4,11 +4,14 @@ Conversation management commands for the API-based CLI.
 All commands use async/await and the async SDK client.
 """
 
-from async_typer import AsyncTyper
-from typer import Option, Argument
 from typing import Optional
 from uuid import UUID
-from .base import get_sdk_with_auth, console, error_message, success_message, format_timestamp
+
+from async_typer import AsyncTyper
+from typer import Argument, Option
+
+from .base import (console, error_message, format_timestamp, get_sdk_with_auth,
+                   success_message)
 
 conversation_app = AsyncTyper(help="💬 Conversation management commands")
 

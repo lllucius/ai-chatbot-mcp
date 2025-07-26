@@ -4,26 +4,20 @@ Core CLI commands for authentication, config, health, version, and help.
 Implements all root-level commands previously in api_manage.py, using async-typer.
 """
 
-from typing import Optional
-from async_typer import AsyncTyper
-from typer import Option
-from rich.panel import Panel
-from rich.table import Table
-from rich.columns import Columns
-from rich.prompt import Prompt
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Optional
+
+from async_typer import AsyncTyper
+from rich.columns import Columns
+from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.table import Table
+from typer import Option
 
 from .auth import get_auth_manager
-from .base import (
-    console,
-    error_message,
-    info_message,
-    success_message,
-    warning_message,
-    get_sdk_with_auth,
-    format_timestamp,
-)
+from .base import (console, error_message, get_sdk_with_auth, info_message,
+                   success_message, warning_message)
 
 core_app = AsyncTyper(help="Core commands for authentication, config, and system status.")
 
@@ -113,7 +107,7 @@ async def version():
     """Show version information."""
     try:
         sdk = await get_sdk_with_auth()
-        response = await sdk.health.basic()
+        _ = await sdk.health.basic()
         app_info = await sdk._request("/")
         version_info = Panel(
             f"[bold]AI Chatbot Platform API CLI[/bold]\n\n"

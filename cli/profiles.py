@@ -4,10 +4,12 @@ LLM profile management commands for the API-based CLI.
 All commands use async/await and the async SDK client.
 """
 
-from async_typer import AsyncTyper
-from typer import Option, Argument
 from typing import Optional
-from .base import get_sdk_with_auth, console, error_message, success_message
+
+from async_typer import AsyncTyper
+from typer import Argument, Option
+
+from .base import console, error_message, get_sdk_with_auth, success_message
 
 profile_app = AsyncTyper(help="🎛️ LLM parameter profile management commands")
 
@@ -56,7 +58,6 @@ async def show(
         data = await sdk.profiles.get_profile(profile_name)
         if data:
             from rich.table import Table
-            from rich.panel import Panel
             table = Table(title="Profile Details")
             table.add_column("Field", style="cyan")
             table.add_column("Value", style="white")
@@ -119,11 +120,16 @@ async def update(
         import json
         sdk = await get_sdk_with_auth()
         update_data = {}
-        if title: update_data["title"] = title
-        if model_name: update_data["model_name"] = model_name
-        if parameters: update_data["parameters"] = json.loads(parameters)
-        if description: update_data["description"] = description
-        if is_default is not None: update_data["is_default"] = is_default
+        if title:
+            update_data["title"] = title
+        if model_name:
+            update_data["model_name"] = model_name
+        if parameters:
+            update_data["parameters"] = json.loads(parameters)
+        if description:
+            update_data["description"] = description
+        if is_default is not None:
+            update_data["is_default"] = is_default
         if not update_data:
             error_message("No update fields provided")
             return
@@ -174,8 +180,8 @@ async def stats():
         sdk = await get_sdk_with_auth()
         data = await sdk.profiles.get_profile_stats()
         if data:
-            from rich.panel import Panel
             from rich.columns import Columns
+            from rich.panel import Panel
             basic_panel = Panel(
                 f"Total Profiles: [green]{data.get('total_profiles', 0)}[/green]\n"
                 f"Active: [blue]{data.get('active_profiles', 0)}[/blue]",

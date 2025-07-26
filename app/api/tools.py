@@ -58,7 +58,7 @@ async def list_tools(
 
         # Get MCP client for OpenAI tools format
         mcp_client = await get_mcp_client(db)
-        client_tools = await mcp_client.get_available_tools(filters, db)
+        await mcp_client.get_available_tools(filters, db)
 
         # Convert to OpenAI format for enabled tools
         openai_tools = []

@@ -5,10 +5,12 @@ This module provides background task management functionality through API calls.
 All commands are fully async and use async-typer.
 """
 
-from async_typer import AsyncTyper
-from typer import Option, Argument
 from typing import Optional
-from .base import get_sdk_with_auth, console, error_message, success_message
+
+from async_typer import AsyncTyper
+from typer import Argument, Option
+
+from .base import console, error_message, get_sdk_with_auth, success_message
 
 tasks_app = AsyncTyper(help="⚙️ Background task management commands")
 
@@ -222,7 +224,6 @@ async def stats(
         # Let's assume get_stats returns a summary and recent_errors
         data = await sdk.tasks.monitor(refresh=None, duration=period_hours)
         if data:
-            from rich.table import Table
             from rich.panel import Panel
             doc_processing = data.get("document_processing", {})
             stats_panel = Panel(
@@ -253,9 +254,8 @@ async def monitor():
         sdk = await get_sdk_with_auth()
         data = await sdk.tasks.monitor()
         if data:
-            from rich.table import Table
-            from rich.panel import Panel
             from rich.columns import Columns
+            from rich.panel import Panel
             system_status = data.get("system_status", {})
             active_tasks = data.get("active_tasks", {})
             workers = data.get("workers", {})

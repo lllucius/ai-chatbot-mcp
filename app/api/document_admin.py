@@ -168,11 +168,11 @@ async def get_document_statistics(
     try:
         # Basic counts by status
         status_counts = {}
-        for status in FileStatus:
+        for stat in FileStatus:
             count = await db.scalar(
-                select(func.count(Document.id)).where(Document.status == status)
+                select(func.count(Document.id)).where(Document.status == stat)
             )
-            status_counts[status.value] = count or 0
+            status_counts[stat.value] = count or 0
         
         # Total storage usage
         total_size = await db.scalar(

@@ -66,11 +66,6 @@ class AuthManager:
         """Login and get authentication token."""
         client = APIClient()
         
-        login_data = {
-            "username": username,
-            "password": password
-        }
-        
         try:
             # Use the SDK's auth method
             sdk = client.get_sdk()
@@ -134,7 +129,7 @@ class AuthManager:
         
         try:
             # Use SDK method if available, otherwise make direct API call
-            sdk = client.get_sdk()
+            client.get_sdk()
             
             # Since SDK may not have a refresh method, fall back to API call
             response = await client.post("/api/v1/auth/refresh")

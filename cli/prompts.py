@@ -4,10 +4,12 @@ Prompt management commands for the API-based CLI.
 This module provides prompt management functionality through API calls, all async.
 """
 
-from async_typer import AsyncTyper
-from typer import Option, Argument
 from typing import Optional
-from .base import get_sdk_with_auth, console, error_message, success_message
+
+from async_typer import AsyncTyper
+from typer import Argument, Option
+
+from .base import console, error_message, get_sdk_with_auth, success_message
 
 prompt_app = AsyncTyper(help="📝 Prompt management commands")
 
@@ -20,7 +22,7 @@ async def list():
         data = await sdk.prompts.list_prompts(active_only=False)
         if data:
             from rich.table import Table
-            from .base import format_timestamp
+
             prompts = data.get("items", []) if isinstance(data, dict) else data
             table = Table(title=f"Prompts ({len(prompts)} total)")
             table.add_column("Name", style="cyan")
@@ -51,8 +53,9 @@ async def show(
         sdk = await get_sdk_with_auth()
         data = await sdk.prompts.get_prompt(prompt_name)
         if data:
-            from rich.table import Table
             from rich.panel import Panel
+            from rich.table import Table
+
             from .base import format_timestamp
             table = Table(title="Prompt Details")
             table.add_column("Field", style="cyan")
@@ -123,11 +126,16 @@ async def update(
     try:
         sdk = await get_sdk_with_auth()
         update_data = {}
-        if title: update_data["title"] = title
-        if content: update_data["content"] = content
-        if category: update_data["category"] = category
-        if description: update_data["description"] = description
-        if tags: update_data["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
+        if title:
+            update_data["title"] = title
+        if content:
+            update_data["content"] = content
+        if category:
+            update_data["category"] = category
+        if description:
+            update_data["description"] = description
+        if tags:
+            update_data["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
         if not update_data:
             error_message("No update fields provided")
             return
@@ -241,8 +249,8 @@ async def stats():
         sdk = await get_sdk_with_auth()
         data = await sdk.prompts.get_prompt_stats()
         if data:
-            from rich.panel import Panel
             from rich.columns import Columns
+            from rich.panel import Panel
             basic_panel = Panel(
                 f"Total Prompts: [green]{data.get('total_prompts', 0)}[/green]\n"
                 f"Active: [blue]{data.get('active_prompts', 0)}[/blue]\n"

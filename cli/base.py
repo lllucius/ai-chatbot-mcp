@@ -329,11 +329,6 @@ def handle_api_response(response: Optional[Dict[str, Any]], operation: str = "op
         error_message(error_msg)
         return None
 
-# Legacy function removed - use async get_sdk_with_auth() instead
-
-# Legacy sync function removed - use async get_sdk_with_auth() instead
-
-
 # Environment and configuration helpers (maintained for backward compatibility)
 def load_environment():
     """Load environment variables from .env file."""

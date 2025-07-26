@@ -362,9 +362,9 @@ async def archive_conversations(
         query = select(Conversation).where(Conversation.created_at < cutoff_date)
         
         if inactive_only:
-            query = query.where(Conversation.is_active == False)
+            query = query.where(Conversation.is_active is False)
         else:
-            query = query.where(Conversation.is_active == True)
+            query = query.where(Conversation.is_active is True)
         
         # Get conversations to archive
         result = await db.execute(query)
@@ -494,7 +494,7 @@ async def search_conversations_and_messages(
         
         # Active conversations only
         if active_only:
-            filters.append(Conversation.is_active == True)
+            filters.append(Conversation.is_active is True)
         
         # Date range filters
         if date_from:
@@ -642,7 +642,7 @@ async def get_conversation_statistics(
         # Basic conversation counts
         total_conversations = await db.scalar(select(func.count(Conversation.id)))
         active_conversations = await db.scalar(
-            select(func.count(Conversation.id)).where(Conversation.is_active == True)
+            select(func.count(Conversation.id)).where(Conversation.is_active is True)
         )
         
         # Message statistics
