@@ -142,6 +142,7 @@ async def check_fastmcp_services():
     FastMCP is REQUIRED - this will fail startup if not available.
     """
     try:
+        from app.database import AsyncSessionLocal
         from app.services.mcp_client import get_mcp_client
 
         # FastMCP is required - this should always be enabled
@@ -150,16 +151,27 @@ async def check_fastmcp_services():
             return False
 
         logger.info("🔧 Initializing REQUIRED FastMCP services...")
-        mcp_client = await get_mcp_client()
-        health = await mcp_client.health_check()
+        async with AsyncSessionLocal() as db:
+            mcp_client = await get_mcp_client(db)
+            health = await mcp_client.health_check(db)
 
-        if not health.get("fastmcp_available"):
+        # Handle both dict and Pydantic schema responses
+        if hasattr(health, 'mcp_available'):
+            # New Pydantic schema
+            mcp_available = health.mcp_available
+            healthy_servers = health.healthy_servers
+            total_servers = health.total_servers
+            tools_count = health.tools_count
+        else:
+            # Fallback for dict response
+            mcp_available = health.get("fastmcp_available", False)
+            healthy_servers = health.get("healthy_servers", 0)
+            total_servers = health.get("total_servers", 0)
+            tools_count = health.get("tools_count", 0)
+
+        if not mcp_available:
             logger.error("❌ FastMCP not available but required for this application")
             return False
-
-        healthy_servers = health.get("healthy_servers", 0)
-        total_servers = health.get("total_servers", 0)
-        tools_count = health.get("tools_count", 0)
 
         if healthy_servers == 0:
             logger.error("❌ No FastMCP servers are healthy - at least one is required")

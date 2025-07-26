@@ -7,6 +7,9 @@ and sample MCP server configurations during database initialization.
 
 import logging
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.schemas.mcp import MCPServerCreateSchema
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_registry import MCPRegistryService
 from app.services.prompt_service import PromptService
@@ -189,7 +192,7 @@ async def create_sample_llm_profiles():
     return created_count
 
 
-async def create_sample_mcp_servers():
+async def create_sample_mcp_servers(db: AsyncSession):
     """Create sample MCP server registrations."""
     sample_servers = [
         {
@@ -215,10 +218,12 @@ async def create_sample_mcp_servers():
         },
     ]
 
+    registry = MCPRegistryService(db)
     created_count = 0
     for server_data in sample_servers:
         try:
-            server = await MCPRegistryService.create_server(**server_data)
+            server_schema = MCPServerCreateSchema(**server_data)
+            server = await registry.create_server(server_schema, auto_discover=False)
             logger.info(f"Created sample MCP server: {server.name}")
             created_count += 1
         except Exception as e:
