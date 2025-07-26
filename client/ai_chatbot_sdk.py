@@ -1,9 +1,11 @@
 """
 AI Chatbot SDK - Python client library for the AI Chatbot Platform.
 
-This module provides a comprehensive SDK for interacting with the AI Chatbot Platform,
+This module provides a comprehensive async SDK for interacting with the AI Chatbot Platform,
 including authentication, document management, conversation handling, and search capabilities.
 
+All methods are async and should be called with await. The SDK uses httpx for async HTTP
+requests and supports all the same features as the original synchronous version.
 """
 
 from datetime import datetime
@@ -11,7 +13,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, Generic, Iterator, List, Optional, Type, TypeVar
 from uuid import UUID
 
-import requests
+import httpx
 from pydantic import BaseModel, EmailStr, Field
 
 # --- Exceptions ---
@@ -392,12 +394,12 @@ def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {k: v for k, v in (query or {}).items() if v is not None}
 
 
-def handle_response(resp: requests.Response, url: str, cls: Optional[Type[T]] = None) -> Any:
+async def handle_response(resp: httpx.Response, url: str, cls: Optional[Type[T]] = None) -> Any:
     """
     Handle API response and raise ApiError on failure.
 
     Args:
-        resp: The HTTP response object.
+        resp: The HTTP response object from httpx.
         url: The URL that was requested.
         cls: Optional type to deserialize response data into.
 
@@ -407,26 +409,26 @@ def handle_response(resp: requests.Response, url: str, cls: Optional[Type[T]] = 
     Raises:
         ApiError: If the response indicates an error.
     """
-    if not resp.ok:
+    if not resp.is_success:
         try:
             body = resp.json()
         except Exception:
             body = resp.text
-        raise ApiError(resp.status_code, resp.reason, url, body)
+        raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
-    json = resp.json()
+    json_data = resp.json()
     if cls:
-        if "items" in json:
-            r = PaginatedResponse(**json)
+        if "items" in json_data:
+            r = PaginatedResponse(**json_data)
             items = []
             for item in r.items:
                 items.append(cls(**item))
             r.items = items
-            json["items"] = items
+            json_data["items"] = items
 
             return r
-        return cls(**json)
-    return json
+        return cls(**json_data)
+    return json_data
 
 
 def build_headers(
@@ -471,7 +473,40 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
     return url
 
 
-def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -> List[Any]:
+async def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -> List[Any]:
+    """
+    Fetch all pages of paginated results asynchronously.
+
+    Args:
+        fetch_page: Async function that takes page and per_page parameters.
+        per_page: Number of items per page.
+
+    Returns:
+        List of all items from all pages.
+    """
+    all_items = []
+    page = 1
+
+    while True:
+        response = await fetch_page(page, per_page)
+        
+        if hasattr(response, "items"):
+            items = response.items
+        else:
+            items = response
+
+        if not items:
+            break
+
+        all_items.extend(items)
+
+        # Check if we got a full page - if not, we're done
+        if len(items) < per_page:
+            break
+
+        page += 1
+
+    return all_items
     """
     Fetch all pages of paginated results.
 
@@ -497,81 +532,86 @@ def fetch_all_pages(fetch_page: Callable[[int, int], Any], per_page: int = 50) -
 
 
 class HealthClient:
-    """Client for health check endpoints."""
+    """Async client for health check endpoints."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def basic(self) -> BaseResponse:
+    async def basic(self) -> BaseResponse:
         """Get basic health status."""
-        return self.sdk._request("/api/v1/health/", BaseResponse)
+        return await self.sdk._request("/api/v1/health/", BaseResponse)
 
-    def detailed(self) -> Dict[str, Any]:
+    async def detailed(self) -> Dict[str, Any]:
         """Get detailed health status including system information."""
-        return self.sdk._request("/api/v1/health/detailed")
+        return await self.sdk._request("/api/v1/health/detailed")
 
-    def database(self) -> Dict[str, Any]:
+    async def database(self) -> Dict[str, Any]:
         """Check database connectivity status."""
-        return self.sdk._request("/api/v1/health/database")
+        return await self.sdk._request("/api/v1/health/database")
 
-    def services(self) -> Dict[str, Any]:
+    async def services(self) -> Dict[str, Any]:
         """Check external services status."""
-        return self.sdk._request("/api/v1/health/services")
+        return await self.sdk._request("/api/v1/health/services")
 
-    def metrics(self) -> Dict[str, Any]:
+    async def metrics(self) -> Dict[str, Any]:
         """Get system metrics and performance data."""
-        return self.sdk._request("/api/v1/health/metrics")
+        return await self.sdk._request("/api/v1/health/metrics")
 
-    def readiness(self) -> Dict[str, Any]:
+    async def readiness(self) -> Dict[str, Any]:
         """Check if the service is ready to accept requests."""
-        return self.sdk._request("/api/v1/health/readiness")
+        return await self.sdk._request("/api/v1/health/readiness")
 
-    def liveness(self) -> Dict[str, Any]:
+    async def liveness(self) -> Dict[str, Any]:
         """Check if the service is alive and responsive."""
-        return self.sdk._request("/api/v1/health/liveness")
+        return await self.sdk._request("/api/v1/health/liveness")
 
 
 class AuthClient:
-    """Client for authentication operations."""
+    """Async client for authentication operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
         self.sdk = sdk
 
-    def register(self, data: RegisterRequest) -> UserResponse:
-        return self.sdk._request(
+    async def register(self, data: RegisterRequest) -> UserResponse:
+        """Register a new user account."""
+        return await self.sdk._request(
             "/api/v1/auth/register",
             UserResponse,
             method="POST",
             json=data.model_dump(),
         )
 
-    def login(self, username: str, password: str) -> Token:
+    async def login(self, username: str, password: str) -> Token:
+        """Login with username and password."""
         data = {"username": username, "password": password}
-        token = self.sdk._request("/api/v1/auth/login", Token, method="POST", json=data)
+        token = await self.sdk._request("/api/v1/auth/login", Token, method="POST", json=data)
         self.sdk.set_token(token.access_token)
         return token
 
-    def me(self) -> UserResponse:
-        return self.sdk._request("/api/v1/auth/me", UserResponse)
+    async def me(self) -> UserResponse:
+        """Get current user profile information."""
+        return await self.sdk._request("/api/v1/auth/me", UserResponse)
 
-    def logout(self) -> BaseResponse:
+    async def logout(self) -> BaseResponse:
         """Logout current user and invalidate token."""
-        return self.sdk._request("/api/v1/auth/logout", BaseResponse, method="POST")
+        return await self.sdk._request("/api/v1/auth/logout", BaseResponse, method="POST")
 
-    def refresh(self) -> Token:
+    async def refresh(self) -> Token:
         """Refresh authentication token."""
-        return self.sdk._request("/api/v1/auth/refresh", Token, method="POST")
+        return await self.sdk._request("/api/v1/auth/refresh", Token, method="POST")
 
-    def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
-        return self.sdk._request(
+    async def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
+        """Request password reset for a user."""
+        return await self.sdk._request(
             "/api/v1/auth/password-reset",
             BaseResponse,
             method="POST",
             json=data.model_dump(),
         )
 
-    def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
-        return self.sdk._request(
+    async def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
+        """Confirm password reset with token."""
+        return await self.sdk._request(
             "/api/v1/auth/password-reset/confirm",
             BaseResponse,
             method="POST",
@@ -1235,11 +1275,14 @@ class AdminClient:
 
 class AIChatbotSDK:
     """
-    Main SDK class for AI Chatbot Platform API interactions.
+    Main async SDK class for AI Chatbot Platform API interactions.
 
-    Provides a comprehensive client for accessing all API endpoints including
+    Provides a comprehensive async client for accessing all API endpoints including
     authentication, document management, conversations, search functionality,
     and registry-based features for prompts, LLM profiles, and MCP tools.
+
+    All methods are async and should be called with await. The SDK uses httpx
+    for async HTTP requests and can be used as an async context manager.
 
     Features:
     - User authentication and management
@@ -1258,16 +1301,17 @@ class AIChatbotSDK:
         base_url: Base URL of the AI Chatbot API.
         token: Optional authentication token.
         on_error: Optional error handler callback.
-        session: Optional custom requests session.
+        client: Optional custom httpx.AsyncClient instance.
+        timeout: Timeout for HTTP requests in seconds (default: 30).
 
     Example:
-        >>> sdk = AIChatbotSDK("http://localhost:8000")
-        >>> token = sdk.auth.login("username", "password")
-        >>> prompts = sdk.prompts.list_prompts()
-        >>> response = sdk.conversations.chat(ChatRequest(
-        ...     user_message="Hello!",
-        ...     prompt_name="helpful_assistant"
-        ... ))
+        >>> async with AIChatbotSDK("http://localhost:8000") as sdk:
+        ...     token = await sdk.auth.login("username", "password")
+        ...     prompts = await sdk.prompts.list_prompts()
+        ...     response = await sdk.conversations.chat(ChatRequest(
+        ...         user_message="Hello!",
+        ...         prompt_name="helpful_assistant"
+        ...     ))
     """
 
     def __init__(
@@ -1275,12 +1319,15 @@ class AIChatbotSDK:
         base_url: str,
         token: Optional[str] = None,
         on_error: Optional[Callable[[ApiError], None]] = None,
-        session: Optional[requests.Session] = None,
+        client: Optional[httpx.AsyncClient] = None,
+        timeout: float = 30.0,
     ):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.on_error = on_error
-        self._session = session or requests.Session()
+        self.timeout = timeout
+        self._client = client
+        self._own_client = client is None
 
         # Initialize all client endpoints
         self.health = HealthClient(self)
@@ -1302,6 +1349,17 @@ class AIChatbotSDK:
         self.tasks = TasksClient(self)
         self.admin = AdminClient(self)
 
+    async def __aenter__(self):
+        """Async context manager entry."""
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=self.timeout)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        if self._own_client and self._client:
+            await self._client.aclose()
+
     def set_token(self, token: Optional[str]) -> None:
         """Set authentication token for API requests."""
         self.token = token
@@ -1314,7 +1372,7 @@ class AIChatbotSDK:
         """Clear stored authentication token."""
         self.token = None
 
-    def _request(
+    async def _request(
         self,
         path: str,
         cls: Optional[Type[T]] = None,
@@ -1324,10 +1382,15 @@ class AIChatbotSDK:
         data: Optional[Dict[str, Any]] = None,
         files: Optional[Dict[str, Any]] = None,
     ) -> Any:
+        """Make an async HTTP request to the API."""
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=self.timeout)
+            
         url = make_url(self.base_url, path, params)
         headers = build_headers(self.token)
+        
         try:
-            resp = self._session.request(
+            resp = await self._client.request(
                 method=method,
                 url=url,
                 headers=headers,
@@ -1336,7 +1399,7 @@ class AIChatbotSDK:
                 data=data,
                 files=files,
             )
-            return handle_response(resp, url, cls)
+            return await handle_response(resp, url, cls)
         except ApiError as e:
             if self.on_error:
                 self.on_error(e)
