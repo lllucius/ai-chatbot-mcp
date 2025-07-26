@@ -831,6 +831,105 @@ class ToolsClient:
         return self.sdk._request("/api/v1/tools/stats", dict)
 
 
+class MCPClient:
+    """Client for MCP server and tools management."""
+
+    def __init__(self, sdk: "AIChatbotSDK"):
+        self.sdk = sdk
+
+    # Server management methods
+    def list_servers(
+        self,
+        enabled_only: bool = False,
+        connected_only: bool = False,
+        detailed: bool = False,
+    ) -> Dict[str, Any]:
+        """List all registered MCP servers."""
+        params = filter_query({
+            "enabled_only": enabled_only,
+            "connected_only": connected_only,
+            "detailed": detailed,
+        })
+        return self.sdk._request("/api/v1/mcp/servers", dict, params=params)
+
+    def add_server(
+        self,
+        name: str,
+        url: str,
+        description: str = "",
+        enabled: bool = True,
+        transport: str = "http",
+    ) -> Dict[str, Any]:
+        """Add a new MCP server."""
+        data = {
+            "name": name,
+            "url": url,
+            "description": description,
+            "enabled": enabled,
+            "transport": transport,
+        }
+        return self.sdk._request("/api/v1/mcp/servers", dict, method="POST", json=data)
+
+    def get_server(self, server_name: str) -> Dict[str, Any]:
+        """Get details for a specific server."""
+        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict)
+
+    def update_server(self, server_name: str, **kwargs) -> Dict[str, Any]:
+        """Update an MCP server."""
+        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict, method="PATCH", json=kwargs)
+
+    def remove_server(self, server_name: str) -> BaseResponse:
+        """Remove an MCP server."""
+        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}", BaseResponse, method="DELETE")
+
+    def enable_server(self, server_name: str) -> Dict[str, Any]:
+        """Enable an MCP server."""
+        return self.update_server(server_name, enabled=True)
+
+    def disable_server(self, server_name: str) -> Dict[str, Any]:
+        """Disable an MCP server."""
+        return self.update_server(server_name, enabled=False)
+
+    def test_server(self, server_name: str) -> Dict[str, Any]:
+        """Test connection to an MCP server."""
+        return self.sdk._request(f"/api/v1/mcp/servers/{server_name}/test", dict, method="POST")
+
+    # Tools management methods
+    def list_tools(
+        self,
+        server: Optional[str] = None,
+        enabled_only: bool = False,
+        detailed: bool = False,
+    ) -> Dict[str, Any]:
+        """List all available MCP tools."""
+        params = filter_query({
+            "server": server,
+            "enabled_only": enabled_only,
+            "detailed": detailed,
+        })
+        return self.sdk._request("/api/v1/mcp/tools", dict, params=params)
+
+    def enable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
+        """Enable an MCP tool."""
+        params = filter_query({"server": server})
+        return self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/enable", dict, method="PATCH", params=params)
+
+    def disable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
+        """Disable an MCP tool."""
+        params = filter_query({"server": server})
+        return self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/disable", dict, method="PATCH", params=params)
+
+    # Statistics and refresh methods
+    def get_stats(self) -> Dict[str, Any]:
+        """Get MCP usage statistics."""
+        return self.sdk._request("/api/v1/mcp/stats", dict)
+
+    def refresh(self, server: Optional[str] = None) -> Dict[str, Any]:
+        """Refresh MCP server connections and tool discovery."""
+        params = filter_query({"server": server})
+        return self.sdk._request("/api/v1/mcp/refresh", dict, method="POST", params=params)
+
+
 class PromptsClient:
     """Client for prompt registry management."""
 
@@ -1193,6 +1292,7 @@ class AIChatbotSDK:
 
         # Registry-based clients
         self.tools = ToolsClient(self)
+        self.mcp = MCPClient(self)
         self.prompts = PromptsClient(self)
         self.profiles = ProfilesClient(self)
 
