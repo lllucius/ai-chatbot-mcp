@@ -34,7 +34,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.post("/users/{user_id}/promote", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/promote", response_model=BaseResponse)
 @handle_api_errors("Failed to promote user")
 async def promote_user_to_superuser(
     user_id: UUID,
@@ -85,7 +85,7 @@ async def promote_user_to_superuser(
         )
 
 
-@router.post("/users/{user_id}/demote", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/demote", response_model=BaseResponse)
 @handle_api_errors("Failed to demote user")
 async def demote_user_from_superuser(
     user_id: UUID,
@@ -143,7 +143,7 @@ async def demote_user_from_superuser(
         )
 
 
-@router.post("/users/{user_id}/activate", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/activate", response_model=BaseResponse)
 @handle_api_errors("Failed to activate user")
 async def activate_user_account(
     user_id: UUID,
@@ -194,7 +194,7 @@ async def activate_user_account(
         )
 
 
-@router.post("/users/{user_id}/deactivate", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/deactivate", response_model=BaseResponse)
 @handle_api_errors("Failed to deactivate user")
 async def deactivate_user_account(
     user_id: UUID,
@@ -252,7 +252,7 @@ async def deactivate_user_account(
         )
 
 
-@router.post("/users/{user_id}/reset-password", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/reset-password", response_model=BaseResponse)
 @handle_api_errors("Failed to reset password")
 async def admin_reset_user_password(
     user_id: UUID,

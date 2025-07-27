@@ -65,7 +65,7 @@ async def initialize_database(
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             
             # Create all tables
-            await conn.run_sync(base.Base.metadata.create_all)
+            await conn.run_sync(base.BaseModelDB.metadata.create_all)
         
         return {
             "success": True,

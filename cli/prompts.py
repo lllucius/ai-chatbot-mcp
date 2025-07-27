@@ -9,7 +9,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, get_sdk_with_auth, success_message
+from .base import console, error_message, get_sdk, success_message
 
 prompt_app = AsyncTyper(help="📝 Prompt management commands")
 
@@ -18,7 +18,7 @@ prompt_app = AsyncTyper(help="📝 Prompt management commands")
 async def list():
     """List all prompts."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.prompts.list_prompts(active_only=False)
         if data:
             from rich.table import Table
@@ -50,7 +50,7 @@ async def show(
 ):
     """Show detailed information about a specific prompt."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.prompts.get_prompt(prompt_name)
         if data:
             from rich.panel import Panel
@@ -96,7 +96,7 @@ async def add(
 ):
     """Add a new prompt."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         from client.ai_chatbot_sdk import PromptCreate
         prompt_data = PromptCreate(
             name=name,
@@ -124,7 +124,7 @@ async def update(
 ):
     """Update an existing prompt."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         update_data = {}
         if title:
             update_data["title"] = title
@@ -157,7 +157,7 @@ async def remove(
         if not force:
             if not confirm_action(f"Are you sure you want to remove prompt '{prompt_name}'?"):
                 return
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         await sdk.prompts.delete_prompt(prompt_name)
         success_message(f"Prompt '{prompt_name}' removed successfully")
     except Exception as e:
@@ -171,7 +171,7 @@ async def set_default(
 ):
     """Set a prompt as the default."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         await sdk.prompts.set_default_prompt(prompt_name)
         success_message(f"Prompt '{prompt_name}' set as default")
     except Exception as e:
@@ -185,7 +185,7 @@ async def activate(
 ):
     """Activate a prompt."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         update_data = {"is_active": True}
         await sdk.prompts.update_prompt(prompt_name, update_data)
         success_message(f"Prompt '{prompt_name}' activated")
@@ -200,7 +200,7 @@ async def deactivate(
 ):
     """Deactivate a prompt."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         update_data = {"is_active": False}
         await sdk.prompts.update_prompt(prompt_name, update_data)
         success_message(f"Prompt '{prompt_name}' deactivated")
@@ -213,7 +213,7 @@ async def deactivate(
 async def categories():
     """List all available prompt categories."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.prompts.get_categories()
         if data:
             from rich.table import Table
@@ -246,7 +246,7 @@ async def tags():
 async def stats():
     """Show prompt usage statistics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.prompts.get_prompt_stats()
         if data:
             from rich.columns import Columns

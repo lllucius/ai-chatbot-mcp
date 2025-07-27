@@ -11,7 +11,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import (console, error_message, get_sdk_with_auth, info_message,
+from .base import (console, error_message, get_sdk, info_message,
                    success_message, warning_message)
 
 mcp_app = AsyncTyper(help="🔌 MCP server and tool management commands", rich_markup_mode="rich")
@@ -25,7 +25,7 @@ async def list_servers(
 ):
     """List all registered MCP servers."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.list_servers(
             enabled_only=enabled_only,
             connected_only=connected_only,
@@ -47,6 +47,23 @@ async def list_servers(
         error_message(f"Failed to list MCP servers: {str(e)}")
 
 
+@mcp_app.async_command("show-server")
+async def show_server(
+    name: str = Argument(..., help="Server name"),
+):
+    """Show detailed information about a specific MCP server."""
+    try:
+        sdk = await get_sdk()
+        response = await sdk.mcp.get_server(name)
+        if response and response.get("success") and response.get("data"):
+            _display_server_details(response["data"])
+        else:
+            error_message(f"Failed to get MCP server: {response.get('message', 'Unknown error')}")
+    except Exception as e:
+        error_message(f"Failed to show server: {str(e)}")
+        raise SystemExit(1)
+
+
 @mcp_app.async_command("add-server")
 async def add_server(
     name: str = Argument(..., help="Server name"),
@@ -57,7 +74,7 @@ async def add_server(
 ):
     """Add a new MCP server."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.add_server(
             name=name,
             url=url,
@@ -88,7 +105,7 @@ async def remove_server(
             if not confirmed:
                 info_message("Operation cancelled")
                 return
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.remove_server(name)
         if getattr(response, "success", False):
             success_message(f"MCP server '{name}' removed successfully")
@@ -104,7 +121,7 @@ async def enable_server(
 ):
     """Enable an MCP server."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.enable_server(name)
         if response and response.get("success"):
             success_message(f"MCP server '{name}' enabled successfully")
@@ -120,7 +137,7 @@ async def disable_server(
 ):
     """Disable an MCP server."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.disable_server(name)
         if response and response.get("success"):
             success_message(f"MCP server '{name}' disabled successfully")
@@ -136,7 +153,7 @@ async def test_server(
 ):
     """Test connection to an MCP server."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.test_server(name)
         if response and response.get("success"):
             test_result = response.get("data", {})
@@ -161,7 +178,7 @@ async def list_tools(
 ):
     """List all available MCP tools."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.list_tools(
             server=server,
             enabled_only=enabled_only,
@@ -183,6 +200,23 @@ async def list_tools(
         error_message(f"Failed to list MCP tools: {str(e)}")
 
 
+@mcp_app.async_command("show-tool")
+async def show_tool(
+    tool_name: str = Argument(..., help="Server name"),
+    server: Optional[str] = Option(None, "--server", "-s", help="Server name"),
+):
+    """Show detailed information about a specific MCP tool."""
+    try:
+        sdk = await get_sdk()
+        response = await sdk.mcp.get_tool(tool_name, server=server)
+        if response and response.get("success") and response.get("data"):
+            _display_tool_details(response["data"])
+        else:
+            error_message(f"Failed to get MCP tool: {response.get('message', 'Unknown error')}")
+    except Exception as e:
+        error_message(f"Failed to show tool: {str(e)}")
+
+
 @mcp_app.async_command("enable-tool")
 async def enable_tool(
     tool_name: str = Argument(..., help="Tool name to enable"),
@@ -190,7 +224,7 @@ async def enable_tool(
 ):
     """Enable an MCP tool."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.enable_tool(tool_name, server=server)
         if response and response.get("success"):
             success_message(f"MCP tool '{tool_name}' enabled successfully")
@@ -207,7 +241,7 @@ async def disable_tool(
 ):
     """Disable an MCP tool."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.disable_tool(tool_name, server=server)
         if response and response.get("success"):
             success_message(f"MCP tool '{tool_name}' disabled successfully")
@@ -221,7 +255,7 @@ async def disable_tool(
 async def stats():
     """Show MCP usage statistics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.get_stats()
         if not response or not response.get("success"):
             error_message("Failed to retrieve MCP statistics")
@@ -238,7 +272,7 @@ async def refresh(
 ):
     """Refresh MCP server connections and tool discovery."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         response = await sdk.mcp.refresh(server=server)
         if response and response.get("success"):
             success_message("MCP refresh completed successfully")
@@ -264,10 +298,11 @@ def _display_servers_table(servers):
     table.add_column("Transport", style="yellow")
     table.add_column("Tools", style="magenta")
     for server in servers:
-        status = "🟢 Enabled" if server.get("enabled") else "🔴 Disabled"
-        if server.get("connected"):
+        print("SERVER", server)
+        status = "🟢 Enabled" if server.get("is_enabled") else "🔴 Disabled"
+        if server.get("is_connected"):
             status += " (Connected)"
-        elif server.get("enabled"):
+        elif server.get("is_enabled"):
             status += " (Disconnected)"
         table.add_row(
             server.get("name", "Unknown"),
@@ -282,7 +317,7 @@ def _display_servers_table(servers):
 def _display_server_details(server):
     from rich.panel import Panel
     name = server.get("name", "Unknown")
-    status = "🟢 Enabled" if server.get("enabled") else "🔴 Disabled"
+    status = "🟢 Enabled" if server.get("is_enabled") else "🔴 Disabled"
     details = [
         f"Name: [cyan]{name}[/cyan]",
         f"URL: [blue]{server.get('url', '')}[/blue]",
@@ -314,7 +349,7 @@ def _display_tools_table(tools):
     table.add_column("Description", style="white")
     table.add_column("Status", style="green")
     for tool in tools:
-        status = "🟢 Enabled" if tool.get("enabled") else "🔴 Disabled"
+        status = "🟢 Enabled" if tool.get("is_enabled") else "🔴 Disabled"
         table.add_row(
             tool.get("name", "Unknown"),
             tool.get("server_name", ""),
@@ -327,7 +362,7 @@ def _display_tools_table(tools):
 def _display_tool_details(tool):
     from rich.panel import Panel
     name = tool.get("name", "Unknown")
-    status = "🟢 Enabled" if tool.get("enabled") else "🔴 Disabled"
+    status = "🟢 Enabled" if tool.get("is_enabled") else "🔴 Disabled"
     details = [
         f"Name: [cyan]{name}[/cyan]",
         f"Server: [blue]{tool.get('server_name', '')}[/blue]",
@@ -375,7 +410,7 @@ def _display_stats(stats_data):
     servers_table.add_column("Metric", style="cyan")
     servers_table.add_column("Value", style="white")
     servers_table.add_row("Total Servers", str(servers_stats.get("total", 0)))
-    servers_table.add_row("Enabled", str(servers_stats.get("enabled", 0)))
+    servers_table.add_row("Enabled", str(servers_stats.get("is_enabled", 0)))
     servers_table.add_row("Connected", str(servers_stats.get("connected", 0)))
     servers_table.add_row("Disconnected", str(servers_stats.get("disconnected", 0)))
 
@@ -383,7 +418,7 @@ def _display_stats(stats_data):
     tools_table.add_column("Metric", style="cyan")
     tools_table.add_column("Value", style="white")
     tools_table.add_row("Total Tools", str(tools_stats.get("total", 0)))
-    tools_table.add_row("Enabled", str(tools_stats.get("enabled", 0)))
+    tools_table.add_row("Enabled", str(tools_stats.get("is_enabled", 0)))
     tools_table.add_row("Used Today", str(usage_stats.get("today", 0)))
     tools_table.add_row("Used This Week", str(usage_stats.get("week", 0)))
     tools_table.add_row("Used This Month", str(usage_stats.get("month", 0)))

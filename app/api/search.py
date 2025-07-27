@@ -69,7 +69,7 @@ async def search_documents(
     )
 
 
-@router.get("/similar/{chunk_id}", response_model=DocumentSearchResponse)
+@router.get("/similar/byid/{chunk_id}", response_model=DocumentSearchResponse)
 @handle_api_errors("Similar chunks search failed")
 async def find_similar_chunks(
     chunk_id: int,

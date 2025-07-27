@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.llm_profile import LLMProfile
+from ..schemas.llm_profile import (LLMProfileCreate, LLMProfileResponse)
 from .base import BaseService
 
 
@@ -28,66 +29,30 @@ class LLMProfileService(BaseService):
         """
         super().__init__(db, "llm_profile_service")
 
-    async def create_profile(
-        self,
-        name: str,
-        title: str,
-        description: Optional[str] = None,
-        is_default: bool = False,
-        **parameters,
-    ) -> LLMProfile:
+    async def create_profile(self, request: LLMProfileCreate) -> LLMProfile:
         """Create a new LLM profile."""
         operation = "create_profile"
-        self._log_operation_start(operation, name=name, is_default=is_default)
-
+        self._log_operation_start(operation, name=request.name, is_default=request.is_default)
         try:
             await self._ensure_db_session()
-
-            # If setting as default, unset any existing defaults
-            if is_default:
-                await self._bulk_update(LLMProfile, [], {"is_default": False})
-
-            # Separate known parameters from others
-            known_params = {
-                "temperature",
-                "top_p",
-                "top_k",
-                "repeat_penalty",
-                "max_tokens",
-                "max_new_tokens",
-                "context_length",
-                "presence_penalty",
-                "frequency_penalty",
-                "stop",
-            }
-
-            profile_params = {}
-            other_params = {}
-
-            for key, value in parameters.items():
-                if key in known_params:
-                    profile_params[key] = value
-                else:
-                    other_params[key] = value
-
             profile = LLMProfile(
-                name=name,
-                title=title,
-                description=description,
-                is_default=is_default,
-                other_params=other_params if other_params else None,
-                **profile_params,
+                name=request.name,
+                title=request.title,
+                model_name=request.model_name,
+                description=request.description,
+                is_default=request.is_default,
+                **request.parameters,
             )
 
             self.db.add(profile)
             await self.db.commit()
             await self.db.refresh(profile)
 
-            self._log_operation_success(operation, name=name, profile_id=str(profile.id))
+            self._log_operation_success(operation, name=request.name, profile_id=str(profile.id))
             return profile
 
         except Exception as e:
-            self._log_operation_error(operation, e, name=name)
+            self._log_operation_error(operation, e, name=request.name)
             await self.db.rollback()
             raise ValidationError(f"LLM profile creation failed: {e}")
 

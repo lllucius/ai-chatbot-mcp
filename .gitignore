@@ -18,6 +18,7 @@ env/
 .idea/
 *.sublime-project
 *.sublime-workspace
+*.smp
 
 # Build artifacts
 dist/

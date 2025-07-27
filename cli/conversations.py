@@ -10,7 +10,7 @@ from uuid import UUID
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import (console, error_message, format_timestamp, get_sdk_with_auth,
+from .base import (console, error_message, format_timestamp, get_sdk,
                    success_message)
 
 conversation_app = AsyncTyper(help="💬 Conversation management commands")
@@ -24,7 +24,7 @@ async def list(
 ):
     """List conversations."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.conversations.list(page=page, size=size, active_only=active_only)
         if resp and resp.items:
             from rich.table import Table
@@ -56,7 +56,7 @@ async def show(
 ):
     """Show conversation details."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         conv = await sdk.conversations.get(UUID(conversation_id))
         if conv:
             from rich.panel import Panel
@@ -81,7 +81,7 @@ async def export(
 ):
     """Export a conversation to a file."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         from uuid import UUID
         data = await sdk.admin.export_conversation(UUID(conversation_id))
         import json

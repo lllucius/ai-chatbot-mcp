@@ -172,7 +172,7 @@ async def list_users(
     )
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/byid/{user_id}", response_model=UserResponse)
 @handle_api_errors("Failed to retrieve user")
 async def get_user(
     user_id: UUID,
@@ -191,7 +191,7 @@ async def get_user(
     return profile
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/byid/{user_id}", response_model=UserResponse)
 @handle_api_errors("User update failed")
 async def update_user(
     user_id: UUID,
@@ -211,7 +211,7 @@ async def update_user(
     return UserResponse.model_validate(updated_user)
 
 
-@router.delete("/{user_id}", response_model=BaseResponse)
+@router.delete("/byid/{user_id}", response_model=BaseResponse)
 @handle_api_errors("User deletion failed")
 async def delete_user(
     user_id: UUID,

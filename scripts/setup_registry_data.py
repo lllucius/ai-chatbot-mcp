@@ -113,6 +113,7 @@ Focus on making complex technical concepts accessible and actionable.""",
 
 async def create_default_llm_profile():
     """Create a default LLM profile."""
+    print("CREATING DEF")
     try:
         default_profile = await LLMProfileService.create_profile(
             name="balanced",

@@ -104,7 +104,7 @@ class FileUploadResponse(BaseResponse):
     filename: str = Field(description="Original filename")
     file_id: Optional[str] = Field(default=None, description="Generated file ID")
     file_size: int = Field(description="File size in bytes")
-    content_type: Optional[str] = Field(default=None, description="MIME content type")
+    mime_type: Optional[str] = Field(default=None, description="MIME content type")
     upload_url: Optional[str] = Field(default=None, description="URL where file was uploaded")
 
 

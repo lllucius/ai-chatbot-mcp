@@ -66,10 +66,6 @@ class Document(BaseModelDB):
         String(1000), nullable=True, doc="Path to stored file"
     )
 
-    content_type: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True, doc="MIME type of the document"
-    )
-
     file_size: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, doc="File size in bytes"
     )
@@ -80,6 +76,10 @@ class Document(BaseModelDB):
         nullable=False,
         default=FileType.OTHER,
         doc="Type of document",
+    )
+
+    mime_type: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True, doc="MIME type of the document"
     )
 
     status: Mapped[FileStatus] = mapped_column(

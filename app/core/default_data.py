@@ -10,11 +10,30 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.mcp import MCPServerCreateSchema
+from app.schemas.llm_profile import LLMProfileCreate
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_registry import MCPRegistryService
 from app.services.prompt_service import PromptService
+from app.services.user import UserService
 
 logger = logging.getLogger(__name__)
+
+
+async def create_default_admin_user(db: AsyncSession):
+    """Create a default admin user."""
+    try:
+        user_service = UserService(db)
+        default_admin = await user_service.create_user(
+            username="admin",
+            email="admin@localhost",
+            password="adminpass",
+            full_name="Admin User",
+            is_superuser=True)
+        logger.info(f"Created default admin user: {default_admin.username}")
+        return default_admin
+    except Exception as e:
+        logger.warning(f"Failed to create default admin user: {e}")
+        return None
 
 
 async def create_default_prompt(db: AsyncSession):
@@ -118,19 +137,25 @@ Focus on making complex technical concepts accessible and actionable.""",
 async def create_default_llm_profile(db: AsyncSession):
     """Create a default LLM profile."""
     try:
+        default_profile = {
+            "name": "balanced",
+            "title": "Balanced - General Purpose",
+            "model_name": "llama3",
+            "description": "Balanced parameters suitable for general conversation and tasks",
+            "is_default": True,
+            "parameters": {
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "max_tokens": 2000,
+                "presence_penalty": 0.0,
+                "frequency_penalty": 0.0,
+            }
+        }
         profile_service = LLMProfileService(db)
-        default_profile = await profile_service.create_profile(
-            name="balanced",
-            title="Balanced - General Purpose",
-            description="Balanced parameters suitable for general conversation and tasks",
-            is_default=True,
-            temperature=0.7,
-            top_p=0.9,
-            max_tokens=2000,
-            presence_penalty=0.0,
-            frequency_penalty=0.0,
+        profile = await profile_service.create_profile(
+            LLMProfileCreate(**default_profile)
         )
-        logger.info(f"Created default LLM profile: {default_profile.name}")
+        logger.info(f"Created default LLM profile: {profile.name}")
         return default_profile
     except Exception as e:
         logger.warning(f"Failed to create default LLM profile: {e}")
@@ -143,42 +168,58 @@ async def create_sample_llm_profiles(db: AsyncSession):
         {
             "name": "creative",
             "title": "Creative - High Variability",
+            "model_name": "llama3",
             "description": "Higher temperature for creative writing and brainstorming",
-            "temperature": 1.0,
-            "top_p": 0.95,
-            "max_tokens": 3000,
-            "presence_penalty": 0.5,
-            "frequency_penalty": 0.3,
+            "is_default": False,
+            "parameters": {
+                "temperature": 1.0,
+                "top_p": 0.95,
+                "max_tokens": 3000,
+                "presence_penalty": 0.5,
+                "frequency_penalty": 0.3,
+            },
         },
         {
             "name": "precise",
             "title": "Precise - Low Variability",
+            "model_name": "llama3",
             "description": "Lower temperature for factual, technical, or analytical tasks",
-            "temperature": 0.3,
-            "top_p": 0.8,
-            "max_tokens": 1500,
-            "presence_penalty": 0.0,
-            "frequency_penalty": 0.0,
+            "is_default": False,
+            "parameters": {
+                "temperature": 0.3,
+                "top_p": 0.8,
+                "max_tokens": 1500,
+                "presence_penalty": 0.0,
+                "frequency_penalty": 0.0,
+            }
         },
         {
             "name": "concise",
             "title": "Concise - Short Responses",
+            "model_name": "llama3",
             "description": "Optimized for brief, to-the-point responses",
-            "temperature": 0.5,
-            "top_p": 0.85,
-            "max_tokens": 500,
-            "presence_penalty": 0.2,
-            "frequency_penalty": 0.1,
+            "is_default": False,
+            "parameters": {
+                "temperature": 0.5,
+                "top_p": 0.85,
+                "max_tokens": 500,
+                "presence_penalty": 0.2,
+                "frequency_penalty": 0.1,
+            }
         },
         {
             "name": "detailed",
             "title": "Detailed - Comprehensive Responses",
+            "model_name": "llama3",
             "description": "Configured for thorough, detailed explanations",
-            "temperature": 0.6,
-            "top_p": 0.9,
-            "max_tokens": 4000,
-            "presence_penalty": 0.1,
-            "frequency_penalty": 0.0,
+            "is_default": False,
+            "parameters": {
+                "temperature": 0.6,
+                "top_p": 0.9,
+                "max_tokens": 4000,
+                "presence_penalty": 0.1,
+                "frequency_penalty": 0.0,
+            }
         },
     ]
 
@@ -186,7 +227,9 @@ async def create_sample_llm_profiles(db: AsyncSession):
     created_count = 0
     for profile_data in sample_profiles:
         try:
-            profile = await profile_service.create_profile(**profile_data)
+            profile = await profile_service.create_profile(
+                LLMProfileCreate(**profile_data)
+            )
             logger.info(f"Created sample LLM profile: {profile.name}")
             created_count += 1
         except Exception as e:
@@ -205,6 +248,7 @@ async def create_sample_mcp_servers(db: AsyncSession):
             "description": "File system operations and management",
             "transport": "http",
             "timeout": 30,
+            "is_enabled": False,
         },
         {
             "name": "web_search",
@@ -212,6 +256,7 @@ async def create_sample_mcp_servers(db: AsyncSession):
             "description": "Web search and information retrieval",
             "transport": "http",
             "timeout": 45,
+            "is_enabled": False,
         },
         {
             "name": "database",
@@ -219,6 +264,7 @@ async def create_sample_mcp_servers(db: AsyncSession):
             "description": "Database query and management tools",
             "transport": "http",
             "timeout": 60,
+            "is_enabled": False,
         },
     ]
 
@@ -241,6 +287,9 @@ async def initialize_default_data(db: AsyncSession):
     """Initialize all default data for the platform."""
     logger.info("Initializing default data for AI Chatbot Platform...")
 
+    # Create default Admin user
+    default_admin = await create_default_admin_user(db)
+ 
     # Create default prompt
     default_prompt = await create_default_prompt(db)
 
@@ -261,6 +310,8 @@ async def initialize_default_data(db: AsyncSession):
     if default_prompt:
         success_count += 1
     if default_profile:
+        success_count += 1
+    if default_admin:
         success_count += 1
 
     total_created = (

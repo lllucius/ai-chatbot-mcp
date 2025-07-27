@@ -9,7 +9,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Option
 
-from .base import console, error_message, get_sdk_with_auth, success_message
+from .base import console, error_message, get_sdk, success_message
 
 analytics_app = AsyncTyper(help="📊 Analytics and reporting commands")
 
@@ -18,7 +18,7 @@ analytics_app = AsyncTyper(help="📊 Analytics and reporting commands")
 async def overview():
     """Show high-level analytics overview."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.analytics.get_overview()
         if data:
             from rich.table import Table
@@ -43,7 +43,7 @@ async def usage(
 ):
     """Show usage analytics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.analytics.get_usage(period, detailed)
         if data:
             from rich.table import Table
@@ -61,7 +61,7 @@ async def usage(
 async def performance():
     """Show system performance metrics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.analytics.get_performance()
         if data:
             from rich.table import Table
@@ -82,7 +82,7 @@ async def export_report(
 ):
     """Export analytics report."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.analytics.export_report(output=output, details=details)
         if getattr(data, "success", False) or data.get("success", False):
             success_message(f"Analytics report exported{' to ' + output if output else ''}.")

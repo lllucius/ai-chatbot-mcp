@@ -16,7 +16,7 @@ from typer import Argument, Option
 from client.ai_chatbot_sdk import ApiError, RegisterRequest
 
 from .base import (console, display_key_value_pairs, error_message,
-                   format_timestamp, get_sdk_with_auth, info_message,
+                   format_timestamp, get_sdk, info_message,
                    success_message)
 
 user_app = AsyncTyper(help="👥 User management commands")
@@ -34,7 +34,7 @@ async def create(
     Create a new user account with comprehensive validation and setup.
     """
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
 
         # Prompt for password if not provided
         if not password:
@@ -93,7 +93,7 @@ async def list(
 ):
     """List all users with comprehensive filtering and detailed display."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         users_response = await sdk.users.list(
             page=page,
             size=size,
@@ -149,7 +149,7 @@ async def show(
 ):
     """Display detailed information about a specific user."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         user = None
         try:
             user_id = UUID(username_or_id)
@@ -186,7 +186,7 @@ async def show(
 async def stats():
     """Display user statistics and analytics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         stats = await sdk.admin.get_user_stats()
 
         stats_info = {

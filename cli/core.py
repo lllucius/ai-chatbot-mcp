@@ -1,7 +1,7 @@
 """
 Core CLI commands for authentication, config, health, version, and help.
 
-Implements all root-level commands previously in api_manage.py, using async-typer.
+Implements all root-level commands using async-typer.
 """
 
 import os
@@ -15,12 +15,10 @@ from rich.prompt import Prompt
 from rich.table import Table
 from typer import Option
 
-from .auth import get_auth_manager
-from .base import (console, error_message, get_sdk_with_auth, info_message,
+from .base import (console, error_message, get_cli_manager, info_message,
                    success_message, warning_message)
 
 core_app = AsyncTyper(help="Core commands for authentication, config, and system status.")
-
 
 @core_app.async_command()
 async def login(
@@ -28,20 +26,18 @@ async def login(
     password: Optional[str] = Option(None, "--password", "-p", help="Password"),
     save_token: bool = Option(True, "--save-token/--no-save-token", help="Save authentication token"),
 ):
-    """Login to the API and save authentication token."""
+    """
+    Authenticate with the API and optionally save the authentication token.
+    """
     try:
-        auth_manager = get_auth_manager()
-
-        # Prompt for credentials if not provided
+        cli_manager = await get_cli_manager()
         if not username:
             username = Prompt.ask("Username")
         if not password:
             password = Prompt.ask("Password", password=True)
-
-        token_data = await auth_manager.login(username, password)
-
+        token = await cli_manager.login(username, password)
         if save_token:
-            auth_manager.save_token(token_data["access_token"])
+            cli_manager.save_token(token.access_token)
             success_message(f"Logged in successfully as {username}. Token saved.")
         else:
             success_message(f"Logged in successfully as {username}.")
@@ -49,39 +45,39 @@ async def login(
 
         info_panel = Panel(
             f"Access Token: [green]{'*' * 20}[/green]\n"
-            f"Token Type: [blue]{token_data.get('token_type', 'bearer')}[/blue]\n"
-            f"Expires In: [yellow]{token_data.get('expires_in', 'Unknown')} seconds[/yellow]",
+            f"Token Type: [blue]{token.token_type}[/blue]\n"
+            f"Expires In: [yellow]{token.expires_in} seconds[/yellow]",
             title="🔐 Authentication Info",
             border_style="green",
         )
         console.print(info_panel)
-
     except Exception as e:
         error_message(f"Login failed: {str(e)}")
         raise SystemExit(1)
 
-
 @core_app.async_command()
 async def logout():
-    """Logout and remove saved authentication token."""
+    """
+    Log out and remove the saved authentication token.
+    """
     try:
-        auth_manager = get_auth_manager()
-        auth_manager.clear_token()
+        cli_manager = await get_cli_manager()
+        await cli_manager.logout()
         success_message("Logged out successfully. Authentication token removed.")
     except Exception as e:
         error_message(f"Logout failed: {str(e)}")
         raise SystemExit(1)
 
-
 @core_app.async_command("auth-status")
 async def auth_status():
-    """Show current authentication status."""
+    """
+    Show current authentication status and user info.
+    """
     try:
-        auth_manager = get_auth_manager()
-
-        if auth_manager.has_token():
+        cli_manager = await get_cli_manager()
+        if cli_manager.has_token():
             try:
-                user_info = await auth_manager.get_current_user()
+                user_info = await cli_manager.get_current_user()
                 status_panel = Panel(
                     f"Status: [green]Authenticated[/green]\n"
                     f"Username: [blue]{user_info.get('username', 'Unknown')}[/blue]\n"
@@ -101,12 +97,17 @@ async def auth_status():
         error_message(f"Failed to check authentication status: {str(e)}")
         raise SystemExit(1)
 
-
 @core_app.async_command()
 async def version():
-    """Show version information."""
+    """
+    Show version information.
+    """
     try:
-        sdk = await get_sdk_with_auth()
+        # Load config and create SDK directly for version check
+        from client.ai_chatbot_sdk import AIChatbotSDK
+        from client.config import load_config
+        config = load_config()
+        sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         _ = await sdk.health.basic()
         app_info = await sdk._request("/")
         version_info = Panel(
@@ -125,12 +126,16 @@ async def version():
         error_message(f"Failed to get version information: {str(e)}")
         raise SystemExit(1)
 
-
 @core_app.async_command()
 async def health():
-    """Perform comprehensive system health check."""
+    """
+    Perform comprehensive system health check.
+    """
     try:
-        sdk = await get_sdk_with_auth()
+        from client.ai_chatbot_sdk import AIChatbotSDK
+        from client.config import load_config
+        config = load_config()
+        sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         console.print(
             Panel(
                 "Performing comprehensive health check...",
@@ -212,12 +217,16 @@ async def health():
         error_message(f"Health check failed: {str(e)}")
         raise SystemExit(1)
 
-
 @core_app.async_command()
 async def status():
-    """Show overall system status summary."""
+    """
+    Show overall system status summary.
+    """
     try:
-        sdk = await get_sdk_with_auth()
+        from client.ai_chatbot_sdk import AIChatbotSDK
+        from client.config import load_config
+        config = load_config()
+        sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         console.print(
             Panel(
                 f"[bold]AI Chatbot Platform System Status[/bold]\n"
@@ -261,10 +270,11 @@ async def status():
         error_message(f"Status check failed: {str(e)}")
         raise SystemExit(1)
 
-
 @core_app.async_command()
 async def quickstart():
-    """Show quick start guide and common commands."""
+    """
+    Show quick start guide and common commands.
+    """
     quickstart_guide = """
 [bold]🚀 AI Chatbot Platform API CLI - Quick Start[/bold]
 
@@ -274,7 +284,6 @@ async def quickstart():
    • Logout: [cyan]python api_manage.py logout[/cyan]
 ...
 """
-
     console.print(
         Panel(
             quickstart_guide,
@@ -284,14 +293,14 @@ async def quickstart():
         )
     )
 
-
 @core_app.async_command()
 async def config():
-    """Show current configuration and environment settings."""
+    """
+    Show current configuration and environment settings.
+    """
     try:
         from dotenv import load_dotenv
 
-        # Look for .env file in current directory first, then parent
         env_file = Path(".env")
         if not env_file.exists():
             env_file = Path(__file__).parent.parent / ".env"
@@ -302,10 +311,12 @@ async def config():
         else:
             warning_message("No .env file found, using environment variables only")
 
+        cli_manager = await get_cli_manager()
+
         config_data = {
             "API Base URL": os.getenv("API_BASE_URL", "http://localhost:8000"),
             "API Timeout": f"{os.getenv('API_TIMEOUT', '30')} seconds",
-            "Authentication": "Token-based" if get_auth_manager().has_token() else "Not authenticated",
+            "Authentication": "Token-based" if cli_manager.has_token() else "Not authenticated",
             "Config File": str(env_file.absolute()) if env_file.exists() else "Not found",
             "Debug Mode": os.getenv("DEBUG", "false"),
             "Log Level": os.getenv("LOG_LEVEL", "INFO"),
@@ -321,8 +332,7 @@ async def config():
             table.add_row(key, str(value))
         console.print(table)
 
-        auth_manager = get_auth_manager()
-        if auth_manager.has_token():
+        if cli_manager.has_token():
             success_message("Authentication token is present and will be used for API calls.")
         else:
             info_message("No authentication token found. Use 'python api_manage.py login' to authenticate.")

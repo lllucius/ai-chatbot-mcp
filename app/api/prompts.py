@@ -91,7 +91,7 @@ async def list_prompts(
         )
 
 
-@router.get("/{prompt_name}", response_model=PromptResponse)
+@router.get("/byname/{prompt_name}", response_model=PromptResponse)
 @handle_api_errors("Failed to get prompt details")
 async def get_prompt_details(
     prompt_name: str,
@@ -158,7 +158,7 @@ async def get_categories(
         )
 
 
-@router.post("/{prompt_name}/set-default", response_model=BaseResponse)
+@router.post("/byname/{prompt_name}/set-default", response_model=BaseResponse)
 @handle_api_errors("Failed to set default prompt")
 async def set_default_prompt(
     prompt_name: str,
@@ -192,7 +192,7 @@ async def set_default_prompt(
         )
 
 
-@router.get("/stats/", response_model=Dict[str, Any])
+@router.get("/stats", response_model=Dict[str, Any])
 @handle_api_errors("Failed to get prompt statistics")
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),

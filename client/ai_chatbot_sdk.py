@@ -658,18 +658,18 @@ class UsersClient:
         return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
     async def get(self, user_id: UUID) -> UserResponse:
-        return await self.sdk._request(f"/api/v1/users/{user_id}", UserResponse)
+        return await self.sdk._request(f"/api/v1/users/byid/{user_id}", UserResponse)
 
     async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
         return await self.sdk._request(
-            f"/api/v1/users/{user_id}",
+            f"/api/v1/users/byid/{user_id}",
             UserResponse,
             method="PUT",
             json=data.model_dump(),
         )
 
     async def delete(self, user_id: UUID) -> BaseResponse:
-        return await self.sdk._request(f"/api/v1/users/{user_id}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/users/byid/{user_id}", BaseResponse, method="DELETE")
 
 
 class DocumentsClient:
@@ -703,34 +703,34 @@ class DocumentsClient:
         return await self.sdk._request("/api/v1/documents/", DocumentResponse, params=params)
 
     async def get(self, document_id: UUID) -> DocumentResponse:
-        return await self.sdk._request(f"/api/v1/documents/{document_id}", DocumentResponse)
+        return await self.sdk._request(f"/api/v1/documents/byid/{document_id}", DocumentResponse)
 
     async def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
         return await self.sdk._request(
-            f"/api/v1/documents/{document_id}",
+            f"/api/v1/documents/byid/{document_id}",
             DocumentResponse,
             method="PUT",
             json=data.model_dump(),
         )
 
     async def delete(self, document_id: UUID) -> BaseResponse:
-        return await self.sdk._request(f"/api/v1/documents/{document_id}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/documents/byid/{document_id}", BaseResponse, method="DELETE")
 
     async def status(self, document_id: UUID) -> ProcessingStatusResponse:
         return await self.sdk._request(
-            f"/api/v1/documents/{document_id}/status",
+            f"/api/v1/documents/byid/{document_id}/status",
             ProcessingStatusResponse,
         )
 
     async def reprocess(self, document_id: UUID) -> BaseResponse:
         return await self.sdk._request(
-            f"/api/v1/documents/{document_id}/reprocess",
+            f"/api/v1/documents/byid/{document_id}/reprocess",
             BaseResponse,
             method="POST",
         )
 
     async def download(self, document_id: UUID) -> bytes:
-        url = make_url(self.sdk.base_url, f"/api/v1/documents/{document_id}/download")
+        url = make_url(self.sdk.base_url, f"/api/v1/documents/byid/{document_id}/download")
         resp = self.sdk._session.get(url, headers=build_headers(self.sdk.token), stream=True)
         if not resp.ok:
             raise ApiError(resp.status_code, resp.reason, url, resp.text)
@@ -757,13 +757,13 @@ class ConversationsClient:
 
     async def get(self, conversation_id: UUID) -> ConversationResponse:
         return await self.sdk._request(
-            f"/api/v1/conversations/{conversation_id}",
+            f"/api/v1/conversations/byid/{conversation_id}",
             ConversationResponse,
         )
 
     async def update(self, conversation_id: UUID, data: ConversationUpdate) -> ConversationResponse:
         return await self.sdk._request(
-            f"/api/v1/conversations/{conversation_id}",
+            f"/api/v1/conversations/byid/{conversation_id}",
             ConversationResponse,
             method="PUT",
             json=data.model_dump(),
@@ -771,7 +771,7 @@ class ConversationsClient:
 
     async def delete(self, conversation_id: UUID) -> BaseResponse:
         return await self.sdk._request(
-            f"/api/v1/conversations/{conversation_id}",
+            f"/api/v1/conversations/byid/{conversation_id}",
             BaseResponse,
             method="DELETE",
         )
@@ -779,7 +779,7 @@ class ConversationsClient:
     async def messages(self, conversation_id: UUID, page: int = 1, size: int = 50) -> PaginatedResponse:
         params = filter_query({"page": page, "size": size})
         return await self.sdk._request(
-            f"/api/v1/conversations/{conversation_id}/messages",
+            f"/api/v1/conversations/byid/{conversation_id}/messages",
             MessageResponse,
             params=params,
         )
@@ -845,33 +845,6 @@ class SearchClient:
         return await self.sdk._request("/api/v1/search/history", BaseResponse, method="DELETE")
 
 
-class ToolsClient:
-    """Client for MCP tools management."""
-
-    def __init__(self, sdk: "AIChatbotSDK"):
-        self.sdk = sdk
-
-    async def list_tools(self) -> ToolsListResponse:
-        """List all available MCP tools with registry integration."""
-        return await self.sdk._request("/api/v1/tools/", ToolsListResponse)
-
-    async def get_tool(self, tool_name: str) -> ToolResponse:
-        """Get details for a specific tool."""
-        return await self.sdk._request(f"/api/v1/tools/{tool_name}", ToolResponse)
-
-    async def enable_tool(self, tool_name: str) -> BaseResponse:
-        """Enable a specific tool."""
-        return await self.sdk._request(f"/api/v1/tools/{tool_name}/enable", BaseResponse, method="POST")
-
-    async def disable_tool(self, tool_name: str) -> BaseResponse:
-        """Disable a specific tool."""
-        return await self.sdk._request(f"/api/v1/tools/{tool_name}/disable", BaseResponse, method="POST")
-
-    async def get_tool_stats(self) -> Dict[str, Any]:
-        """Get tool usage statistics."""
-        return await self.sdk._request("/api/v1/tools/stats", dict)
-
-
 class MCPClient:
     """Client for MCP server and tools management."""
 
@@ -913,27 +886,27 @@ class MCPClient:
 
     async def get_server(self, server_name: str) -> Dict[str, Any]:
         """Get details for a specific server."""
-        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict)
+        return await self.sdk._request(f"/api/v1/mcp/servers/byname/{server_name}", dict)
 
     async def update_server(self, server_name: str, **kwargs) -> Dict[str, Any]:
         """Update an MCP server."""
-        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}", dict, method="PATCH", json=kwargs)
+        return await self.sdk._request(f"/api/v1/mcp/servers/byname/{server_name}", dict, method="PATCH", json=kwargs)
 
     async def remove_server(self, server_name: str) -> BaseResponse:
         """Remove an MCP server."""
-        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/mcp/servers/byname/{server_name}", BaseResponse, method="DELETE")
 
     async def enable_server(self, server_name: str) -> Dict[str, Any]:
         """Enable an MCP server."""
-        return self.update_server(server_name, enabled=True)
+        return await self.update_server(server_name, enabled=True)
 
     async def disable_server(self, server_name: str) -> Dict[str, Any]:
         """Disable an MCP server."""
-        return self.update_server(server_name, enabled=False)
+        return await self.update_server(server_name, enabled=False)
 
     async def test_server(self, server_name: str) -> Dict[str, Any]:
         """Test connection to an MCP server."""
-        return await self.sdk._request(f"/api/v1/mcp/servers/{server_name}/test", dict, method="POST")
+        return await self.sdk._request(f"/api/v1/mcp/servers/byname/{server_name}/test", dict, method="POST")
 
     # Tools management methods
     async def list_tools(
@@ -950,15 +923,20 @@ class MCPClient:
         })
         return await self.sdk._request("/api/v1/mcp/tools", dict, params=params)
 
+    async def get_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
+        """Get details for a specific tool."""
+        params = filter_query({"server": server})
+        return await self.sdk._request(f"/api/v1/tools/byname/{tool_name}", dict, params=params)
+
     async def enable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
         """Enable an MCP tool."""
         params = filter_query({"server": server})
-        return await self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/enable", dict, method="PATCH", params=params)
+        return await self.sdk._request(f"/api/v1/mcp/tools/byname/{tool_name}/enable", dict, method="PATCH", params=params)
 
     async def disable_tool(self, tool_name: str, server: Optional[str] = None) -> Dict[str, Any]:
         """Disable an MCP tool."""
         params = filter_query({"server": server})
-        return await self.sdk._request(f"/api/v1/mcp/tools/{tool_name}/disable", dict, method="PATCH", params=params)
+        return await self.sdk._request(f"/api/v1/mcp/tools/byname/{tool_name}/disable", dict, method="PATCH", params=params)
 
     # Statistics and refresh methods
     async def get_stats(self) -> Dict[str, Any]:
@@ -989,7 +967,7 @@ class PromptsClient:
 
     async def get_prompt(self, prompt_name: str) -> PromptResponse:
         """Get a specific prompt by name."""
-        return await self.sdk._request(f"/api/v1/prompts/{prompt_name}", PromptResponse)
+        return await self.sdk._request(f"/api/v1/prompts/byname/{prompt_name}", PromptResponse)
 
     async def create_prompt(self, data: PromptCreate) -> PromptResponse:
         """Create a new prompt."""
@@ -1000,12 +978,12 @@ class PromptsClient:
     async def update_prompt(self, prompt_name: str, data: Dict[str, Any]) -> PromptResponse:
         """Update an existing prompt."""
         return await self.sdk._request(
-            f"/api/v1/prompts/{prompt_name}", PromptResponse, method="PUT", json=data
+            f"/api/v1/prompts/byname/{prompt_name}", PromptResponse, method="PUT", json=data
         )
 
     async def delete_prompt(self, prompt_name: str) -> BaseResponse:
         """Delete a prompt."""
-        return await self.sdk._request(f"/api/v1/prompts/{prompt_name}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/prompts/byname/{prompt_name}", BaseResponse, method="DELETE")
 
     async def get_prompt_stats(self) -> Dict[str, Any]:
         """Get prompt usage statistics."""
@@ -1017,7 +995,7 @@ class PromptsClient:
 
     async def set_default_prompt(self, prompt_name: str) -> BaseResponse:
         """Set a prompt as the default."""
-        return await self.sdk._request(f"/api/v1/prompts/{prompt_name}/set-default", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/prompts/byname/{prompt_name}/set-default", BaseResponse, method="POST")
 
 
 class ProfilesClient:
@@ -1035,7 +1013,7 @@ class ProfilesClient:
 
     async def get_profile(self, profile_name: str) -> LLMProfileResponse:
         """Get a specific LLM profile by name."""
-        return await self.sdk._request(f"/api/v1/profiles/{profile_name}", LLMProfileResponse)
+        return await self.sdk._request(f"/api/v1/profiles/byname/{profile_name}", LLMProfileResponse)
 
     async def create_profile(self, data: LLMProfileCreate) -> LLMProfileResponse:
         """Create a new LLM profile."""
@@ -1049,7 +1027,7 @@ class ProfilesClient:
     async def update_profile(self, profile_name: str, data: Dict[str, Any]) -> LLMProfileResponse:
         """Update an existing LLM profile."""
         return await self.sdk._request(
-            f"/api/v1/profiles/{profile_name}",
+            f"/api/v1/profiles/byname/{profile_name}",
             LLMProfileResponse,
             method="PUT",
             json=data,
@@ -1057,7 +1035,7 @@ class ProfilesClient:
 
     async def delete_profile(self, profile_name: str) -> BaseResponse:
         """Delete an LLM profile."""
-        return await self.sdk._request(f"/api/v1/profiles/{profile_name}", BaseResponse, method="DELETE")
+        return await self.sdk._request(f"/api/v1/profiles/byname/{profile_name}", BaseResponse, method="DELETE")
 
     async def get_profile_stats(self) -> Dict[str, Any]:
         """Get LLM profile usage statistics."""
@@ -1065,7 +1043,7 @@ class ProfilesClient:
 
     async def set_default_profile(self, profile_name: str) -> BaseResponse:
         """Set a profile as the default."""
-        return await self.sdk._request(f"/api/v1/profiles/{profile_name}/set-default", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/profiles/byname/{profile_name}/set-default", BaseResponse, method="POST")
 
 
 class AnalyticsClient:
@@ -1206,24 +1184,24 @@ class AdminClient:
     # User admin operations
     async def promote_user(self, user_id: UUID) -> BaseResponse:
         """Promote user to superuser."""
-        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/promote", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/byid/{user_id}/promote", BaseResponse, method="POST")
 
     async def demote_user(self, user_id: UUID) -> BaseResponse:
         """Demote user from superuser."""
-        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/demote", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/byid/{user_id}/demote", BaseResponse, method="POST")
 
     async def activate_user(self, user_id: UUID) -> BaseResponse:
         """Activate user account."""
-        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/activate", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/byid/{user_id}/activate", BaseResponse, method="POST")
 
     async def deactivate_user(self, user_id: UUID) -> BaseResponse:
         """Deactivate user account."""
-        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/deactivate", BaseResponse, method="POST")
+        return await self.sdk._request(f"/api/v1/admin/users/byid/{user_id}/deactivate", BaseResponse, method="POST")
 
     async def reset_user_password(self, user_id: UUID, new_password: Optional[str] = None) -> BaseResponse:
         """Reset user password."""
         data = filter_query({"new_password": new_password})
-        return await self.sdk._request(f"/api/v1/admin/users/{user_id}/reset-password", BaseResponse, method="POST", json=data)
+        return await self.sdk._request(f"/api/v1/admin/users/byid/{user_id}/reset-password", BaseResponse, method="POST", json=data)
 
     async def get_user_stats(self) -> Dict[str, Any]:
         """Get user statistics."""
@@ -1259,7 +1237,7 @@ class AdminClient:
 
     async def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
         """Export conversation."""
-        return await self.sdk._request(f"/api/v1/admin/conversations/{conversation_id}/export", dict)
+        return await self.sdk._request(f"/api/v1/admin/conversations/byid/{conversation_id}/export", dict)
 
     async def import_conversations(self, data: Dict[str, Any]) -> BaseResponse:
         """Import conversations."""
@@ -1339,7 +1317,6 @@ class AIChatbotSDK:
         self.search = SearchClient(self)
 
         # Registry-based clients
-        self.tools = ToolsClient(self)
         self.mcp = MCPClient(self)
         self.prompts = PromptsClient(self)
         self.profiles = ProfilesClient(self)

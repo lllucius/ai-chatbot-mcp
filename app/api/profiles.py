@@ -16,7 +16,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.llm_profile import LLMProfileResponse
+from ..schemas.llm_profile import LLMProfileCreate, LLMProfileResponse
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -26,6 +26,25 @@ router = APIRouter(tags=["profiles"])
 async def get_profile_service(db: AsyncSession = Depends(get_db)) -> LLMProfileService:
     """Get LLM profile service instance."""
     return LLMProfileService(db)
+
+
+@router.post("/", response_model=LLMProfileResponse)
+@handle_api_errors("Failed to create profile")
+async def create_profile(
+    request: LLMProfileCreate,
+    current_user: User = Depends(get_current_user),
+    profile_service: LLMProfileService = Depends(get_profile_service),
+):
+    """
+    Create a new LLM profile.
+
+    Creates a new LLM profile.
+    """
+    log_api_call("create_profile", user_id=current_user.id)
+
+    profile = await profile_service.create_profile(request)
+
+    return LLMProfileResponse.model_validate(profile)
 
 
 @router.get("/", response_model=Dict[str, Any])
@@ -85,7 +104,7 @@ async def list_profiles(
         )
 
 
-@router.get("/{profile_name}", response_model=LLMProfileResponse)
+@router.get("/byname/{profile_name}", response_model=LLMProfileResponse)
 @handle_api_errors("Failed to get profile details")
 async def get_profile_details(
     profile_name: str,
@@ -137,7 +156,7 @@ async def get_profile_details(
     return LLMProfileResponse(**response_data)
 
 
-@router.post("/{profile_name}/set-default", response_model=BaseResponse)
+@router.post("/byname/{profile_name}/set-default", response_model=BaseResponse)
 @handle_api_errors("Failed to set default profile")
 async def set_default_profile(
     profile_name: str,
@@ -202,7 +221,7 @@ async def get_default_profile_parameters(
         )
 
 
-@router.get("/stats/", response_model=Dict[str, Any])
+@router.get("/stats", response_model=Dict[str, Any])
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),

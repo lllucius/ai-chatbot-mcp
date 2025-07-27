@@ -182,21 +182,21 @@ async def init_db(with_default_data: bool = True) -> None:
 
                 logger.info("Database initialized successfully")
 
-                # Initialize default data if requested
-                if with_default_data:
-                    try:
-                        # Create a new session for default data initialization
-                        async with AsyncSessionLocal() as db_session:
-                            result = await initialize_default_data(db_session)
-                            await db_session.commit()
-                            logger.info(
-                                f"Default data initialized: {result['total_created']} items created"
-                            )
-                    except Exception as e:
-                        logger.warning(f"Failed to initialize default data: {e}")
-                        # Don't fail the entire init if default data creation fails
+            # Initialize default data if requested
+            if with_default_data:
+                try:
+                    # Create a new session for default data initialization
+                    async with AsyncSessionLocal() as db_session:
+                        result = await initialize_default_data(db_session)
+                        await db_session.commit()
+                        logger.info(
+                            f"Default data initialized: {result['total_created']} items created"
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to initialize default data: {e}")
+                    # Don't fail the entire init if default data creation fails
 
-                return
+            return
 
         except Exception as e:
             logger.error(

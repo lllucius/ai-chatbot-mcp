@@ -132,7 +132,7 @@ class DocumentService(BaseService):
             filename=file.filename,
             title=title,
             user_id=str(user_id),
-            content_type=file.content_type,
+            mime_type=file.content_type,
         )
 
         try:
@@ -220,12 +220,11 @@ class DocumentService(BaseService):
                 file_path=file_path,
                 file_type=file_extension.lstrip("."),
                 file_size=len(content),
-                content_type=detected_mime_type or file.content_type or file_info.get("mime_type"),
+                mime_type=detected_mime_type or file.content_type or file_info.get("mime_type"),
                 status=FileStatus.PENDING,
                 owner_id=user_id,
                 metainfo={
                     "original_filename": file.filename,
-                    "detected_mime_type": detected_mime_type,
                     "upload_info": file_info,
                     "processing_config": {
                         "chunk_size": settings.default_chunk_size,

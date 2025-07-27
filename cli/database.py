@@ -9,7 +9,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Option
 
-from .base import console, error_message, get_sdk_with_auth, success_message
+from .base import console, error_message, get_sdk, success_message
 
 database_app = AsyncTyper(help="🗄️ Database management commands")
 
@@ -18,7 +18,7 @@ database_app = AsyncTyper(help="🗄️ Database management commands")
 async def status():
     """Get database status."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.database.get_status()
         if data:
             from rich.table import Table
@@ -35,7 +35,7 @@ async def status():
 async def init():
     """Initialize the database."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.database.init_database()
         if getattr(resp, "success", False):
             success_message("Database initialized successfully.")
@@ -50,7 +50,7 @@ async def init():
 async def upgrade():
     """Run database migrations/upgrade."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.database.upgrade()
         if getattr(resp, "success", False):
             success_message("Database upgraded successfully.")
@@ -67,7 +67,7 @@ async def backup(
 ):
     """Create database backup."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.database.backup(output)
         if getattr(resp, "success", False):
             success_message("Database backup created successfully.")
@@ -82,7 +82,7 @@ async def backup(
 async def tables():
     """List database tables."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.database.get_tables()
         if data:
             from rich.table import Table
@@ -102,7 +102,7 @@ async def tables():
 async def vacuum():
     """Vacuum the database."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.database.vacuum()
         if getattr(resp, "success", False):
             success_message("Database vacuum completed successfully.")

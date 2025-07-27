@@ -119,7 +119,7 @@ async def list_tools(
         )
 
 
-@router.get("/{tool_name}", response_model=Dict[str, Any])
+@router.get("/byname/{tool_name}", response_model=Dict[str, Any])
 @handle_api_errors("Failed to get tool details")
 async def get_tool_details(
     tool_name: str,
@@ -179,7 +179,7 @@ async def get_tool_details(
         )
 
 
-@router.post("/{tool_name}/test", response_model=Dict[str, Any])
+@router.post("/byname/{tool_name}/test", response_model=Dict[str, Any])
 @handle_api_errors("Failed to test tool")
 async def test_tool(
     tool_name: str,
@@ -292,7 +292,7 @@ async def refresh_tools(
         )
 
 
-@router.post("/{tool_name}/enable", response_model=BaseResponse)
+@router.post("/byname/{tool_name}/enable", response_model=BaseResponse)
 @handle_api_errors("Failed to enable tool")
 async def enable_tool(
     tool_name: str,
@@ -318,7 +318,7 @@ async def enable_tool(
         )
 
 
-@router.post("/{tool_name}/disable", response_model=BaseResponse)
+@router.post("/byname/{tool_name}/disable", response_model=BaseResponse)
 @handle_api_errors("Failed to disable tool")
 async def disable_tool(
     tool_name: str,

@@ -11,7 +11,7 @@ from async_typer import AsyncTyper
 from typer import Argument, Option
 
 from .base import (console, error_message, format_file_size, format_timestamp,
-                   get_sdk_with_auth, info_message, success_message)
+                   get_sdk, info_message, success_message)
 
 document_app = AsyncTyper(help="📄 Document management commands")
 
@@ -25,7 +25,7 @@ async def list(
 ):
     """List all documents with filtering."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.documents.list(page=page, size=size, file_type=file_type, status=status)
         if resp and resp.items:
             from rich.table import Table
@@ -64,7 +64,7 @@ async def upload(
 ):
     """Upload a new document for processing."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         import os
         if not os.path.exists(file_path):
             error_message(f"File not found: {file_path}")
@@ -88,7 +88,7 @@ async def show(
 ):
     """Show document details."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         doc = await sdk.documents.get(UUID(document_id))
         if doc:
             from rich.panel import Panel
@@ -116,7 +116,7 @@ async def status(
 ):
     """Show processing status for a document."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         status = await sdk.documents.status(UUID(document_id))
         if status:
             from rich.panel import Panel
@@ -140,7 +140,7 @@ async def reprocess(
 ):
     """Reprocess a document."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.documents.reprocess(UUID(document_id))
         if getattr(resp, "success", False):
             success_message("Document reprocessing started.")
@@ -162,7 +162,7 @@ async def delete(
         if not force:
             if not confirm_action(f"Are you sure you want to delete document '{document_id}'?"):
                 return
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         resp = await sdk.documents.delete(UUID(document_id))
         if getattr(resp, "success", False):
             success_message("Document deleted successfully.")

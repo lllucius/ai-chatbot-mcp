@@ -39,7 +39,7 @@ async def get_conversation_service(db: AsyncSession = Depends(get_db)) -> Conver
     return ConversationService(db)
 
 
-@router.get("/conversations/{conversation_id}/export", response_model=Dict[str, Any])
+@router.get("/conversations/byid/{conversation_id}/export", response_model=Dict[str, Any])
 @handle_api_errors("Failed to export conversation")
 async def export_conversation(
     conversation_id: UUID,

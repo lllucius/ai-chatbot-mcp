@@ -1,0 +1,4 @@
+#!/bin/bash
+base="$(dirname $0)"
+PYTHONPATH="${base}" python3.12 "${base}/client/chatbot.py" "$@"
+

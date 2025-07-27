@@ -96,7 +96,7 @@ async def list_conversations(
     )
 
 
-@router.get("/{conversation_id}", response_model=ConversationResponse)
+@router.get("/byid/{conversation_id}", response_model=ConversationResponse)
 @handle_api_errors("Failed to retrieve conversation")
 async def get_conversation(
     conversation_id: UUID,
@@ -119,7 +119,7 @@ async def get_conversation(
     return ConversationResponse.model_validate(conversation)
 
 
-@router.put("/{conversation_id}", response_model=ConversationResponse)
+@router.put("/byid/{conversation_id}", response_model=ConversationResponse)
 @handle_api_errors("Failed to update conversation")
 async def update_conversation(
     conversation_id: UUID,
@@ -144,7 +144,7 @@ async def update_conversation(
     return ConversationResponse.model_validate(conversation)
 
 
-@router.delete("/{conversation_id}", response_model=BaseResponse)
+@router.delete("/byid/{conversation_id}", response_model=BaseResponse)
 @handle_api_errors("Failed to delete conversation")
 async def delete_conversation(
     conversation_id: UUID,
@@ -170,7 +170,7 @@ async def delete_conversation(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
 
-@router.get("/{conversation_id}/messages", response_model=PaginatedResponse[MessageResponse])
+@router.get("/byid/{conversation_id}/messages", response_model=PaginatedResponse[MessageResponse])
 @handle_api_errors("Failed to retrieve messages")
 async def get_messages(
     conversation_id: UUID,

@@ -37,7 +37,7 @@ class LLMProfileCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=1000, description="Profile description")
     model_name: str = Field(..., description="OpenAI model name")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Model parameters")
-    is_active: bool = Field(True, description="Whether profile is active")
+    is_default: bool = Field(False, description="Whether this is the default profile")
 
 
 class LLMProfileUpdate(BaseModel):

@@ -10,7 +10,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, get_sdk_with_auth, success_message
+from .base import console, error_message, get_sdk, success_message
 
 tasks_app = AsyncTyper(help="⚙️ Background task management commands")
 
@@ -19,7 +19,7 @@ tasks_app = AsyncTyper(help="⚙️ Background task management commands")
 async def status():
     """Show background task system status."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.tasks.get_status()
         if data:
             from rich.table import Table
@@ -41,7 +41,7 @@ async def status():
 async def workers():
     """Show information about Celery workers."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.tasks.get_workers()
         if data:
             from rich.table import Table
@@ -75,7 +75,7 @@ async def queue(
 ):
     """Show task queue information."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.tasks.get_queue()
         if data:
             from rich.table import Table
@@ -105,7 +105,7 @@ async def queue(
 async def active():
     """Show currently active tasks."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.tasks.get_active()
         if data:
             from rich.table import Table
@@ -141,7 +141,7 @@ async def schedule(
 ):
     """Schedule a background task for execution."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         params = {
             "task_name": task_name,
             "args": args,
@@ -173,7 +173,7 @@ async def retry_failed(
 ):
     """Retry failed document processing tasks."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.tasks.retry_failed()
         if data:
             from rich.panel import Panel
@@ -206,7 +206,7 @@ async def purge(
         if not confirm_action(f"Are you sure you want to purge all tasks from queue '{queue_name}'?"):
             return
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         await sdk.tasks.purge_queue()
         success_message(f"Purged queue '{queue_name}'.")
     except Exception as e:
@@ -220,7 +220,7 @@ async def stats(
 ):
     """Show task execution statistics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         # Let's assume get_stats returns a summary and recent_errors
         data = await sdk.tasks.monitor(refresh=None, duration=period_hours)
         if data:
@@ -251,7 +251,7 @@ async def stats(
 async def monitor():
     """Get real-time monitoring data for task system."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.tasks.monitor()
         if data:
             from rich.columns import Columns

@@ -59,6 +59,10 @@ class LLMProfile(BaseModelDB):
     description: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, doc="Optional description of the profile's purpose"
     )
+    model_name: Mapped[str] = mapped_column(
+        Text, nullable=True, doc="OpenAI model name"
+    )
+
     is_default: Mapped[bool] = mapped_column(
         Boolean,
         default=False,

@@ -91,11 +91,26 @@ async def list_documents(
         file_type=file_type,
         status_filter=status_filter,
     )
-
-    document_responses = [DocumentResponse.model_validate(doc) for doc in documents]
+    responses = []
+    for document in documents:
+        response = {
+            "id": document.id,
+            "title": document.title,
+            "filename": document.filename,
+            "file_type": document.file_type,
+            "file_size": document.file_size,
+            "mime_type": document.mime_type,
+            "processing_status": document.status,
+            "owner_id": document.owner_id,
+            "metainfo": document.metainfo,
+            "chunk_count": document.chunk_count,
+            "created_at": document.created_at,
+            "updated_at": document.updated_at
+        }
+        responses.append(DocumentResponse.model_validate(response))
 
     return PaginatedResponse.create(
-        items=document_responses,
+        items=responses,
         total=total,
         page=page,
         size=size,
@@ -103,7 +118,7 @@ async def list_documents(
     )
 
 
-@router.get("/{document_id}", response_model=DocumentResponse)
+@router.get("/byid/{document_id}", response_model=DocumentResponse)
 @handle_api_errors("Failed to retrieve document")
 async def get_document(
     document_id: UUID,
@@ -117,10 +132,24 @@ async def get_document(
     owned by the current user.
     """
     document = await document_service.get_document(document_id, current_user.id)
-    return DocumentResponse.model_validate(document)
+    response = {
+        "id": document.id,
+        "title": document.title,
+        "filename": document.filename,
+        "file_type": document.file_type,
+        "file_size": document.file_size,
+        "mime_type": document.mime_type,
+        "processing_status": document.status,
+        "owner_id": document.owner_id,
+        "metainfo": document.metainfo,
+        "chunk_count": document.chunk_count,
+        "created_at": document.created_at,
+        "updated_at": document.updated_at
+    }
+    return DocumentResponse.model_validate(response)
 
 
-@router.put("/{document_id}", response_model=DocumentResponse)
+@router.put("/byid/{document_id}", response_model=DocumentResponse)
 @handle_api_errors("Document update failed")
 async def update_document(
     document_id: UUID,
@@ -138,7 +167,7 @@ async def update_document(
     return DocumentResponse.model_validate(document)
 
 
-@router.delete("/{document_id}", response_model=BaseResponse)
+@router.delete("/byid/{document_id}", response_model=BaseResponse)
 @handle_api_errors("Document deletion failed")
 async def delete_document(
     document_id: UUID,
@@ -159,7 +188,7 @@ async def delete_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
 
 
-@router.get("/{document_id}/status", response_model=ProcessingStatusResponse)
+@router.get("/byid/{document_id}/status", response_model=ProcessingStatusResponse)
 @handle_api_errors("Failed to get processing status", log_errors=True)
 async def get_processing_status(
     document_id: UUID,
@@ -187,7 +216,7 @@ async def get_processing_status(
     return ProcessingStatusResponse(success=True, message=message, **status_info)
 
 
-@router.post("/{document_id}/reprocess", response_model=BaseResponse)
+@router.post("/byid/{document_id}/reprocess", response_model=BaseResponse)
 @handle_api_errors("Reprocessing failed for document", log_errors=True)
 async def reprocess_document(
     document_id: UUID,
@@ -212,7 +241,7 @@ async def reprocess_document(
         )
 
 
-@router.get("/{document_id}/download")
+@router.get("/byid/{document_id}/download")
 @handle_api_errors("Download of document failed", log_errors=True)
 async def download_document(
     document_id: UUID,
@@ -233,7 +262,7 @@ async def download_document(
     return FileResponse(path=file_path, filename=filename, media_type=mime_type)
 
 
-@router.post("/{document_id}/process", response_model=BackgroundTaskResponse)
+@router.post("/byid/{document_id}/process", response_model=BackgroundTaskResponse)
 @handle_api_errors("Failed to start document processing", log_errors=True)
 async def start_document_processing(
     document_id: UUID,

@@ -9,7 +9,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, get_sdk_with_auth, success_message
+from .base import console, error_message, get_sdk, success_message
 
 profile_app = AsyncTyper(help="🎛️ LLM parameter profile management commands")
 
@@ -21,7 +21,7 @@ async def list(
 ):
     """List all LLM profiles with optional filtering."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.profiles.list_profiles(active_only=active_only, search=search)
         if data:
             from rich.table import Table
@@ -54,7 +54,7 @@ async def show(
 ):
     """Show detailed information about a specific LLM profile."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.profiles.get_profile(profile_name)
         if data:
             from rich.table import Table
@@ -88,7 +88,7 @@ async def add(
     """Add a new LLM profile."""
     try:
         import json
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         from client.ai_chatbot_sdk import LLMProfileCreate
         params = json.loads(parameters) if parameters else {}
         profile_data = LLMProfileCreate(
@@ -118,7 +118,7 @@ async def update(
     """Update an existing LLM profile."""
     try:
         import json
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         update_data = {}
         if title:
             update_data["title"] = title
@@ -151,7 +151,7 @@ async def remove(
         if not force:
             if not confirm_action(f"Are you sure you want to remove profile '{profile_name}'?"):
                 return
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         await sdk.profiles.delete_profile(profile_name)
         success_message(f"Profile '{profile_name}' removed successfully")
     except Exception as e:
@@ -165,7 +165,7 @@ async def set_default(
 ):
     """Set a profile as the default."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         await sdk.profiles.set_default_profile(profile_name)
         success_message(f"Profile '{profile_name}' set as default")
     except Exception as e:
@@ -177,7 +177,7 @@ async def set_default(
 async def stats():
     """Show profile usage statistics."""
     try:
-        sdk = await get_sdk_with_auth()
+        sdk = await get_sdk()
         data = await sdk.profiles.get_profile_stats()
         if data:
             from rich.columns import Columns

@@ -69,7 +69,7 @@ async def create_server(
     }
 
 
-@router.get("/servers/{server_name}")
+@router.get("/servers/byname/{server_name}")
 @handle_api_errors("Failed to get MCP server")
 async def get_server(
     server_name: str,
@@ -95,7 +95,7 @@ async def get_server(
     }
 
 
-@router.patch("/servers/{server_name}")
+@router.patch("/servers/byname/{server_name}")
 @handle_api_errors("Failed to update MCP server")
 async def update_server(
     server_name: str,
@@ -116,7 +116,7 @@ async def update_server(
     }
 
 
-@router.delete("/servers/{server_name}", response_model=BaseResponse)
+@router.delete("/servers/byname/{server_name}", response_model=BaseResponse)
 @handle_api_errors("Failed to delete MCP server")
 async def delete_server(
     server_name: str,
@@ -135,7 +135,7 @@ async def delete_server(
     )
 
 
-@router.post("/servers/{server_name}/test")
+@router.post("/servers/byname/{server_name}/test")
 @handle_api_errors("Failed to test MCP server connection")
 async def test_server_connection(
     server_name: str,
@@ -183,7 +183,7 @@ async def list_tools(
     }
 
 
-@router.patch("/tools/{tool_name}/enable", response_model=BaseResponse)
+@router.patch("/tools/byname/{tool_name}/enable", response_model=BaseResponse)
 @handle_api_errors("Failed to enable MCP tool")
 async def enable_tool(
     tool_name: str,
@@ -203,7 +203,7 @@ async def enable_tool(
     )
 
 
-@router.patch("/tools/{tool_name}/disable", response_model=BaseResponse)
+@router.patch("/tools/byname/{tool_name}/disable", response_model=BaseResponse)
 @handle_api_errors("Failed to disable MCP tool")
 async def disable_tool(
     tool_name: str,
