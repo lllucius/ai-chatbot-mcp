@@ -25,7 +25,7 @@ async def create_default_admin_user(db: AsyncSession):
         user_service = UserService(db)
         default_admin = await user_service.create_user(
             username="admin",
-            email="admin@localhost",
+            email="admin@example.com",
             password="adminpass",
             full_name="Admin User",
             is_superuser=True)

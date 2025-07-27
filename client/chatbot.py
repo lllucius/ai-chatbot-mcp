@@ -13,6 +13,7 @@ import os
 import sys
 import threading
 import time
+import asyncio
 from datetime import datetime
 from typing import Optional
 
@@ -163,9 +164,9 @@ class AIChatbotTerminal:
         if self.sdk:
             await self.sdk.__aexit__(exc_type, exc_val, exc_tb)
 
-    def _load_saved_token(self):
+    async def _load_saved_token(self):
         """Load previously saved authentication token."""
-        token_file = self.config.token_file or get_default_token_file()
+        token_file = self.config.client_token_file or get_default_token_file()
         try:
             if os.path.exists(token_file):
                 with open(token_file, "r") as f:
@@ -175,24 +176,24 @@ class AIChatbotTerminal:
                         self.token = token_data["token"]
                         # Try to verify the token
                         try:
-                            user = self.sdk.auth.me()
+                            user = await self.sdk.auth.me()
                             self.username = user.username
                             print(f"Resumed session for {user.username}")
                             return True
                         except ApiError:
                             # Token expired, clear it
-                            self._clear_saved_token()
+                            await self._clear_saved_token()
         except Exception as e:
-            if self.config.debug_mode:
+            if self.config.client_debug_mode:
                 print(f"Error loading saved token: {e}")
         return False
 
-    def _save_token(self, token: str):
+    async def _save_token(self, token: str):
         """Save authentication token for future use."""
-        if not self.config.token_file and not get_default_token_file():
+        if not self.config.client_token_file and not get_default_token_file():
             return
 
-        token_file = self.config.token_file or get_default_token_file()
+        token_file = self.config.client_token_file or get_default_token_file()
         try:
             os.makedirs(os.path.dirname(token_file), exist_ok=True)
             with open(token_file, "w") as f:
@@ -205,61 +206,61 @@ class AIChatbotTerminal:
                     f,
                 )
         except Exception as e:
-            if self.config.debug_mode:
+            if self.config.client_debug_mode:
                 print(f"Error saving token: {e}")
 
-    def _clear_saved_token(self):
+    async def _clear_saved_token(self):
         """Clear saved authentication token."""
-        token_file = self.config.token_file or get_default_token_file()
+        token_file = self.config.client_token_file or get_default_token_file()
         try:
             if os.path.exists(token_file):
                 os.remove(token_file)
         except Exception as e:
-            if self.config.debug_mode:
+            if self.config.client_debug_mode:
                 print(f"Error clearing token: {e}")
 
-    def authenticate(self):
+    async def authenticate(self):
         """Authenticate user with the API and store token."""
         if self.token and self.username:
             return  # Already authenticated
 
         print_boxed("AI Chatbot Login")
         while True:
-            username = self.config.username or input_prompt("Username: ")
-            password = self.config.password or input_prompt("Password: ")
+            username = self.config.client_username or input_prompt("Username: ")
+            password = self.config.client_password or input_prompt("Password: ")
             try:
-                token = self.sdk.auth.login(username=username, password=password)
+                token = await self.sdk.auth.login(username=username, password=password)
                 self.sdk.set_token(token.access_token)
                 self.token = token.access_token
                 self.username = username
-                self._save_token(token.access_token)
+                await self._save_token(token.access_token)
 
-                user = self.sdk.auth.me()
+                user = await self.sdk.auth.me()
                 print(f"Welcome, {user.username}!\n")
                 break
             except ApiError as e:
                 print(
                     f"Login failed: {e.body.get('message') if hasattr(e, 'body') and isinstance(e.body, dict) else str(e)}"
                 )
-                if self.config.username and self.config.password:
+                if self.config.client_username and self.config.client_password:
                     sys.exit(1)
 
-    def new_conversation(self):
+    async def new_conversation(self):
         """Create a new conversation."""
         title = input_prompt("Start a new conversation (title): ").strip()
-        if not title and self.config.auto_title:
+        if not title and self.config.client_auto_title:
             title = f"Chat {time.strftime('%Y-%m-%d %H:%M:%S')}"
         if not title:
             title = "Untitled Conversation"
 
-        convo = self.sdk.conversations.create(ConversationCreate(is_active=True, title=title))
+        convo = await self.sdk.conversations.create(ConversationCreate(is_active=True, title=title))
         self.conversation_id = convo.id
         self.conversation_title = convo.title
         print(f"Started new conversation: {self.conversation_title} (ID: {self.conversation_id})\n")
 
-    def load_conversations(self):
+    async def load_conversations(self):
         """Load and display conversation history with enhanced options."""
-        convos = self.sdk.conversations.list(page=1, size=10, active_only=False)
+        convos = await self.sdk.conversations.list(page=1, size=10, active_only=False)
         if not convos.items:
             print("You have no previous conversations.")
             return False
@@ -284,10 +285,10 @@ class AIChatbotTerminal:
         choice = input_prompt("Choose option: ").strip()
 
         if choice.lower() in ["n", "new"]:
-            self.new_conversation()
+            await self.new_conversation()
             return True
         elif choice.lower() in ["s", "search"]:
-            return self.search_conversations()
+            return await self.search_conversations()
 
         try:
             idx = int(choice)
@@ -303,16 +304,14 @@ class AIChatbotTerminal:
         print("Invalid selection.")
         return False
 
-    def search_conversations(self):
+    async def search_conversations(self):
         """Search through conversations by title or content."""
         query = input_prompt("Search conversations (title): ").strip()
         if not query:
             return False
 
         try:
-            # Get all conversations and filter by title (basic search)
-            # In a real implementation, this could use full-text search
-            convos = self.sdk.conversations.list(page=1, size=50, active_only=False)
+            convos = await self.sdk.conversations.list(page=1, size=50, active_only=False)
             matches = [c for c in convos.items if query.lower() in c.title.lower()]
 
             if not matches:
@@ -340,17 +339,17 @@ class AIChatbotTerminal:
 
         return False
 
-    def show_history(self):
+    async def show_history(self):
         """Show conversation history with pagination."""
         if not self.conversation_id:
             print("No conversation selected.")
             return
 
         try:
-            msgs = self.sdk.conversations.messages(
+            msgs = await self.sdk.conversations.messages(
                 conversation_id=self.conversation_id,
                 page=1,
-                size=self.config.max_history_display,
+                size=self.config.client_max_history_display,
             )
 
             if not msgs.items:
@@ -371,7 +370,7 @@ class AIChatbotTerminal:
         except Exception as e:
             print(f"Error loading conversation history: {e}")
 
-    def chat_loop(self):
+    async def chat_loop(self):
         """Main chat loop for interactive conversation."""
         print_boxed(f"AI Chatbot - {self.conversation_title or 'Untitled'}")
 
@@ -379,20 +378,20 @@ class AIChatbotTerminal:
         print("Current Settings:")
         print(f"  Prompt: {self.current_prompt or 'Default'}")
         print(f"  Profile: {self.current_profile or 'Default'}")
-        print(f"  RAG: {'Enabled' if self.config.default_use_rag else 'Disabled'}")
-        print(f"  Tools: {'Enabled' if self.config.default_use_tools else 'Disabled'}")
-        print(f"  Streaming: {'Enabled' if self.config.enable_streaming else 'Disabled'}")
+        print(f"  RAG: {'Enabled' if self.config.client_default_use_rag else 'Disabled'}")
+        print(f"  Tools: {'Enabled' if self.config.client_default_use_tools else 'Disabled'}")
+        print(f"  Streaming: {'Enabled' if self.config.client_enable_streaming else 'Disabled'}")
         print()
 
         print("Type your message. /help for commands. /exit or Ctrl+D to quit.\n")
-        self.show_history()
+        await self.show_history()
 
         while True:
             msg = input_prompt("You: ")
             if msg.strip() == "":
                 continue
             if msg.startswith("/"):
-                self.handle_command(msg)
+                await self.handle_command(msg)
                 continue
 
             # Prepare chat request with current settings
@@ -400,17 +399,17 @@ class AIChatbotTerminal:
                 user_message=msg,
                 conversation_id=self.conversation_id,
                 conversation_title=self.conversation_title,
-                use_rag=self.config.default_use_rag,
-                use_tools=self.config.default_use_tools,
+                use_rag=self.config.client_default_use_rag,
+                use_tools=self.config.client_default_use_tools,
                 prompt_name=self.current_prompt,
                 profile_name=self.current_profile,
             )
 
             try:
-                if self.config.enable_streaming:
+                if self.config.client_enable_streaming:
                     # Use streaming response
                     print("AI: ", end="", flush=True)
-                    for chunk in self.sdk.conversations.chat_stream(chat_req):
+                    async for chunk in self.sdk.conversations.chat_stream(chat_req):
                         chunk = json.loads(chunk)
                         match chunk["type"]:
                             case "start":
@@ -424,11 +423,12 @@ class AIChatbotTerminal:
                 else:
                     # Show spinner if enabled and not streaming
                     spinner_thread = None
-                    if self.config.spinner_enabled:
+                    running = None
+                    if self.config.client_spinner_enabled:
                         spinner_thread, running = spinner("AI is thinking")
 
                     try:
-                        resp = self.sdk.conversations.chat(chat_req)
+                        resp = await self.sdk.conversations.chat(chat_req)
                         ai_msg = resp.ai_message.content
                         print(f"AI: {ai_msg}\n")
 
@@ -444,19 +444,19 @@ class AIChatbotTerminal:
                 print(f"Error: {e}")
                 continue
 
-    def handle_command(self, cmd: str):
+    async def handle_command(self, cmd: str):
         """Handle special commands during chat with enhanced functionality."""
         cmd = cmd.strip().lower()
 
         if cmd == "/help":
             self.show_help()
         elif cmd == "/history":
-            self.show_history()
+            await self.show_history()
         elif cmd == "/new":
-            self.new_conversation()
+            await self.new_conversation()
             print_boxed(f"AI Chatbot - {self.conversation_title or 'Untitled'}")
         elif cmd == "/list":
-            self.load_conversations()
+            await self.load_conversations()
             print_boxed(f"AI Chatbot - {self.conversation_title or 'Untitled'}")
         elif cmd == "/title":
             print(f"Current conversation: {self.conversation_title or '(none)'}")
@@ -465,19 +465,19 @@ class AIChatbotTerminal:
         elif cmd == "/config":
             self.configure_settings()
         elif cmd.startswith("/prompt"):
-            self.handle_prompt_command(cmd)
+            await self.handle_prompt_command(cmd)
         elif cmd.startswith("/profile"):
-            self.handle_profile_command(cmd)
+            await self.handle_profile_command(cmd)
         elif cmd.startswith("/tools"):
-            self.handle_tools_command(cmd)
+            await self.handle_tools_command(cmd)
         elif cmd.startswith("/docs"):
-            self.handle_docs_command(cmd)
+            await self.handle_docs_command(cmd)
         elif cmd.startswith("/export"):
-            self.export_conversation()
+            await self.export_conversation()
         elif cmd.startswith("/search"):
-            self.search_conversations()
+            await self.search_conversations()
         elif cmd == "/logout":
-            self.logout()
+            await self.logout()
         elif cmd == "/exit":
             print("Goodbye!")
             sys.exit(0)
@@ -531,13 +531,13 @@ class AIChatbotTerminal:
         print(f"Username: {self.username or 'Not logged in'}")
         print(f"Current Prompt: {self.current_prompt or 'Default'}")
         print(f"Current Profile: {self.current_profile or 'Default'}")
-        print(f"RAG Enabled: {self.config.default_use_rag}")
-        print(f"Tools Enabled: {self.config.default_use_tools}")
-        print(f"Streaming Enabled: {self.config.enable_streaming}")
-        print(f"Spinner Enabled: {self.config.spinner_enabled}")
-        print(f"Auto Title: {self.config.auto_title}")
-        print(f"Max History Display: {self.config.max_history_display}")
-        print(f"Debug Mode: {self.config.debug_mode}")
+        print(f"RAG Enabled: {self.config.client_default_use_rag}")
+        print(f"Tools Enabled: {self.config.client_default_use_tools}")
+        print(f"Streaming Enabled: {self.config.client_enable_streaming}")
+        print(f"Spinner Enabled: {self.config.client_spinner_enabled}")
+        print(f"Auto Title: {self.config.client_auto_title}")
+        print(f"Max History Display: {self.config.client_max_history_display}")
+        print(f"Debug Mode: {self.config.client_debug_mode}")
 
     def configure_settings(self):
         """Interactive configuration of settings."""
@@ -545,40 +545,40 @@ class AIChatbotTerminal:
         print()
 
         # Toggle RAG
-        rag_input = input_prompt(f"Enable RAG [{self.config.default_use_rag}]: ").strip().lower()
+        rag_input = input_prompt(f"Enable RAG [{self.config.client_default_use_rag}]: ").strip().lower()
         if rag_input in ["true", "yes", "y", "1"]:
-            self.config.default_use_rag = True
+            self.config.client_default_use_rag = True
         elif rag_input in ["false", "no", "n", "0"]:
-            self.config.default_use_rag = False
+            self.config.client_default_use_rag = False
 
         # Toggle Tools
         tools_input = (
-            input_prompt(f"Enable Tools [{self.config.default_use_tools}]: ").strip().lower()
+            input_prompt(f"Enable Tools [{self.config.client_default_use_tools}]: ").strip().lower()
         )
         if tools_input in ["true", "yes", "y", "1"]:
-            self.config.default_use_tools = True
+            self.config.client_default_use_tools = True
         elif tools_input in ["false", "no", "n", "0"]:
-            self.config.default_use_tools = False
+            self.config.client_default_use_tools = False
 
         # Toggle Streaming
         streaming_input = (
-            input_prompt(f"Enable Streaming [{self.config.enable_streaming}]: ").strip().lower()
+            input_prompt(f"Enable Streaming [{self.config.client_enable_streaming}]: ").strip().lower()
         )
         if streaming_input in ["true", "yes", "y", "1"]:
-            self.config.enable_streaming = True
+            self.config.client_enable_streaming = True
         elif streaming_input in ["false", "no", "n", "0"]:
-            self.config.enable_streaming = False
+            self.config.client_enable_streaming = False
 
         # Max history
         history_input = input_prompt(
-            f"Max History Display [{self.config.max_history_display}]: "
+            f"Max History Display [{self.config.client_max_history_display}]: "
         ).strip()
         if history_input.isdigit():
-            self.config.max_history_display = int(history_input)
+            self.config.client_max_history_display = int(history_input)
 
         print("Settings updated!")
 
-    def handle_prompt_command(self, cmd: str):
+    async def handle_prompt_command(self, cmd: str):
         """Handle prompt-related commands."""
         parts = cmd.split(maxsplit=2)
         if len(parts) < 2:
@@ -589,7 +589,7 @@ class AIChatbotTerminal:
 
         try:
             if action == "list":
-                prompts = self.sdk.prompts.list_prompts()
+                prompts = await self.sdk.prompts.list_prompts()
                 if prompts.get("prompts"):
                     print("Available Prompts:")
                     for prompt in prompts["prompts"]:
@@ -604,7 +604,7 @@ class AIChatbotTerminal:
                     return
                 name = parts[2]
                 try:
-                    prompt = self.sdk.prompts.get_prompt(name)
+                    prompt = await self.sdk.prompts.get_prompt(name)
                     self.current_prompt = name
                     print(f"Now using prompt: {prompt.title}")
                 except ApiError as e:
@@ -616,7 +616,7 @@ class AIChatbotTerminal:
                     print("No prompt specified and no current prompt set.")
                     return
                 try:
-                    prompt = self.sdk.prompts.get_prompt(name)
+                    prompt = await self.sdk.prompts.get_prompt(name)
                     print(f"Prompt: {prompt.title}")
                     print(f"Description: {prompt.description or 'N/A'}")
                     print(f"Category: {prompt.category or 'N/A'}")
@@ -628,13 +628,13 @@ class AIChatbotTerminal:
                     print(f"Error: {e}")
 
             elif action == "reset":
-                self.current_prompt = self.config.default_prompt_name
+                self.current_prompt = self.config.client_default_prompt_name
                 print("Reset to default prompt.")
 
         except Exception as e:
             print(f"Error with prompt command: {e}")
 
-    def handle_profile_command(self, cmd: str):
+    async def handle_profile_command(self, cmd: str):
         """Handle LLM profile-related commands."""
         parts = cmd.split(maxsplit=2)
         if len(parts) < 2:
@@ -645,7 +645,7 @@ class AIChatbotTerminal:
 
         try:
             if action == "list":
-                profiles = self.sdk.profiles.list_profiles()
+                profiles = await self.sdk.profiles.list_profiles()
                 if profiles.get("profiles"):
                     print("Available LLM Profiles:")
                     for profile in profiles["profiles"]:
@@ -661,7 +661,7 @@ class AIChatbotTerminal:
                     return
                 name = parts[2]
                 try:
-                    profile = self.sdk.profiles.get_profile(name)
+                    profile = await self.sdk.profiles.get_profile(name)
                     self.current_profile = name
                     print(f"Now using profile: {profile.title}")
                 except ApiError as e:
@@ -673,7 +673,7 @@ class AIChatbotTerminal:
                     print("No profile specified and no current profile set.")
                     return
                 try:
-                    profile = self.sdk.profiles.get_profile(name)
+                    profile = await self.sdk.profiles.get_profile(name)
                     print(f"Profile: {profile.title}")
                     print(f"Description: {profile.description or 'N/A'}")
                     print(f"Model: {profile.model_name}")
@@ -682,13 +682,13 @@ class AIChatbotTerminal:
                     print(f"Error: {e}")
 
             elif action == "reset":
-                self.current_profile = self.config.default_profile_name
+                self.current_profile = self.config.client_default_profile_name
                 print("Reset to default profile.")
 
         except Exception as e:
             print(f"Error with profile command: {e}")
 
-    def handle_tools_command(self, cmd: str):
+    async def handle_tools_command(self, cmd: str):
         """Handle tools-related commands."""
         parts = cmd.split(maxsplit=2)
         if len(parts) < 2:
@@ -699,14 +699,14 @@ class AIChatbotTerminal:
 
         try:
             if action == "list":
-                tools = self.sdk.tools.list_tools()
+                tools = await self.sdk.tools.list_tools()
                 print(f"Available Tools ({tools.enabled_count}/{tools.total_count} enabled):")
                 for tool in tools.available_tools:
                     status = "✓" if tool.is_enabled else "✗"
                     print(f" {status} {tool.name}: {tool.description[:60]}...")
 
             elif action == "status":
-                tools = self.sdk.tools.list_tools()
+                tools = await self.sdk.tools.list_tools()
                 print("Tools Status:")
                 print(f"  Total Tools: {tools.total_count}")
                 print(f"  Enabled Tools: {tools.enabled_count}")
@@ -721,10 +721,10 @@ class AIChatbotTerminal:
                 tool_name = parts[2]
                 try:
                     if action == "enable":
-                        self.sdk.tools.enable_tool(tool_name)
+                        await self.sdk.tools.enable_tool(tool_name)
                         print(f"Enabled tool: {tool_name}")
                     else:
-                        self.sdk.tools.disable_tool(tool_name)
+                        await self.sdk.tools.disable_tool(tool_name)
                         print(f"Disabled tool: {tool_name}")
                 except ApiError as e:
                     print(f"Error: {e}")
@@ -732,7 +732,7 @@ class AIChatbotTerminal:
         except Exception as e:
             print(f"Error with tools command: {e}")
 
-    def handle_docs_command(self, cmd: str):
+    async def handle_docs_command(self, cmd: str):
         """Handle document-related commands."""
         parts = cmd.split(maxsplit=2)
         if len(parts) < 2:
@@ -743,7 +743,7 @@ class AIChatbotTerminal:
 
         try:
             if action == "list":
-                docs = self.sdk.documents.list(page=1, size=20)
+                docs = await self.sdk.documents.list(page=1, size=20)
                 if docs.items:
                     print("Your Documents:")
                     for doc in docs.items:
@@ -777,7 +777,7 @@ class AIChatbotTerminal:
                     return
                 try:
                     with open(file_path, "rb") as f:
-                        result = self.sdk.documents.upload(f, title=os.path.basename(file_path))
+                        result = await self.sdk.documents.upload(f, title=os.path.basename(file_path))
                     print(f"Uploaded: {result.document.title}")
                     print(f"Processing status: {result.document.processing_status}")
                 except Exception as e:
@@ -789,7 +789,7 @@ class AIChatbotTerminal:
                     return
                 query = parts[2]
                 try:
-                    results = self.sdk.search.search(
+                    results = await self.sdk.search.search(
                         DocumentSearchRequest(query=query, limit=10)
                     )
                     if results.get("results"):
@@ -812,7 +812,7 @@ class AIChatbotTerminal:
                 try:
                     from uuid import UUID
 
-                    status = self.sdk.documents.status(UUID(doc_id))
+                    status = await self.sdk.documents.status(UUID(doc_id))
                     print(f"Document Status: {status.status}")
                     print(f"Progress: {status.progress:.1%}")
                     print(f"Chunks: {status.chunks_processed}/{status.total_chunks}")
@@ -822,7 +822,7 @@ class AIChatbotTerminal:
         except Exception as e:
             print(f"Error with docs command: {e}")
 
-    def export_conversation(self):
+    async def export_conversation(self):
         """Export current conversation to a file."""
         if not self.conversation_id:
             print("No conversation selected.")
@@ -835,7 +835,7 @@ class AIChatbotTerminal:
             size = 100  # Maximum allowed size
             
             while True:
-                msgs = self.sdk.conversations.messages(
+                msgs = await self.sdk.conversations.messages(
                     conversation_id=self.conversation_id, page=page, size=size
                 )
                 
@@ -845,7 +845,7 @@ class AIChatbotTerminal:
                 all_messages.extend(msgs.items)
                 
                 # Check if we have all messages
-                if len(msgs.items) < size or len(all_messages) >= msgs.pagination.total:
+                if len(msgs.items) < size or (hasattr(msgs, "pagination") and hasattr(msgs.pagination, "total") and len(all_messages) >= msgs.pagination.total):
                     break
                     
                 page += 1
@@ -880,27 +880,28 @@ class AIChatbotTerminal:
         except Exception as e:
             print(f"Error exporting conversation: {e}")
 
-    def logout(self):
+    async def logout(self):
         """Logout and clear saved authentication data."""
         try:
-            self.sdk.auth.logout()
+            await self.sdk.auth.logout()
         except Exception:
             pass  # Ignore errors, we're logging out anyway
 
-        self._clear_saved_token()
+        await self._clear_saved_token()
         self.token = None
         self.username = None
         self.sdk.clear_token()
         print("Logged out successfully.")
 
 
-def main(config_file: Optional[str] = None):
+async def main_async(config_file: Optional[str] = None):
     """
     Main entry point for the chatbot terminal application.
 
     Args:
         config_file: Optional path to configuration file.
     """
+    config = None
     try:
         # Set up readline for command history
         setup_readline()
@@ -909,17 +910,18 @@ def main(config_file: Optional[str] = None):
         config = load_config(config_file)
 
         # Initialize chatbot with config
-        bot = AIChatbotTerminal(config)
+        async with AIChatbotTerminal(config) as bot:
 
-        # Authenticate (may reuse saved token)
-        bot.authenticate()
+            # Authenticate (may reuse saved token)
+            await bot.authenticate()
 
-        # Load or start conversation
-        if not bot.load_conversations():
-            bot.new_conversation()
+            # Load or start conversation
+            loaded = await bot.load_conversations()
+            if not loaded:
+                await bot.new_conversation()
 
-        # Start chat loop
-        bot.chat_loop()
+            # Start chat loop
+            await bot.chat_loop()
 
     except KeyboardInterrupt:
         print("\nGoodbye!")
@@ -944,4 +946,4 @@ if __name__ == "__main__":
     if args.debug:
         os.environ["CHATBOT_DEBUG_MODE"] = "true"
 
-    main(args.config)
+    asyncio.run(main_async(args.config))
