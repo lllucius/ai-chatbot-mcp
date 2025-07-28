@@ -278,6 +278,11 @@ async def chat_stream(
     )
 
     async def generate_response():
+        # Must maintain local DB session and service
+        generator = get_db()
+        session: AsyncSession = await anext(generator)
+        conversation_service = ConversationService(session)
+
         # Send initial event
         start_event = StreamStartResponse(message="Generating response...")
         yield f"data: {json.dumps(start_event.model_dump())}\n\n"
@@ -298,17 +303,28 @@ async def chat_stream(
                 elif chunk.get("type") == "complete":
                     # Send completion event with full response
                     response_data = chunk.get("response", {})
-
-                    # Convert Pydantic objects to dictionaries
-                    if "ai_message" in response_data:
-                        response_data["ai_message"] = response_data["ai_message"].model_dump(
-                            mode="json"
-                        )
-                    if "conversation" in response_data:
-                        response_data["conversation"] = response_data["conversation"].model_dump(
-                            mode="json"
-                        )
-
+                    for k, v in response_data.items():
+                        match k:
+                            case "ai_message" | "conversation":
+                                response_data[k] = v.model_dump(mode="json")
+                            case "rag_context":
+                                if v:
+                                    ctx = []
+                                    for item in v:
+                                        item["chunk_id"] = str(item["chunk_id"])
+                                        ctx.append(item)
+                                    response_data[k] = json.dumps(ctx)
+                                else:
+                                    response_data[k] = {}
+                            case "tool_call_summary":
+                                if v:
+                                    response_data[k] = json.dumps(v)
+                                else:
+                                    response_data[k] = {}
+                            case _:
+                                e = f"Unexpected key value: {s}"
+                                error_event = StreamErrorResponse(error=str(e))
+                                yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                     complete_event = StreamCompleteResponse(response=response_data)
                     yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
                     break
@@ -317,7 +333,6 @@ async def chat_stream(
                     error_event = StreamErrorResponse(error=chunk.get("error", "Unknown error"))
                     yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                     break
-
         except Exception as e:
             # Send error event for any unhandled exceptions
             error_event = StreamErrorResponse(error=str(e))
@@ -326,6 +341,8 @@ async def chat_stream(
         # Send end event
         end_event = StreamEndResponse()
         yield f"data: {json.dumps(end_event.model_dump())}\n\n"
+
+        await generator.aclose()
 
     return StreamingResponse(
         generate_response(),

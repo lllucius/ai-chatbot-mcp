@@ -404,6 +404,9 @@ class ConversationService(BaseService):
             await self.db.commit()
             await self.db.refresh(user_message)
             await self.db.refresh(ai_message)
+
+            # Re-fetch conversation to ensure it's persistent
+            conversation = await self.get_conversation(conversation.id, user_id)
             await self.db.refresh(conversation)
 
             logger.info(f"Chat processed for conversation {conversation.id}")
@@ -423,7 +426,6 @@ class ConversationService(BaseService):
                 "tool_call_summary": tool_call_summary,
                 "tool_handling_mode": ai_response.get("tool_handling_mode"),
             }
-
         except Exception as e:
             logger.error(f"Chat processing failed: {e}")
             raise ValidationError(f"Chat processing failed: {e}")
@@ -546,11 +548,15 @@ class ConversationService(BaseService):
             async for chunk in self.openai_client.chat_completion_stream(
                 messages=ai_messages, **openai_params
             ):
-                if chunk.get("type") == "content":
+                chunk_type = chunk.get("type")
+                if chunk_type == "content":
                     content = chunk.get("content", "")
                     full_content += content
-                    yield {"type": "content", "content": content}
-                elif chunk.get("type") == "tool_call":
+                    yield {
+                        "type": "content",
+                        "content": content
+                    }
+                elif chunk_type == "tool_call":
                     yield {
                         "type": "tool_call",
                         "tool": chunk.get("tool"),
@@ -572,6 +578,9 @@ class ConversationService(BaseService):
 
             await self.db.commit()
             await self.db.refresh(ai_message)
+
+            # Re-fetch conversation to ensure it's persistent
+            conversation = await self.get_conversation(conversation.id, user_id)
             await self.db.refresh(conversation)
 
             # Create tool call summary if tools were executed
@@ -589,7 +598,6 @@ class ConversationService(BaseService):
                     "tool_call_summary": tool_call_summary,
                 },
             }
-
         except Exception as e:
             logger.error(f"Streaming chat processing failed: {e}")
             yield {"type": "error", "error": str(e)}

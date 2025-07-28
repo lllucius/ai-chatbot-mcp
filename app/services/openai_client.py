@@ -400,6 +400,8 @@ class OpenAIClient:
                         # Note: OpenAI streams tool calls in parts, we'd need to collect and assemble them
                         if tool_call.function and tool_call.function.name:
                             tool_calls_data.append(tool_call)
+                if chunk.choices[0].finish_reason:
+                    break;
 
             # Execute any tool calls that were collected
             if tool_calls_data:

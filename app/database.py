@@ -23,7 +23,6 @@ from .models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
 
-
 # Create async engine with flexible database configuration
 def _get_engine_config():
     """Get database engine configuration based on database type."""
@@ -64,6 +63,7 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
     expire_on_commit=False,
+    close_resets_only=False
 )
 
 
@@ -80,8 +80,17 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         # Test connection health
         await session.execute(text("SELECT 1"))
 
-        yield session
-        await session.commit()
+        print("\n!====================================================================!")
+        print("! Session created:", session)
+        print("!====================================================================!\n")
+
+        async with session:
+            yield session
+            await session.commit()
+
+        print("\n!====================================================================!")
+        print("! Session closed:", session)
+        print("!====================================================================!\n")
     except (DisconnectionError, OperationalError) as e:
         tb = traceback.extract_tb(sys.exc_info()[2])[-1]
         logger.error(
@@ -125,6 +134,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.rollback()
         raise
     finally:
+        print("\n!====================================================================!")
+        print("! Session finally:", session)
+        print("!====================================================================!\n")
+
         if session:
             await session.close()
 

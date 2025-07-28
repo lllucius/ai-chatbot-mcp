@@ -406,6 +406,8 @@ class AIChatbotTerminal:
             )
 
             try:
+                tokens = 0
+                start = time.time()
                 if self.config.client_enable_streaming:
                     # Use streaming response
                     print("AI: ", end="", flush=True)
@@ -416,6 +418,11 @@ class AIChatbotTerminal:
                                 print(chunk["message"], end="\n", flush=True)
                             case "content":
                                 print(chunk["content"], end="", flush=True)
+                            case "complete":
+                                ai_message = chunk["response"]["ai_message"]
+                                tokens = ai_message["token_count"]
+                            case "end":
+                                pass # Ignore it for now
                             case _:
                                 print(chunk, end="", flush=True)
 
@@ -439,6 +446,9 @@ class AIChatbotTerminal:
                         if spinner_thread:
                             running[0] = False
                             spinner_thread.join()
+                if tokens > 0:
+                    tps = tokens / (time.time() - start)
+                    print(f"Total tokens {tokens} - {tps:.4f}")
 
             except Exception as e:
                 print(f"Error: {e}")
@@ -927,7 +937,7 @@ async def main_async(config_file: Optional[str] = None):
         print("\nGoodbye!")
     except Exception as e:
         print(f"\nUnexpected error: {e}")
-        if config and config.debug_mode:
+        if config and config.client_debug_mode:
             import traceback
 
             traceback.print_exc()
