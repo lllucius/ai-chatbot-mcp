@@ -659,7 +659,7 @@ class ConversationService(BaseService):
             search_request = DocumentSearchRequest(
                 query=request.user_message,
                 limit=5,
-                threshold=0.7,
+                threshold=0.5,
                 algorithm="hybrid",
                 document_ids=request.rag_documents,
             )

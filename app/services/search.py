@@ -39,6 +39,7 @@ from uuid import UUID
 
 from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from ..core.exceptions import NotFoundError, SearchError
 from ..models.document import Document, DocumentChunk
@@ -191,12 +192,12 @@ class SearchService(BaseService):
         """
         Vector similarity search using PGVector ivfflat index.
         - Uses pre-filtering on user_id and other filters for index efficiency.
-        - Returns similarity_score and search_meta for each result.
+        - Returns similarity_score for each result.
         """
         embedding = await self.get_query_embedding(request.query)
         if not embedding:
             raise SearchError("Failed to generate query embedding")
-        
+
         # Validate embedding is a list
         if not isinstance(embedding, list):
             raise SearchError(f"Invalid embedding type: {type(embedding)}, expected list")
@@ -208,6 +209,7 @@ class SearchService(BaseService):
         query = (
             select(DocumentChunk, distance_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
+            .options(joinedload(DocumentChunk.document))
             .where(Document.owner_id == user_id)
             .where(DocumentChunk.embedding.isnot(None))
         )
@@ -224,8 +226,9 @@ class SearchService(BaseService):
             .limit(request.limit)
         )
 
-        result = await self.db.execute(query)
-        rows = result.fetchall()
+        async with self.db as db:
+            result = await db.execute(query)
+            rows = result.fetchall()
 
         # Normalize scores to [0, 1]
         distances = [distance for _, distance in rows]
@@ -240,13 +243,21 @@ class SearchService(BaseService):
         results = []
         for chunk, distance in rows:
             similarity_score = norm(distance)
-            chunk_response = DocumentChunkResponse.model_validate(chunk)
-            chunk_response.similarity_score = similarity_score
-            chunk_response.search_meta = {
-                "method": "vector",
-                "distance": float(distance),
-                "normalized_similarity": similarity_score,
+            response = {
+                "id": chunk.id,
+                "content": chunk.content,
+                "chunk_index": chunk.chunk_index,
+                "start_char": chunk.start_offset,
+                "end_char": chunk.end_offset,
+                "token_count": chunk.token_count,
+                "document_id": chunk.document_id,
+                "document_title": chunk.document.title,
+                "similarity_score": similarity_score,
+                "metainfo": chunk.document.metainfo,
+                "created_at": chunk.created_at,
             }
+
+            chunk_response = DocumentChunkResponse.model_validate(response)
             results.append(chunk_response)
         return results
 
@@ -257,7 +268,6 @@ class SearchService(BaseService):
         Full-text search using Postgres GIN index and tsvector column.
         - Uses plainto_tsquery and tsvector column (content_tsv) for performance.
         - Uses BM25 ranking (if pg_bm25 is installed), else fallback to ts_rank_cd.
-        - Returns search_meta for each result.
         """
         ts_query = func.plainto_tsquery("english", request.query)
         # Check support for bm25
@@ -270,6 +280,7 @@ class SearchService(BaseService):
         query = (
             select(DocumentChunk, rank_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
+            .options(joinedload(DocumentChunk.document))
             .where(Document.owner_id == user_id)
             .where(func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query))
         )
@@ -280,8 +291,9 @@ class SearchService(BaseService):
 
         query = query.order_by(rank_expr.desc()).limit(request.limit)
 
-        result = await self.db.execute(query)
-        rows = result.fetchall()
+        async with self.db as db:
+            result = await db.execute(query)
+            rows = result.fetchall()
 
         # Normalize rank to [0,1]
         ranks = [float(rank) for _, rank in rows]
@@ -295,16 +307,23 @@ class SearchService(BaseService):
         for chunk, rank in rows:
             score = norm(float(rank))
             if score >= request.threshold:
-                chunk_response = DocumentChunkResponse.model_validate(chunk)
-                chunk_response.similarity_score = score
-                chunk_response.search_meta = {
-                    "method": "text",
-                    "bm25_supported": bm25_supported,
-                    "raw_score": float(rank),
-                    "normalized_score": score,
+                response = {
+                    "id": chunk.id,
+                    "content": chunk.content,
+                    "chunk_index": chunk.chunk_index,
+                    "start_char": chunk.start_offset,
+                    "end_char": chunk.end_offset,
+                    "token_count": chunk.token_count,
+                    "document_id": chunk.document_id,
+                    "document_title": chunk.document.title,
+                    "similarity_score": score,
+                    "metainfo": chunk.document.metainfo,
+                    "created_at": chunk.created_at,
                 }
+                chunk_response = DocumentChunkResponse.model_validate(response)
                 results.append(chunk_response)
         results.sort(key=lambda x: x.similarity_score or 0, reverse=True)
+
         return results[: request.limit]
 
     async def _hybrid_search(
@@ -322,21 +341,15 @@ class SearchService(BaseService):
         for result in vector_results:
             chunk_id = result.id
             combined_results[chunk_id] = result
-            combined_results[chunk_id].search_meta = {
-                "methods": ["vector"],
-                **result.search_meta,
-            }
             combined_results[chunk_id].similarity_score = (result.similarity_score or 0) * 0.7
 
         for result in text_results:
             chunk_id = result.id
             if chunk_id in combined_results:
-                combined_results[chunk_id].search_meta["methods"].append("text")
                 text_score = (result.similarity_score or 0) * 0.3
                 combined_results[chunk_id].similarity_score += text_score
             else:
                 result.similarity_score = (result.similarity_score or 0) * 0.3
-                result.search_meta = {"methods": ["text"], **result.search_meta}
                 combined_results[chunk_id] = result
 
         results = list(combined_results.values())
@@ -397,9 +410,6 @@ class SearchService(BaseService):
                 remaining.pop(best_idx)
             else:
                 break
-        for res in selected:
-            if hasattr(res, "search_meta"):
-                res.search_meta["methods"] = ["vector", "mmr"]
         return selected
 
     @staticmethod

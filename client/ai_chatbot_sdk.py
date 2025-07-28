@@ -8,9 +8,10 @@ All methods are async and should be called with await. The SDK uses httpx for as
 requests and supports all the same features as the original synchronous version.
 """
 
+from collections.abc import AsyncIterator
 from datetime import datetime
 from enum import Enum
-from typing import (Any, Callable, Dict, Generic, Iterator, List, Optional,
+from typing import (Any, Callable, Dict, Generic, List, Optional,
                     Type, TypeVar)
 from uuid import UUID
 
@@ -793,27 +794,36 @@ class ConversationsClient:
             json=data.model_dump(mode="json"),
         )
 
-    async def chat_stream(self, data: ChatRequest) -> Iterator[str]:
+    async def chat_stream(self, data: ChatRequest) -> AsyncIterator[str]:
         """Send a message and get streaming AI response."""
         url = make_url(self.sdk.base_url, "/api/v1/conversations/chat/stream")
         headers = build_headers(self.sdk.token)
         headers["Accept"] = "text/event-stream"
 
-        resp = self.sdk._session.post(
-            url, headers=headers, json=data.model_dump(mode="json"), stream=True
-        )
+        if self.sdk._client is None:
+            self.sdk._client = httpx.AsyncClient(timeout=self.sdk.timeout)
 
-        if not resp.ok:
-            raise ApiError(resp.status_code, resp.reason or "", url, resp.text)
+        async with self.sdk._client.stream(
+            "POST",
+            url,
+            headers=headers,
+            json=data.model_dump(mode="json"),
+        ) as resp:
+            if resp.status_code != 200:
+                # Try to read error content
+                try:
+                    error_text = await resp.aread()
+                except Exception:
+                    error_text = ""
+                raise ApiError(resp.status_code, resp.reason_phrase or "", url, error_text)
 
-        # Parse Server-Sent Events
-        for line in resp.iter_lines(decode_unicode=True):
-            if line.startswith("data: "):
-                data_content = line[6:]  # Remove "data: " prefix
-                if data_content.strip() == "[DONE]":
-                    break
-                if data_content.strip():
-                    yield data_content
+            async for line in resp.aiter_lines():
+                if line.startswith("data: "):
+                    data_content = line[6:]  # Remove "data: " prefix
+                    if data_content.strip() == "[DONE]":
+                        break
+                    if data_content.strip():
+                        yield data_content
 
     async def stats(self) -> Dict[str, Any]:
         return await self.sdk._request("/api/v1/conversations/stats")

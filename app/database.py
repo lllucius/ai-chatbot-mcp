@@ -36,6 +36,7 @@ def _get_engine_config():
         # PostgreSQL-specific configuration
         base_config.update(
             {
+                "echo": True,
                 "pool_pre_ping": True,
                 "pool_size": 20,
                 "max_overflow": 30,
