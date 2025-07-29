@@ -274,6 +274,8 @@ class OpenAIClient:
             dict: Streaming response chunks with content or tool call results
         """
         final_tools = tools or []
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print("UISE", use_tools, tools, self.tool_executor)
         if use_tools and not tools and self.tool_executor:
             try:
                 tools = await self.tool_executor.get_available_tools()

@@ -116,6 +116,7 @@ class FastMCPToolStrategy(ToolExecutionStrategy):
 
         filters = MCPListFiltersSchema(enabled_only=True)
         tools = await self.mcp_client.get_available_tools(filters, db_session)
+        print("TOOLS", tools)
         openai_tools = []
         for tool in tools:
             if tool.is_enabled and tool.server.is_enabled:
