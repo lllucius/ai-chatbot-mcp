@@ -226,9 +226,8 @@ class SearchService(BaseService):
             .limit(request.limit)
         )
 
-        async with self.db as db:
-            result = await db.execute(query)
-            rows = result.fetchall()
+        result = await self.db.execute(query)
+        rows = result.fetchall()
 
         # Normalize scores to [0, 1]
         distances = [distance for _, distance in rows]
