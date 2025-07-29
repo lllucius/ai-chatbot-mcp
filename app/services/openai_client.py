@@ -195,18 +195,23 @@ class OpenAIClient:
 
         if message.tool_calls:
             tool_calls_executed = await self._execute_tool_calls(message.tool_calls)
-
             if tool_handling_mode == ToolHandlingMode.RETURN_RESULTS:
                 final_content = self._format_tool_results_as_content(tool_calls_executed)
+                print("#######################################")
                 logger.info("Returning tool results as content without further completion")
-
             elif tool_handling_mode == ToolHandlingMode.COMPLETE_WITH_RESULTS:
+                print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+                print("MESSAGES", messages)
+                print("TOOL_CALLS", message.tool_calls)
+                print("EXEC", tool_calls_executed)
+                print("PROFILE", llm_profile)
                 final_completion = await self._complete_with_tool_results(
                     messages,
                     message.tool_calls,
                     tool_calls_executed,
                     llm_profile,
                 )
+                print("FINAL COMPLE", final_completion)
                 final_content = final_completion["content"]
                 final_usage["prompt_tokens"] += final_completion["usage"]["prompt_tokens"]
                 final_usage["completion_tokens"] += final_completion["usage"]["completion_tokens"]
@@ -290,6 +295,7 @@ class OpenAIClient:
             full_content = ""
 
             async for chunk in stream:
+                print("CUNK", chunk)
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     full_content += content
@@ -297,9 +303,13 @@ class OpenAIClient:
 
                 if chunk.choices[0].delta.tool_calls:
                     for tool_call in chunk.choices[0].delta.tool_calls:
+                        print("TOOLCALLS", tool_call)
+                        print("FUNC", tool_call.function)
+                        print("FUNCNAME", tool_call.function.name)
                         if tool_call.function and tool_call.function.name:
                             tool_calls_data.append(tool_call)
 
+            print("DATA", tool_calls_data)
             if tool_calls_data:
                 tool_calls_executed = await self._execute_tool_calls(tool_calls_data)
                 for tool_result in tool_calls_executed:
@@ -320,34 +330,37 @@ class OpenAIClient:
             yield {"type": "error", "error": str(e)}
 
     async def _execute_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
-        try:
-            tool_calls = []
-            for tool_call in tool_calls:
-                tool_calls.append(
-                    {
-                        "id": getattr(tool_call, "id", None),
-                        "name": getattr(getattr(tool_call, "function", None), "name", None),
-                        "arguments": json.loads(getattr(getattr(tool_call, "function", None), "arguments", "{}")),
-                    }
-                )
-
-            results = await self.mcp_service.execute_tool_calls(tool_calls)
-            formatted_results = []
-            for result in results:
-                formatted_results.append(
-                    {
-                        "tool_call_id": result.get("tool_call_id"),
-                        "success": result.get("success"),
-                        "content": result.get("content"),
-                        "error": result.get("error"),
-                        "provider": result.get("provider"),
-                        "execution_time_ms": result.get("execution_time_ms"),
-                    }
-                )
-            return formatted_results
-        except Exception as e:
-            logger.error(f"Failed to execute tool calls: {e}")
-            return []
+        #try:
+        print("TOOL_CALLS", tool_calls)
+        tools = []
+        for tool_call in tool_calls:
+            tools.append(
+                {
+                    "id": getattr(tool_call, "id", None),
+                    "name": getattr(getattr(tool_call, "function", None), "name", None),
+                    "arguments": json.loads(getattr(getattr(tool_call, "function", None), "arguments", "{}")),
+                }
+            )
+        print("ASDFASDF", tools)
+        results = await self.mcp_service.execute_tool_calls(tools)
+        print("execute_tool_call rES", results)
+        formatted_results = []
+        for result in results:
+            formatted_results.append(
+                {
+                    "tool_call_id": result.get("tool_call_id"),
+                    "success": result.get("success"),
+                    "content": result.get("content"),
+                    "error": result.get("error"),
+                    "provider": result.get("provider"),
+                    "execution_time_ms": result.get("execution_time_ms"),
+                }
+            )
+        print("FORMATTED RES", formatted_results)
+        return formatted_results
+#        except Exception as e:
+#            logger.error(f"Failed to execute tool calls: {e}")
+#            return []
 
     def _format_tool_results_as_content(self, tool_results: List[Dict[str, Any]]) -> str:
         if not tool_results:
@@ -397,6 +410,7 @@ class OpenAIClient:
             "content": None,
             "tool_calls": [tool_call.model_dump() for tool_call in tool_calls],
         }
+        print("MESSAGE", assistant_message)
         completion_messages.append(assistant_message)
         for tool_call, result in zip(tool_calls, tool_results):
             tool_message = {
@@ -429,6 +443,7 @@ class OpenAIClient:
             else:
                 request_params["temperature"] = 0.7
 
+            print("REQUEST_APRM", request_params)
             response = await self.client.chat.completions.create(**request_params)
             return response
 

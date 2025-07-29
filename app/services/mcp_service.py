@@ -4,14 +4,12 @@ MCP service for registry management, FastMCP client proxy, and tool execution.
 This service provides:
 - Registry CRUD operations for MCP servers and tools (DB layer)
 - FastMCP client proxy logic for tool execution and health checking
-- In-memory registry cache for quick lookup and active connection management
 - Tool execution with retry, parallelization, and API response result caching
 - OpenAI-compatible tool schema formatting for integration
 
 Key Features:
 - Single entry point for all MCP tool operations (including bulk/parallel calls)
 - Consistent retry and error handling with configurable retry parameters
-- Separation of registry caching vs. tool result caching (see docstrings)
 - Improved, comprehensive docstrings at all levels
 
 The service is initialized per-request with an AsyncSession.
@@ -57,10 +55,6 @@ class MCPService:
     def __init__(self, db_session: AsyncSession):
         self.db: AsyncSession = db_session
         self.clients: Dict[str, Client] = {}
-        self._cache_timeout = 300
-        self._last_refresh = 0
-        self._cached_servers: Dict[str, MCPServerSchema] = {}
-        self._cached_tools: Dict[str, MCPToolSchema] = {}
         self.is_initialized = False
         logger.info("MCPService initialized")
 
@@ -439,60 +433,16 @@ class MCPService:
             return await self.discover_tools_from_server(server_name)
         return None
 
-    async def _should_refresh_cache(self) -> bool:
-        return (time.time() - self._last_refresh) > self._cache_timeout
-
-    async def _refresh_from_registry(self):
-        if not settings.mcp_enabled:
-            logger.info("MCP is disabled, skipping registry refresh")
-            return
-        try:
-            filters = MCPListFiltersSchema(enabled_only=True)
-            servers = await self.list_servers(filters)
-            self._cached_servers = {server.name: server for server in servers}
-            tools = await self.list_tools(filters)
-            self._cached_tools = {tool.name: tool for tool in tools if tool.server.is_enabled}
-            self._last_refresh = time.time()
-            logger.info(
-                f"Refreshed from registry: {len(self._cached_servers)} servers, "
-                f"{len(self._cached_tools)} tools"
-            )
-        except Exception as e:
-            logger.error(f"Failed to refresh from registry: {e}")
-            raise ExternalServiceError(f"Registry refresh failed: {e}")
-
     async def initialize(self):
         """
-        Initialize the MCP service registry/cache and server connections.
+        Initialize the MCP service registry/client connections.
         """
         if not settings.mcp_enabled:
             logger.warning("MCP is disabled - cannot initialize MCP clients")
             self.is_initialized = False
             return
-        try:
-            await self._refresh_from_registry()
-            if not self._cached_servers:
-                logger.warning("No enabled MCP servers found in registry")
-                self.is_initialized = False
-                return
-            successful_connections = 0
-            for server_name, server in self._cached_servers.items():
-                try:
-                    await self._connect_server(server)
-                    successful_connections += 1
-                    logger.info(f"✅ Connected to MCP server: {server_name}")
-                except Exception as e:
-                    logger.error(f"❌ Failed to connect to MCP server {server_name}: {e}")
-            tools_count = len([t for t in self._cached_tools.values() if t.server.name in self.clients])
-            self.is_initialized = True
-            logger.info(
-                f"MCPService initialization completed: {successful_connections}/"
-                f"{len(self._cached_servers)} servers, {tools_count} tools available"
-            )
-        except Exception as e:
-            logger.error(f"MCPService initialization failed: {e}")
-            logger.warning("Continuing without MCP integration")
-            self.is_initialized = False
+        self.is_initialized = True
+        logger.info("MCPService initialized (no registry caching)")
 
     async def _connect_server(self, server: MCPServerSchema):
         try:
@@ -558,16 +508,14 @@ class MCPService:
         request: MCPToolExecutionRequestSchema,
     ) -> MCPToolExecutionResultSchema:
         """
-        Execute a single tool call (with MCP registry/cache), using FastMCP client proxy.
+        Execute a single tool call (with MCP registry), using FastMCP client proxy.
         Does NOT apply retry or caching logic. For managed execution use 'execute_tool_call'.
         """
-        if not self.is_initialized:
-            raise ExternalServiceError("MCP client not initialized")
-        if await self._should_refresh_cache():
-            await self._refresh_from_registry()
-        tool = self._cached_tools.get(request.tool_name)
+#        if not self.is_initialized:
+#            raise ExternalServiceError("MCP client not initialized")
+        tool = await self.get_tool(request.tool_name)
         if not tool:
-            available_tools = list(self._cached_tools.keys())
+            available_tools = [t.name for t in await self.list_tools()]
             raise ExternalServiceError(
                 f"Tool '{request.tool_name}' not found. Available: {available_tools}"
             )
@@ -575,7 +523,11 @@ class MCPService:
             raise ExternalServiceError(f"Tool '{request.tool_name}' is disabled")
         server_name = tool.server.name
         if server_name not in self.clients:
-            raise ExternalServiceError(f"Server '{server_name}' not connected")
+            # Connect if not already connected
+            server = await self.get_server(server_name)
+            if not server:
+                raise ExternalServiceError(f"Server '{server_name}' not found")
+            await self._connect_server(server)
         client = self.clients[server_name]
         start_time = time.time()
         success = False
@@ -667,14 +619,12 @@ class MCPService:
         filters: Optional[MCPListFiltersSchema] = None,
     ) -> List[MCPToolSchema]:
         """
-        Return a list of available tools (from cache/registry), optionally filtered.
+        Return a list of available tools (from DB/registry), optionally filtered.
         """
-        if not self.is_initialized:
-            logger.warning("MCP client not initialized - returning empty tools list")
-            return []
-        if await self._should_refresh_cache():
-            await self._refresh_from_registry()
-        tools = list(self._cached_tools.values())
+#        if not self.is_initialized:
+#            logger.warning("MCP client not initialized - returning empty tools list")
+#            return []
+        tools = await self.list_tools(filters)
         if filters:
             if filters.enabled_only:
                 tools = [t for t in tools if t.is_enabled and t.server.is_enabled]
@@ -729,12 +679,12 @@ class MCPService:
         arguments = tool_call.get("arguments", {})
         cache_key = None
 
-        if use_cache:
-            cache_key = make_cache_key("tool_call", tool_name, arguments)
-            cached_result = await api_response_cache.get(cache_key)
-            if cached_result is not None:
-                logger.debug(f"Using cached result for tool call: {tool_name}")
-                return cached_result
+        #if use_cache:
+        #    cache_key = make_cache_key("tool_call", tool_name, arguments)
+        #    cached_result = await api_response_cache.get(cache_key)
+        #    if cached_result is not None:
+        #        logger.debug(f"Using cached result for tool call: {tool_name}")
+        #        return cached_result
 
         last_exception = None
         for attempt in range(max_retries):
@@ -748,7 +698,7 @@ class MCPService:
                 )
                 result = await self.call_tool(req)
                 execution_time = (time.time() - start_time) * 1000
-
+                print("RESULT", result)
                 result_dict = {
                     "tool_call_id": tool_call_id,
                     "tool_name": tool_name,
@@ -758,8 +708,9 @@ class MCPService:
                     "provider": "fastmcp",
                     "execution_time_ms": execution_time,
                 }
-                if use_cache and cache_key and result.success:
-                    await api_response_cache.set(cache_key, result_dict, ttl=cache_ttl)
+                print("RESULTDICT", result_dict)
+                #if use_cache and cache_key and result.success:
+                #    await api_response_cache.set(cache_key, result_dict, ttl=cache_ttl)
                 return result_dict
             except Exception as e:
                 last_exception = e
@@ -845,48 +796,52 @@ class MCPService:
 
     async def health_check(self) -> MCPHealthStatusSchema:
         """
-        Perform a health check of the MCP system: registry, cache, and client connections.
+        Perform a health check of the MCP system: registry and client connections.
         """
+        all_servers = await self.list_servers()
+        all_tools = await self.list_tools()
         health_status = MCPHealthStatusSchema(
             mcp_available=settings.mcp_enabled,
             initialized=self.is_initialized,
-            total_servers=len(self._cached_servers),
+            total_servers=len(all_servers),
             healthy_servers=0,
             unhealthy_servers=0,
-            tools_count=len(self._cached_tools),
+            tools_count=len(all_tools),
             server_status={}
         )
         if not self.is_initialized:
             return health_status
-        for server_name, client in self.clients.items():
-            try:
-                async with client:
-                    await asyncio.wait_for(client.list_tools(), timeout=5)
-                tools_count = len([t for t in self._cached_tools.values() if t.server.name == server_name])
-                health_status.server_status[server_name] = {
-                    "status": "healthy",
-                    "tools_count": tools_count,
-                    "connected": True,
-                }
-                health_status.healthy_servers += 1
-            except Exception as e:
-                health_status.server_status[server_name] = {
-                    "status": "unhealthy",
-                    "error": str(e),
-                    "connected": False,
-                }
-                health_status.unhealthy_servers += 1
-        for server_name in self._cached_servers:
-            if server_name not in self.clients:
-                health_status.server_status[server_name] = {
+        for server in all_servers:
+            server_name = server.name
+            healthy = False
+            if server_name in self.clients:
+                client = self.clients[server_name]
+                try:
+                    async with client:
+                        await asyncio.wait_for(client.list_tools(), timeout=5)
+                    tools_count = len([t for t in all_tools if t.server.name == server_name])
+                    health_status.server_status[server_name] = {
+                        "status": "healthy",
+                        "tools_count": tools_count,
+                        "connected": True,
+                    }
+                    health_status.healthy_servers += 1
+                    healthy = True
+                except Exception as e:
+                    health_status.server_status[server_name] = {
+                        "status": "unhealthy",
+                        "error": str(e),
+                        "connected": False,
+                    }
+                    health_status.unhealthy_servers += 1
+            if not healthy:
+                health_status.server_status.setdefault(server_name, {
                     "status": "disconnected",
-                    "error": "Failed to connect",
+                    "error": "Not connected",
                     "connected": False,
-                }
+                })
                 health_status.unhealthy_servers += 1
         try:
-            all_servers = await self.list_servers()
-            all_tools = await self.list_tools()
             enabled_servers = sum(1 for s in all_servers if s.is_enabled)
             enabled_tools = sum(1 for t in all_tools if t.is_enabled)
             health_status.registry_stats = {
@@ -904,7 +859,7 @@ class MCPService:
 
     async def disconnect_all(self):
         """
-        Disconnect from all MCP servers and clear cached registry/tool state.
+        Disconnect from all MCP servers and clear client state.
         """
         disconnected_servers = []
         for server_name, client in self.clients.items():
@@ -915,16 +870,13 @@ class MCPService:
             except Exception as e:
                 logger.warning(f"Error disconnecting from {server_name}: {e}")
         self.clients.clear()
-        self._cached_servers.clear()
-        self._cached_tools.clear()
-        self._last_refresh = 0
         self.is_initialized = False
         logger.info(f"Disconnected from {len(disconnected_servers)} MCP servers")
 
     async def refresh_from_registry(self):
         """
-        Force a refresh of the MCP registry and re-initialize all server connections/caches.
+        Force a refresh of the MCP registry and clear all client connections.
         """
-        logger.info("Force refreshing MCP client from registry")
+        logger.info("Force refreshing MCP client from registry (connections cleared)")
         await self.disconnect_all()
         await self.initialize()
