@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.mcp import MCPServerCreateSchema
 from app.schemas.llm_profile import LLMProfileCreate
 from app.services.llm_profile_service import LLMProfileService
-from app.services.mcp_registry import MCPRegistryService
+from app.services.mcp_service import MCPService
 from app.services.prompt_service import PromptService
 from app.services.user import UserService
 
@@ -268,12 +268,12 @@ async def create_sample_mcp_servers(db: AsyncSession):
         },
     ]
 
-    registry = MCPRegistryService(db)
+    mcp_service = MCPService(db)
     created_count = 0
     for server_data in sample_servers:
         try:
             server_schema = MCPServerCreateSchema(**server_data)
-            server = await registry.create_server(server_schema, auto_discover=False)
+            server = await mcp_service.create_server(server_schema, auto_discover=False)
             logger.info(f"Created sample MCP server: {server.name}")
             created_count += 1
         except Exception as e:

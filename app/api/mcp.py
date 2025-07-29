@@ -16,7 +16,7 @@ from ..models.user import User
 from ..schemas.common import BaseResponse
 from ..schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
                            MCPServerUpdateSchema)
-from ..services.mcp_registry import MCPRegistryService
+from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["mcp"])
@@ -34,13 +34,13 @@ async def list_servers(
     """List all registered MCP servers."""
     log_api_call("list_mcp_servers", user_id=current_user.id)
 
-    registry = MCPRegistryService(db)
+    mcp_service = MCPService(db)
     filters = MCPListFiltersSchema(
         enabled_only=enabled_only,
         connected_only=connected_only
     )
     
-    servers = await registry.list_servers(filters)
+    servers = await mcp_service.list_servers(filters)
     
     return {
         "success": True,
@@ -59,8 +59,8 @@ async def create_server(
     """Create a new MCP server."""
     log_api_call("create_mcp_server", user_id=current_user.id, server_name=server_data.name)
 
-    registry = MCPRegistryService(db)
-    server = await registry.add_server(server_data)
+    mcp_service = MCPService(db)
+    server = await mcp_service.add_server(server_data)
     
     return {
         "success": True,
@@ -79,8 +79,8 @@ async def get_server(
     """Get details of a specific MCP server."""
     log_api_call("get_mcp_server", user_id=current_user.id, server_name=server_name)
 
-    registry = MCPRegistryService(db)
-    server = await registry.get_server(server_name)
+    mcp_service = MCPService(db)
+    server = await mcp_service.get_server(server_name)
     
     if not server:
         raise HTTPException(
@@ -106,8 +106,8 @@ async def update_server(
     """Update an MCP server."""
     log_api_call("update_mcp_server", user_id=current_user.id, server_name=server_name)
 
-    registry = MCPRegistryService(db)
-    server = await registry.update_server(server_name, server_update)
+    mcp_service = MCPService(db)
+    server = await mcp_service.update_server(server_name, server_update)
     
     return {
         "success": True,
@@ -126,8 +126,8 @@ async def delete_server(
     """Delete an MCP server."""
     log_api_call("delete_mcp_server", user_id=current_user.id, server_name=server_name)
 
-    registry = MCPRegistryService(db)
-    await registry.remove_server(server_name)
+    mcp_service = MCPService(db)
+    await mcp_service.remove_server(server_name)
     
     return BaseResponse(
         success=True,
@@ -145,8 +145,8 @@ async def test_server_connection(
     """Test connection to an MCP server."""
     log_api_call("test_mcp_server", user_id=current_user.id, server_name=server_name)
 
-    registry = MCPRegistryService(db)
-    test_result = await registry.test_connection(server_name)
+    mcp_service = MCPService(db)
+    test_result = await mcp_service.test_connection(server_name)
     
     return {
         "success": True,
@@ -167,14 +167,14 @@ async def list_tools(
     """List all available MCP tools."""
     log_api_call("list_mcp_tools", user_id=current_user.id)
 
-    registry = MCPRegistryService(db)
+    mcp_service = MCPService(db)
     
     # Build filters
     filters = MCPListFiltersSchema(enabled_only=enabled_only)
     if server:
         filters.server_name = server
     
-    tools = await registry.list_tools(filters)
+    tools = await mcp_service.list_tools(filters)
     
     return {
         "success": True,
@@ -194,8 +194,8 @@ async def enable_tool(
     """Enable an MCP tool."""
     log_api_call("enable_mcp_tool", user_id=current_user.id, tool_name=tool_name)
 
-    registry = MCPRegistryService(db)
-    await registry.enable_tool(tool_name, server_name=server)
+    mcp_service = MCPService(db)
+    await mcp_service.enable_tool(tool_name, server_name=server)
     
     return BaseResponse(
         success=True,
@@ -214,8 +214,8 @@ async def disable_tool(
     """Disable an MCP tool."""
     log_api_call("disable_mcp_tool", user_id=current_user.id, tool_name=tool_name)
 
-    registry = MCPRegistryService(db)
-    await registry.disable_tool(tool_name, server_name=server)
+    mcp_service = MCPService(db)
+    await mcp_service.disable_tool(tool_name, server_name=server)
     
     return BaseResponse(
         success=True,
@@ -232,8 +232,8 @@ async def get_mcp_stats(
     """Get MCP usage statistics."""
     log_api_call("get_mcp_stats", user_id=current_user.id)
 
-    registry = MCPRegistryService(db)
-    stats = await registry.get_statistics()
+    mcp_service = MCPService(db)
+    stats = await mcp_service.get_statistics()
     
     return {
         "success": True,
@@ -252,16 +252,16 @@ async def refresh_mcp(
     """Refresh MCP server connections and tool discovery."""
     log_api_call("refresh_mcp", user_id=current_user.id, server=server)
 
-    registry = MCPRegistryService(db)
+    mcp_service = MCPService(db)
     
     if server:
         # Refresh specific server
-        result = await registry.refresh_server(server)
+        result = await mcp_service.refresh_server(server)
         servers_refreshed = 1 if result else 0
         tools_discovered = len(result.get("tools", [])) if result else 0
     else:
         # Refresh all servers
-        result = await registry.refresh_all_servers()
+        result = await mcp_service.refresh_all_servers()
         servers_refreshed = result.get("servers_refreshed", 0)
         tools_discovered = result.get("tools_discovered", 0)
     

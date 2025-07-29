@@ -2,24 +2,21 @@
 Tools API endpoints for MCP tools management with registry integration.
 
 This module provides endpoints for managing MCP (Model Context Protocol) tools
-using the refactored registry service and client, with Pydantic schemas
-throughout for consistent API responses.
+using the unified MCPService for both registry and client operations.
 
 """
-
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..dependencies import get_current_superuser
+from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
 from ..schemas.common import BaseResponse
 from ..schemas.mcp import (MCPListFiltersSchema, MCPToolExecutionRequestSchema,
                            OpenAIToolSchema)
-from ..services.mcp_client import get_mcp_client
-from ..services.mcp_registry import MCPRegistryService
+from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["tools"])
@@ -32,35 +29,23 @@ async def list_tools(
     server_name: Optional[str] = None,
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     List all available MCP tools with registry integration.
-
-    Returns information about all configured MCP tools including their
-    status, schemas, configuration details, and usage statistics from
-    the registry system.
-
-    Only available to superusers.
     """
     log_api_call("list_tools", user_id=current_user.id)
 
     try:
-        # Get tools from registry using new service
-        registry = MCPRegistryService(db)
         filters = MCPListFiltersSchema(
             enabled_only=enabled_only,
             server_name=server_name
         )
-        tools = await registry.list_tools(filters)
-        
-        # Get servers for status info
-        servers = await registry.list_servers()
+        tools = await mcp_service.list_tools(filters)
+        servers = await mcp_service.list_servers()
 
-        # Get MCP client for OpenAI tools format
-        mcp_client = await get_mcp_client(db)
-        await mcp_client.get_available_tools(filters, db)
+        await mcp_service.get_available_tools(filters)
 
-        # Convert to OpenAI format for enabled tools
         openai_tools = []
         for tool in tools:
             if tool.is_enabled and tool.server.is_enabled:
@@ -74,7 +59,6 @@ async def list_tools(
                 )
                 openai_tools.append(openai_tool)
 
-        # Server status summary
         server_status = []
         for server in servers:
             server_tools = [t for t in tools if t.server.name == server.name]
@@ -88,7 +72,6 @@ async def list_tools(
                 "connection_errors": server.connection_errors,
             })
 
-        # Convert tools to response format
         tool_responses = []
         for tool in tools:
             tool_responses.append({
@@ -124,19 +107,15 @@ async def list_tools(
 async def get_tool_details(
     tool_name: str,
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     Get detailed information about a specific tool with registry integration.
-
-    Returns the complete schema, configuration, status information,
-    and usage statistics for the specified tool.
     """
     log_api_call("get_tool_details", user_id=current_user.id, tool_name=tool_name)
 
     try:
-        registry = MCPRegistryService(db)
-        tool = await registry.get_tool(tool_name)
+        tool = await mcp_service.get_tool(tool_name)
 
         if not tool:
             raise HTTPException(
@@ -185,44 +164,33 @@ async def test_tool(
     tool_name: str,
     test_params: Optional[Dict[str, Any]] = None,
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     Test a tool with optional parameters using registry integration.
-
-    Executes the tool with provided test parameters to verify
-    it's working correctly.
     """
     log_api_call("test_tool", user_id=current_user.id, tool_name=tool_name)
 
     try:
-        registry = MCPRegistryService(db)
-        tool = await registry.get_tool(tool_name)
-        
+        tool = await mcp_service.get_tool(tool_name)
         if not tool:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Tool '{tool_name}' not found in registry",
             )
-
         if not tool.is_enabled:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Tool '{tool_name}' is disabled",
             )
-
-        # Use empty parameters if none provided
         if test_params is None:
             test_params = {}
-
-        # Execute the tool
-        mcp_client = await get_mcp_client(db)
         request = MCPToolExecutionRequestSchema(
             tool_name=tool_name,
             parameters=test_params,
             record_usage=True
         )
-        result = await mcp_client.call_tool(request, db)
+        result = await mcp_service.call_tool(request)
 
         return {
             "success": True,
@@ -253,24 +221,19 @@ async def test_tool(
 @handle_api_errors("Failed to refresh tools")
 async def refresh_tools(
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     Refresh tool discovery and reconnect to MCP servers with registry integration.
-
-    Triggers a fresh discovery of all available tools from configured MCP servers
-    and updates the registry with new tool information.
     """
     log_api_call("refresh_tools", user_id=current_user.id)
 
     try:
-        registry = MCPRegistryService(db)
-        results = await registry.discover_tools_all_servers()
+        results = await mcp_service.discover_tools_all_servers()
 
         if not results:
             return BaseResponse(success=True, message="No enabled servers found for tool discovery")
 
-        # Summarize results
         total_new = sum(r.new_tools for r in results if r.success)
         total_updated = sum(r.updated_tools for r in results if r.success)
         failed_servers = [r.server_name for r in results if not r.success]
@@ -279,9 +242,7 @@ async def refresh_tools(
         if failed_servers:
             message += f". Failed servers: {', '.join(failed_servers)}"
 
-        # Also refresh the MCP client cache
-        mcp_client = await get_mcp_client(db)
-        await mcp_client.refresh_from_registry(db)
+        await mcp_service.refresh_from_registry()
 
         return BaseResponse(success=True, message=message)
 
@@ -297,17 +258,14 @@ async def refresh_tools(
 async def enable_tool(
     tool_name: str,
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     Enable a specific tool in the registry.
-
-    Enables the tool for use in conversations and tool calling.
     """
     log_api_call("enable_tool", user_id=current_user.id, tool_name=tool_name)
 
-    registry = MCPRegistryService(db)
-    success = await registry.enable_tool(tool_name)
+    success = await mcp_service.enable_tool(tool_name)
 
     if success:
         return BaseResponse(success=True, message=f"Tool '{tool_name}' enabled successfully")
@@ -323,17 +281,14 @@ async def enable_tool(
 async def disable_tool(
     tool_name: str,
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     Disable a specific tool in the registry.
-
-    Disables the tool from being used in conversations and tool calling.
     """
     log_api_call("disable_tool", user_id=current_user.id, tool_name=tool_name)
 
-    registry = MCPRegistryService(db)
-    success = await registry.disable_tool(tool_name)
+    success = await mcp_service.disable_tool(tool_name)
 
     if success:
         return BaseResponse(success=True, message=f"Tool '{tool_name}' disabled successfully")
@@ -348,19 +303,15 @@ async def disable_tool(
 @handle_api_errors("Failed to get server status")
 async def get_server_status(
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
     Get status of all configured MCP servers with registry integration.
-
-    Returns connection status, tool counts, and health information
-    for all configured MCP servers from the registry.
     """
     log_api_call("get_server_status", user_id=current_user.id)
 
     try:
-        registry = MCPRegistryService(db)
-        servers = await registry.list_servers()
+        servers = await mcp_service.list_servers()
 
         if not servers:
             return {
@@ -379,9 +330,8 @@ async def get_server_status(
         enabled_count = 0
 
         for server in servers:
-            # Get tools for this server
             filters = MCPListFiltersSchema(server_name=server.name)
-            tools = await registry.list_tools(filters)
+            tools = await mcp_service.list_tools(filters)
 
             server_status[server.name] = {
                 "name": server.name,

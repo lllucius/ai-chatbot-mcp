@@ -16,11 +16,10 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (analytics_router, auth_router, conversation_admin_router,
-                  conversations_router, database_router, document_admin_router,
-                  documents_router, health_router, mcp_router, profiles_router,
-                  prompts_router, search_router, tasks_router, tools_router,
-                  user_admin_router, users_router)
+from .api import (analytics_router, auth_router, conversations_router,
+                  database_router, documents_router, health_router, mcp_router,
+                  profiles_router, prompts_router, search_router, tasks_router,
+                  tools_router, users_router)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .core.logging import get_component_logger, setup_logging
@@ -75,17 +74,6 @@ async def lifespan(app: FastAPI):
             logger.error(f"Background document processor initialization failed: {e}")
             # This is critical for document processing, log error but continue
             raise
-
-        # Initialize FastMCP and UnifiedToolExecutor
-        try:
-            from .core.tool_executor import get_unified_tool_executor
-
-            await get_unified_tool_executor()
-            logger.info("UnifiedToolExecutor initialized successfully")
-        except Exception as e:
-            logger.warning(f"UnifiedToolExecutor initialization failed (optional): {e}")
-            # Continue without unified tools - it's not critical for basic operation
-
     except Exception as e:
         logger.error(f"Application initialization failed: {e}")
         raise
@@ -110,10 +98,8 @@ async def lifespan(app: FastAPI):
         # Cleanup UnifiedToolExecutor and MCP
         try:
             from .core.tool_executor import cleanup_unified_tool_executor
-            from .services.mcp_client import cleanup_mcp_client
 
             await cleanup_unified_tool_executor()
-            await cleanup_mcp_client()
             logger.info("Tool execution system cleaned up")
         except Exception as e:
             logger.warning(f"Tool execution cleanup failed: {e}")
@@ -306,36 +292,19 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # API Routes
-app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
-
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
-
-app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
-app.include_router(user_admin_router, prefix="/api/v1/admin", tags=["user-admin"])
-
-app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
-app.include_router(document_admin_router, prefix="/api/v1/admin", tags=["document-admin"])
-
-app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["conversations"])
-app.include_router(conversation_admin_router, prefix="/api/v1/admin", tags=["conversation-admin"])
-
-app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
-
-app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
-
-app.include_router(mcp_router, prefix="/api/v1/mcp", tags=["mcp"])
-
-# Registry-based API routes
-app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
-
-app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"])
-
-# Management API routes
 app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
-
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
+app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["conversations"])
 app.include_router(database_router, prefix="/api/v1/database", tags=["database"])
-
+app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
+app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
+app.include_router(mcp_router, prefix="/api/v1/mcp", tags=["mcp"])
+app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"])
+app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
+app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(tasks_router, prefix="/api/v1/tasks", tags=["tasks"])
+app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
+app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 
 
 # Root endpoint

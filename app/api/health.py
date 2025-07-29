@@ -7,7 +7,7 @@ including database connectivity, external services, and system metrics.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
@@ -15,8 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
+from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
 from ..schemas.common import BaseResponse
+from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import (api_response_cache, embedding_cache,
                              search_result_cache)
@@ -46,7 +48,10 @@ async def basic_health_check() -> Dict[str, Any]:
 
 @router.get("/detailed")
 @handle_api_errors("Health check failed")
-async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+async def detailed_health_check(
+    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
+) -> Dict[str, Any]:
     """
     Detailed health check with all system components.
 
@@ -68,12 +73,11 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
         "database": await _check_database_health(db),
         "cache": await _check_cache_health(),
         "openai": await _check_openai_health(),
-        "fastmcp": await _check_fastmcp_health(db),
+        "fastmcp": await _check_fastmcp_health(mcp_service),
         "timestamp": utcnow(),
         "overall_status": "healthy",
     }
 
-    # Determine overall status
     component_statuses = [
         health_status["database"]["status"],
         health_status["cache"]["status"],
@@ -94,12 +98,6 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
 async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
     """
     Database connectivity health check.
-
-    Args:
-        db: Database session
-
-    Returns:
-        dict: Database health status
     """
     log_api_call("database_health_check")
     return await _check_database_health(db)
@@ -107,57 +105,45 @@ async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
 
 @router.get("/services")
 @handle_api_errors("Services health check failed")
-async def services_health_check() -> Dict[str, Any]:
+async def services_health_check(
+    mcp_service: MCPService = Depends(get_mcp_service),
+) -> Dict[str, Any]:
     """
     External services health check.
-
-    Returns:
-        dict: External services health status
     """
     log_api_call("services_health_check")
     return {
         "openai": await _check_openai_health(),
-        "fastmcp": await _check_fastmcp_health(),
+        "fastmcp": await _check_fastmcp_health(mcp_service),
         "timestamp": utcnow(),
     }
 
 
 async def _check_cache_health() -> Dict[str, Any]:
-    """Check cache system health and performance."""
     try:
         cache_stats = {
             "embedding_cache": embedding_cache.get_stats(),
             "api_response_cache": api_response_cache.get_stats(),
             "search_result_cache": search_result_cache.get_stats(),
         }
-
-        # Test cache functionality
         test_key = "health_check_test"
         test_value = "test_data"
-
-        # Test set/get operations on each cache
         await embedding_cache.set(test_key, test_value, ttl=60)
         retrieved = await embedding_cache.get(test_key)
         await embedding_cache.delete(test_key)
-
         if retrieved != test_value:
             return {
                 "status": "unhealthy",
                 "message": "Cache test operation failed",
                 "stats": cache_stats,
             }
-
-        # Calculate overall cache health
         total_hit_rate = 0
         total_requests = 0
-
         for cache_name, stats in cache_stats.items():
             total_requests += stats["hits"] + stats["misses"]
             if stats["hits"] + stats["misses"] > 0:
                 total_hit_rate += stats["hit_rate"]
-
         avg_hit_rate = total_hit_rate / len(cache_stats) if cache_stats else 0
-
         return {
             "status": "healthy",
             "message": "Cache system operational",
@@ -165,7 +151,6 @@ async def _check_cache_health() -> Dict[str, Any]:
             "overall_hit_rate": avg_hit_rate,
             "total_requests": total_requests,
         }
-
     except Exception as e:
         logger.error(f"Cache health check failed: {e}")
         return {
@@ -176,16 +161,11 @@ async def _check_cache_health() -> Dict[str, Any]:
 
 
 async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
-    """Check database connectivity and basic operations."""
     try:
-        # Test basic connectivity
         result = await db.execute(text("SELECT 1 as test"))
         test_value = result.scalar()
-
         if test_value != 1:
             raise Exception("Database query returned unexpected result")
-
-        # Test table existence (basic schema check)
         tables_result = await db.execute(
             text(
                 """
@@ -197,11 +177,8 @@ async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
             )
         )
         tables = [row[0] for row in tables_result.fetchall()]
-
-        # Check for required tables
         required_tables = ["users", "documents", "conversations"]
         missing_tables = [table for table in required_tables if table not in tables]
-
         if missing_tables:
             return {
                 "status": "warning",
@@ -209,7 +186,6 @@ async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
                 "connectivity": "ok",
                 "schema_status": "incomplete",
             }
-
         return {
             "status": "healthy",
             "message": "Database connectivity and schema OK",
@@ -217,7 +193,6 @@ async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
             "schema_status": "complete",
             "tables_found": len(tables),
         }
-
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         return {
@@ -228,20 +203,16 @@ async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
 
 
 async def _check_openai_health() -> Dict[str, Any]:
-    """Check OpenAI API health."""
     try:
         from ..services.openai_client import OpenAIClient
-
         if settings.openai_api_key == "your-openai-api-key-here":
             return {
                 "status": "warning",
                 "message": "OpenAI API key not configured",
                 "configured": False,
             }
-
         client = OpenAIClient()
         health_result = await client.health_check()
-
         return {
             "status": ("healthy" if health_result.get("openai_available") else "unhealthy"),
             "message": health_result.get("status", "Unknown"),
@@ -250,7 +221,6 @@ async def _check_openai_health() -> Dict[str, Any]:
             "chat_model": health_result.get("chat_model"),
             "embedding_model": health_result.get("embedding_model"),
         }
-
     except Exception as e:
         logger.error(f"OpenAI health check failed: {e}")
         return {
@@ -260,8 +230,7 @@ async def _check_openai_health() -> Dict[str, Any]:
         }
 
 
-async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, Any]:
-    """Check FastMCP services health with enhanced registry integration."""
+async def _check_fastmcp_health(mcp_service: MCPService) -> Dict[str, Any]:
     try:
         if not settings.mcp_enabled:
             return {
@@ -269,20 +238,7 @@ async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, 
                 "message": "FastMCP disabled (optional service)",
                 "enabled": False,
             }
-
-        # Import here to avoid circular imports
-        from ..database import AsyncSessionLocal
-        from ..services.mcp_client import get_mcp_client
-
-        # Use provided db session or create a new one
-        if db:
-            mcp_client = await get_mcp_client(db)
-            health_result = await mcp_client.health_check(db)
-        else:
-            async with AsyncSessionLocal() as session:
-                mcp_client = await get_mcp_client(session)
-                health_result = await mcp_client.health_check(session)
-
+        health_result = await mcp_service.health_check()
         if not health_result.mcp_available:
             return {
                 "status": "warning",
@@ -290,13 +246,10 @@ async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, 
                 "enabled": settings.mcp_enabled,
                 "available": False,
             }
-
-        # Get registry-specific information
         registry_info = health_result.registry_stats or {}
         total_servers = registry_info.get("total_servers", 0)
         enabled_servers = registry_info.get("enabled_servers", 0)
         connected_servers = health_result.healthy_servers
-
         if connected_servers == 0:
             status = "warning"
             message = "No MCP servers are connected (optional service)"
@@ -308,7 +261,6 @@ async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, 
             message = (
                 f"All enabled MCP servers are connected ({connected_servers}/{enabled_servers})"
             )
-
         return {
             "status": status,
             "message": message,
@@ -322,7 +274,6 @@ async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, 
             "server_status": health_result.server_status,
             "tools_count": registry_info.get("enabled_tools", 0),
         }
-
     except Exception as e:
         logger.warning(f"FastMCP health check failed: {e}")
         return {
@@ -336,24 +287,14 @@ async def _check_fastmcp_health(db: Optional[AsyncSession] = None) -> Dict[str, 
 @router.get("/metrics")
 @handle_api_errors("Failed to get system metrics")
 async def get_system_metrics() -> Dict[str, Any]:
-    """
-    Get system performance metrics.
-
-    Returns:
-        dict: System metrics and performance data
-    """
     log_api_call("get_system_metrics")
-
     try:
         import time
 
         import psutil
-
-        # Get system metrics
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
-
         return {
             "system": {
                 "cpu_usage_percent": cpu_percent,
@@ -375,7 +316,6 @@ async def get_system_metrics() -> Dict[str, Any]:
             },
             "timestamp": utcnow(),
         }
-
     except ImportError:
         return {
             "error": "psutil not available for system metrics",
@@ -384,39 +324,35 @@ async def get_system_metrics() -> Dict[str, Any]:
 
 
 @router.get("/readiness")
-async def readiness_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
-    """
-    Kubernetes-style readiness probe.
-
-    Args:
-        db: Database session
-
-    Returns:
-        dict: Readiness status
-    """
+async def readiness_check(
+    db: AsyncSession = Depends(get_db),
+    mcp_service: MCPService = Depends(get_mcp_service),
+) -> Dict[str, Any]:
     try:
-        # Check critical dependencies
         db_health = await _check_database_health(db)
         cache_health = await _check_cache_health()
+        fastmcp_health = await _check_fastmcp_health(mcp_service)
 
         if db_health["status"] == "unhealthy":
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Database not ready",
             )
-
         if cache_health["status"] == "unhealthy":
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Cache system not ready",
             )
-
+        if fastmcp_health["status"] == "unhealthy":
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="FastMCP not ready",
+            )
         return {
             "status": "ready",
             "message": "Application is ready to serve traffic",
             "timestamp": utcnow(),
         }
-
     except HTTPException:
         raise
     except Exception as e:
@@ -430,22 +366,10 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
 @router.get("/performance")
 @handle_api_errors("Failed to get performance metrics")
 async def get_performance_metrics() -> Dict[str, Any]:
-    """
-    Get comprehensive performance metrics and statistics.
-
-    Returns:
-        dict: Performance metrics and system health data
-    """
     log_api_call("get_performance_metrics")
     return get_performance_stats()
 
 
 @router.get("/liveness")
 async def liveness_check() -> Dict[str, Any]:
-    """
-    Kubernetes-style liveness probe.
-
-    Returns:
-        dict: Liveness status
-    """
     return {"status": "alive", "message": "Application is alive", "timestamp": utcnow()}

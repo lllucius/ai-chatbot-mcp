@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .database import get_db
 from .models.user import User
 from .services.auth import AuthService
+from .services.mcp_service import MCPService
 
 # Security scheme for JWT tokens
 security = HTTPBearer()
@@ -143,3 +144,9 @@ async def get_current_superuser(current_user: User = Depends(get_current_user)) 
 async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     """Get AuthService instance."""
     return AuthService(db)
+
+async def get_mcp_service(db: AsyncSession = Depends(get_db)) -> MCPService:
+    """Get MCPService instance."""
+    service = MCPService(db)
+    await service.initialize()
+    return service
