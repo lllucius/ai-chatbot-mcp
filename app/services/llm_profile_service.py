@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.llm_profile import LLMProfile
-from ..schemas.llm_profile import (LLMProfileCreate)
+from ..schemas.llm_profile import LLMProfileCreate
 from .base import BaseService
 
 

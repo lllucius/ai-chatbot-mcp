@@ -19,7 +19,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db, AsyncSessionLocal
+from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.conversation import Conversation, Message
 from ..models.user import User

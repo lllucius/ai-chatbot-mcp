@@ -15,7 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .database import get_db
 from .models.user import User
 from .services.auth import AuthService
+from .services.conversation import ConversationService
+from .services.document import DocumentService
+from .services.embedding import EmbeddingService
 from .services.mcp_service import MCPService
+from .services.search import SearchService
+from .services.user import UserService
 
 # Security scheme for JWT tokens
 security = HTTPBearer()
@@ -145,8 +150,36 @@ async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     """Get AuthService instance."""
     return AuthService(db)
 
+
 async def get_mcp_service(db: AsyncSession = Depends(get_db)) -> MCPService:
     """Get MCPService instance."""
     service = MCPService(db)
     await service.initialize()
     return service
+
+
+async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
+    """Get UserService instance."""
+    return UserService(db)
+
+
+async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentService:
+    """Get DocumentService instance."""
+    return DocumentService(db)
+
+
+async def get_search_service(db: AsyncSession = Depends(get_db)) -> SearchService:
+    """Get SearchService instance."""
+    return SearchService(db)
+
+
+async def get_conversation_service(db: AsyncSession = Depends(get_db)) -> ConversationService:
+    """Get ConversationService instance."""
+    return ConversationService(db)
+
+
+async def get_embedding_service(db: AsyncSession = Depends(get_db)) -> EmbeddingService:
+    """Get EmbeddingService instance."""
+    return EmbeddingService(db)
+
+

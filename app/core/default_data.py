@@ -9,8 +9,8 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.mcp import MCPServerCreateSchema
 from app.schemas.llm_profile import LLMProfileCreate
+from app.schemas.mcp import MCPServerCreateSchema
 from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_service import MCPService
 from app.services.prompt_service import PromptService
@@ -269,6 +269,7 @@ async def create_sample_mcp_servers(db: AsyncSession):
     ]
 
     mcp_service = MCPService(db)
+    mcp_service.initialize()
     created_count = 0
     for server_data in sample_servers:
         try:

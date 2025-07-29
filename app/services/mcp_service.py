@@ -1,10 +1,18 @@
 """
-MCP service for registry management and FastMCP client proxy.
+MCP service for registry management, FastMCP client proxy, and tool execution.
 
-This service combines the registry and client logic for:
-- MCP server and tool registration/discovery/updating
-- Lightweight in-memory cache for active MCP server connections
-- Thin proxy for tool execution and health checking
+This service provides:
+- Registry CRUD operations for MCP servers and tools (DB layer)
+- FastMCP client proxy logic for tool execution and health checking
+- In-memory registry cache for quick lookup and active connection management
+- Tool execution with retry, parallelization, and API response result caching
+- OpenAI-compatible tool schema formatting for integration
+
+Key Features:
+- Single entry point for all MCP tool operations (including bulk/parallel calls)
+- Consistent retry and error handling with configurable retry parameters
+- Separation of registry caching vs. tool result caching (see docstrings)
+- Improved, comprehensive docstrings at all levels
 
 The service is initialized per-request with an AsyncSession.
 """
@@ -26,22 +34,24 @@ from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..schemas.mcp import (
-    MCPDiscoveryResultSchema, MCPHealthStatusSchema, MCPListFiltersSchema,
-    MCPServerCreateSchema, MCPServerSchema, MCPServerUpdateSchema,
-    MCPToolCreateSchema, MCPToolExecutionRequestSchema, MCPToolExecutionResultSchema,
-    MCPToolSchema, MCPToolUpdateSchema, MCPToolUsageStatsSchema
-)
+from ..schemas.mcp import (MCPDiscoveryResultSchema, MCPHealthStatusSchema,
+                           MCPListFiltersSchema, MCPServerCreateSchema,
+                           MCPServerSchema, MCPServerUpdateSchema,
+                           MCPToolCreateSchema, MCPToolExecutionRequestSchema,
+                           MCPToolExecutionResultSchema, MCPToolSchema,
+                           MCPToolUpdateSchema, MCPToolUsageStatsSchema)
+from ..utils.caching import api_response_cache, make_cache_key
 
 logger = get_api_logger("mcp_service")
 
 
 class MCPService:
     """
-    MCP service for registry and client proxy.
+    MCP service for registry, client proxy, and tool execution.
 
     Pass a database session when instantiating. All registry and client operations
-    are available on this class.
+    as well as tool execution (with retry, parallelization, caching) are available
+    on this class. This is the single entry point for all MCP tool operations.
     """
 
     def __init__(self, db_session: AsyncSession):
@@ -53,8 +63,6 @@ class MCPService:
         self._cached_tools: Dict[str, MCPToolSchema] = {}
         self.is_initialized = False
         logger.info("MCPService initialized")
-
-    # --- Registry methods (from MCPRegistryService) ---
 
     async def create_server(self, server_data: MCPServerCreateSchema, auto_discover: bool = True) -> MCPServerSchema:
         server = MCPServer(
@@ -431,8 +439,6 @@ class MCPService:
             return await self.discover_tools_from_server(server_name)
         return None
 
-    # --- MCP client proxy methods (from FastMCPClientService, using registry via self) ---
-
     async def _should_refresh_cache(self) -> bool:
         return (time.time() - self._last_refresh) > self._cache_timeout
 
@@ -456,6 +462,9 @@ class MCPService:
             raise ExternalServiceError(f"Registry refresh failed: {e}")
 
     async def initialize(self):
+        """
+        Initialize the MCP service registry/cache and server connections.
+        """
         if not settings.mcp_enabled:
             logger.warning("MCP is disabled - cannot initialize MCP clients")
             self.is_initialized = False
@@ -548,6 +557,10 @@ class MCPService:
         self,
         request: MCPToolExecutionRequestSchema,
     ) -> MCPToolExecutionResultSchema:
+        """
+        Execute a single tool call (with MCP registry/cache), using FastMCP client proxy.
+        Does NOT apply retry or caching logic. For managed execution use 'execute_tool_call'.
+        """
         if not self.is_initialized:
             raise ExternalServiceError("MCP client not initialized")
         if await self._should_refresh_cache():
@@ -653,6 +666,9 @@ class MCPService:
         self,
         filters: Optional[MCPListFiltersSchema] = None,
     ) -> List[MCPToolSchema]:
+        """
+        Return a list of available tools (from cache/registry), optionally filtered.
+        """
         if not self.is_initialized:
             logger.warning("MCP client not initialized - returning empty tools list")
             return []
@@ -666,37 +682,171 @@ class MCPService:
                 tools = [t for t in tools if t.server.name == filters.server_name]
         return tools
 
+    async def get_openai_tools(
+        self,
+        filters: Optional[MCPListFiltersSchema] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Format available MCP tools as OpenAI-compatible function tool schemas.
+        """
+        mcp_tools = await self.get_available_tools(filters)
+        openai_tools = []
+        for tool in mcp_tools:
+            if tool.is_enabled and tool.server.is_enabled:
+                openai_tool = {
+                    "type": "function",
+                    "function": {
+                        "name": tool.name,
+                        "description": tool.description or f"Tool from {tool.server.name}",
+                        "parameters": tool.parameters or {"type": "object", "properties": {}}
+                    }
+                }
+                openai_tools.append(openai_tool)
+        return openai_tools
+
+    async def execute_tool_call(
+        self,
+        tool_call: Dict[str, Any],
+        max_retries: int = 3,
+        use_cache: bool = True,
+        cache_ttl: int = 300,
+    ) -> Dict[str, Any]:
+        """
+        Execute a single tool call, with retry and API response caching logic.
+
+        Args:
+            tool_call: Dict with keys: id (str), name (str), arguments (dict)
+            max_retries: Number of retry attempts on failure (default 3)
+            use_cache: If True, cache successful results for identical arguments
+            cache_ttl: TTL for result cache in seconds
+
+        Returns:
+            Dict describing the tool execution result (see below).
+        """
+        import time
+        tool_call_id = tool_call.get("id", "")
+        tool_name = tool_call.get("name")
+        arguments = tool_call.get("arguments", {})
+        cache_key = None
+
+        if use_cache:
+            cache_key = make_cache_key("tool_call", tool_name, arguments)
+            cached_result = await api_response_cache.get(cache_key)
+            if cached_result is not None:
+                logger.debug(f"Using cached result for tool call: {tool_name}")
+                return cached_result
+
+        last_exception = None
+        for attempt in range(max_retries):
+            start_time = time.time()
+            try:
+                logger.info(f"Executing tool call '{tool_name}', attempt {attempt + 1}/{max_retries}")
+                req = MCPToolExecutionRequestSchema(
+                    tool_name=tool_name,
+                    parameters=arguments,
+                    record_usage=True
+                )
+                result = await self.call_tool(req)
+                execution_time = (time.time() - start_time) * 1000
+
+                result_dict = {
+                    "tool_call_id": tool_call_id,
+                    "tool_name": tool_name,
+                    "success": result.success,
+                    "content": result.content,
+                    "error": getattr(result, "error", None),
+                    "provider": "fastmcp",
+                    "execution_time_ms": execution_time,
+                }
+                if use_cache and cache_key and result.success:
+                    await api_response_cache.set(cache_key, result_dict, ttl=cache_ttl)
+                return result_dict
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"Tool execution attempt {attempt + 1} failed: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = 2**attempt
+                    await asyncio.sleep(wait_time)
+                    continue
+
+        logger.error(
+            f"Tool execution failed after {max_retries} attempts: {tool_name} (error: {last_exception})"
+        )
+        return {
+            "tool_call_id": tool_call_id,
+            "tool_name": tool_name,
+            "success": False,
+            "content": [],
+            "error": f"Tool execution failed after {max_retries} attempts: {last_exception}",
+            "provider": "fastmcp",
+            "execution_time_ms": None,
+        }
+
     async def execute_tool_calls(
         self,
         tool_calls: List[Dict[str, Any]],
-    ) -> List[MCPToolExecutionResultSchema]:
-        if not self.is_initialized:
-            raise ExternalServiceError("MCP client not initialized")
-        results = []
-        for tool_call in tool_calls:
-            try:
-                function_name = tool_call["function"]["name"]
-                function_args = json.loads(tool_call["function"]["arguments"])
-                request = MCPToolExecutionRequestSchema(
-                    tool_name=function_name,
-                    parameters=function_args,
-                    record_usage=True
+        max_retries: int = 3,
+        use_cache: bool = True,
+        parallel_execution: bool = True,
+    ) -> List[Dict[str, Any]]:
+        """
+        Execute multiple tool calls, optionally in parallel, with retry and caching.
+
+        Args:
+            tool_calls: List of tool call dicts (see 'execute_tool_call')
+            max_retries: Number of retry attempts per call
+            use_cache: If True, use API response caching
+            parallel_execution: If True, run tool calls concurrently
+
+        Returns:
+            List of result dicts, in the same order as tool_calls
+        """
+        if not tool_calls:
+            return []
+        logger.info(f"Executing {len(tool_calls)} tool calls (parallel={parallel_execution})")
+
+        if parallel_execution:
+            tasks = [
+                self.execute_tool_call(
+                    tool_call,
+                    max_retries=max_retries,
+                    use_cache=use_cache
                 )
-                result = await self.call_tool(request)
+                for tool_call in tool_calls
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            processed_results = []
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    processed_results.append(
+                        {
+                            "tool_call_id": tool_calls[i].get("id", ""),
+                            "tool_name": tool_calls[i].get("name", ""),
+                            "success": False,
+                            "content": [],
+                            "error": str(result),
+                            "provider": "fastmcp",
+                            "execution_time_ms": None,
+                        }
+                    )
+                else:
+                    processed_results.append(result)
+            return processed_results
+        else:
+            results = []
+            for tool_call in tool_calls:
+                result = await self.execute_tool_call(
+                    tool_call,
+                    max_retries=max_retries,
+                    use_cache=use_cache,
+                )
                 results.append(result)
-            except Exception as e:
-                logger.error(f"Failed to execute tool call {tool_call.get('id', 'unknown')}: {e}")
-                error_result = MCPToolExecutionResultSchema(
-                    success=False,
-                    tool_name=tool_call.get("function", {}).get("name", "unknown"),
-                    server="unknown",
-                    content=[],
-                    error=str(e)
-                )
-                results.append(error_result)
-        return results
+            return results
 
     async def health_check(self) -> MCPHealthStatusSchema:
+        """
+        Perform a health check of the MCP system: registry, cache, and client connections.
+        """
         health_status = MCPHealthStatusSchema(
             mcp_available=settings.mcp_enabled,
             initialized=self.is_initialized,
@@ -753,6 +903,9 @@ class MCPService:
         return health_status
 
     async def disconnect_all(self):
+        """
+        Disconnect from all MCP servers and clear cached registry/tool state.
+        """
         disconnected_servers = []
         for server_name, client in self.clients.items():
             try:
@@ -769,6 +922,9 @@ class MCPService:
         logger.info(f"Disconnected from {len(disconnected_servers)} MCP servers")
 
     async def refresh_from_registry(self):
+        """
+        Force a refresh of the MCP registry and re-initialize all server connections/caches.
+        """
         logger.info("Force refreshing MCP client from registry")
         await self.disconnect_all()
         await self.initialize()

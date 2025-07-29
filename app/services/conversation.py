@@ -28,7 +28,7 @@ import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import and_, desc, func, select, text
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
@@ -90,12 +90,12 @@ class ConversationService(BaseService):
         super().__init__(db, "conversation_service")
 
         # Initialize AI and search services
-        self.openai_client = OpenAIClient()
         self.search_service = SearchService(db)
         self.embedding_service = EmbeddingService(db)
         self.prompt_service = PromptService(db)
         self.llm_profile_service = LLMProfileService(db)
         self.mcp_service = MCPService(db)
+        self.openai_client = OpenAIClient(self.mcp_service)
 
     async def create_conversation(self, request: ConversationCreate, user_id: UUID) -> Conversation:
         """
@@ -374,6 +374,9 @@ class ConversationService(BaseService):
             # Get enhanced MCP tools if tools are enabled
             if request.use_tools:
                 try:
+                    if self.mcp_service and not self.mcp_service.is_initialized:
+                        await mcp_service.initialize()
+
                     if self.mcp_service and self.mcp_service.is_initialized:
                         openai_params["use_tools"] = True
                         openai_params["tool_handling_mode"] = request.tool_handling_mode

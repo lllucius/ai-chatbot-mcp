@@ -9,19 +9,17 @@ functionality including tool calling via ToolExecutor (now dependency-injected).
 import json
 from typing import Any, Dict, List, Optional, Union
 
+import openai
+import tiktoken
+from openai import AsyncOpenAI
+
 from ..config import settings
 from ..core.logging import get_api_logger
-from ..core.tool_executor import ToolCall, ToolExecutor
 from ..schemas.tool_calling import ToolHandlingMode
+from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors
 from ..utils.caching import embedding_cache, make_cache_key
 from ..utils.tool_middleware import RetryConfig, tool_operation
-
-import openai
-from openai import AsyncOpenAI
-
-import tiktoken
-
 
 logger = get_api_logger("openai_client")
 
@@ -32,34 +30,17 @@ class OpenAIClient:
 
     This client provides methods for chat completions, embeddings,
     and content moderation with automatic tool calling capabilities.
-
-    Key Features:
-    - Tool calling through injected ToolExecutor
-    - Consistent error handling via @handle_api_errors decorator
-    - Retry logic and caching through middleware decorators
-    - Structured logging for all operations
-    - Full async/await support for all operations
-
-    Tool Integration:
-    - Automatically integrates with ToolExecutor for tool calling
-    - Supports both custom tools and tools from multiple providers
-    - Handles tool call execution with proper error handling and logging
-
-    Error Handling:
-    - Uses @handle_api_errors decorator for consistent error responses
-    - Automatic retry logic for rate limits and connection errors
-    - Proper exception mapping to HTTP status codes
     """
 
-    def __init__(self, tool_executor: Optional[ToolExecutor] = None):
-        """Initialize OpenAI client with dependency-injected ToolExecutor."""
+    def __init__(self, mcp_service: Optional[MCPService] = None):
+        """Initialize OpenAI client with dependency-injected MCPService."""
+        self.mcp_service = mcp_service
+
         self.client = AsyncOpenAI(
             api_key=settings.openai_api_key,
             base_url=settings.openai_base_url,
         )
-        self.tool_executor = tool_executor
 
-        # Initialize tokenizer
         self.tokenizer = None
         try:
             self.tokenizer = tiktoken.encoding_for_model(settings.openai_chat_model)
@@ -163,9 +144,9 @@ class OpenAIClient:
         """
         final_tools = tools or []
 
-        if use_tools and not tools and self.tool_executor:
+        if use_tools and not tools:
             try:
-                tools = await self.tool_executor.get_available_tools()
+                tools = await self.mcp_service.get_openai_tools()
                 final_tools.extend(tools)
                 logger.info(f"Added {len(tools)} tools to chat completion")
             except Exception as e:
@@ -212,7 +193,7 @@ class OpenAIClient:
             "total_tokens": response.usage.total_tokens,
         }
 
-        if message.tool_calls and self.tool_executor:
+        if message.tool_calls:
             tool_calls_executed = await self._execute_tool_calls(message.tool_calls)
 
             if tool_handling_mode == ToolHandlingMode.RETURN_RESULTS:
@@ -275,10 +256,10 @@ class OpenAIClient:
         """
         final_tools = tools or []
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        print("UISE", use_tools, tools, self.tool_executor)
-        if use_tools and not tools and self.tool_executor:
+        print("UISE", use_tools, tools)
+        if use_tools and not tools:
             try:
-                tools = await self.tool_executor.get_available_tools()
+                tools = await self.mcp_service.get_openai_tools()
                 final_tools.extend(tools)
                 logger.info(
                     f"Added {len(tools)} tools to streaming chat completion"
@@ -319,7 +300,7 @@ class OpenAIClient:
                         if tool_call.function and tool_call.function.name:
                             tool_calls_data.append(tool_call)
 
-            if tool_calls_data and self.tool_executor:
+            if tool_calls_data:
                 tool_calls_executed = await self._execute_tool_calls(tool_calls_data)
                 for tool_result in tool_calls_executed:
                     yield {
@@ -340,31 +321,27 @@ class OpenAIClient:
 
     async def _execute_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
         try:
-            if not self.tool_executor:
-                logger.warning("ToolExecutor not provided")
-                return []
-
             tool_calls = []
             for tool_call in tool_calls:
                 tool_calls.append(
-                    ToolCall(
-                        id=tool_call.id,
-                        name=tool_call.function.name,
-                        arguments=json.loads(tool_call.function.arguments),
-                    )
+                    {
+                        "id": getattr(tool_call, "id", None),
+                        "name": getattr(getattr(tool_call, "function", None), "name", None),
+                        "arguments": json.loads(getattr(getattr(tool_call, "function", None), "arguments", "{}")),
+                    }
                 )
 
-            results = await self.tool_executor.execute_tool_calls(tool_calls)
+            results = await self.mcp_service.execute_tool_calls(tool_calls)
             formatted_results = []
             for result in results:
                 formatted_results.append(
                     {
-                        "tool_call_id": result.tool_call_id,
-                        "success": result.success,
-                        "content": result.content,
-                        "error": result.error,
-                        "provider": result.provider.value if result.provider else None,
-                        "execution_time_ms": result.execution_time_ms,
+                        "tool_call_id": result.get("tool_call_id"),
+                        "success": result.get("success"),
+                        "content": result.get("content"),
+                        "error": result.get("error"),
+                        "provider": result.get("provider"),
+                        "execution_time_ms": result.get("execution_time_ms"),
                     }
                 )
             return formatted_results

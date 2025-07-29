@@ -17,7 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
+from ..dependencies import (get_current_superuser, get_current_user,
+                            get_document_service)
 from ..models.document import Document, FileStatus
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
@@ -30,11 +31,6 @@ from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["documents"])
-
-
-async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentService:
-    """Get document service instance."""
-    return DocumentService(db)
 
 
 @router.post("/upload", response_model=DocumentUploadResponse)
@@ -334,12 +330,6 @@ async def get_queue_status(
     queue_status = await background_processor.get_queue_status()
 
     return {"message": "Queue status retrieved", **queue_status}
-
-
-
-async def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentService:
-    """Get document service instance."""
-    return DocumentService(db)
 
 
 @router.post("/documents/cleanup", response_model=BaseResponse)

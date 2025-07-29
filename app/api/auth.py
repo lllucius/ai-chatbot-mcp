@@ -22,10 +22,8 @@ Security Features:
 """
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_auth_service, get_current_user
 from ..models.user import User
 from ..schemas.auth import (LoginRequest, PasswordResetConfirm,
                             PasswordResetRequest, RegisterRequest, Token)
@@ -35,11 +33,6 @@ from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["authentication"])
-
-
-async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
-    """Get authentication service instance."""
-    return AuthService(db)
 
 
 @router.post("/register", response_model=UserResponse)
