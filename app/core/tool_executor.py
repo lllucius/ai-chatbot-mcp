@@ -1,5 +1,5 @@
 """
-Unified tool execution system for centralizing tool calling logic.
+Tool execution system for centralizing tool calling logic.
 
 This module provides a centralized interface for executing tools from both
 FastMCP and OpenAI integrations, with consistent retry, fallback, error
@@ -139,9 +139,9 @@ class FastMCPToolStrategy(ToolExecutionStrategy):
         return health_result
 
 
-class UnifiedToolExecutor:
+class ToolExecutor:
     """
-    Unified tool executor that centralizes all tool calling logic.
+    Tool executor that centralizes all tool calling logic.
 
     This class provides a single interface for executing tools from different
     providers (FastMCP, OpenAI) with consistent retry, caching, and error
@@ -310,7 +310,7 @@ class UnifiedToolExecutor:
 
     async def health_check(self, db_session: Optional[AsyncSession] = None) -> Dict[str, Any]:
         health_status = {
-            "unified_tool_executor": {
+            "tool_executor": {
                 "status": "healthy" if self._initialized else "not_initialized",
                 "providers": {},
             }
@@ -318,11 +318,11 @@ class UnifiedToolExecutor:
         for provider_type, strategy in self.strategies.items():
             try:
                 provider_health = await strategy.health_check(db_session)
-                health_status["unified_tool_executor"]["providers"][
+                health_status["tool_executor"]["providers"][
                     provider_type.value
                 ] = provider_health
             except Exception as e:
-                health_status["unified_tool_executor"]["providers"][provider_type.value] = {
+                health_status["tool_executor"]["providers"][provider_type.value] = {
                     "status": "error",
                     "error": str(e),
                 }

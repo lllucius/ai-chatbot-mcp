@@ -28,7 +28,7 @@ import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
@@ -55,18 +55,18 @@ class ConversationService(BaseService):
 
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
-    and unified tool calling with enhanced logging and context management.
+    and tool calling with enhanced logging and context management.
 
     AI Capabilities:
     - Multi-turn conversations with context preservation
     - Integration with OpenAI GPT models for intelligent responses
     - RAG (Retrieval Augmented Generation) with document search
-    - Unified tool calling through UnifiedToolExecutor integration
+    - Tool calling through ToolExecutor integration
     - Token usage optimization and tracking
     - Response quality monitoring and analytics
 
     Tool Integration:
-    - Uses unified tool calling instead of manual tool management
+    - Uses tool calling instead of manual tool management
     - Automatic tool availability and execution through OpenAI client
     - Proper tool call result handling and user feedback
     - Complete tool calling implementation (no TODOs remaining)
@@ -375,17 +375,17 @@ class ConversationService(BaseService):
             if request.use_tools:
                 try:
                     if self.mcp_service and self.mcp_service.is_initialized:
-                        openai_params["use_unified_tools"] = True
+                        openai_params["use_tools"] = True
                         openai_params["tool_handling_mode"] = request.tool_handling_mode
                     else:
-                        openai_params["use_unified_tools"] = request.use_tools
+                        openai_params["use_tools"] = request.use_tools
                         openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
                     logger.warning(f"Failed to get MCP service: {e}")
-                    openai_params["use_unified_tools"] = request.use_tools
+                    openai_params["use_tools"] = request.use_tools
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
             else:
-                openai_params["use_unified_tools"] = False
+                openai_params["use_tools"] = False
 
             # Get AI response with enhanced registry integration
             ai_response = await self.openai_client.chat_completion(
@@ -534,17 +534,17 @@ class ConversationService(BaseService):
             if request.use_tools:
                 try:
                     if self.mcp_service and self.mcp_service.is_initialized:
-                        openai_params["use_unified_tools"] = True
+                        openai_params["use_tools"] = True
                         openai_params["tool_handling_mode"] = request.tool_handling_mode
                     else:
-                        openai_params["use_unified_tools"] = request.use_tools
+                        openai_params["use_tools"] = request.use_tools
                         openai_params["tool_handling_mode"] = request.tool_handling_mode
                 except Exception as e:
                     logger.warning(f"Failed to get MCP service: {e}")
-                    openai_params["use_unified_tools"] = request.use_tools
+                    openai_params["use_tools"] = request.use_tools
                     openai_params["tool_handling_mode"] = request.tool_handling_mode
             else:
-                openai_params["use_unified_tools"] = False
+                openai_params["use_tools"] = False
 
             # Stream AI response
             full_content = ""
@@ -605,6 +605,7 @@ class ConversationService(BaseService):
             }
         except Exception as e:
             logger.error(f"Streaming chat processing failed: {e}")
+            
             yield {"type": "error", "error": str(e)}
 
     async def _get_conversation_history(
@@ -696,7 +697,6 @@ class ConversationService(BaseService):
                 )
 
             return context
-
         except Exception as e:
             logger.warning(f"Failed to get RAG context: {e}")
             return None

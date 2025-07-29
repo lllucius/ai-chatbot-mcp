@@ -10,8 +10,7 @@ from .exceptions import (AuthenticationError, AuthorizationError,
                          EmbeddingError, ExternalServiceError, NotFoundError,
                          ValidationError)
 from .logging import StructuredLogger, get_logger, setup_logging
-from .tool_executor import (ToolCall, ToolProvider, ToolResult,
-                            UnifiedToolExecutor)
+from .tool_executor import (ToolCall, ToolProvider, ToolResult, ToolExecutor)
 
 __all__ = [
     "ChatbotPlatformException",
@@ -22,11 +21,11 @@ __all__ = [
     "DocumentError",
     "EmbeddingError",
     "ExternalServiceError",
-    "UnifiedToolExecutor",
+    "ToolExecutor",
     "ToolCall",
     "ToolResult",
     "ToolProvider",
-    "get_unified_tool_executor",
+    "get_tool_executor",
     "setup_logging",
     "get_logger",
     "StructuredLogger",

@@ -35,7 +35,7 @@ def _get_engine_config():
         # PostgreSQL-specific configuration
         base_config.update(
             {
-                "echo": True,
+                "echo": "debug",
                 "pool_pre_ping": True,
                 "pool_size": 20,
                 "max_overflow": 30,
@@ -63,7 +63,7 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
     expire_on_commit=False,
-    close_resets_only=False
+    close_resets_only=False,
 )
 
 
@@ -80,17 +80,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         # Test connection health
         await session.execute(text("SELECT 1"))
 
-        print("\n!====================================================================!")
-        print("! Session created:", session)
-        print("!====================================================================!\n")
-
         async with session:
             yield session
             await session.commit()
 
-        print("\n!====================================================================!")
-        print("! Session closed:", session)
-        print("!====================================================================!\n")
     except (DisconnectionError, OperationalError) as e:
         tb = traceback.extract_tb(sys.exc_info()[2])[-1]
         logger.error(
@@ -134,10 +127,6 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.rollback()
         raise
     finally:
-        print("\n!====================================================================!")
-        print("! Session finally:", session)
-        print("!====================================================================!\n")
-
         if session:
             await session.close()
 

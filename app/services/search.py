@@ -290,9 +290,8 @@ class SearchService(BaseService):
 
         query = query.order_by(rank_expr.desc()).limit(request.limit)
 
-        async with self.db as db:
-            result = await db.execute(query)
-            rows = result.fetchall()
+        result = await self.db.execute(query)
+        rows = result.fetchall()
 
         # Normalize rank to [0,1]
         ranks = [float(rank) for _, rank in rows]

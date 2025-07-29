@@ -1,5 +1,5 @@
 """
-Unified MCP service for registry management and FastMCP client proxy.
+MCP service for registry management and FastMCP client proxy.
 
 This service combines the registry and client logic for:
 - MCP server and tool registration/discovery/updating
@@ -38,7 +38,7 @@ logger = get_api_logger("mcp_service")
 
 class MCPService:
     """
-    Unified MCP service for registry and client proxy.
+    MCP service for registry and client proxy.
 
     Pass a database session when instantiating. All registry and client operations
     are available on this class.

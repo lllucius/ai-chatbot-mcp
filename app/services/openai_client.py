@@ -1,8 +1,8 @@
 """
-OpenAI API client with unified tool integration.
+OpenAI API client with tool integration.
 
 This service provides a wrapper around the OpenAI API with enhanced
-functionality including tool calling via UnifiedToolExecutor (now dependency-injected).
+functionality including tool calling via ToolExecutor (now dependency-injected).
 
 """
 
@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from ..config import settings
 from ..core.logging import get_api_logger
-from ..core.tool_executor import ToolCall, UnifiedToolExecutor
+from ..core.tool_executor import ToolCall, ToolExecutor
 from ..schemas.tool_calling import ToolHandlingMode
 from ..utils.api_errors import handle_api_errors
 from ..utils.caching import embedding_cache, make_cache_key
@@ -28,21 +28,21 @@ logger = get_api_logger("openai_client")
 
 class OpenAIClient:
     """
-    OpenAI API client with unified tool integration.
+    OpenAI API client with tool integration.
 
     This client provides methods for chat completions, embeddings,
-    and content moderation with automatic unified tool calling capabilities.
+    and content moderation with automatic tool calling capabilities.
 
     Key Features:
-    - Unified tool calling through injected UnifiedToolExecutor
+    - Tool calling through injected ToolExecutor
     - Consistent error handling via @handle_api_errors decorator
     - Retry logic and caching through middleware decorators
     - Structured logging for all operations
     - Full async/await support for all operations
 
     Tool Integration:
-    - Automatically integrates with UnifiedToolExecutor for tool calling
-    - Supports both custom tools and unified tools from multiple providers
+    - Automatically integrates with ToolExecutor for tool calling
+    - Supports both custom tools and tools from multiple providers
     - Handles tool call execution with proper error handling and logging
 
     Error Handling:
@@ -51,8 +51,8 @@ class OpenAIClient:
     - Proper exception mapping to HTTP status codes
     """
 
-    def __init__(self, tool_executor: Optional[UnifiedToolExecutor] = None):
-        """Initialize OpenAI client with dependency-injected UnifiedToolExecutor."""
+    def __init__(self, tool_executor: Optional[ToolExecutor] = None):
+        """Initialize OpenAI client with dependency-injected ToolExecutor."""
         self.client = AsyncOpenAI(
             api_key=settings.openai_api_key,
             base_url=settings.openai_base_url,
@@ -140,7 +140,7 @@ class OpenAIClient:
         llm_profile: Optional[Any] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
-        use_unified_tools: bool = True,
+        use_tools: bool = True,
         tool_handling_mode: ToolHandlingMode = ToolHandlingMode.COMPLETE_WITH_RESULTS,
         max_retries: int = 3,
     ) -> Dict[str, Any]:
@@ -150,9 +150,9 @@ class OpenAIClient:
         Args:
             messages: List of messages
             llm_profile: LLM profile object containing model parameters (temperature, max_tokens, etc.)
-            tools: Custom tools (if None, will use unified tools if available)
+            tools: Custom tools (if None, will use tools if available)
             tool_choice: Tool choice strategy
-            use_unified_tools: Whether to automatically include unified tools
+            use_tools: Whether to automatically include tools
             tool_handling_mode: How to handle tool call results:
                 - RETURN_RESULTS: Return tool results as content without further processing
                 - COMPLETE_WITH_RESULTS: Execute tools and feed results back for final completion
@@ -163,13 +163,13 @@ class OpenAIClient:
         """
         final_tools = tools or []
 
-        if use_unified_tools and not tools and self.tool_executor:
+        if use_tools and not tools and self.tool_executor:
             try:
-                unified_tools = await self.tool_executor.get_available_tools()
-                final_tools.extend(unified_tools)
-                logger.info(f"Added {len(unified_tools)} unified tools to chat completion")
+                tools = await self.tool_executor.get_available_tools()
+                final_tools.extend(tools)
+                logger.info(f"Added {len(tools)} tools to chat completion")
             except Exception as e:
-                logger.warning(f"Failed to add unified tools: {e}")
+                logger.warning(f"Failed to add tools: {e}")
 
         request_params = {
             "model": settings.openai_chat_model,
@@ -213,7 +213,7 @@ class OpenAIClient:
         }
 
         if message.tool_calls and self.tool_executor:
-            tool_calls_executed = await self._execute_unified_tool_calls(message.tool_calls)
+            tool_calls_executed = await self._execute_tool_calls(message.tool_calls)
 
             if tool_handling_mode == ToolHandlingMode.RETURN_RESULTS:
                 final_content = self._format_tool_results_as_content(tool_calls_executed)
@@ -254,7 +254,7 @@ class OpenAIClient:
         llm_profile: Optional[Any] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
         tool_choice: Union[str, Dict[str, Any]] = "auto",
-        use_unified_tools: bool = True,
+        use_tools: bool = True,
         tool_handling_mode: ToolHandlingMode = ToolHandlingMode.COMPLETE_WITH_RESULTS,
         max_retries: int = 3,
     ):
@@ -264,9 +264,9 @@ class OpenAIClient:
         Args:
             messages: List of messages
             llm_profile: LLM profile object containing model parameters (temperature, max_tokens, etc.)
-            tools: Custom tools (if None, will use unified tools if available)
+            tools: Custom tools (if None, will use tools if available)
             tool_choice: Tool choice strategy
-            use_unified_tools: Whether to automatically include unified tools
+            use_tools: Whether to automatically include tools
             tool_handling_mode: How to handle tool call results
             max_retries: Maximum number of retry attempts
 
@@ -274,16 +274,17 @@ class OpenAIClient:
             dict: Streaming response chunks with content or tool call results
         """
         final_tools = tools or []
-        if use_unified_tools and not tools and self.tool_executor:
+        if use_tools and not tools and self.tool_executor:
             try:
-                unified_tools = await self.tool_executor.get_available_tools()
-                final_tools.extend(unified_tools)
+                tools = await self.tool_executor.get_available_tools()
+                final_tools.extend(tools)
                 logger.info(
-                    f"Added {len(unified_tools)} unified tools to streaming chat completion"
+                    f"Added {len(tools)} tools to streaming chat completion"
                 )
             except Exception as e:
-                logger.warning(f"Failed to add unified tools: {e}")
-
+                logger.warning(f"Failed to add tools: {e}")
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print("TOOLS", final_tools)
         request_params = {
             "model": settings.openai_chat_model,
             "messages": messages,
@@ -317,7 +318,7 @@ class OpenAIClient:
                             tool_calls_data.append(tool_call)
 
             if tool_calls_data and self.tool_executor:
-                tool_calls_executed = await self._execute_unified_tool_calls(tool_calls_data)
+                tool_calls_executed = await self._execute_tool_calls(tool_calls_data)
                 for tool_result in tool_calls_executed:
                     yield {
                         "type": "tool_call",
@@ -335,15 +336,15 @@ class OpenAIClient:
             logger.error(f"Streaming chat completion failed: {e}")
             yield {"type": "error", "error": str(e)}
 
-    async def _execute_unified_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
+    async def _execute_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
         try:
             if not self.tool_executor:
-                logger.warning("UnifiedToolExecutor not provided")
+                logger.warning("ToolExecutor not provided")
                 return []
 
-            unified_tool_calls = []
+            tool_calls = []
             for tool_call in tool_calls:
-                unified_tool_calls.append(
+                tool_calls.append(
                     ToolCall(
                         id=tool_call.id,
                         name=tool_call.function.name,
@@ -351,7 +352,7 @@ class OpenAIClient:
                     )
                 )
 
-            results = await self.tool_executor.execute_tool_calls(unified_tool_calls)
+            results = await self.tool_executor.execute_tool_calls(tool_calls)
             formatted_results = []
             for result in results:
                 formatted_results.append(
@@ -366,7 +367,7 @@ class OpenAIClient:
                 )
             return formatted_results
         except Exception as e:
-            logger.error(f"Failed to execute unified tool calls: {e}")
+            logger.error(f"Failed to execute tool calls: {e}")
             return []
 
     def _format_tool_results_as_content(self, tool_results: List[Dict[str, Any]]) -> str:

@@ -282,14 +282,14 @@ async def chat_stream(
     )
 
     async def generate_response():
-        # Send initial event
-        start_event = StreamStartResponse(message="Generating response...")
-        yield f"data: {json.dumps(start_event.model_dump())}\n\n"
+        async with AsyncSessionLocal() as db:
+            conversation_service = ConversationService(db)
 
-        try:
-            async with AsyncSessionLocal() as db:
-                conversation_service = ConversationService(db)
+            # Send initial event
+            start_event = StreamStartResponse(message="Generating response...")
+            yield f"data: {json.dumps(start_event.model_dump())}\n\n"
 
+            try:
                 # Process chat request with streaming
                 async for chunk in conversation_service.process_chat_stream(request, current_user.id):
                     if chunk.get("type") == "content":
@@ -335,14 +335,14 @@ async def chat_stream(
                         error_event = StreamErrorResponse(error=chunk.get("error", "Unknown error"))
                         yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                         break
-        except Exception as e:
-            # Send error event for any unhandled exceptions
-            error_event = StreamErrorResponse(error=str(e))
-            yield f"data: {json.dumps(error_event.model_dump())}\n\n"
+            except Exception as e:
+                # Send error event for any unhandled exceptions
+                error_event = StreamErrorResponse(error=str(e))
+                yield f"data: {json.dumps(error_event.model_dump())}\n\n"
 
-        # Send end event
-        end_event = StreamEndResponse()
-        yield f"data: {json.dumps(end_event.model_dump())}\n\n"
+            # Send end event
+            end_event = StreamEndResponse()
+            yield f"data: {json.dumps(end_event.model_dump())}\n\n"
 
     return StreamingResponse(
         generate_response(),

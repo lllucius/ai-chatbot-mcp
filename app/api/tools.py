@@ -2,7 +2,7 @@
 Tools API endpoints for MCP tools management with registry integration.
 
 This module provides endpoints for managing MCP (Model Context Protocol) tools
-using the unified MCPService for both registry and client operations.
+using the MCPService for both registry and client operations.
 
 """
 from typing import Any, Dict, Optional

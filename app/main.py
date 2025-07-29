@@ -95,11 +95,11 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Background processor shutdown failed: {e}")
 
-        # Cleanup UnifiedToolExecutor and MCP
+        # Cleanup ToolExecutor and MCP
         try:
-            from .core.tool_executor import cleanup_unified_tool_executor
+            from .core.tool_executor import cleanup_tool_executor
 
-            await cleanup_unified_tool_executor()
+            await cleanup_tool_executor()
             logger.info("Tool execution system cleaned up")
         except Exception as e:
             logger.warning(f"Tool execution cleanup failed: {e}")
