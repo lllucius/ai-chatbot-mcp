@@ -55,7 +55,9 @@ class EmbeddingService:
             or getattr(DocumentChunk.__table__.c.embedding.type, "dim", None)
             or getattr(settings, "vector_dimension", 3072)
         )
-        self.batch_size: int = batch_size or getattr(settings, "embedding_batch_size", 100)
+        self.batch_size: int = batch_size or getattr(
+            settings, "embedding_batch_size", 100
+        )
         self.embedding_encoding: str = embedding_encoding or getattr(
             settings, "embedding_encoding", "base64"
         )
@@ -104,7 +106,9 @@ class EmbeddingService:
             logger.error(f"Embedding generation failed for text: {e}", exc_info=True)
             return None
 
-    async def generate_embeddings_batch(self, texts: List[str]) -> List[Optional[List[float]]]:
+    async def generate_embeddings_batch(
+        self, texts: List[str]
+    ) -> List[Optional[List[float]]]:
         """
         Generate embeddings for multiple texts in batch.
 
@@ -143,7 +147,9 @@ class EmbeddingService:
         try:
             for chunk_start in range(0, len(cleaned_texts), self.batch_size):
                 chunk = cleaned_texts[chunk_start : chunk_start + self.batch_size]
-                indices_chunk = text_indices[chunk_start : chunk_start + self.batch_size]
+                indices_chunk = text_indices[
+                    chunk_start : chunk_start + self.batch_size
+                ]
                 embeddings = await self.openai_client.create_embeddings_batch(chunk)
                 for j, embedding in enumerate(embeddings):
                     idx = indices_chunk[j]
@@ -162,7 +168,9 @@ class EmbeddingService:
             logger.error(f"Batch embedding generation failed: {e}", exc_info=True)
             return [None] * len(texts)
 
-    def compute_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
+    def compute_similarity(
+        self, embedding1: List[float], embedding2: List[float]
+    ) -> float:
         """
         Compute cosine similarity between two embeddings.
 
@@ -214,7 +222,9 @@ class EmbeddingService:
             return []
 
         try:
-            valid_mask = [emb and len(emb) == len(query_embedding) for emb in embeddings]
+            valid_mask = [
+                emb and len(emb) == len(query_embedding) for emb in embeddings
+            ]
             if not any(valid_mask):
                 return [0.0] * len(embeddings)
 
@@ -320,7 +330,9 @@ class EmbeddingService:
         except Exception:
             return False
 
-    def _ensure_float32_and_shape(self, embedding: Optional[List[float]]) -> Optional[List[float]]:
+    def _ensure_float32_and_shape(
+        self, embedding: Optional[List[float]]
+    ) -> Optional[List[float]]:
         """
         Ensure the embedding is a float32 list of the correct shape.
 
@@ -404,7 +416,9 @@ class EmbeddingService:
                 LIMIT :top_k
             """
             )
-            result = await self.db.execute(sql, {"embedding": query_embedding, "top_k": top_k})
+            result = await self.db.execute(
+                sql, {"embedding": query_embedding, "top_k": top_k}
+            )
             # If using SQLAlchemy 2.x, use scalars().all(); adjust as per version
             return result.scalars().all()
         except Exception as e:

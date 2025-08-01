@@ -10,8 +10,15 @@ from uuid import UUID
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import (console, error_message, format_file_size, format_timestamp,
-                   get_sdk, info_message, success_message)
+from .base import (
+    console,
+    error_message,
+    format_file_size,
+    format_timestamp,
+    get_sdk,
+    info_message,
+    success_message,
+)
 
 document_app = AsyncTyper(help="📄 Document management commands")
 
@@ -21,14 +28,19 @@ async def list(
     page: int = Option(1, "--page", "-p", help="Page number"),
     size: int = Option(20, "--size", "-s", help="Items per page"),
     file_type: Optional[str] = Option(None, "--file-type", help="Filter by file type"),
-    status: Optional[str] = Option(None, "--status", help="Filter by processing status"),
+    status: Optional[str] = Option(
+        None, "--status", help="Filter by processing status"
+    ),
 ):
     """List all documents with filtering."""
     try:
         sdk = await get_sdk()
-        resp = await sdk.documents.list(page=page, size=size, file_type=file_type, status=status)
+        resp = await sdk.documents.list(
+            page=page, size=size, file_type=file_type, status=status
+        )
         if resp and resp.items:
             from rich.table import Table
+
             table = Table(title=f"Documents (Page {resp.pagination.page})")
             table.add_column("ID", style="cyan")
             table.add_column("Title", style="white")
@@ -47,7 +59,7 @@ async def list(
                     doc.processing_status,
                     str(doc.owner_id)[:8] + "...",
                     str(doc.chunk_count),
-                    format_timestamp(str(doc.created_at))
+                    format_timestamp(str(doc.created_at)),
                 )
             console.print(table)
         else:
@@ -66,11 +78,14 @@ async def upload(
     try:
         sdk = await get_sdk()
         import os
+
         if not os.path.exists(file_path):
             error_message(f"File not found: {file_path}")
             return
         with open(file_path, "rb") as f:
-            resp = await sdk.documents.upload(f, title=title or os.path.basename(file_path))
+            resp = await sdk.documents.upload(
+                f, title=title or os.path.basename(file_path)
+            )
         if getattr(resp, "success", False) or getattr(resp, "document", None):
             doc = getattr(resp, "document", None)
             doc_id = str(doc.id) if doc else "N/A"
@@ -92,6 +107,7 @@ async def show(
         doc = await sdk.documents.get(UUID(document_id))
         if doc:
             from rich.panel import Panel
+
             details = (
                 f"ID: [cyan]{doc.id}[/cyan]\n"
                 f"Title: [white]{doc.title}[/white]\n"
@@ -120,6 +136,7 @@ async def status(
         status = await sdk.documents.status(UUID(document_id))
         if status:
             from rich.panel import Panel
+
             details = (
                 f"Status: [yellow]{status.status}[/yellow]\n"
                 f"Progress: [green]{status.progress:.1%}[/green]\n"
@@ -158,9 +175,12 @@ async def delete(
 ):
     """Delete a document."""
     from .base import confirm_action
+
     try:
         if not force:
-            if not confirm_action(f"Are you sure you want to delete document '{document_id}'?"):
+            if not confirm_action(
+                f"Are you sure you want to delete document '{document_id}'?"
+            ):
                 return
         sdk = await get_sdk()
         resp = await sdk.documents.delete(UUID(document_id))

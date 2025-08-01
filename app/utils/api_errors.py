@@ -11,10 +11,16 @@ from typing import Any, Callable, Dict, Optional
 
 from fastapi import HTTPException, status
 
-from ..core.exceptions import (AuthenticationError, AuthorizationError,
-                               ChatbotPlatformException, DocumentError,
-                               ExternalServiceError, NotFoundError,
-                               SearchError, ValidationError)
+from ..core.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    ChatbotPlatformException,
+    DocumentError,
+    ExternalServiceError,
+    NotFoundError,
+    SearchError,
+    ValidationError,
+)
 from ..core.logging import get_api_logger
 from ..utils.timestamp import get_current_timestamp
 
@@ -56,7 +62,7 @@ def handle_api_errors(
             except HTTPException:
                 # Re-raise HTTPExceptions as they are already properly formatted
                 raise
-            
+
             except ValidationError as e:
                 if log_errors:
                     logger.warning(
@@ -68,7 +74,9 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=_format_error_response(str(e), "VALIDATION_ERROR", include_details),
+                    detail=_format_error_response(
+                        str(e), "VALIDATION_ERROR", include_details
+                    ),
                 )
 
             except AuthenticationError as e:
@@ -82,7 +90,9 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=_format_error_response(str(e), "AUTHENTICATION_ERROR", include_details),
+                    detail=_format_error_response(
+                        str(e), "AUTHENTICATION_ERROR", include_details
+                    ),
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
@@ -97,7 +107,9 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=_format_error_response(str(e), "AUTHORIZATION_ERROR", include_details),
+                    detail=_format_error_response(
+                        str(e), "AUTHORIZATION_ERROR", include_details
+                    ),
                 )
 
             except NotFoundError as e:
@@ -111,7 +123,9 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_format_error_response(str(e), "NOT_FOUND_ERROR", include_details),
+                    detail=_format_error_response(
+                        str(e), "NOT_FOUND_ERROR", include_details
+                    ),
                 )
 
             except (DocumentError, SearchError) as e:
@@ -127,7 +141,9 @@ def handle_api_errors(
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=_format_error_response(
-                        str(e), getattr(e, "error_code", "SERVICE_ERROR"), include_details
+                        str(e),
+                        getattr(e, "error_code", "SERVICE_ERROR"),
+                        include_details,
                     ),
                 )
 

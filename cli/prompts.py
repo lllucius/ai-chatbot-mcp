@@ -36,7 +36,7 @@ async def list():
                     prompt.get("title", ""),
                     prompt.get("category", ""),
                     "Yes" if prompt.get("is_default") else "No",
-                    "Yes" if prompt.get("is_active") else "No"
+                    "Yes" if prompt.get("is_active") else "No",
                 )
             console.print(table)
     except Exception as e:
@@ -57,6 +57,7 @@ async def show(
             from rich.table import Table
 
             from .base import format_timestamp
+
             table = Table(title="Prompt Details")
             table.add_column("Field", style="cyan")
             table.add_column("Value", style="white")
@@ -64,17 +65,18 @@ async def show(
             table.add_row("Title", data.title)
             table.add_row("Category", data.category or "")
             table.add_row("Description", data.description or "")
-            table.add_row("Default", "Yes" if getattr(data, "is_default", False) else "No")
-            table.add_row("Active", "Yes" if getattr(data, "is_active", False) else "No")
+            table.add_row(
+                "Default", "Yes" if getattr(data, "is_default", False) else "No"
+            )
+            table.add_row(
+                "Active", "Yes" if getattr(data, "is_active", False) else "No"
+            )
             table.add_row("Created", format_timestamp(str(data.created_at)))
             console.print(table)
             content = getattr(data, "content", "")
             if content:
                 content_panel = Panel(
-                    content,
-                    title="Prompt Content",
-                    border_style="blue",
-                    expand=False
+                    content, title="Prompt Content", border_style="blue", expand=False
                 )
                 console.print(content_panel)
             tags = getattr(data, "tags", [])
@@ -98,6 +100,7 @@ async def add(
     try:
         sdk = await get_sdk()
         from client.ai_chatbot_sdk import PromptCreate
+
         prompt_data = PromptCreate(
             name=name,
             title=title,
@@ -135,7 +138,9 @@ async def update(
         if description:
             update_data["description"] = description
         if tags:
-            update_data["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
+            update_data["tags"] = [
+                tag.strip() for tag in tags.split(",") if tag.strip()
+            ]
         if not update_data:
             error_message("No update fields provided")
             return
@@ -153,9 +158,12 @@ async def remove(
 ):
     """Remove a prompt."""
     from .base import confirm_action
+
     try:
         if not force:
-            if not confirm_action(f"Are you sure you want to remove prompt '{prompt_name}'?"):
+            if not confirm_action(
+                f"Are you sure you want to remove prompt '{prompt_name}'?"
+            ):
                 return
         sdk = await get_sdk()
         await sdk.prompts.delete_prompt(prompt_name)
@@ -217,15 +225,13 @@ async def categories():
         data = await sdk.prompts.get_categories()
         if data:
             from rich.table import Table
+
             categories = data.get("categories", [])
             table = Table(title="Prompt Categories")
             table.add_column("Category", style="cyan")
             table.add_column("Count", style="green")
             for cat in categories:
-                table.add_row(
-                    cat.get("name", ""),
-                    str(cat.get("count", 0))
-                )
+                table.add_row(cat.get("name", ""), str(cat.get("count", 0)))
             console.print(table)
     except Exception as e:
         error_message(f"Failed to get categories: {str(e)}")
@@ -251,18 +257,19 @@ async def stats():
         if data:
             from rich.columns import Columns
             from rich.panel import Panel
+
             basic_panel = Panel(
                 f"Total Prompts: [green]{data.get('total_prompts', 0)}[/green]\n"
                 f"Active: [blue]{data.get('active_prompts', 0)}[/blue]\n"
                 f"Categories: [yellow]{data.get('total_categories', 0)}[/yellow]",
                 title="📊 Prompt Stats",
-                border_style="cyan"
+                border_style="cyan",
             )
             usage_panel = Panel(
                 f"Default Prompt: [green]{data.get('default_prompt', 'None')}[/green]\n"
                 f"Most Used: [blue]{data.get('most_used_prompt', 'N/A')}[/blue]",
                 title="📈 Usage",
-                border_style="green"
+                border_style="green",
             )
             console.print(Columns([basic_panel, usage_panel]))
     except Exception as e:

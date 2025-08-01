@@ -44,7 +44,9 @@ class Prompt(BaseModelDB):
     title: Mapped[str] = mapped_column(
         String(200), nullable=False, doc="Display title for the prompt"
     )
-    content: Mapped[str] = mapped_column(Text, nullable=False, doc="The actual prompt content")
+    content: Mapped[str] = mapped_column(
+        Text, nullable=False, doc="The actual prompt content"
+    )
     description: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, doc="Optional description of the prompt's purpose"
     )

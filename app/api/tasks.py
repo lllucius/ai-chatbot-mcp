@@ -147,7 +147,7 @@ async def get_workers_info(
         conf_results = inspector.conf() or {}
 
         workers = []
-        for worker_name in stats.keys():
+        for worker_name in stats:
             worker_stats = stats.get(worker_name, {})
             worker_ping = ping_results.get(worker_name, {})
             worker_conf = conf_results.get(worker_name, {})

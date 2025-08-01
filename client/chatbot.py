@@ -38,12 +38,23 @@ try:
 except ImportError:
     readline = None  # Windows fallback
 
-from ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest,
-                            DocumentSearchRequest, LLMProfileCreate,
-                            PromptCreate, ToolHandlingMode, UserPasswordUpdate,
-                            UserUpdate)
-from config import (ClientConfig, get_default_backup_dir,
-                    get_default_token_file, load_config)
+from ai_chatbot_sdk import (
+    AIChatbotSDK,
+    ApiError,
+    ChatRequest,
+    DocumentSearchRequest,
+    LLMProfileCreate,
+    PromptCreate,
+    ToolHandlingMode,
+    UserPasswordUpdate,
+    UserUpdate,
+)
+from config import (
+    ClientConfig,
+    get_default_backup_dir,
+    get_default_token_file,
+    load_config,
+)
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -56,29 +67,44 @@ BACKUP_DIR: str = config.client_conversation_backup_dir or get_default_backup_di
 SETTINGS_FILE: str = str(Path(BACKUP_DIR).parent / "settings.json")
 CLI_VERSION: str = "2.0.0"
 
+
 def save_token(token: str) -> None:
     os.makedirs(os.path.dirname(TOKEN_FILE), exist_ok=True)
     with open(TOKEN_FILE, "w") as f:
         f.write(token)
+
+
 def load_token() -> Optional[str]:
     try:
         with open(TOKEN_FILE, "r") as f:
             return f.read().strip()
     except Exception:
         return None
+
+
 def clear_token() -> None:
     try:
         os.remove(TOKEN_FILE)
     except FileNotFoundError:
         pass
+
+
 def print_error(msg: str) -> None:
     console.print(f"[bold red]Error:[/bold red] {msg}")
+
+
 def print_success(msg: str) -> None:
     console.print(f"[bold green]{msg}[/bold green]")
+
+
 def print_info(msg: str) -> None:
     console.print(f"[bold cyan]{msg}[/bold cyan]")
+
+
 def print_warn(msg: str) -> None:
     console.print(f"[yellow]{msg}[/yellow]")
+
+
 def prettify_dict(
     data: Any,
     title: Optional[str] = None,
@@ -100,14 +126,22 @@ def prettify_dict(
     for k, v in data.items():
         if isinstance(v, dict) and max_depth > 0:
             console.print(f"{'  ' * indent}[{key_color}]{k}[/]:")
-            prettify_dict(v, max_depth=max_depth-1, indent=indent+1)
-        elif isinstance(v, list) and max_depth > 0 and all(isinstance(i, dict) for i in v) and v:
+            prettify_dict(v, max_depth=max_depth - 1, indent=indent + 1)
+        elif (
+            isinstance(v, list)
+            and max_depth > 0
+            and all(isinstance(i, dict) for i in v)
+            and v
+        ):
             console.print(f"{'  ' * indent}[{key_color}]{k}[/]:")
             for idx, elem in enumerate(v, 1):
                 console.print(f"{'  ' * (indent+1)}-")
-                prettify_dict(elem, max_depth=max_depth-1, indent=indent+2)
+                prettify_dict(elem, max_depth=max_depth - 1, indent=indent + 2)
         else:
-            console.print(f"{'  ' * indent}[{key_color}]{k}[/]: [{value_color}]{v}[/{value_color}]")
+            console.print(
+                f"{'  ' * indent}[{key_color}]{k}[/]: [{value_color}]{v}[/{value_color}]"
+            )
+
 
 def prettify_list(
     items: List[Any],
@@ -137,8 +171,10 @@ def prettify_list(
     if len(items) > max_rows:
         console.print(f"[dim]+ {len(items)-max_rows} more rows...[/dim]")
 
+
 def parse_bool(val: str) -> bool:
     return str(val).lower() in ("1", "true", "yes", "y", "on")
+
 
 def save_settings(settings: Dict[str, Any]) -> None:
     try:
@@ -149,6 +185,7 @@ def save_settings(settings: Dict[str, Any]) -> None:
     except Exception as e:
         print_warn(f"Failed to save settings: {e}")
 
+
 def load_settings() -> Dict[str, Any]:
     try:
         with open(SETTINGS_FILE, "r") as f:
@@ -156,8 +193,10 @@ def load_settings() -> Dict[str, Any]:
     except Exception:
         return {}
 
+
 def ensure_backup_dir() -> None:
     os.makedirs(BACKUP_DIR, exist_ok=True)
+
 
 def save_conversation_to_file(content: str, filename: Optional[str] = None) -> str:
     ensure_backup_dir()
@@ -167,6 +206,7 @@ def save_conversation_to_file(content: str, filename: Optional[str] = None) -> s
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
     return path
+
 
 def extract_ai_content(text: str) -> str:
     if not text:
@@ -183,17 +223,24 @@ def extract_ai_content(text: str) -> str:
         return text_stripped.strip()
     return text.strip()
 
-def display_token_stats(usage: Optional[Dict[str, Any]], response_time_ms: Optional[float]) -> None:
+
+def display_token_stats(
+    usage: Optional[Dict[str, Any]], response_time_ms: Optional[float]
+) -> None:
     if usage:
         tkns = usage.get("total_tokens")
         prompt_tkns = usage.get("prompt_tokens")
         comp_tkns = usage.get("completion_tokens")
         model = usage.get("model")
         msg = []
-        if tkns: msg.append(f"Total tokens: {tkns}")
-        if prompt_tkns: msg.append(f"Prompt: {prompt_tkns}")
-        if comp_tkns: msg.append(f"Completion: {comp_tkns}")
-        if model: msg.append(f"Model: {model}")
+        if tkns:
+            msg.append(f"Total tokens: {tkns}")
+        if prompt_tkns:
+            msg.append(f"Prompt: {prompt_tkns}")
+        if comp_tkns:
+            msg.append(f"Completion: {comp_tkns}")
+        if model:
+            msg.append(f"Model: {model}")
         if response_time_ms is not None:
             msg.append(f"Latency: {response_time_ms:.0f} ms")
         if msg:
@@ -201,10 +248,12 @@ def display_token_stats(usage: Optional[Dict[str, Any]], response_time_ms: Optio
     elif response_time_ms is not None:
         print_info(f"Latency: {response_time_ms:.0f} ms")
 
+
 def ellipsis(text: str, max_len: int = 100) -> str:
     if len(text) > max_len:
-        return text[:max_len - 3] + "..."
+        return text[: max_len - 3] + "..."
     return text
+
 
 def prompt_password(confirm: bool = False) -> str:
     while True:
@@ -216,6 +265,7 @@ def prompt_password(confirm: bool = False) -> str:
             return pw
         print_warn("Passwords do not match. Try again.")
 
+
 def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
     if not readline:
         return
@@ -226,7 +276,9 @@ def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
         pass
     readline.set_history_length(1000)
     import atexit
+
     atexit.register(lambda: readline.write_history_file(histfile))
+
 
 class SpinnerContext:
     def __init__(self, message: str = "Thinking...", enabled: bool = True):
@@ -234,18 +286,22 @@ class SpinnerContext:
         self.message = message
         self.task: Optional[asyncio.Task] = None
         self.stop_event: asyncio.Event = asyncio.Event()
+
     async def __aenter__(self) -> "SpinnerContext":
         if self.enabled:
             self.task = asyncio.create_task(self._spin())
         return self
+
     async def __aexit__(self, exc_type, exc, tb) -> None:
         self.stop_event.set()
         if self.task:
             await self.task
+
     async def _spin(self) -> None:
         with console.status(f"[bold blue]{self.message}"):
             while not self.stop_event.is_set():
                 await asyncio.sleep(0.05)
+
 
 class Settings:
     _persist_keys = [
@@ -257,6 +313,7 @@ class Settings:
         "spinner_enabled",
         "auto_title",
     ]
+
     def __init__(self, config: ClientConfig):
         self.use_rag: bool = config.client_default_use_rag
         self.use_tools: bool = config.client_default_use_tools
@@ -271,6 +328,7 @@ class Settings:
         for key in self._persist_keys:
             if key in loaded:
                 setattr(self, key, loaded[key])
+
     def display(self) -> None:
         t = Table(title="Current Settings", box=box.SIMPLE)
         t.add_column("Setting", style="cyan")
@@ -287,8 +345,10 @@ class Settings:
         ]:
             t.add_row(k, str(v))
         console.print(t)
+
     def settings_dict(self) -> Dict[str, Any]:
         return {k: getattr(self, k) for k in self._persist_keys}
+
     def set(self, key: str, value: Any) -> None:
         if hasattr(self, key):
             setattr(self, key, value)
@@ -296,18 +356,23 @@ class Settings:
             save_settings(self.settings_dict())
         else:
             print_warn(f"Unknown setting: {key}")
+
     def reset_llm(self) -> None:
         self.llm_overrides.clear()
         print_success("Cleared all LLM parameter overrides.")
+
     def set_llm_param(self, key: str, value: Any) -> None:
         self.llm_overrides[key] = value
         print_success(f"LLM parameter override: {key} = {value}")
+
     def unset_llm_param(self, key: str) -> None:
         if key in self.llm_overrides:
             self.llm_overrides.pop(key)
             print_success(f"Removed override for {key}")
+
     def get_llm_params(self) -> Dict[str, Any]:
         return self.llm_overrides.copy()
+
     def display_llm_params(self) -> None:
         if not self.llm_overrides:
             print_info("No LLM parameter overrides set.")
@@ -318,6 +383,7 @@ class Settings:
             for k, v in self.llm_overrides.items():
                 t.add_row(k, str(v))
             console.print(t)
+
     def available_settings(self) -> List[Tuple[str, str, str]]:
         return [
             ("use_rag", "bool", "Enable RAG (true/false)"),
@@ -331,6 +397,7 @@ class Settings:
 
 
 # ---- Command Handlers ----
+
 
 class CommandHandler:
     """
@@ -432,7 +499,9 @@ class CommandHandler:
 
         Type a message to chat with the AI.
         """
-        console.print(Panel(textwrap.dedent(help_text), title="Chatbot CLI Help", box=box.ROUNDED))
+        console.print(
+            Panel(textwrap.dedent(help_text), title="Chatbot CLI Help", box=box.ROUNDED)
+        )
 
     def show_settings_help(self) -> None:
         """Show available settings and their types."""
@@ -452,7 +521,13 @@ class CommandHandler:
             print_warn("Usage: /set <key> <value>")
             return
         key, value = args
-        if key in ("use_rag", "use_tools", "enable_streaming", "spinner_enabled", "auto_title"):
+        if key in (
+            "use_rag",
+            "use_tools",
+            "enable_streaming",
+            "spinner_enabled",
+            "auto_title",
+        ):
             parsed = parse_bool(value)
             self.settings.set(key, parsed)
         else:
@@ -507,7 +582,17 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             users = await self.sdk.users.list()
-            prettify_list([u.model_dump() for u in users.items], columns=["username", "email", "is_active", "is_superuser", "created_at"], title="Users")
+            prettify_list(
+                [u.model_dump() for u in users.items],
+                columns=[
+                    "username",
+                    "email",
+                    "is_active",
+                    "is_superuser",
+                    "created_at",
+                ],
+                title="Users",
+            )
         elif subcmd == "show":
             me = await self.sdk.users.me()
             prettify_dict(me, title="User Profile")
@@ -535,7 +620,11 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             servers = await self.sdk.mcp.list_servers(detailed=True)
-            prettify_list(servers.get("servers", []), columns=["name", "url", "enabled", "connected", "description"], title="MCP Servers")
+            prettify_list(
+                servers.get("servers", []),
+                columns=["name", "url", "enabled", "connected", "description"],
+                title="MCP Servers",
+            )
         elif subcmd == "add":
             if len(args) < 3:
                 print_warn("Usage: /mcp add <name> <url>")
@@ -572,12 +661,14 @@ class CommandHandler:
         doc_req = DocumentSearchRequest(query=query, limit=5)
         docs = await self.sdk.search.search(doc_req)
         console.print("[bold]Top document matches:[/bold]")
-        prettify_list(docs.get("results", []), columns=["chunk_id", "document_id", "score", "content"], title="Document Matches")
+        prettify_list(
+            docs.get("results", []),
+            columns=["chunk_id", "document_id", "score", "content"],
+            title="Document Matches",
+        )
         try:
             history = await self.sdk.search.history(limit=50)
-            matches = [
-                m for m in history if query.lower() in str(m).lower()
-            ]
+            matches = [m for m in history if query.lower() in str(m).lower()]
             if matches:
                 console.print("[bold]Conversation history matches:[/bold]")
                 prettify_list(matches, title="History Matches")
@@ -591,7 +682,11 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             prompts = await self.sdk.prompts.list_prompts()
-            prettify_list(prompts.get("prompts", []), columns=["name", "title", "is_active", "created_at"], title="Prompts")
+            prettify_list(
+                prompts.get("prompts", []),
+                columns=["name", "title", "is_active", "created_at"],
+                title="Prompts",
+            )
         elif subcmd == "show":
             if len(args) != 2:
                 print_warn("Usage: /prompt show <name>")
@@ -623,7 +718,11 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             profiles = await self.sdk.profiles.list_profiles()
-            prettify_list(profiles.get("profiles", []), columns=["name", "title", "is_active", "is_default", "model_name"], title="LLM Profiles")
+            prettify_list(
+                profiles.get("profiles", []),
+                columns=["name", "title", "is_active", "is_default", "model_name"],
+                title="LLM Profiles",
+            )
         elif subcmd == "show":
             if len(args) != 2:
                 print_warn("Usage: /profile show <name>")
@@ -648,7 +747,18 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             docs = await self.sdk.documents.list()
-            prettify_list([d.model_dump() for d in docs.items], columns=["id", "title", "filename", "file_type", "processing_status", "chunk_count"], title="Documents")
+            prettify_list(
+                [d.model_dump() for d in docs.items],
+                columns=[
+                    "id",
+                    "title",
+                    "filename",
+                    "file_type",
+                    "processing_status",
+                    "chunk_count",
+                ],
+                title="Documents",
+            )
         elif subcmd == "show":
             if len(args) != 2:
                 print_warn("Usage: /documents show <id>")
@@ -693,7 +803,7 @@ class CommandHandler:
             prettify_dict(data, title="Database Tables")
         else:
             print_warn("Unknown db command.")
-                
+
     async def cmd_export(self, args: List[str]) -> None:
         if not args:
             print_warn("Usage: /export <conversations|analytics> ...")
@@ -705,14 +815,18 @@ class CommandHandler:
                 return
             conv_id = args[1]
             data = await self.sdk.admin.export_conversation(conv_id)
-            out_file = Prompt.ask("Enter output filename (leave empty for auto)", default="")
+            out_file = Prompt.ask(
+                "Enter output filename (leave empty for auto)", default=""
+            )
             out_file = out_file or None
             content = json.dumps(data, indent=2)
             path = save_conversation_to_file(content, filename=out_file)
             print_success(f"Conversation exported to {path}")
         elif subcmd == "analytics":
             data = await self.sdk.analytics.export_report()
-            out_file = Prompt.ask("Enter output filename (leave empty for auto)", default="")
+            out_file = Prompt.ask(
+                "Enter output filename (leave empty for auto)", default=""
+            )
             out_file = out_file or None
             content = json.dumps(data, indent=2)
             path = save_conversation_to_file(content, filename=out_file)
@@ -746,7 +860,10 @@ class CommandHandler:
             except Exception:
                 pass
 
-async def auto_generate_title(user_message: str, sdk: AIChatbotSDK, settings: Settings) -> str:
+
+async def auto_generate_title(
+    user_message: str, sdk: AIChatbotSDK, settings: Settings
+) -> str:
     raw = user_message.strip()
     words = raw.split()
     if len(words) < 12:
@@ -756,22 +873,23 @@ async def auto_generate_title(user_message: str, sdk: AIChatbotSDK, settings: Se
     except Exception:
         return "AI Chat"
 
+
 def get_user_input() -> str:
     prompt_str = "You: "
     try:
         return input(prompt_str)
     except EOFError:
         return ""
-                    
+
+
 async def chat_loop(
-    sdk: AIChatbotSDK,
-    settings: Settings,
-    handler: Any,
-    history: List[str]
+    sdk: AIChatbotSDK, settings: Settings, handler: Any, history: List[str]
 ) -> None:
-    console.print("[bold green]Welcome to the AI Chatbot CLI! Type /help for commands.[/bold green]")
+    console.print(
+        "[bold green]Welcome to the AI Chatbot CLI! Type /help for commands.[/bold green]"
+    )
     conversation_id: Optional[str] = None
-                
+
     while True:
         try:
             user_message: str = get_user_input()
@@ -782,10 +900,12 @@ async def chat_loop(
             history.append(user_message)
             if await handler.handle(user_message):
                 continue
-                    
+
             conversation_title: Optional[str] = None
             if conversation_id is None and settings.auto_title:
-                conversation_title = await auto_generate_title(user_message, sdk, settings)
+                conversation_title = await auto_generate_title(
+                    user_message, sdk, settings
+                )
 
             chat_req = ChatRequest(
                 user_message=user_message,
@@ -797,8 +917,10 @@ async def chat_loop(
                 rag_documents=None,
                 prompt_name=settings.prompt_name,
                 profile_name=settings.profile_name,
-                llm_profile=settings.get_llm_params() if settings.llm_overrides else None,
-                )
+                llm_profile=(
+                    settings.get_llm_params() if settings.llm_overrides else None
+                ),
+            )
 
             response = None
             spinner_msg = "Waiting for AI response..."
@@ -816,6 +938,7 @@ async def chat_loop(
                     raise
 
             if settings.enable_streaming:
+
                 async def do_stream():
                     stream = sdk.conversations.chat_stream(chat_req)
                     usage = None
@@ -845,10 +968,13 @@ async def chat_loop(
                     print()
                     if usage:
                         display_token_stats(usage, latency)
+
                 await do_stream()
             else:
                 async with SpinnerContext(spinner_msg, enabled=True):
-                    response = await fetch_and_retry_on_auth(lambda: sdk.conversations.chat(chat_req))
+                    response = await fetch_and_retry_on_auth(
+                        lambda: sdk.conversations.chat(chat_req)
+                    )
 
             if response:
                 ai_msg_raw = response.ai_message.content
@@ -865,15 +991,16 @@ async def chat_loop(
         except Exception as e:
             print_error(f"Unexpected error: {e}")
 
+
 async def ensure_auth(sdk: AIChatbotSDK) -> bool:
     token = load_token()
     if token:
         sdk.set_token(token)
     try:
-            await sdk.users.me()
-            return True
-        except Exception:
-            pass
+        await sdk.users.me()
+        return True
+    except Exception:
+        pass
     username = config.client_username or input("Username: ")
     password = config.client_password or prompt_password()
     try:
@@ -886,15 +1013,18 @@ async def ensure_auth(sdk: AIChatbotSDK) -> bool:
         print_error(f"Login failed: {e}")
         return False
 
+
 def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
     def _exit_handler():
         print_warn("\nExiting. (Ctrl+C)")
         sys.exit(0)
+
     try:
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, _exit_handler)
     except NotImplementedError:
         pass
+
 
 async def main() -> None:
     if readline:
@@ -913,6 +1043,7 @@ async def main() -> None:
         if not await ensure_auth(sdk):
             sys.exit(1)
         await chat_loop(sdk, settings, handler, history)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

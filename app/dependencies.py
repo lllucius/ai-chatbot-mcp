@@ -173,7 +173,9 @@ async def get_search_service(db: AsyncSession = Depends(get_db)) -> SearchServic
     return SearchService(db)
 
 
-async def get_conversation_service(db: AsyncSession = Depends(get_db)) -> ConversationService:
+async def get_conversation_service(
+    db: AsyncSession = Depends(get_db),
+) -> ConversationService:
     """Get ConversationService instance."""
     return ConversationService(db)
 
@@ -181,5 +183,3 @@ async def get_conversation_service(db: AsyncSession = Depends(get_db)) -> Conver
 async def get_embedding_service(db: AsyncSession = Depends(get_db)) -> EmbeddingService:
     """Get EmbeddingService instance."""
     return EmbeddingService(db)
-
-

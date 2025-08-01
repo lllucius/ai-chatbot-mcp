@@ -22,6 +22,7 @@ async def overview():
         data = await sdk.analytics.get_overview()
         if data:
             from rich.table import Table
+
             overview = data.get("data", data)
             table = Table(title="Analytics Overview")
             for k, v in overview.items():
@@ -38,7 +39,9 @@ async def overview():
 
 @analytics_app.async_command()
 async def usage(
-    period: Optional[str] = Option(None, "--period", help="Usage period: 1d, 7d, 30d, etc."),
+    period: Optional[str] = Option(
+        None, "--period", help="Usage period: 1d, 7d, 30d, etc."
+    ),
     detailed: bool = Option(False, "--detailed", help="Show detailed usage"),
 ):
     """Show usage analytics."""
@@ -47,6 +50,7 @@ async def usage(
         data = await sdk.analytics.get_usage(period, detailed)
         if data:
             from rich.table import Table
+
             usage = data.get("usage", data)
             table = Table(title=f"Usage Analytics ({period or 'default'})")
             for k, v in usage.items():
@@ -65,6 +69,7 @@ async def performance():
         data = await sdk.analytics.get_performance()
         if data:
             from rich.table import Table
+
             perf = data.get("performance", data)
             table = Table(title="Performance Metrics")
             for k, v in perf.items():
@@ -85,7 +90,9 @@ async def export_report(
         sdk = await get_sdk()
         data = await sdk.analytics.export_report(output=output, details=details)
         if getattr(data, "success", False) or data.get("success", False):
-            success_message(f"Analytics report exported{' to ' + output if output else ''}.")
+            success_message(
+                f"Analytics report exported{' to ' + output if output else ''}."
+            )
         else:
             error_message(getattr(data, "message", "Failed to export report"))
     except Exception as e:

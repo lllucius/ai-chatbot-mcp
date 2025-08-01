@@ -126,7 +126,7 @@ class SearchService(BaseService):
         # Query pg_proc for a function named bm25 with (tsvector, tsquery) params
         sql = """
         SELECT EXISTS(
-            SELECT 1 FROM pg_proc 
+            SELECT 1 FROM pg_proc
             WHERE proname = 'bm25'
             AND proargtypes[0] = (SELECT oid FROM pg_type WHERE typname = 'tsvector')
         );
@@ -141,7 +141,9 @@ class SearchService(BaseService):
         if cached is not None:
             # Validate cached embedding type
             if not isinstance(cached, list):
-                logger.warning(f"Invalid cached embedding type: {type(cached)}, regenerating")
+                logger.warning(
+                    f"Invalid cached embedding type: {type(cached)}, regenerating"
+                )
                 # Remove invalid cache entry
                 if query in embedding_cache.cache:
                     del embedding_cache.cache[query]
@@ -150,7 +152,7 @@ class SearchService(BaseService):
                 cached = None
             else:
                 return cached
-        
+
         embedding = await self.embedding_service.generate_embedding(query)
         if embedding:
             # Validate embedding before caching
@@ -200,9 +202,13 @@ class SearchService(BaseService):
 
         # Validate embedding is a list
         if not isinstance(embedding, list):
-            raise SearchError(f"Invalid embedding type: {type(embedding)}, expected list")
+            raise SearchError(
+                f"Invalid embedding type: {type(embedding)}, expected list"
+            )
 
-        distance_expr = DocumentChunk.embedding.cosine_distance(embedding).label("distance")
+        distance_expr = DocumentChunk.embedding.cosine_distance(embedding).label(
+            "distance"
+        )
         similarity_threshold = 1.0 - request.threshold
 
         # Pre-filter user_id before vector op!
@@ -272,16 +278,22 @@ class SearchService(BaseService):
         # Check support for bm25
         bm25_supported = await self.check_bm25_support()
         if bm25_supported:
-            rank_expr = func.bm25(func.to_tsvector("english", DocumentChunk.content), ts_query).label("rank")
+            rank_expr = func.bm25(
+                func.to_tsvector("english", DocumentChunk.content), ts_query
+            ).label("rank")
         else:
-            rank_expr = func.ts_rank_cd(func.to_tsvector("english", DocumentChunk.content), ts_query).label("rank")
+            rank_expr = func.ts_rank_cd(
+                func.to_tsvector("english", DocumentChunk.content), ts_query
+            ).label("rank")
 
         query = (
             select(DocumentChunk, rank_expr)
             .join(Document, DocumentChunk.document_id == Document.id)
             .options(joinedload(DocumentChunk.document))
             .where(Document.owner_id == user_id)
-            .where(func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query))
+            .where(
+                func.to_tsvector("english", DocumentChunk.content).op("@@")(ts_query)
+            )
         )
         if request.document_ids:
             query = query.where(Document.id.in_(request.document_ids))
@@ -339,7 +351,9 @@ class SearchService(BaseService):
         for result in vector_results:
             chunk_id = result.id
             combined_results[chunk_id] = result
-            combined_results[chunk_id].similarity_score = (result.similarity_score or 0) * 0.7
+            combined_results[chunk_id].similarity_score = (
+                result.similarity_score or 0
+            ) * 0.7
 
         for result in text_results:
             chunk_id = result.id
@@ -352,7 +366,9 @@ class SearchService(BaseService):
 
         results = list(combined_results.values())
         results.sort(key=lambda x: x.similarity_score or 0, reverse=True)
-        filtered_results = [r for r in results if (r.similarity_score or 0) >= request.threshold]
+        filtered_results = [
+            r for r in results if (r.similarity_score or 0) >= request.threshold
+        ]
         return filtered_results[: request.limit]
 
     async def _mmr_search(

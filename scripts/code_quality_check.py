@@ -67,7 +67,7 @@ class CodeQualityChecker:
         violations = []
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 content = f.read()
 
             # Parse imports
@@ -95,7 +95,7 @@ class CodeQualityChecker:
         violations = []
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -125,7 +125,7 @@ class CodeQualityChecker:
         violations = []
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 content = f.read()
 
             # Check for old logging pattern
@@ -158,7 +158,7 @@ class CodeQualityChecker:
             return violations
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -191,7 +191,7 @@ class CodeQualityChecker:
             return violations
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 content = f.read()
 
             # Check for old error handling patterns

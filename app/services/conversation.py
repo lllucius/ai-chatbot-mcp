@@ -33,9 +33,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.conversation import Conversation, Message
-from ..schemas.conversation import (ChatRequest, ConversationCreate,
-                                    ConversationResponse, ConversationUpdate,
-                                    MessageResponse)
+from ..schemas.conversation import (
+    ChatRequest,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationUpdate,
+    MessageResponse,
+)
 from ..schemas.document import DocumentSearchRequest
 from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
@@ -97,7 +101,9 @@ class ConversationService(BaseService):
         self.mcp_service = MCPService(db)
         self.openai_client = OpenAIClient(self.mcp_service)
 
-    async def create_conversation(self, request: ConversationCreate, user_id: UUID) -> Conversation:
+    async def create_conversation(
+        self, request: ConversationCreate, user_id: UUID
+    ) -> Conversation:
         """
         Create a new conversation.
 
@@ -127,7 +133,9 @@ class ConversationService(BaseService):
             logger.error(f"Failed to create conversation: {e}")
             raise ValidationError(f"Conversation creation failed: {e}")
 
-    async def get_conversation(self, conversation_id: UUID, user_id: UUID) -> Conversation:
+    async def get_conversation(
+        self, conversation_id: UUID, user_id: UUID
+    ) -> Conversation:
         """
         Get conversation by ID.
 
@@ -143,7 +151,9 @@ class ConversationService(BaseService):
         """
         result = await self.db.execute(
             select(Conversation).where(
-                and_(Conversation.id == conversation_id, Conversation.user_id == user_id)
+                and_(
+                    Conversation.id == conversation_id, Conversation.user_id == user_id
+                )
             )
         )
         conversation = result.scalar_one_or_none()
@@ -294,10 +304,14 @@ class ConversationService(BaseService):
         try:
             # Get or create conversation
             if request.conversation_id:
-                conversation = await self.get_conversation(request.conversation_id, user_id)
+                conversation = await self.get_conversation(
+                    request.conversation_id, user_id
+                )
             else:
                 # Create new conversation
-                title = request.conversation_title or f"Chat {request.user_message[:50]}..."
+                title = (
+                    request.conversation_title or f"Chat {request.user_message[:50]}..."
+                )
                 conversation = await self.create_conversation(
                     ConversationCreate(title=title, is_active=True), user_id
                 )
@@ -337,7 +351,9 @@ class ConversationService(BaseService):
                     # Add RAG context to system message
                     context_text = self._format_rag_context(rag_context)
                     if ai_messages[0]["role"] == "system":
-                        ai_messages[0]["content"] += f"\n\nRelevant context:\n{context_text}"
+                        ai_messages[0][
+                            "content"
+                        ] += f"\n\nRelevant context:\n{context_text}"
                     else:
                         ai_messages.insert(
                             0,
@@ -355,14 +371,18 @@ class ConversationService(BaseService):
                     llm_profile = request.llm_profile
                 elif request.profile_name:
                     # Load profile by name
-                    llm_profile = await self.llm_profile_service.get_profile(request.profile_name)
+                    llm_profile = await self.llm_profile_service.get_profile(
+                        request.profile_name
+                    )
                 else:
                     # Get default profile
                     llm_profile = await self.llm_profile_service.get_default_profile()
 
                 # Record profile usage if we have a profile
                 if llm_profile:
-                    await self.llm_profile_service.record_profile_usage(llm_profile.name)
+                    await self.llm_profile_service.record_profile_usage(
+                        llm_profile.name
+                    )
             except Exception as e:
                 logger.warning(f"Failed to get LLM profile: {e}")
 
@@ -455,10 +475,14 @@ class ConversationService(BaseService):
         try:
             # Get or create conversation
             if request.conversation_id:
-                conversation = await self.get_conversation(request.conversation_id, user_id)
+                conversation = await self.get_conversation(
+                    request.conversation_id, user_id
+                )
             else:
                 # Create new conversation
-                title = request.conversation_title or f"Chat {request.user_message[:50]}..."
+                title = (
+                    request.conversation_title or f"Chat {request.user_message[:50]}..."
+                )
                 conversation = await self.create_conversation(
                     ConversationCreate(title=title, is_active=True), user_id
                 )
@@ -499,7 +523,9 @@ class ConversationService(BaseService):
                     # Add RAG context to system message
                     context_text = self._format_rag_context(rag_context)
                     if ai_messages[0]["role"] == "system":
-                        ai_messages[0]["content"] += f"\n\nRelevant context:\n{context_text}"
+                        ai_messages[0][
+                            "content"
+                        ] += f"\n\nRelevant context:\n{context_text}"
                     else:
                         ai_messages.insert(
                             0,
@@ -517,14 +543,18 @@ class ConversationService(BaseService):
                     llm_profile = request.llm_profile
                 elif request.profile_name:
                     # Load profile by name
-                    llm_profile = await self.llm_profile_service.get_profile(request.profile_name)
+                    llm_profile = await self.llm_profile_service.get_profile(
+                        request.profile_name
+                    )
                 else:
                     # Get default profile
                     llm_profile = await self.llm_profile_service.get_default_profile()
 
                 # Record profile usage if we have a profile
                 if llm_profile:
-                    await self.llm_profile_service.record_profile_usage(llm_profile.name)
+                    await self.llm_profile_service.record_profile_usage(
+                        llm_profile.name
+                    )
             except Exception as e:
                 logger.warning(f"Failed to get LLM profile: {e}")
 
@@ -560,10 +590,7 @@ class ConversationService(BaseService):
                 if chunk_type == "content":
                     content = chunk.get("content", "")
                     full_content += content
-                    yield {
-                        "type": "content",
-                        "content": content
-                    }
+                    yield {"type": "content", "content": content}
                 elif chunk_type == "tool_call":
                     yield {
                         "type": "tool_call",
@@ -608,7 +635,7 @@ class ConversationService(BaseService):
             }
         except Exception as e:
             logger.error(f"Streaming chat processing failed: {e}")
-            
+
             yield {"type": "error", "error": str(e)}
 
     async def _get_conversation_history(
@@ -639,7 +666,9 @@ class ConversationService(BaseService):
                     await self.prompt_service.record_prompt_usage(prompt.name)
                     return prompt.content
                 else:
-                    logger.warning(f"Prompt '{request.prompt_name}' not found, using default")
+                    logger.warning(
+                        f"Prompt '{request.prompt_name}' not found, using default"
+                    )
             except Exception as e:
                 logger.warning(f"Failed to get prompt '{request.prompt_name}': {e}")
 
@@ -682,7 +711,9 @@ class ConversationService(BaseService):
             )
 
             # Search for relevant chunks
-            search_results = await self.search_service.search_documents(search_request, user_id)
+            search_results = await self.search_service.search_documents(
+                search_request, user_id
+            )
 
             if not search_results:
                 return None
@@ -693,7 +724,8 @@ class ConversationService(BaseService):
                 context.append(
                     {
                         "content": result.content,
-                        "source": result.document_title or f"Document {result.document_id}",
+                        "source": result.document_title
+                        or f"Document {result.document_id}",
                         "similarity": result.similarity_score,
                         "chunk_id": result.id,
                     }
@@ -736,7 +768,9 @@ class ConversationService(BaseService):
                 results=[],
             )
 
-        successful_calls = sum(1 for call in tool_calls_executed if call.get("success", False))
+        successful_calls = sum(
+            1 for call in tool_calls_executed if call.get("success", False)
+        )
         failed_calls = len(tool_calls_executed) - successful_calls
         total_execution_time = sum(
             call.get("execution_time_ms", 0) or 0 for call in tool_calls_executed
@@ -792,16 +826,22 @@ class ConversationService(BaseService):
 
         # Total messages
         messages_result = await self.db.execute(
-            select(func.count(Message.id)).join(Conversation).where(Conversation.user_id == user_id)
+            select(func.count(Message.id))
+            .join(Conversation)
+            .where(Conversation.user_id == user_id)
         )
         total_messages = messages_result.scalar() or 0
 
         # Average messages per conversation
-        avg_messages = total_messages / total_conversations if total_conversations > 0 else 0
+        avg_messages = (
+            total_messages / total_conversations if total_conversations > 0 else 0
+        )
 
         # Most recent activity
         recent_result = await self.db.execute(
-            select(func.max(Conversation.updated_at)).where(Conversation.user_id == user_id)
+            select(func.max(Conversation.updated_at)).where(
+                Conversation.user_id == user_id
+            )
         )
         most_recent_activity = recent_result.scalar()
 

@@ -65,7 +65,7 @@ def get_api_version_from_request(request: Request) -> APIVersion:
     """Extract API version from request."""
     # Method 1: From URL path (e.g., /api/v1/...)
     path_parts = request.url.path.split("/")
-    for i, part in enumerate(path_parts):
+    for _i, part in enumerate(path_parts):
         if part.startswith("v") and part[1:].isdigit():
             try:
                 return APIVersion(part)
@@ -96,12 +96,16 @@ def get_api_version_from_request(request: Request) -> APIVersion:
 def add_version_headers(response, version: APIVersion) -> None:
     """Add version information to response headers."""
     response.headers["X-API-Version"] = version.value
-    response.headers["X-API-Supported-Versions"] = "v1"  # Update as new versions are added
+    response.headers["X-API-Supported-Versions"] = (
+        "v1"  # Update as new versions are added
+    )
 
     # Add deprecation warning if applicable
     version_info = versioned_router.get_version_info(version)
     if version_info and version_info.deprecated:
-        response.headers["Warning"] = f'299 - "API version {version.value} is deprecated"'
+        response.headers["Warning"] = (
+            f'299 - "API version {version.value} is deprecated"'
+        )
         if version_info.sunset_date:
             response.headers["Sunset"] = version_info.sunset_date
 
@@ -174,7 +178,9 @@ class APIMigration:
         if "full_name" in v2_user:
             name_parts = v2_user["full_name"].split(" ", 1)
             v2_user["profile"]["first_name"] = name_parts[0]
-            v2_user["profile"]["last_name"] = name_parts[1] if len(name_parts) > 1 else ""
+            v2_user["profile"]["last_name"] = (
+                name_parts[1] if len(name_parts) > 1 else ""
+            )
 
         return v2_user
 

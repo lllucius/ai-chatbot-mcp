@@ -14,8 +14,7 @@ from async_typer import AsyncTyper
 from cli.analytics import analytics_app
 from cli.base import console
 from cli.conversations import conversation_app
-from cli.core import \
-    core_app  # New: core commands (login, auth-status, config, etc.)
+from cli.core import core_app  # New: core commands (login, auth-status, config, etc.)
 from cli.database import database_app
 from cli.documents import document_app
 from cli.mcp import mcp_app
@@ -31,7 +30,9 @@ app = AsyncTyper(
 )
 
 # Register sub-applications
-app.add_typer(core_app, name=None)  # core_app contains root commands (login, logout, etc.)
+app.add_typer(
+    core_app, name=None
+)  # core_app contains root commands (login, logout, etc.)
 app.add_typer(user_app, name="users")
 app.add_typer(document_app, name="documents")
 app.add_typer(conversation_app, name="conversations")

@@ -15,12 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.analytics import (AnalyticsExportResponse,
-                                 AnalyticsOverviewResponse,
-                                 AnalyticsPerformanceResponse,
-                                 AnalyticsTrendsResponse,
-                                 AnalyticsUsageResponse,
-                                 AnalyticsUserAnalyticsResponse)
+from ..schemas.analytics import (
+    AnalyticsExportResponse,
+    AnalyticsOverviewResponse,
+    AnalyticsPerformanceResponse,
+    AnalyticsTrendsResponse,
+    AnalyticsUsageResponse,
+    AnalyticsUserAnalyticsResponse,
+)
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["analytics"])
@@ -227,14 +229,14 @@ async def get_performance_metrics(
         db_stats = await db.execute(
             text(
                 """
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 n_tup_ins + n_tup_upd + n_tup_del as total_operations,
                 n_live_tup as live_tuples,
                 n_dead_tup as dead_tuples
-            FROM pg_stat_user_tables 
-            ORDER BY total_operations DESC 
+            FROM pg_stat_user_tables
+            ORDER BY total_operations DESC
             LIMIT 5
         """
             )

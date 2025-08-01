@@ -22,6 +22,7 @@ async def status():
         data = await sdk.database.get_status()
         if data:
             from rich.table import Table
+
             table = Table(title="Database Status")
             for k, v in data.items():
                 table.add_row(str(k), str(v))
@@ -86,6 +87,7 @@ async def tables():
         data = await sdk.database.get_tables()
         if data:
             from rich.table import Table
+
             tables = data.get("tables", [])
             table = Table(title="Database Tables")
             table.add_column("Table", style="cyan")

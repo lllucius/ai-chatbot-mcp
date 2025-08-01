@@ -95,7 +95,9 @@ def organize_imports(imports: List[str]) -> List[str]:
     local_imports = []
 
     for import_line in imports:
-        if import_line.strip().startswith("from ") or import_line.strip().startswith("import "):
+        if import_line.strip().startswith("from ") or import_line.strip().startswith(
+            "import "
+        ):
             if any(module in import_line for module in STANDARD_LIBRARY_MODULES):
                 standard_imports.append(import_line)
             elif any(module in import_line for module in THIRD_PARTY_MODULES):
@@ -132,7 +134,7 @@ def validate_import_order(file_path: str) -> List[str]:
     violations = []
 
     try:
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             lines = f.readlines()
 
         import_section = []

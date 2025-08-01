@@ -109,10 +109,7 @@ class InputValidator:
         if not text:
             return False
 
-        for pattern in cls.SQL_INJECTION_PATTERNS:
-            if pattern.search(text):
-                return True
-        return False
+        return any(pattern.search(text) for pattern in cls.SQL_INJECTION_PATTERNS)
 
     @classmethod
     def check_xss(cls, text: str) -> bool:
@@ -128,13 +125,12 @@ class InputValidator:
         if not text:
             return False
 
-        for pattern in cls.XSS_PATTERNS:
-            if pattern.search(text):
-                return True
-        return False
+        return any(pattern.search(text) for pattern in cls.XSS_PATTERNS)
 
     @classmethod
-    def validate_json_payload(cls, payload: Dict[str, Any], max_depth: int = 10) -> bool:
+    def validate_json_payload(
+        cls, payload: Dict[str, Any], max_depth: int = 10
+    ) -> bool:
         """
         Validate JSON payload structure and depth.
 
@@ -228,7 +224,9 @@ def validate_search_query(query: str) -> str:
     return InputValidator.sanitize_string(query)
 
 
-def validate_file_upload(filename: str, content_type: str, allowed_types: List[str]) -> None:
+def validate_file_upload(
+    filename: str, content_type: str, allowed_types: List[str]
+) -> None:
     """
     Validate file upload parameters.
 
