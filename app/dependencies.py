@@ -1,9 +1,77 @@
 """
-FastAPI dependencies for authentication and authorization.
+FastAPI dependencies for authentication, authorization, and service injection.
 
-This module provides reusable dependencies for FastAPI endpoints
-including user authentication, authorization checks, and common utilities.
+This module provides comprehensive reusable dependencies for FastAPI endpoints
+including user authentication, authorization checks, service injection, and
+common utilities. Implements enterprise-grade dependency injection patterns
+with proper security controls, validation, and integration with the application's
+service architecture for scalable and maintainable API development.
 
+Dependency Architecture:
+- JWT-based authentication with secure token validation and user identification
+- Role-based authorization with permission checking and access control
+- Service dependency injection with proper lifecycle management
+- Database session management with transaction handling and connection pooling
+- Request validation and sanitization with comprehensive error handling
+- Integration with FastAPI's dependency injection system for clean architecture
+
+Authentication Dependencies:
+- JWT token validation with proper signature verification and expiration checking
+- User identification and retrieval with efficient database queries
+- Optional authentication for endpoints with both authenticated and anonymous access
+- Session management with proper token lifecycle and security controls
+- Multi-factor authentication support for enhanced security requirements
+- Integration with external identity providers and authentication systems
+
+Authorization Dependencies:
+- Role-based access control with flexible permission systems
+- Resource-level authorization with ownership and access validation
+- Admin and superuser privilege checking for administrative operations
+- API key authentication for service-to-service communication
+- Rate limiting and throttling for abuse prevention and resource protection
+- Audit logging for access control and compliance monitoring
+
+Service Dependencies:
+- Database session injection with proper transaction management and cleanup
+- Service class instantiation with dependency resolution and lifecycle management
+- Configuration injection with environment-specific settings and validation
+- External service client injection with connection pooling and error handling
+- Cache service injection with intelligent caching and invalidation strategies
+- Logging service injection with structured logging and audit trail capabilities
+
+Security Features:
+- Secure token handling with proper validation and error responses
+- Input sanitization and validation to prevent injection attacks
+- Rate limiting per user and IP address for abuse prevention
+- Security audit logging for compliance and monitoring requirements
+- Error handling that doesn't leak sensitive information
+- Integration with security monitoring and alerting systems
+
+Performance Optimization:
+- Efficient database session management with connection reuse
+- Lazy loading of dependencies for optimal resource utilization
+- Caching of frequently accessed data for reduced database load
+- Async dependency resolution for non-blocking operations
+- Memory management with proper cleanup and garbage collection
+- Integration with performance monitoring and optimization tools
+
+Use Cases:
+- API endpoint protection with authentication and authorization
+- Service layer dependency injection for clean architecture patterns
+- Database session management across request lifecycle
+- User context propagation through application layers
+- Administrative function protection with proper privilege checking
+- Integration with external services and microservices architecture
+
+Example Usage:
+    @router.get("/protected-endpoint")
+    async def protected_function(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+        user_service: UserService = Depends(get_user_service)
+    ):
+        # Endpoint with authenticated user, database session, and service injection
+        return await user_service.get_user_profile(current_user.id)
 """
 
 from typing import Optional

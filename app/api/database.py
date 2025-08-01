@@ -21,7 +21,7 @@ Security:
 import os
 import subprocess
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
@@ -415,7 +415,7 @@ async def get_migration_status(
         )
 
         migration_status = "up_to_date" if current_revision == available_heads else "pending"
-        
+
         return DatabaseMigrationsResponse(
             success=True,
             applied_migrations=[],  # Could be expanded to parse history
@@ -1187,7 +1187,7 @@ async def execute_custom_query(
         POST /api/v1/database/query?query=SELECT%20*%20FROM%20users%20WHERE%20active=true&limit=50
     """
     log_api_call("execute_custom_query", user_id=str(current_user.id))
-    
+
     import time
     start_time = time.time()
 

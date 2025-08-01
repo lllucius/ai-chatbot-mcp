@@ -132,10 +132,6 @@ async def basic_health_check() -> Dict[str, Any]:
             "timestamp": "2024-01-01T00:00:00Z"
         }
     """
-            "version": "1.0.0",
-            "timestamp": "2024-01-01T12:00:00Z"
-        }
-    """
     log_api_call("basic_health_check")
     return {
         "success": True,
