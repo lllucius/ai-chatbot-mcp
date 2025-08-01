@@ -51,14 +51,38 @@ async def initialize_database(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Initialize the database and create all tables.
+    Initialize the database and create all tables with required extensions.
 
-    This endpoint runs the initial database setup including:
-    - Creating all tables from SQLAlchemy models
-    - Setting up indexes and constraints
-    - Installing required extensions (e.g., pgvector)
+    Performs comprehensive database initialization including table creation
+    from SQLAlchemy models, index setup, constraint creation, and installation
+    of required PostgreSQL extensions like pgvector for vector operations.
 
-    Requires superuser access.
+    Args:
+        current_user: Current authenticated superuser performing initialization
+        db: Database session for initialization operations
+
+    Returns:
+        BaseResponse: Success confirmation with initialization timestamp
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If database initialization process fails
+
+    Initialization Operations:
+        - Creates all tables from registered SQLAlchemy models
+        - Sets up database indexes and foreign key constraints
+        - Installs pgvector extension for vector similarity operations
+        - Validates database schema and configuration
+        - Establishes proper permissions and access controls
+
+    Security Notes:
+        - Requires superuser privileges for system-level database operations
+        - Operation is logged for administrative audit trail
+        - Validation ensures proper schema integrity
+        - Rollback mechanisms for failed initialization attempts
+
+    Example:
+        POST /api/v1/database/init
     """
     log_api_call("initialize_database", user_id=str(current_user.id))
 
@@ -94,10 +118,44 @@ async def get_database_status(
     db: AsyncSession = Depends(get_db),
 ) -> DatabaseStatusResponse:
     """
-    Get database connection status and basic information.
+    Get comprehensive database connection status and configuration information.
 
-    Returns information about database connectivity, version,
-    installed extensions, and basic configuration.
+    Returns detailed information about database connectivity, version information,
+    installed extensions, configuration parameters, and health metrics. Provides
+    complete database status for monitoring and administrative purposes.
+
+    Args:
+        current_user: Current authenticated superuser requesting database status
+        db: Database session for status queries and validation
+
+    Returns:
+        DatabaseStatusResponse: Database status information including:
+            - connection_status: Database connectivity and health status
+            - version_info: PostgreSQL version and build information
+            - extensions: Installed extensions and their versions
+            - configuration: Key database configuration parameters
+            - health_metrics: Performance and capacity indicators
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If database status retrieval fails
+
+    Status Information:
+        - Database connection health and response time
+        - PostgreSQL version and feature availability
+        - Installed extensions (pgvector, uuid-ossp, etc.)
+        - Configuration parameters and settings
+        - Storage utilization and performance metrics
+
+    Health Metrics:
+        - Connection pool status and availability
+        - Query performance and response times
+        - Storage capacity and utilization rates
+        - Index health and optimization status
+        - Replication status (if applicable)
+
+    Example:
+        GET /api/v1/database/status
     """
     log_api_call("get_database_status", user_id=str(current_user.id))
 
