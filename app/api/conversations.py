@@ -1,10 +1,56 @@
 """
-Conversation and chat API endpoints.
+Conversation and chat API endpoints with comprehensive AI assistant integration.
 
-This module provides endpoints for managing conversations, sending messages,
-and interacting with the AI assistant with RAG capabilities and enhanced
-registry integration for prompts, LLM profiles, and MCP tools.
+This module provides endpoints for managing conversations, sending messages, and
+interacting with the AI assistant featuring advanced RAG (Retrieval-Augmented
+Generation) capabilities, streaming responses, and enhanced registry integration
+for prompts, LLM profiles, and MCP tools.
 
+Key Features:
+- Conversation lifecycle management (create, read, update, delete, archive)
+- Real-time and streaming chat interactions with AI assistant
+- Message history tracking and conversation context management
+- RAG-enhanced responses with document retrieval and citation
+- Advanced search across conversations and messages
+- Export and import capabilities for conversation data
+- Comprehensive statistics and analytics for conversation insights
+
+AI Assistant Integration:
+- Streaming and non-streaming chat responses with real-time feedback
+- Integration with LLM profiles for customized conversation behavior
+- MCP (Model Context Protocol) tool integration for enhanced capabilities
+- RAG system integration for document-aware conversations
+- Prompt registry integration for consistent conversation experiences
+- Context-aware conversation management and memory
+
+Conversation Management:
+- Create conversations with custom titles and settings
+- List and filter conversations with pagination and search
+- Update conversation metadata and configuration
+- Archive conversations for long-term storage and organization
+- Delete conversations with proper cleanup and data management
+- Comprehensive conversation statistics and usage analytics
+
+Message Operations:
+- Send messages to AI assistant with streaming and non-streaming options
+- Retrieve message history with pagination and filtering
+- Message search across conversation content and metadata
+- Message export and import for data portability
+- Real-time message streaming with server-sent events
+
+Advanced Features:
+- Conversation search with full-text search capabilities
+- Statistical analysis and conversation insights
+- Bulk operations for conversation management
+- Data export in multiple formats for analysis and backup
+- Integration with external systems through API endpoints
+
+Security and Performance:
+- User-based access control and conversation ownership
+- Rate limiting and abuse protection for chat interactions
+- Efficient pagination and caching for large conversation datasets
+- Comprehensive audit logging for conversation activities
+- Privacy controls and data protection measures
 """
 
 import json
@@ -80,29 +126,62 @@ async def create_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Create a new conversation for the current user.
+    Create a new conversation with comprehensive configuration and AI assistant integration.
 
-    Creates a new conversation thread with the specified title and metadata.
-    The conversation is owned by the current authenticated user and can be
-    used for subsequent chat interactions.
+    Creates a new conversation thread with specified title, metadata, and configuration
+    options. The conversation is owned by the current authenticated user and serves
+    as a context container for subsequent chat interactions with the AI assistant,
+    including RAG-enhanced responses and tool integrations.
 
     Args:
-        request: Conversation creation data including title and optional metadata
-        current_user: Current authenticated user from JWT token
-        conversation_service: Injected conversation service instance
+        request: Conversation creation data including title, metadata, and configuration
+        current_user: Current authenticated user from validated JWT token
+        conversation_service: Injected conversation service instance for operations
 
     Returns:
-        ConversationResponse: Created conversation details including ID and metadata
+        ConversationResponse: Created conversation details including:
+            - id: Unique conversation identifier for future operations
+            - title: Conversation title for organization and display
+            - metadata: Additional configuration and context information
+            - created_at: Conversation creation timestamp
+            - updated_at: Last modification timestamp
+            - user_id: Owner identification for access control
 
     Raises:
-        HTTP 400: If conversation creation data is invalid
-        HTTP 500: If conversation creation fails
+        HTTP 400: If conversation creation data is invalid or malformed
+        HTTP 422: If request validation fails or required fields are missing
+        HTTP 500: If conversation creation process fails due to system error
+
+    Conversation Features:
+        - Custom titles for organization and identification
+        - Metadata storage for context and configuration
+        - Automatic ownership assignment for access control
+        - Integration with AI assistant for enhanced interactions
+        - Support for RAG-enabled document-aware conversations
+        - Compatibility with LLM profiles and conversation settings
+
+    Configuration Options:
+        - title: Descriptive name for conversation identification
+        - metadata: Key-value pairs for custom configuration and context
+        - settings: Conversation-specific AI behavior and preferences
+        - context: Initial conversation context and background information
+
+    Use Cases:
+        - Interactive AI assistant conversations and consultations
+        - Document-aware discussions with RAG integration
+        - Project-specific conversations with custom contexts
+        - Multi-topic conversations with organized metadata
+        - Long-term conversation threads with persistent context
 
     Example:
         POST /api/v1/conversations/
         {
-            "title": "Planning Discussion",
-            "metadata": {"category": "work"}
+            "title": "Project Planning Discussion",
+            "metadata": {
+                "category": "work",
+                "project": "ai-integration",
+                "priority": "high"
+            }
         }
     """
     log_api_call(
@@ -125,26 +204,56 @@ async def list_conversations(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    List user's conversations with pagination and filtering.
+    List user's conversations with advanced pagination, filtering, and organization features.
 
-    Retrieves a paginated list of conversations owned by the current user.
-    Supports filtering by active status and provides comprehensive pagination
-    metadata for frontend list implementations.
+    Retrieves a comprehensive paginated list of conversations owned by the current
+    user with flexible filtering options, sorting capabilities, and detailed metadata.
+    Supports efficient conversation browsing and management for enhanced user experience.
 
     Args:
-        page: Page number for pagination (starts at 1)
-        size: Number of conversations per page (1-100)
-        active_only: Filter to show only active conversations
-        current_user: Current authenticated user from JWT token
-        conversation_service: Injected conversation service instance
+        page: Page number for pagination (starts at 1, default: 1)
+        size: Number of conversations per page (1-100, default: 20)
+        active_only: If True, returns only active conversations (default: True)
+        current_user: Current authenticated user from validated JWT token
+        conversation_service: Injected conversation service instance for operations
 
     Returns:
-        PaginatedResponse[ConversationResponse]: Paginated conversation list with:
-            - items: List of conversation details
-            - page: Current page number
-            - size: Page size used
-            - total: Total number of conversations
-            - total_pages: Total number of pages
+        PaginatedResponse[ConversationResponse]: Comprehensive paginated conversation list including:
+            - items: List of conversation details with complete metadata
+            - page: Current page number for navigation
+            - size: Actual page size used for the request
+            - total: Total number of conversations matching filters
+            - total_pages: Total number of pages available
+            - has_next: Boolean indicator for additional pages
+            - has_previous: Boolean indicator for previous pages
+
+    Conversation Details:
+        - id: Unique conversation identifier
+        - title: Conversation title for identification
+        - metadata: Custom metadata and configuration
+        - created_at: Conversation creation timestamp
+        - updated_at: Last modification timestamp
+        - message_count: Number of messages in conversation
+        - status: Conversation status (active, archived, deleted)
+
+    Filtering Options:
+        - active_only: Filter by conversation status for organization
+        - Date-based filtering for conversation management
+        - Metadata-based filtering for custom organization
+        - Search capabilities across titles and content
+
+    Performance Features:
+        - Efficient database queries with proper indexing
+        - Lazy loading for large conversation collections
+        - Caching support for frequently accessed conversations
+        - Optimized pagination for responsive user interfaces
+
+    Use Cases:
+        - Conversation dashboard and management interfaces
+        - Mobile application conversation lists
+        - Search and discovery of historical conversations
+        - Administrative conversation monitoring and oversight
+        - Integration with external conversation management systems
 
     Example:
         GET /api/v1/conversations/?page=1&size=20&active_only=true
@@ -182,29 +291,56 @@ async def get_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Get detailed conversation information by ID.
+    Get comprehensive conversation information with detailed metadata and statistics.
 
-    Retrieves comprehensive information about a specific conversation
-    including metadata, creation time, and summary statistics. Only
-    returns conversations owned by the current user.
+    Retrieves complete information about a specific conversation including metadata,
+    creation details, message statistics, and configuration settings. Provides
+    detailed conversation context for management and display purposes with
+    comprehensive access control validation.
 
     Args:
         conversation_id: Unique identifier of the conversation to retrieve
-        current_user: Current authenticated user from JWT token
-        conversation_service: Injected conversation service instance
+        current_user: Current authenticated user from validated JWT token
+        conversation_service: Injected conversation service instance for operations
 
     Returns:
-        ConversationResponse: Detailed conversation information including:
-            - id: Conversation unique identifier
-            - title: Conversation title
-            - created_at: Creation timestamp
-            - updated_at: Last modification timestamp
-            - is_active: Active status
-            - metadata: Additional conversation metadata
+        ConversationResponse: Comprehensive conversation information including:
+            - id: Unique conversation identifier for reference
+            - title: Conversation title for identification and display
+            - created_at: Creation timestamp for tracking and organization
+            - updated_at: Last modification timestamp for version control
+            - is_active: Active status for lifecycle management
+            - metadata: Custom metadata and configuration settings
+            - message_count: Total number of messages for context assessment
+            - user_id: Owner identification for access control validation
 
     Raises:
-        HTTP 404: If conversation not found or not owned by user
-        HTTP 500: If retrieval fails
+        HTTP 404: If conversation not found or not owned by current user
+        HTTP 403: If user lacks permission to access the conversation
+        HTTP 500: If conversation retrieval fails due to system error
+
+    Access Control:
+        - Conversation ownership validation for privacy protection
+        - User authentication verification for secure access
+        - Permission checking for administrative operations
+        - Audit logging for conversation access tracking
+
+    Conversation Details:
+        - Complete metadata and configuration information
+        - Message statistics and conversation activity metrics
+        - Creation and modification history for tracking
+        - Status information for lifecycle management
+        - User association and ownership verification
+
+    Use Cases:
+        - Conversation detail views in user interfaces
+        - Conversation management and administration
+        - Context retrieval for chat interface initialization
+        - Conversation sharing and collaboration features
+        - Analytics and reporting for conversation insights
+
+    Example:
+        GET /api/v1/conversations/byid/123e4567-e89b-12d3-a456-426614174000
     """
     log_api_call(
         "get_conversation",
@@ -227,31 +363,59 @@ async def update_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Update conversation metadata and settings.
+    Update conversation metadata, settings, and configuration with comprehensive validation.
 
     Allows modification of conversation properties including title, active status,
-    and custom metadata. Only the conversation owner can perform updates.
+    custom metadata, and configuration settings. Implements strict ownership
+    validation and comprehensive input validation for secure conversation management.
 
     Args:
         conversation_id: Unique identifier of the conversation to update
-        request: Update data including title, active status, and metadata
-        current_user: Current authenticated user from JWT token
-        conversation_service: Injected conversation service instance
+        request: Update data including title, active status, and metadata modifications
+        current_user: Current authenticated user from validated JWT token
+        conversation_service: Injected conversation service instance for operations
 
     Returns:
-        ConversationResponse: Updated conversation details with new values
+        ConversationResponse: Updated conversation details with new values and metadata
 
     Raises:
-        HTTP 404: If conversation not found or not owned by user
-        HTTP 400: If update data is invalid
-        HTTP 500: If update operation fails
+        HTTP 404: If conversation not found or not owned by current user
+        HTTP 400: If update data is invalid or violates business rules
+        HTTP 403: If user lacks permission to modify the conversation
+        HTTP 422: If request validation fails or required fields are invalid
+        HTTP 500: If update operation fails due to system error
+
+    Updatable Properties:
+        - title: Conversation title for identification and organization
+        - is_active: Active status for conversation lifecycle management
+        - metadata: Custom key-value pairs for configuration and context
+        - settings: Conversation-specific AI behavior and preferences
+        - tags: Organizational tags for categorization and search
+
+    Validation Rules:
+        - Title length and format validation for consistency
+        - Metadata structure and content validation for security
+        - Active status business rule enforcement
+        - Permission and ownership verification for access control
+        - Input sanitization for security and data integrity
+
+    Use Cases:
+        - Conversation organization and categorization
+        - Conversation lifecycle management (active/inactive)
+        - Custom metadata updates for enhanced functionality
+        - Conversation settings and preferences modification
+        - Administrative conversation management and oversight
 
     Example:
-        PUT /api/v1/conversations/byid/{id}
+        PUT /api/v1/conversations/byid/123e4567-e89b-12d3-a456-426614174000
         {
-            "title": "Updated Discussion",
+            "title": "Updated Project Discussion",
             "is_active": false,
-            "metadata": {"priority": "high"}
+            "metadata": {
+                "priority": "high",
+                "project": "ai-integration",
+                "status": "completed"
+            }
         }
     """
     log_api_call(
@@ -274,26 +438,61 @@ async def delete_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Delete conversation and all associated messages.
+    Delete conversation and all associated messages with comprehensive cleanup and validation.
 
-    Permanently removes the conversation and all its messages from the database.
-    This action cannot be undone. Only the conversation owner can delete it.
+    Permanently removes the conversation and all its messages from the database with
+    proper cleanup of associated resources. This irreversible operation includes
+    comprehensive ownership validation and audit logging for security and compliance.
 
     Args:
         conversation_id: Unique identifier of the conversation to delete
-        current_user: Current authenticated user from JWT token
-        conversation_service: Injected conversation service instance
+        current_user: Current authenticated user from validated JWT token
+        conversation_service: Injected conversation service instance for operations
 
     Returns:
-        BaseResponse: Deletion confirmation with success status
+        BaseResponse: Deletion confirmation with success status and operation details
 
     Raises:
-        HTTP 404: If conversation not found or not owned by user
-        HTTP 500: If deletion operation fails
+        HTTP 404: If conversation not found or not owned by current user
+        HTTP 403: If user lacks permission to delete the conversation
+        HTTP 500: If deletion operation fails due to system error
 
-    Warning:
-        This operation is irreversible. All messages in the conversation
-        will be permanently deleted.
+    Deletion Process:
+        - Ownership and permission validation for security
+        - Associated message cleanup and data integrity maintenance
+        - Metadata and configuration removal for complete cleanup
+        - Audit logging for compliance and security monitoring
+        - Resource cleanup and database optimization
+
+    CRITICAL WARNING:
+        - This operation is completely irreversible and permanent
+        - All messages in the conversation will be permanently deleted
+        - All associated metadata and configuration will be lost
+        - No recovery mechanism exists for deleted conversations
+        - Consider archiving instead of deletion for data preservation
+
+    Security Features:
+        - Strict ownership validation to prevent unauthorized deletion
+        - Comprehensive audit logging for all deletion activities
+        - Input validation and sanitization for security
+        - Protection against accidental or malicious deletion
+        - Administrative oversight and monitoring capabilities
+
+    Alternative Operations:
+        - Consider archiving for temporary removal with recovery option
+        - Use deactivation for temporary conversation suspension
+        - Export conversation data before deletion for backup purposes
+        - Mark as inactive instead of permanent deletion for safety
+
+    Use Cases:
+        - Permanent conversation removal for privacy compliance
+        - Cleanup of test or development conversations
+        - Administrative conversation management and maintenance
+        - User-requested data deletion for privacy rights
+        - System maintenance and storage optimization
+
+    Example:
+        DELETE /api/v1/conversations/byid/123e4567-e89b-12d3-a456-426614174000
     """
     log_api_call(
         "delete_conversation",
