@@ -1,20 +1,79 @@
 """
-Unified logging service for the AI Chatbot Platform.
+Unified logging service for the AI Chatbot Platform with comprehensive observability and monitoring.
 
-This module provides a centralized, standardized logging system that consolidates
-all logging functionality into a single service. It supports structured logging,
-contextual information, performance monitoring, and different output formats
-for development and production environments.
+This module provides a centralized, standardized logging system that consolidates all
+logging functionality into a single service with advanced features for production
+monitoring, debugging, and performance analysis. Implements structured logging,
+contextual information tracking, performance monitoring, and different output formats
+optimized for development and production environments.
 
-Features:
-- Unified logging configuration
-- Structured JSON logging for production
-- Human-readable format for development
-- Correlation IDs for request tracing
-- Performance metrics integration
-- Context filters for user and operation tracking
-- Standardized loggers for different components
+Key Features:
+- Unified logging configuration with centralized management and control
+- Structured JSON logging for production with machine-readable format
+- Human-readable colored logging for development with enhanced readability
+- Correlation ID support for request tracing and distributed system monitoring
+- Performance metrics integration with timing and operation tracking
+- Context filters for user identification and operation tracking
+- Standardized loggers for different application components and services
+- Advanced log formatting with timezone awareness and metadata enrichment
 
+Logging Architecture:
+- LoggingService: Central service for unified logging configuration and management
+- StructuredFormatter: JSON formatter for production with comprehensive metadata
+- DevelopmentFormatter: Human-readable formatter with color coding and context
+- ContextFilter: Request and user context injection for correlation and tracking
+- PerformanceLogger: Specialized logging for performance metrics and timing
+- StructuredLogger: Backward-compatible logger with structured data support
+
+Production Features:
+- JSON structured logging for log aggregation and analysis systems
+- Timezone-aware timestamp formatting with UTC standardization
+- Correlation ID propagation for distributed request tracing
+- User context tracking for audit and security monitoring
+- Operation context for business logic and workflow tracking
+- Exception handling with detailed stack trace and context information
+- Performance metrics integration with duration and success tracking
+
+Development Features:
+- Color-coded log levels for enhanced visual debugging
+- Human-readable timestamp and message formatting
+- Context information display for development workflow
+- Debug-level location information (module, function, line)
+- Exception formatting with readable stack traces
+- Real-time log output with immediate feedback
+
+Context Management:
+- Correlation ID generation and propagation for request tracking
+- User context association for audit trails and security monitoring
+- Operation context for business process tracking and analysis
+- Thread-safe context management for concurrent operations
+- Integration with FastAPI middleware for automatic context injection
+- Support for custom context fields and metadata enrichment
+
+Performance Monitoring:
+- Operation timing with microsecond precision and performance analysis
+- Success/failure tracking for reliability monitoring and alerting
+- Context manager integration for automatic timing and logging
+- Performance metrics collection for optimization and capacity planning
+- Integration with monitoring systems for real-time performance analysis
+- Custom performance loggers for specialized monitoring requirements
+
+Use Cases:
+- Application-wide logging standardization and consistency
+- Production monitoring and alerting with structured data
+- Debug logging for development and troubleshooting workflows
+- Performance monitoring and optimization with detailed metrics
+- Security audit trails with user and operation tracking
+- Distributed system request tracing with correlation IDs
+- Integration with log aggregation and analysis platforms
+
+Security and Compliance:
+- Sensitive data filtering and protection in log outputs
+- User activity tracking for audit and compliance requirements
+- Security event logging with detailed context and metadata
+- Access control logging for authorization and permission tracking
+- Data privacy controls for sensitive information handling
+- Compliance-ready log formats for regulatory requirements
 """
 
 import json
