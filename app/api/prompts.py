@@ -8,7 +8,7 @@ support, and detailed usage tracking for AI conversation enhancement.
 
 Key Features:
 - Prompt CRUD operations with validation and categorization
-- Category and tag management for prompt organization  
+- Category and tag management for prompt organization
 - Usage statistics and analytics tracking
 - Default prompt configuration and management
 - Search and filtering capabilities across prompts

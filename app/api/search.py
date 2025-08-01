@@ -269,7 +269,7 @@ async def get_search_suggestions(
         GET /api/v1/search/suggestions?query=machine&limit=5
         Response: [
             "machine learning",
-            "machine learning examples", 
+            "machine learning examples",
             "machine learning tutorial",
             "how to machine learning",
             "machine learning best practices"
