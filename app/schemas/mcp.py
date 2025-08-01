@@ -144,6 +144,16 @@ class MCPToolListResponse(BaseModel):
     total_count: int = Field(..., description="Total number of tools")
 
 
+class MCPToolsResponse(BaseModel):
+    """Response schema for simple MCP tools list."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    success: bool = Field(default=True, description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    data: List[MCPToolSchema] = Field(..., description="List of MCP tools")
+
+
 class MCPStatsResponse(BaseModel):
     """Response schema for MCP statistics."""
     

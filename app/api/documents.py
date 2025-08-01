@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from uuid import UUID
 
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, Query,
-                     UploadFile, status)
+from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +24,7 @@ from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.document import (BackgroundTaskResponse, DocumentResponse,
                                 DocumentUpdate, DocumentUploadResponse,
                                 ProcessingConfigResponse,
-                                ProcessingStatusResponse)
+                                ProcessingStatusResponse, QueueStatusResponse)
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -254,7 +253,7 @@ async def download_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-):
+) -> FileResponse:
     """
     Download original document file.
 
@@ -323,7 +322,7 @@ async def get_processing_config() -> ProcessingConfigResponse:
     )
 
 
-@router.get("/queue-status")
+@router.get("/queue-status", response_model=QueueStatusResponse)
 @handle_api_errors("Failed to get queue status", log_errors=True)
 async def get_queue_status(
     user: User = Depends(get_current_user),
@@ -337,7 +336,11 @@ async def get_queue_status(
     background_processor = await get_background_processor(db)
     queue_status = await background_processor.get_queue_status()
 
-    return {"message": "Queue status retrieved", **queue_status}
+    return QueueStatusResponse(
+        success=True,
+        message="Queue status retrieved", 
+        **queue_status
+    )
 
 
 @router.post("/documents/cleanup", response_model=BaseResponse)

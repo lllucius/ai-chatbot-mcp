@@ -15,7 +15,7 @@ from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
 from ..schemas.common import BaseResponse
 from ..schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
-                           MCPServerUpdateSchema)
+                           MCPServerListResponse, MCPServerUpdateSchema, MCPToolsResponse)
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -167,7 +167,7 @@ async def delete_server(
         )
 
 
-@router.get("/tools")
+@router.get("/tools", response_model=MCPToolsResponse)
 @handle_api_errors("Failed to list MCP tools")
 async def list_tools(
     server: Optional[str] = Query(None, description="Filter by server name"),
@@ -185,11 +185,11 @@ async def list_tools(
         filters.server_name = server
     tools = await mcp_service.list_tools(filters)
 
-    return {
-        "success": True,
-        "message": f"Retrieved {len(tools)} MCP tools",
-        "data": tools,
-    }
+    return MCPToolsResponse(
+        success=True,
+        message=f"Retrieved {len(tools)} MCP tools",
+        data=tools,
+    )
 
 
 @router.patch("/tools/byname/{tool_name}/enable", response_model=BaseResponse)
