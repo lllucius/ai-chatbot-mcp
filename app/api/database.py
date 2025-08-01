@@ -238,10 +238,49 @@ async def list_database_tables(
     db: AsyncSession = Depends(get_db),
 ) -> DatabaseTablesResponse:
     """
-    List all database tables with row counts.
+    List all database tables with comprehensive metadata and statistics.
 
-    Returns information about all tables in the database including
-    their row counts and basic statistics.
+    Returns detailed information about all tables in the database including
+    row counts, table sizes, schema information, and basic performance
+    statistics. Provides essential insights for database administration
+    and capacity planning.
+
+    Args:
+        current_user: Current authenticated superuser performing the operation
+        db: Database session for table metadata queries
+
+    Returns:
+        DatabaseTablesResponse: Complete table information including:
+            - tables: List of table objects with detailed metadata
+            - total_tables: Total number of tables in the database
+            - schema_summary: Overall database schema statistics
+            - timestamp: Query execution timestamp
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If table listing operation fails
+
+    Table Information:
+        - schema: Database schema name (typically 'public')
+        - name: Table name and identifier
+        - row_count: Current number of rows in the table
+        - size: Human-readable table size including indexes
+        - estimated_rows: PostgreSQL estimated row count
+
+    Performance Metrics:
+        - Table size calculations include indexes and TOAST data
+        - Row counts are live statistics from pg_stat_user_tables
+        - Size information is formatted for human readability
+        - Sorting by row count for operational insights
+
+    Use Cases:
+        - Database capacity planning and monitoring
+        - Table growth analysis and trending
+        - Storage optimization and cleanup planning
+        - Administrative reporting and documentation
+
+    Example:
+        GET /api/v1/database/tables
     """
     log_api_call("list_database_tables", user_id=str(current_user.id))
 
@@ -291,10 +330,48 @@ async def get_migration_status(
     current_user: User = Depends(get_current_superuser),
 ) -> DatabaseMigrationsResponse:
     """
-    Get migration status and available migrations.
+    Get comprehensive database migration status and history.
 
-    Returns information about the current migration state and
-    available migrations that can be applied.
+    Returns detailed information about the current migration state, available
+    migrations, migration history, and pending schema changes. Provides complete
+    visibility into database schema evolution and version management.
+
+    Args:
+        current_user: Current authenticated superuser requesting migration status
+
+    Returns:
+        DatabaseMigrationsResponse: Migration status information including:
+            - applied_migrations: List of successfully applied migrations
+            - pending_migrations: Migrations available for application
+            - migration_status: Current migration state summary
+            - last_migration: Most recent migration information
+            - timestamp: Status query execution time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If migration status retrieval fails
+
+    Migration Information:
+        - current_revision: Currently applied migration revision
+        - available_heads: Latest available migration revisions
+        - migration_history: Complete migration application history
+        - pending_changes: Schema changes waiting for application
+        - migration_status: Overall migration state assessment
+
+    Status Indicators:
+        - up_to_date: Database schema matches latest migrations
+        - pending: Migrations are available for application
+        - unknown: Migration status cannot be determined
+        - error: Migration system is experiencing issues
+
+    Use Cases:
+        - Database version management and tracking
+        - Pre-deployment migration validation
+        - Schema evolution monitoring
+        - Development environment synchronization
+
+    Example:
+        GET /api/v1/database/migrations
     """
     log_api_call("get_migration_status", user_id=str(current_user.id))
 
@@ -361,13 +438,50 @@ async def upgrade_database(
     current_user: User = Depends(get_current_superuser),
 ):
     """
-    Run database migrations to upgrade schema.
+    Execute database schema migrations to upgrade to target revision.
 
-    Executes Alembic migrations to bring the database schema
-    up to the specified revision or latest if not specified.
+    Runs Alembic migrations to bring the database schema up to the specified
+    revision or latest available revision if not specified. Performs safe
+    schema evolution with validation and rollback capabilities.
 
     Args:
-        revision: Target revision to upgrade to (default: head)
+        revision: Target migration revision to upgrade to (default: 'head')
+        current_user: Current authenticated superuser performing the upgrade
+
+    Returns:
+        BaseResponse: Migration execution results including:
+            - success: Operation completion status
+            - message: Migration result summary
+            - output: Detailed migration execution output
+            - timestamp: Migration execution time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 400: If target revision is invalid or unreachable
+        HTTP 500: If migration execution fails
+
+    Migration Process:
+        - Validates target revision availability
+        - Executes Alembic upgrade command with proper environment
+        - Captures migration output and error reporting
+        - Provides detailed execution feedback
+        - Ensures database consistency and integrity
+
+    Safety Features:
+        - Pre-migration validation and compatibility checking
+        - Detailed error reporting and troubleshooting information
+        - Administrative logging for audit and monitoring
+        - Rollback guidance for failed migration scenarios
+
+    Use Cases:
+        - Deploying new application versions with schema changes
+        - Upgrading development environments to latest schema
+        - Production deployment automation
+        - Database maintenance and evolution
+
+    Example:
+        POST /api/v1/database/upgrade?revision=head
+        POST /api/v1/database/upgrade?revision=abc123def456
     """
     log_api_call("upgrade_database", user_id=str(current_user.id), revision=revision)
 
@@ -406,13 +520,51 @@ async def downgrade_database(
     current_user: User = Depends(get_current_superuser),
 ):
     """
-    Downgrade database to a previous migration.
+    Downgrade database schema to a previous migration revision.
 
-    CAUTION: This operation may result in data loss.
-    Always create a backup before downgrading.
+    Executes Alembic downgrade operations to revert the database schema
+    to a previous state. This is a potentially destructive operation that
+    may result in data loss and should be used with extreme caution.
 
     Args:
-        revision: Target revision to downgrade to
+        revision: Target migration revision to downgrade to (required)
+        current_user: Current authenticated superuser performing the downgrade
+
+    Returns:
+        BaseResponse: Downgrade execution results including:
+            - success: Operation completion status
+            - message: Downgrade result summary with target revision
+            - output: Detailed downgrade execution output
+            - timestamp: Downgrade execution time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 400: If target revision is invalid or unreachable
+        HTTP 500: If downgrade execution fails
+
+    CRITICAL WARNINGS:
+        - This operation may result in permanent data loss
+        - Always create a complete backup before downgrading
+        - Downgrading may drop tables, columns, or constraints
+        - Application compatibility must be verified after downgrade
+        - Production downgrades require careful planning and testing
+
+    Downgrade Process:
+        - Validates target revision and downgrade path
+        - Executes Alembic downgrade command with safety checks
+        - Captures detailed execution output and error reporting
+        - Provides comprehensive result feedback
+        - Logs operation for administrative audit
+
+    Safety Recommendations:
+        - Test downgrade operations in development environment first
+        - Create database backup before executing downgrade
+        - Verify application compatibility with target schema
+        - Plan for data migration or recovery procedures
+        - Coordinate with application deployment strategies
+
+    Example:
+        POST /api/v1/database/downgrade?revision=abc123def456
     """
     log_api_call("downgrade_database", user_id=str(current_user.id), revision=revision)
 
@@ -454,13 +606,59 @@ async def create_database_backup(
     current_user: User = Depends(get_current_superuser),
 ):
     """
-    Create a database backup.
+    Create a comprehensive database backup using PostgreSQL dump utilities.
 
-    Creates a PostgreSQL dump of the database for backup purposes.
+    Generates a complete database backup including schema, data, and metadata
+    using pg_dump. Supports both full database backups and schema-only backups
+    for different backup strategies and use cases.
 
     Args:
-        output_file: Output file path (auto-generated if not provided)
-        schema_only: Whether to backup schema only (no data)
+        output_file: Custom output file path (auto-generated if not provided)
+        schema_only: If True, creates schema-only backup without data
+        current_user: Current authenticated superuser performing the backup
+
+    Returns:
+        BaseResponse: Backup creation results including:
+            - success: Backup operation completion status
+            - message: Backup result summary
+            - output_file: Path to the created backup file
+            - file_size: Human-readable backup file size
+            - schema_only: Backup type indicator
+            - timestamp: Backup creation time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If backup creation process fails
+
+    Backup Features:
+        - Complete database dump with all objects and data
+        - Schema-only option for structure backups
+        - Automatic file naming with timestamps
+        - File size reporting and validation
+        - Comprehensive error handling and reporting
+
+    Backup Contents:
+        - Database schema including tables, indexes, constraints
+        - User data and application content (unless schema_only=True)
+        - Database metadata and configuration
+        - Extension definitions and custom functions
+        - Proper restoration instructions and formatting
+
+    Security Considerations:
+        - Requires superuser privileges for complete database access
+        - Backup files contain sensitive data and should be secured
+        - Database credentials are handled securely during backup
+        - Administrative audit logging for backup operations
+
+    Use Cases:
+        - Regular backup schedules and disaster recovery
+        - Pre-migration backups for safety
+        - Development environment data exports
+        - Database archiving and long-term storage
+
+    Example:
+        POST /api/v1/database/backup
+        POST /api/v1/database/backup?schema_only=true&output_file=schema_backup.sql
     """
     log_api_call("create_database_backup", user_id=str(current_user.id))
 
@@ -532,13 +730,56 @@ async def restore_database(
     current_user: User = Depends(get_current_superuser),
 ):
     """
-    Restore database from a backup file.
+    Restore database from a backup file with comprehensive data replacement.
 
-    CAUTION: This operation will overwrite existing data.
-    Ensure you have a current backup before proceeding.
+    Executes a complete database restoration from a previously created backup
+    file using PostgreSQL utilities. This operation completely replaces the
+    current database content with the backup data.
 
     Args:
-        backup_file: Path to the backup file to restore from
+        backup_file: Full path to the backup file for restoration
+        current_user: Current authenticated superuser performing the restoration
+
+    Returns:
+        BaseResponse: Restoration execution results including:
+            - success: Restoration operation completion status
+            - message: Restoration result summary with source file
+            - timestamp: Restoration execution time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 400: If backup file is not found or inaccessible
+        HTTP 500: If restoration process fails
+
+    CRITICAL WARNINGS:
+        - This operation completely overwrites existing database content
+        - All current data and schema changes will be permanently lost
+        - Always verify backup file integrity before restoration
+        - Ensure application compatibility with restored schema
+        - Create a current backup before restoration for safety
+
+    Restoration Process:
+        - Validates backup file existence and accessibility
+        - Executes psql restoration with proper connection parameters
+        - Handles database credentials securely during restoration
+        - Provides detailed execution output and error reporting
+        - Comprehensive logging for administrative audit
+
+    Pre-Restoration Checklist:
+        - Verify backup file integrity and completeness
+        - Create current database backup for rollback capability
+        - Stop application services to prevent data conflicts
+        - Coordinate with development and operations teams
+        - Plan for post-restoration validation and testing
+
+    Use Cases:
+        - Disaster recovery and data restoration
+        - Development environment setup with production data
+        - Database migration and transfer operations
+        - System recovery from data corruption
+
+    Example:
+        POST /api/v1/database/restore?backup_file=/path/to/backup_20240101_120000.sql
     """
     log_api_call(
         "restore_database", user_id=str(current_user.id), backup_file=backup_file
@@ -606,13 +847,58 @@ async def vacuum_database(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Run VACUUM to optimize database performance.
+    Execute database maintenance with VACUUM operations for optimal performance.
 
-    Performs database maintenance to reclaim storage and update
-    statistics for the query planner.
+    Performs essential database maintenance by reclaiming storage space from
+    deleted tuples and updating statistics for the query planner. Improves
+    database performance, reduces bloat, and optimizes query execution plans.
 
     Args:
-        analyze: Whether to run ANALYZE after VACUUM
+        analyze: If True, runs ANALYZE after VACUUM to update statistics (default: True)
+        current_user: Current authenticated superuser performing maintenance
+        db: Database session for VACUUM operations
+
+    Returns:
+        BaseResponse: Maintenance operation results including:
+            - success: Operation completion status
+            - message: Detailed maintenance result summary
+            - timestamp: Maintenance execution time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If VACUUM operation fails
+
+    VACUUM Operations:
+        - Reclaims storage space from deleted and updated tuples
+        - Removes dead tuples to reduce table bloat
+        - Updates free space maps for efficient space reuse
+        - Improves table scan performance and index efficiency
+        - Reduces overall database storage requirements
+
+    ANALYZE Operations (when enabled):
+        - Updates table statistics for query planning optimization
+        - Samples table data to estimate row counts and data distribution
+        - Improves query performance through better execution plans
+        - Updates index usage statistics and selectivity estimates
+        - Enables cost-based optimization for complex queries
+
+    Performance Benefits:
+        - Reduces table and index bloat significantly
+        - Improves query execution speed and efficiency
+        - Optimizes storage utilization and I/O performance
+        - Enhances concurrent access and locking behavior
+        - Maintains database health and performance consistency
+
+    Maintenance Schedule:
+        - Regular VACUUM prevents excessive bloat accumulation
+        - ANALYZE ensures accurate statistics for query optimization
+        - Recommended frequency depends on update/delete patterns
+        - Production systems benefit from automated scheduling
+        - Monitor bloat levels and performance metrics regularly
+
+    Example:
+        POST /api/v1/database/vacuum
+        POST /api/v1/database/vacuum?analyze=false
     """
     log_api_call("vacuum_database", user_id=str(current_user.id), analyze=analyze)
 
@@ -646,11 +932,64 @@ async def analyze_database(
     db: AsyncSession = Depends(get_db),
 ) -> DatabaseAnalysisResponse:
     """
-    Analyze database and show performance statistics.
+    Perform comprehensive database analysis with performance insights and recommendations.
 
-    Returns detailed performance statistics and analysis
-    of the database including table sizes, index usage,
-    and query performance metrics.
+    Analyzes the database to provide detailed performance statistics, table usage
+    patterns, index effectiveness, and optimization recommendations. Offers valuable
+    insights for database tuning, capacity planning, and performance optimization.
+
+    Args:
+        current_user: Current authenticated superuser performing the analysis
+        db: Database session for analysis queries and statistics collection
+
+    Returns:
+        DatabaseAnalysisResponse: Comprehensive analysis results including:
+            - table_stats: Detailed table size and usage statistics
+            - index_analysis: Index usage patterns and effectiveness metrics
+            - performance_insights: Key performance indicators and ratios
+            - recommendations: Optimization suggestions and best practices
+            - timestamp: Analysis execution time
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If database analysis process fails
+
+    Table Analysis:
+        - Table sizes including data and indexes
+        - Row count statistics and growth patterns
+        - Storage utilization and bloat assessment
+        - Most significant tables by size and activity
+        - Schema distribution and organization
+
+    Index Analysis:
+        - Index usage frequency and scan patterns
+        - Index efficiency and selectivity metrics
+        - Unused or redundant index identification
+        - Index size and maintenance overhead
+        - Query performance impact assessment
+
+    Performance Insights:
+        - Cache hit ratios and buffer pool efficiency
+        - Transaction success rates and rollback patterns
+        - Disk I/O patterns and performance metrics
+        - Connection pooling and concurrency statistics
+        - Database activity and workload characteristics
+
+    Optimization Recommendations:
+        - Index creation and removal suggestions
+        - Table maintenance and optimization strategies
+        - Configuration tuning recommendations
+        - Capacity planning and scaling guidance
+        - Performance bottleneck identification
+
+    Use Cases:
+        - Database performance monitoring and optimization
+        - Capacity planning and resource allocation
+        - Proactive maintenance and tuning decisions
+        - System health assessment and reporting
+
+    Example:
+        GET /api/v1/database/analyze
     """
     log_api_call("analyze_database", user_id=str(current_user.id))
 
@@ -789,14 +1128,63 @@ async def execute_custom_query(
     db: AsyncSession = Depends(get_db),
 ) -> DatabaseQueryResponse:
     """
-    Execute a custom SQL query.
+    Execute custom SQL queries with comprehensive safety controls and monitoring.
 
-    CAUTION: This endpoint allows execution of arbitrary SQL.
-    Use with extreme care and only for administrative purposes.
+    Provides a controlled interface for executing custom SQL queries with built-in
+    safety mechanisms, result limiting, and detailed execution reporting. Designed
+    for administrative database operations and troubleshooting.
 
     Args:
-        query: SQL query to execute
-        limit: Result limit for SELECT queries
+        query: SQL query to execute (SELECT statements only for safety)
+        limit: Maximum number of rows to return (1-1000, default: 100)
+        current_user: Current authenticated superuser executing the query
+        db: Database session for query execution
+
+    Returns:
+        DatabaseQueryResponse: Query execution results including:
+            - success: Query execution status
+            - query: Executed query text with applied modifications
+            - result_type: Type of SQL operation performed
+            - rows_affected: Number of rows returned or affected
+            - execution_time_ms: Query execution time in milliseconds
+            - results: Query result data in structured format
+            - timestamp: Query execution timestamp
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 400: If query contains dangerous operations or invalid syntax
+        HTTP 500: If query execution fails
+
+    CRITICAL SAFETY RESTRICTIONS:
+        - Only SELECT queries are permitted for data safety
+        - Dangerous keywords (DROP, DELETE, etc.) are strictly prohibited
+        - Automatic result limiting prevents resource exhaustion
+        - Query execution time monitoring and reporting
+        - Comprehensive error handling and safe failure modes
+
+    Safety Mechanisms:
+        - Query validation and dangerous keyword detection
+        - Automatic LIMIT clause injection for unbounded queries
+        - Execution time monitoring and timeout protection
+        - Result size limiting and memory management
+        - Detailed error reporting without sensitive information exposure
+
+    Query Features:
+        - Full PostgreSQL SELECT syntax support
+        - Joins, subqueries, and complex expressions allowed
+        - Result formatting in JSON-compatible structures
+        - Column metadata and type information preservation
+        - Performance metrics and execution statistics
+
+    Administrative Use Cases:
+        - Database troubleshooting and diagnostics
+        - Data analysis and reporting queries
+        - System monitoring and health checks
+        - Development and testing support
+        - Ad-hoc data exploration and investigation
+
+    Example:
+        POST /api/v1/database/query?query=SELECT%20*%20FROM%20users%20WHERE%20active=true&limit=50
     """
     log_api_call("execute_custom_query", user_id=str(current_user.id))
     
