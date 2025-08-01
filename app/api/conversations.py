@@ -54,7 +54,21 @@ router = APIRouter(tags=["conversations"])
 async def get_conversation_service(
     db: AsyncSession = Depends(get_db),
 ) -> ConversationService:
-    """Get conversation service instance."""
+    """
+    Get conversation service instance with database session.
+
+    Creates and returns a ConversationService instance configured with
+    the provided database session for conversation and message operations.
+
+    Args:
+        db: Database session dependency for service initialization
+
+    Returns:
+        ConversationService: Configured service instance for conversation operations
+
+    Note:
+        This is a dependency function used by FastAPI's dependency injection system.
+    """
     return ConversationService(db)
 
 
@@ -66,9 +80,30 @@ async def create_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Create a new conversation.
+    Create a new conversation for the current user.
 
-    Creates a new conversation thread for the current user.
+    Creates a new conversation thread with the specified title and metadata.
+    The conversation is owned by the current authenticated user and can be
+    used for subsequent chat interactions.
+
+    Args:
+        request: Conversation creation data including title and optional metadata
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        ConversationResponse: Created conversation details including ID and metadata
+
+    Raises:
+        HTTP 400: If conversation creation data is invalid
+        HTTP 500: If conversation creation fails
+
+    Example:
+        POST /api/v1/conversations/
+        {
+            "title": "Planning Discussion",
+            "metadata": {"category": "work"}
+        }
     """
     log_api_call(
         "create_conversation", user_id=str(current_user.id), title=request.title
@@ -90,10 +125,29 @@ async def list_conversations(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    List user's conversations with pagination.
+    List user's conversations with pagination and filtering.
 
-    Returns paginated list of conversations owned by the current user
-    with optional filtering by active status.
+    Retrieves a paginated list of conversations owned by the current user.
+    Supports filtering by active status and provides comprehensive pagination
+    metadata for frontend list implementations.
+
+    Args:
+        page: Page number for pagination (starts at 1)
+        size: Number of conversations per page (1-100)
+        active_only: Filter to show only active conversations
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        PaginatedResponse[ConversationResponse]: Paginated conversation list with:
+            - items: List of conversation details
+            - page: Current page number
+            - size: Page size used
+            - total: Total number of conversations
+            - total_pages: Total number of pages
+
+    Example:
+        GET /api/v1/conversations/?page=1&size=20&active_only=true
     """
     log_api_call(
         "list_conversations",
@@ -128,10 +182,29 @@ async def get_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Get conversation by ID.
+    Get detailed conversation information by ID.
 
-    Returns detailed information about a specific conversation
-    owned by the current user.
+    Retrieves comprehensive information about a specific conversation
+    including metadata, creation time, and summary statistics. Only
+    returns conversations owned by the current user.
+
+    Args:
+        conversation_id: Unique identifier of the conversation to retrieve
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        ConversationResponse: Detailed conversation information including:
+            - id: Conversation unique identifier
+            - title: Conversation title
+            - created_at: Creation timestamp
+            - updated_at: Last modification timestamp
+            - is_active: Active status
+            - metadata: Additional conversation metadata
+
+    Raises:
+        HTTP 404: If conversation not found or not owned by user
+        HTTP 500: If retrieval fails
     """
     log_api_call(
         "get_conversation",
@@ -154,9 +227,32 @@ async def update_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Update conversation metadata.
+    Update conversation metadata and settings.
 
-    Allows updating conversation title, active status, and metadata.
+    Allows modification of conversation properties including title, active status,
+    and custom metadata. Only the conversation owner can perform updates.
+
+    Args:
+        conversation_id: Unique identifier of the conversation to update
+        request: Update data including title, active status, and metadata
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        ConversationResponse: Updated conversation details with new values
+
+    Raises:
+        HTTP 404: If conversation not found or not owned by user
+        HTTP 400: If update data is invalid
+        HTTP 500: If update operation fails
+
+    Example:
+        PUT /api/v1/conversations/byid/{id}
+        {
+            "title": "Updated Discussion",
+            "is_active": false,
+            "metadata": {"priority": "high"}
+        }
     """
     log_api_call(
         "update_conversation",
@@ -178,9 +274,26 @@ async def delete_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Delete conversation and all messages.
+    Delete conversation and all associated messages.
 
-    Permanently deletes the conversation and all associated messages.
+    Permanently removes the conversation and all its messages from the database.
+    This action cannot be undone. Only the conversation owner can delete it.
+
+    Args:
+        conversation_id: Unique identifier of the conversation to delete
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        BaseResponse: Deletion confirmation with success status
+
+    Raises:
+        HTTP 404: If conversation not found or not owned by user
+        HTTP 500: If deletion operation fails
+
+    Warning:
+        This operation is irreversible. All messages in the conversation
+        will be permanently deleted.
     """
     log_api_call(
         "delete_conversation",
@@ -213,9 +326,33 @@ async def get_messages(
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     """
-    Get messages in a conversation.
+    Get paginated messages from a conversation.
 
-    Returns paginated list of messages in the specified conversation.
+    Retrieves messages from the specified conversation with pagination support.
+    Messages are returned in chronological order and include both user messages
+    and AI responses with full content and metadata.
+
+    Args:
+        conversation_id: Unique identifier of the conversation
+        page: Page number for pagination (starts at 1)
+        size: Number of messages per page (1-100)
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        PaginatedResponse[MessageResponse]: Paginated message list with:
+            - items: List of messages with content and metadata
+            - page: Current page number
+            - size: Page size used
+            - total: Total number of messages
+            - total_pages: Total number of pages
+
+    Raises:
+        HTTP 404: If conversation not found or not owned by user
+        HTTP 500: If message retrieval fails
+
+    Example:
+        GET /api/v1/conversations/byid/{id}/messages?page=1&size=50
     """
     log_api_call(
         "get_messages",
@@ -250,14 +387,41 @@ async def chat(
     """
     Send a message and get AI response with enhanced registry integration.
 
-    Sends a user message to the AI assistant and returns the response.
-    Supports RAG (Retrieval-Augmented Generation) for context-aware responses,
-    tool calling for enhanced functionality, and registry-based prompt/profile management.
+    Processes a user message and generates an AI response using advanced features
+    including RAG (Retrieval-Augmented Generation), MCP tool calling, and
+    registry-based configuration management for prompts and LLM profiles.
+
+    Args:
+        request: Chat request containing message, conversation ID, and options
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
+
+    Returns:
+        ChatResponse: Complete chat response containing:
+            - ai_message: Generated AI response message
+            - conversation: Updated conversation details
+            - usage: Token usage statistics
+            - rag_context: Retrieved context information (if applicable)
+            - tool_calls_made: List of tool calls executed
+            - tool_call_summary: Summary of tool call results
+            - response_time_ms: Response generation time
 
     Enhanced Features:
-    - Registry-based prompt management for consistent system prompts
-    - LLM profile management for parameter optimization
-    - Enhanced MCP tool integration with usage tracking
+        - Registry-based prompt management for consistent system prompts
+        - LLM profile management for parameter optimization
+        - Enhanced MCP tool integration with usage tracking
+        - RAG context retrieval from document store
+        - Comprehensive usage and performance metrics
+
+    Example:
+        POST /api/v1/conversations/chat
+        {
+            "conversation_id": "uuid",
+            "user_message": "What is the weather like?",
+            "use_rag": true,
+            "prompt_id": "default",
+            "llm_profile_id": "fast-response"
+        }
     """
     log_api_call(
         "chat",
@@ -297,11 +461,33 @@ async def chat_stream(
     """
     Send a message and get a streaming AI response.
 
-    Returns a Server-Sent Events (SSE) stream of the AI response as it's generated,
-    providing real-time feedback to the user.
+    Processes a chat request and returns the AI response as a Server-Sent Events
+    (SSE) stream, providing real-time feedback as the response is generated.
+    Supports the same advanced features as the standard chat endpoint.
+
+    Args:
+        request: Chat request containing message, conversation ID, and options
+        current_user: Current authenticated user from JWT token
+        conversation_service: Injected conversation service instance
 
     Returns:
-        StreamingResponse: Server-sent events stream with typed response objects
+        StreamingResponse: Server-sent events stream containing:
+            - StreamStartResponse: Initial response start event
+            - StreamContentResponse: Incremental content chunks
+            - StreamToolCallResponse: Tool call execution events
+            - StreamCompleteResponse: Final completion event with metadata
+            - StreamErrorResponse: Error events if processing fails
+
+    Stream Event Types:
+        - start: Response generation initiated
+        - content: Incremental text content chunks
+        - tool_call: Tool execution progress and results
+        - complete: Final response with full metadata
+        - error: Error information if processing fails
+
+    Note:
+        This endpoint returns a streaming response suitable for real-time
+        chat interfaces. Clients should handle SSE parsing appropriately.
     """
     log_api_call(
         "chat_stream",
@@ -866,19 +1052,45 @@ async def search_conversations_and_messages(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Search conversations and messages.
+    Search conversations and messages with advanced filtering options.
 
-    Performs full-text search across conversation titles and message content
-    with various filtering options.
+    Performs comprehensive full-text search across conversation titles and
+    message content with support for date ranges, user filtering, and
+    status-based filtering. Provides powerful search capabilities for
+    finding relevant conversations and discussions.
 
     Args:
-        query: Search query
-        search_messages: Whether to search within message content
-        user_filter: Username to filter by
-        date_from: Start date for filtering
-        date_to: End date for filtering
-        active_only: Search only active conversations
-        limit: Maximum number of results
+        query: Search term to look for in titles and content
+        search_messages: Whether to include message content in search
+        user_filter: Filter results by specific username (superuser only)
+        date_from: Start date for filtering results (YYYY-MM-DD format)
+        date_to: End date for filtering results (YYYY-MM-DD format)  
+        active_only: Limit search to only active conversations
+        limit: Maximum number of results to return (1-100)
+        current_user: Current authenticated user from JWT token
+        db: Database session for search queries
+
+    Returns:
+        SearchResponse: Search results containing:
+            - results: List of matching conversations with relevance scoring
+            - total_found: Total number of matches
+            - search_criteria: Applied search parameters
+            - timestamp: Search execution timestamp
+
+    Search Features:
+        - Full-text search across titles and message content
+        - Date range filtering for temporal searches
+        - User-specific filtering (for administrators)
+        - Active/inactive conversation filtering
+        - Relevance-based result ordering
+        - Comprehensive result metadata
+
+    Note:
+        Non-superusers can only search their own conversations.
+        Superusers can search across all users when user_filter is specified.
+
+    Example:
+        GET /api/v1/conversations/search?query=project&search_messages=true&limit=10
     """
     log_api_call("search_conversations", user_id=str(current_user.id), query=query)
 
@@ -1058,10 +1270,34 @@ async def get_conversation_statistics(
     db: AsyncSession = Depends(get_db),
 ) -> ConversationStatsResponse:
     """
-    Get comprehensive conversation statistics.
+    Get comprehensive conversation statistics and analytics.
 
-    Returns detailed statistics about conversations including counts,
-    activity metrics, and usage patterns.
+    Retrieves detailed statistics about conversations including total counts,
+    activity metrics, user engagement patterns, and message distribution.
+    Provides insights for analytics dashboards and usage monitoring.
+
+    Args:
+        current_user: Current authenticated user from JWT token
+        db: Database session for statistics queries
+
+    Returns:
+        ConversationStatsResponse: Comprehensive statistics containing:
+            - conversations: Total, active, and inactive conversation counts
+            - messages: Total messages, averages, and role distribution
+            - recent_activity: Activity metrics for the last 7 days
+            - user_engagement: User participation statistics and top users
+            - timestamp: Statistics generation timestamp
+
+    Statistics Included:
+        - Conversation totals and active/inactive breakdown
+        - Message counts and averages per conversation
+        - Message role distribution (user/assistant/system)
+        - Recent activity trends (7-day window)
+        - User engagement metrics and top contributors
+        - Comprehensive usage patterns
+
+    Example:
+        GET /api/v1/conversations/stats
     """
     log_api_call("get_conversation_statistics", user_id=str(current_user.id))
 

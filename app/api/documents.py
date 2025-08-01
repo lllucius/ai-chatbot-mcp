@@ -80,9 +80,53 @@ async def upload_document(
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentUploadResponse:
     """
-    Upload a document for processing.
+    Upload a document for processing with configurable options.
 
-    Enhanced with auto-processing option and priority control.
+    Uploads a document file to the platform and optionally starts automatic
+    processing including text extraction, chunking, and embedding generation.
+    Supports various file formats and priority-based processing.
+
+    Args:
+        file: Document file to upload (various formats supported)
+        title: Human-readable title for the document
+        auto_process: Whether to automatically start processing after upload
+        processing_priority: Processing priority level (1-10, higher = more priority)
+        user: Current authenticated user from JWT token
+        service: Injected document service instance
+
+    Returns:
+        DocumentUploadResponse: Upload result containing:
+            - document: Created document metadata
+            - task_id: Background processing task ID (if auto_process=true)
+            - processing_status: Initial processing status
+            - upload_info: File upload information and statistics
+
+    Supported File Types:
+        - PDF documents (.pdf)
+        - Microsoft Word (.docx, .doc)
+        - Plain text files (.txt)
+        - Markdown files (.md)
+        - HTML files (.html)
+
+    Processing Pipeline:
+        - Text extraction from uploaded file
+        - Intelligent content chunking
+        - Embedding generation for semantic search
+        - Metadata extraction and indexing
+
+    Raises:
+        HTTP 400: If file type is not supported or file is corrupted
+        HTTP 413: If file size exceeds configured limits
+        HTTP 500: If upload or processing initialization fails
+
+    Example:
+        POST /api/v1/documents/upload
+        Content-Type: multipart/form-data
+        
+        file: [document.pdf]
+        title: "Project Requirements"
+        auto_process: true
+        processing_priority: 7
     """
     log_api_call(
         "upload_document", user_id=str(user.id), title=title, auto_process=auto_process

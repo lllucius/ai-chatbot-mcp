@@ -39,7 +39,21 @@ router = APIRouter(tags=["users"])
 
 
 async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
-    """Get user service instance."""
+    """
+    Get user service instance with database session.
+
+    Creates and returns a UserService instance configured with the provided
+    database session for user management operations and profile handling.
+
+    Args:
+        db: Database session dependency for service initialization
+
+    Returns:
+        UserService: Configured service instance for user operations
+
+    Note:
+        This is a dependency function used by FastAPI's dependency injection system.
+    """
     return UserService(db)
 
 
@@ -92,10 +106,37 @@ async def update_my_profile(
     user_service: UserService = Depends(get_user_service),
 ):
     """
-    Update current user profile.
+    Update current user profile information.
 
-    Allows users to update their own profile information
-    such as email and full name.
+    Allows authenticated users to update their own profile information including
+    email address and full name. Provides secure self-service profile management
+    with input validation and security checks.
+
+    Args:
+        request: Profile update data containing new email and/or full_name
+        current_user: Current authenticated user from JWT token
+        user_service: Injected user service instance
+
+    Returns:
+        UserResponse: Updated user profile with new information
+
+    Raises:
+        HTTP 400: If profile update data is invalid
+        HTTP 409: If email address is already in use by another user
+        HTTP 500: If profile update fails
+
+    Security Notes:
+        - Users can only update their own profiles
+        - Email uniqueness is enforced
+        - Input validation prevents malicious data
+        - Profile changes are logged for audit purposes
+
+    Example:
+        PUT /api/v1/users/me
+        {
+            "email": "newemail@example.com",
+            "full_name": "John Smith"
+        }
     """
     log_api_call("update_my_profile", user_id=str(current_user.id))
 
@@ -111,10 +152,38 @@ async def change_password(
     user_service: UserService = Depends(get_user_service),
 ):
     """
-    Change current user password.
+    Change current user password with security verification.
 
-    Requires the current password for verification
-    and the new password.
+    Allows users to securely change their password by providing their current
+    password for verification. Implements secure password change workflow with
+    proper validation and audit logging.
+
+    Args:
+        request: Password change data with current and new passwords
+        current_user: Current authenticated user from JWT token
+        user_service: Injected user service instance
+
+    Returns:
+        BaseResponse: Password change confirmation
+
+    Raises:
+        HTTP 400: If password validation fails or passwords don't meet requirements
+        HTTP 401: If current password verification fails
+        HTTP 500: If password change operation fails
+
+    Security Features:
+        - Current password verification required
+        - New password strength validation
+        - Secure password hashing (bcrypt)
+        - Password change events logged for security monitoring
+        - Protection against password reuse (if configured)
+
+    Example:
+        POST /api/v1/users/me/change-password
+        {
+            "current_password": "currentPassword123!",
+            "new_password": "newSecurePassword456!"
+        }
     """
     log_api_call("change_password", user_id=str(current_user.id))
 

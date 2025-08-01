@@ -22,10 +22,21 @@ console = Console()
 
 class APIError(Exception):
     """
-    Custom exception for API errors.
+    Custom exception for API errors in CLI operations.
+
+    Represents errors that occur during API communication in the CLI,
+    providing additional context such as HTTP status codes for better
+    error handling and user feedback.
 
     Attributes:
-        status_code: HTTP status code if available
+        status_code: HTTP status code if the error originated from an API response
+
+    Args:
+        message: Descriptive error message
+        status_code: Optional HTTP status code associated with the error
+
+    Example:
+        raise APIError("Authentication failed", status_code=401)
     """
 
     def __init__(self, message: str, status_code=None):
@@ -35,8 +46,32 @@ class APIError(Exception):
 
 class CLIManager:
     """
-    Manages authentication for the CLI, including token storage,
-    login/logout, and user status queries.
+    Manages authentication and SDK operations for the CLI interface.
+
+    This class provides centralized management of CLI authentication including
+    token storage, login/logout operations, and SDK initialization. It handles
+    the authentication lifecycle and provides a consistent interface for all
+    CLI commands.
+
+    Responsibilities:
+        - Token storage and retrieval from local file system
+        - User login and logout operations
+        - SDK initialization with authentication
+        - User status and profile management
+        - Configuration management for CLI operations
+
+    Security Features:
+        - Secure token storage in user's home directory
+        - Automatic token refresh and validation
+        - Cleanup of expired or invalid tokens
+
+    Token Storage:
+        Tokens are stored in ~/.ai-chatbot-cli/token for secure access
+        across CLI sessions.
+
+    Note:
+        This class automatically creates necessary directories and handles
+        configuration loading from environment or config files.
     """
 
     def __init__(self):
