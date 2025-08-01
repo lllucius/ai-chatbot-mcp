@@ -37,7 +37,9 @@ router = APIRouter(tags=["authentication"])
 
 @router.post("/register", response_model=UserResponse)
 @handle_api_errors("User registration failed")
-async def register(request: RegisterRequest, auth_service: AuthService = Depends(get_auth_service)):
+async def register(
+    request: RegisterRequest, auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Register a new user account with validation and conflict detection.
 
@@ -79,7 +81,9 @@ async def register(request: RegisterRequest, auth_service: AuthService = Depends
 
 @router.post("/login", response_model=Token)
 @handle_api_errors("User authentication failed")
-async def login(request: LoginRequest, auth_service: AuthService = Depends(get_auth_service)):
+async def login(
+    request: LoginRequest, auth_service: AuthService = Depends(get_auth_service)
+):
     """
     Authenticate user and return JWT access token.
 
@@ -114,11 +118,14 @@ async def login(request: LoginRequest, auth_service: AuthService = Depends(get_a
     """
     log_api_call("login", username=request.username)
 
-    token_data = await auth_service.authenticate_user(request.username, request.password)
+    token_data = await auth_service.authenticate_user(
+        request.username, request.password
+    )
     return token_data
 
 
 @router.get("/me", response_model=UserResponse)
+@handle_api_errors("Failed to get current user information")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
     Get current authenticated user information.
@@ -147,6 +154,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout", response_model=BaseResponse)
+@handle_api_errors("Logout failed")
 async def logout():
     """
     Logout current user (client-side token invalidation).

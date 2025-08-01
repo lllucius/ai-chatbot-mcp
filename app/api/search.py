@@ -109,7 +109,7 @@ async def find_similar_chunks(
     )
 
 
-@router.get("/suggestions")
+@router.get("/suggestions", response_model=SearchSuggestionResponse)
 @handle_api_errors("Failed to generate suggestions")
 async def get_search_suggestions(
     query: str = Query(..., min_length=1),
@@ -123,7 +123,9 @@ async def get_search_suggestions(
     Returns suggested search terms based on document content
     and previous search patterns.
     """
-    log_api_call("get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit)
+    log_api_call(
+        "get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit
+    )
 
     # This is a simplified implementation
     # In a production system, you might want to implement
@@ -145,7 +147,7 @@ async def get_search_suggestions(
     }
 
 
-@router.get("/history")
+@router.get("/history", response_model=SearchHistoryResponse)
 @handle_api_errors("Failed to retrieve search history")
 async def get_search_history(
     limit: int = Query(10, ge=1, le=50), current_user: User = Depends(get_current_user)

@@ -17,8 +17,11 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.llm_profile import (LLMProfileCreate, LLMProfileListResponse,
-                                   LLMProfileResponse)
+from ..schemas.llm_profile import (
+    LLMProfileCreate,
+    LLMProfileResponse,
+    LLMProfileListResponse,
+)
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -64,31 +67,33 @@ async def list_profiles(
     parameters, usage statistics, and metadata.
     """
     log_api_call("list_profiles", user_id=current_user.id)
-
+    
     profiles, total = await profile_service.list_profiles(
         active_only=active_only, search=search, page=page, size=size
     )
     pages = (total + size - 1) // size if size else 1
     profile_responses = []
     for p in profiles:
-        profile_responses.append(
-            LLMProfileResponse(
-                name=p.name,
-                title=p.title,
-                description=p.description,
-                model_name=settings.openai_chat_model,
-                parameters=p.to_openai_params(),
-                is_default=p.is_default,
-                is_active=p.is_active,
-                usage_count=p.usage_count,
-                last_used_at=p.last_used_at,
-                created_at=p.created_at,
-                updated_at=p.updated_at,
-            )
-        )
+        profile_responses.append(LLMProfileResponse(
+            name=p.name,
+            title=p.title,
+            description=p.description,
+            model_name=settings.openai_chat_model,
+            parameters=p.to_openai_params(),
+            is_default=p.is_default,
+            is_active=p.is_active,
+            usage_count=p.usage_count,
+            last_used_at=p.last_used_at,
+            created_at=p.created_at,
+            updated_at=p.updated_at,
+        ))
     return LLMProfileListResponse(
-        profiles=profile_responses, total=total, page=page, size=size, pages=pages
-    )
+        profiles=profile_responses,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
+        )
 
 
 @router.get("/byname/{profile_name}", response_model=LLMProfileResponse)
@@ -103,16 +108,13 @@ async def get_profile_details(
 
     Returns the complete profile parameters, metadata, and usage statistics.
     """
-    log_api_call(
-        "get_profile_details", user_id=current_user.id, profile_name=profile_name
-    )
+    log_api_call("get_profile_details", user_id=current_user.id, profile_name=profile_name)
     profile = await profile_service.get_profile(profile_name)
     if not profile:
         raise HTTPException(
             status_code=404,
             detail=f"Profile '{profile_name}' not found",
         )
-
     response_data = {
         "name": profile.name,
         "title": profile.title,
@@ -153,19 +155,15 @@ async def set_default_profile(
 
     Only available to superusers.
     """
-    log_api_call(
-        "set_default_profile", user_id=current_user.id, profile_name=profile_name
-    )
-    success = await profile_service.set_default_profile(profile_name)
-    if success:
-        return BaseResponse(
-            success=True, message=f"Profile '{profile_name}' set as default"
-        )
-    else:
-        raise HTTPException(
+    log_api_call("set_default_profile", user_id=current_user.id, profile_name=profile_name)
+        success = await profile_service.set_default_profile(profile_name)
+        if success:
+            return BaseResponse(success=True, message=f"Profile '{profile_name}' set as default")
+        else:
+            raise HTTPException(
             status_code=404,
-            detail=f"Profile '{profile_name}' not found",
-        )
+                detail=f"Profile '{profile_name}' not found",
+            )
 
 
 @router.get("/default/parameters", response_model=Dict[str, Any])
@@ -180,14 +178,14 @@ async def get_default_profile_parameters(
     Returns the parameters in OpenAI format ready for use in API calls.
     """
     log_api_call("get_default_profile_parameters", user_id=current_user.id)
-    params = await profile_service.get_profile_for_openai()
-    return {
-        "success": True,
-        "data": {
-            "parameters": params,
-            "profile_name": "default",
-        },
-    }
+        params = await profile_service.get_profile_for_openai()
+        return {
+            "success": True,
+            "data": {
+                "parameters": params,
+                "profile_name": "default",
+            },
+        }
 
 
 @router.get("/stats", response_model=Dict[str, Any])
@@ -198,11 +196,11 @@ async def get_profile_stats(
 ) -> Dict[str, Any]:
     """Get LLM profile usage statistics and analytics."""
     log_api_call("get_profile_stats", user_id=current_user.id)
-    stats = await profile_service.get_profile_stats()
-    return {
-        "success": True,
-        "data": stats,
-    }
+        stats = await profile_service.get_profile_stats()
+        return {
+            "success": True,
+            "data": stats,
+        }
 
 
 @router.post("/validate", response_model=Dict[str, Any])
@@ -218,12 +216,12 @@ async def validate_parameters(
     Returns validation results with any errors or warnings.
     """
     log_api_call("validate_parameters", user_id=current_user.id)
-    errors = await profile_service.validate_parameters(**parameters)
-    return {
-        "success": len(errors) == 0,
-        "data": {
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "parameters": parameters,
-        },
-    }
+        errors = await profile_service.validate_parameters(**parameters)
+        return {
+            "success": len(errors) == 0,
+            "data": {
+                "valid": len(errors) == 0,
+                "errors": errors,
+                "parameters": parameters,
+            },
+        }

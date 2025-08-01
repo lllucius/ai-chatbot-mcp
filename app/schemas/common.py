@@ -89,6 +89,28 @@ class HealthCheckResponse(BaseResponse):
         return json.dumps(data)
 
 
+class DetailedHealthCheckResponse(BaseModel):
+    """Detailed health check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    application: Dict[str, Any] = Field(..., description="Application health information")
+    database: Dict[str, Any] = Field(..., description="Database health status")
+    cache: Dict[str, Any] = Field(..., description="Cache system health status")
+    openai: Dict[str, Any] = Field(..., description="OpenAI service health status")
+    fastmcp: Dict[str, Any] = Field(..., description="FastMCP service health status")
+    timestamp: datetime = Field(default_factory=utcnow, description="Health check timestamp")
+    overall_status: str = Field(..., description="Overall system health status")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
 class FileUploadResponse(BaseResponse):
     """Response for file upload operations."""
 

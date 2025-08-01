@@ -22,7 +22,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["mcp"])
 
 
-@router.get("/servers")
+@router.get("/servers", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to list MCP servers")
 async def list_servers(
     enabled_only: bool = Query(False, description="Show only enabled servers"),
@@ -32,24 +32,49 @@ async def list_servers(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """List all registered MCP servers."""
+    """
+    List all registered MCP servers with optional filtering.
+
+    Returns a list of MCP servers configured in the system with their
+    connection status, configuration details, and metadata. Supports
+    filtering by enabled/connected status and includes detailed information
+    when requested.
+
+    Args:
+        enabled_only: If True, returns only enabled servers
+        connected_only: If True, returns only currently connected servers
+        detailed: If True, includes additional server metadata
+        current_user: Current authenticated superuser
+        db: Database session
+        mcp_service: MCP service instance
+
+    Returns:
+        MCPServerListResponse: List of servers with metadata
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If server listing fails
+
+    Note:
+        This endpoint requires superuser privileges as it exposes
+        system configuration details.
+    """
     log_api_call("list_mcp_servers", user_id=current_user.id)
 
     filters = MCPListFiltersSchema(
-        enabled_only=enabled_only,
-        connected_only=connected_only
+        enabled_only=enabled_only, connected_only=connected_only
     )
-    
+
     servers = await mcp_service.list_servers(filters)
-    
+
     return {
         "success": True,
         "message": f"Retrieved {len(servers)} MCP servers",
-        "data": servers
+        "data": servers,
     }
 
 
-@router.post("/servers")
+@router.post("/servers", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to create MCP server")
 async def create_server(
     server_data: MCPServerCreateSchema,
@@ -58,18 +83,20 @@ async def create_server(
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """Create a new MCP server."""
-    log_api_call("create_mcp_server", user_id=current_user.id, server_name=server_data.name)
+    log_api_call(
+        "create_mcp_server", user_id=current_user.id, server_name=server_data.name
+    )
 
     server = await mcp_service.create_server(server_data)
-    
+
     return {
         "success": True,
         "message": f"MCP server '{server_data.name}' created successfully",
-        "data": server
+        "data": server,
     }
 
 
-@router.get("/servers/byname/{server_name}")
+@router.get("/servers/byname/{server_name}", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to get MCP server")
 async def get_server(
     server_name: str,
@@ -81,21 +108,21 @@ async def get_server(
     log_api_call("get_mcp_server", user_id=current_user.id, server_name=server_name)
 
     server = await mcp_service.get_server(server_name)
-    
+
     if not server:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP server '{server_name}' not found"
+            detail=f"MCP server '{server_name}' not found",
         )
-    
+
     return {
         "success": True,
         "message": f"Retrieved MCP server '{server_name}'",
-        "data": server
+        "data": server,
     }
 
 
-@router.patch("/servers/byname/{server_name}")
+@router.patch("/servers/byname/{server_name}", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to update MCP server")
 async def update_server(
     server_name: str,
@@ -108,11 +135,11 @@ async def update_server(
     log_api_call("update_mcp_server", user_id=current_user.id, server_name=server_name)
 
     server = await mcp_service.update_server(server_name, server_update)
-    
+
     return {
         "success": True,
         "message": f"MCP server '{server_name}' updated successfully",
-        "data": server
+        "data": server,
     }
 
 
@@ -128,16 +155,15 @@ async def delete_server(
     log_api_call("delete_mcp_server", user_id=current_user.id, server_name=server_name)
 
     deleted = await mcp_service.delete_server(server_name)
-    
+
     if deleted:
         return BaseResponse(
-            success=True,
-            message=f"MCP server '{server_name}' deleted successfully"
+            success=True, message=f"MCP server '{server_name}' deleted successfully"
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP server '{server_name}' not found"
+            detail=f"MCP server '{server_name}' not found",
         )
 
 
@@ -158,11 +184,11 @@ async def list_tools(
     if server:
         filters.server_name = server
     tools = await mcp_service.list_tools(filters)
-    
+
     return {
         "success": True,
         "message": f"Retrieved {len(tools)} MCP tools",
-        "data": tools
+        "data": tools,
     }
 
 
@@ -178,16 +204,15 @@ async def enable_tool(
     log_api_call("enable_mcp_tool", user_id=current_user.id, tool_name=tool_name)
 
     success = await mcp_service.enable_tool(tool_name)
-    
+
     if success:
         return BaseResponse(
-            success=True,
-            message=f"MCP tool '{tool_name}' enabled successfully"
+            success=True, message=f"MCP tool '{tool_name}' enabled successfully"
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP tool '{tool_name}' not found"
+            detail=f"MCP tool '{tool_name}' not found",
         )
 
 
@@ -203,20 +228,19 @@ async def disable_tool(
     log_api_call("disable_mcp_tool", user_id=current_user.id, tool_name=tool_name)
 
     success = await mcp_service.disable_tool(tool_name)
-    
+
     if success:
         return BaseResponse(
-            success=True,
-            message=f"MCP tool '{tool_name}' disabled successfully"
+            success=True, message=f"MCP tool '{tool_name}' disabled successfully"
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP tool '{tool_name}' not found"
+            detail=f"MCP tool '{tool_name}' not found",
         )
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=MCPStatsResponse)
 @handle_api_errors("Failed to get MCP statistics")
 async def get_mcp_stats(
     current_user: User = Depends(get_current_superuser),
@@ -227,15 +251,15 @@ async def get_mcp_stats(
     log_api_call("get_mcp_stats", user_id=current_user.id)
 
     stats = await mcp_service.get_tool_stats()
-    
+
     return {
         "success": True,
         "message": "MCP statistics retrieved successfully",
-        "data": [s.model_dump() for s in stats]
+        "data": [s.model_dump() for s in stats],
     }
 
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=MCPStatsResponse)
 @handle_api_errors("Failed to refresh MCP")
 async def refresh_mcp(
     current_user: User = Depends(get_current_superuser),
@@ -246,7 +270,7 @@ async def refresh_mcp(
     log_api_call("refresh_mcp", user_id=current_user.id)
 
     await mcp_service.refresh_from_registry()
-    
+
     return {
         "success": True,
         "message": "MCP refresh completed successfully",

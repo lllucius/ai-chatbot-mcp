@@ -5,6 +5,7 @@ This module provides endpoints for managing MCP (Model Context Protocol) tools
 using the MCPService for both registry and client operations.
 
 """
+
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -22,7 +23,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["tools"])
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=MCPToolListResponse)
 @handle_api_errors("Failed to list tools")
 async def list_tools(
     enabled_only: bool = False,
@@ -33,13 +34,39 @@ async def list_tools(
 ):
     """
     List all available MCP tools with registry integration.
+
+    Returns a comprehensive list of all MCP tools available through registered
+    servers, including their schemas, usage statistics, and OpenAI-compatible
+    function definitions. This endpoint provides the foundation for tool
+    discovery and integration.
+
+    Args:
+        enabled_only: If True, returns only enabled tools from enabled servers
+        server_name: If specified, returns tools from this server only
+        current_user: Current authenticated superuser
+        db: Database session
+        mcp_service: MCP service instance
+
+    Returns:
+        MCPToolListResponse: Comprehensive tool listing with:
+            - available_tools: Tool definitions with metadata
+            - openai_tools: Tools formatted for OpenAI function calling
+            - servers: Server status and tool counts
+            - enabled_count/total_count: Statistics
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If tool discovery fails
+
+    Note:
+        This endpoint requires superuser privileges and may trigger
+        tool discovery from MCP servers if needed.
     """
     log_api_call("list_tools", user_id=current_user.id)
 
     try:
         filters = MCPListFiltersSchema(
-            enabled_only=enabled_only,
-            server_name=server_name
+            enabled_only=enabled_only, server_name=server_name
         )
         tools = await mcp_service.list_tools(filters)
         servers = await mcp_service.list_servers()
@@ -53,37 +80,43 @@ async def list_tools(
                     type="function",
                     function={
                         "name": tool.name,
-                        "description": tool.description or f"Tool from {tool.server.name}",
-                        "parameters": tool.parameters or {"type": "object", "properties": {}}
-                    }
+                        "description": tool.description
+                        or f"Tool from {tool.server.name}",
+                        "parameters": tool.parameters
+                        or {"type": "object", "properties": {}},
+                    },
                 )
                 openai_tools.append(openai_tool)
 
         server_status = []
         for server in servers:
             server_tools = [t for t in tools if t.server.name == server.name]
-            server_status.append({
-                "name": server.name,
-                "status": "connected" if server.is_connected else "disconnected",
-                "enabled": server.is_enabled,
-                "url": server.url,
-                "tool_count": len(server_tools),
-                "last_connected": server.last_connected_at,
-                "connection_errors": server.connection_errors,
-            })
+            server_status.append(
+                {
+                    "name": server.name,
+                    "status": "connected" if server.is_connected else "disconnected",
+                    "enabled": server.is_enabled,
+                    "url": server.url,
+                    "tool_count": len(server_tools),
+                    "last_connected": server.last_connected_at,
+                    "connection_errors": server.connection_errors,
+                }
+            )
 
         tool_responses = []
         for tool in tools:
-            tool_responses.append({
-                "name": tool.name,
-                "description": tool.description or "",
-                "schema": tool.parameters or {},
-                "server_name": tool.server.name,
-                "is_enabled": tool.is_enabled,
-                "usage_count": tool.usage_count,
-                "last_used_at": tool.last_used_at,
-                "success_rate": tool.success_rate,
-            })
+            tool_responses.append(
+                {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "schema": tool.parameters or {},
+                    "server_name": tool.server.name,
+                    "is_enabled": tool.is_enabled,
+                    "usage_count": tool.usage_count,
+                    "last_used_at": tool.last_used_at,
+                    "success_rate": tool.success_rate,
+                }
+            )
 
         return {
             "success": True,
@@ -186,9 +219,7 @@ async def test_tool(
         if test_params is None:
             test_params = {}
         request = MCPToolExecutionRequestSchema(
-            tool_name=tool_name,
-            parameters=test_params,
-            record_usage=True
+            tool_name=tool_name, parameters=test_params, record_usage=True
         )
         result = await mcp_service.call_tool(request)
 
@@ -232,13 +263,17 @@ async def refresh_tools(
         results = await mcp_service.discover_tools_all_servers()
 
         if not results:
-            return BaseResponse(success=True, message="No enabled servers found for tool discovery")
+            return BaseResponse(
+                success=True, message="No enabled servers found for tool discovery"
+            )
 
         total_new = sum(r.new_tools for r in results if r.success)
         total_updated = sum(r.updated_tools for r in results if r.success)
         failed_servers = [r.server_name for r in results if not r.success]
 
-        message = f"Tools refreshed successfully: {total_new} new, {total_updated} updated"
+        message = (
+            f"Tools refreshed successfully: {total_new} new, {total_updated} updated"
+        )
         if failed_servers:
             message += f". Failed servers: {', '.join(failed_servers)}"
 
@@ -268,7 +303,9 @@ async def enable_tool(
     success = await mcp_service.enable_tool(tool_name)
 
     if success:
-        return BaseResponse(success=True, message=f"Tool '{tool_name}' enabled successfully")
+        return BaseResponse(
+            success=True, message=f"Tool '{tool_name}' enabled successfully"
+        )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -291,7 +328,9 @@ async def disable_tool(
     success = await mcp_service.disable_tool(tool_name)
 
     if success:
-        return BaseResponse(success=True, message=f"Tool '{tool_name}' disabled successfully")
+        return BaseResponse(
+            success=True, message=f"Tool '{tool_name}' disabled successfully"
+        )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
