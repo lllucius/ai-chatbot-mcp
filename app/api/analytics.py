@@ -16,14 +16,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.analytics import (
-    AnalyticsExportResponse,
-    AnalyticsOverviewResponse,
-    AnalyticsPerformanceResponse,
-    AnalyticsTrendsResponse,
-    AnalyticsUsageResponse,
-    AnalyticsUserAnalyticsResponse,
-)
+from ..schemas.analytics import (AnalyticsExportResponse,
+                                 AnalyticsOverviewResponse,
+                                 AnalyticsPerformanceResponse,
+                                 AnalyticsTrendsResponse,
+                                 AnalyticsUsageResponse,
+                                 AnalyticsUserAnalyticsResponse)
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["analytics"])

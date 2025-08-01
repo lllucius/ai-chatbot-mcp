@@ -13,7 +13,8 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import (APIRouter, Depends, File, HTTPException, Query,
+                     UploadFile, status)
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,21 +24,13 @@ from ..dependencies import get_current_superuser, get_current_user
 from ..models.conversation import Conversation, Message
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-    StreamCompleteResponse,
-    StreamContentResponse,
-    StreamEndResponse,
-    StreamErrorResponse,
-    StreamStartResponse,
-    StreamToolCallResponse,
-)
+from ..schemas.conversation import (ChatRequest, ChatResponse,
+                                    ConversationCreate, ConversationResponse,
+                                    ConversationStats, ConversationUpdate,
+                                    MessageResponse, StreamCompleteResponse,
+                                    StreamContentResponse, StreamEndResponse,
+                                    StreamErrorResponse, StreamStartResponse,
+                                    StreamToolCallResponse)
 from ..services.conversation import ConversationService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
