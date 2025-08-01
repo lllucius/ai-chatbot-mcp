@@ -1,9 +1,75 @@
 """
-Common Pydantic schemas used across the application.
+Common Pydantic schemas for comprehensive API requests and responses across the application.
 
-This module provides base schemas and common response formats
-using modern Pydantic V2 features and serialization.
-All fields have an explicit "description" argument.
+This module provides foundational schemas and standardized response formats using
+modern Pydantic V2 features with advanced validation, serialization, and type safety.
+Implements consistent API response structures, pagination handling, health monitoring,
+and error reporting patterns used throughout the application.
+
+Key Features:
+- Standardized API response formats with consistent structure and metadata
+- Comprehensive pagination support with flexible parameters and calculations
+- Advanced health monitoring schemas for system observability and diagnostics
+- Error handling schemas with structured error reporting and validation
+- Generic response patterns with type safety and reusability
+- Custom JSON serialization with proper datetime and type handling
+
+Response Architecture:
+- BaseResponse: Foundation for all API responses with success status and messaging
+- SuccessResponse: Standardized success response with optional data payload
+- ErrorResponse: Structured error response with error codes and details
+- ValidationErrorResponse: Specialized validation error with field-level reporting
+- PaginatedResponse: Generic paginated response with type safety and metadata
+
+Health Monitoring:
+- HealthCheckResponse: Basic application health status and version information
+- DetailedHealthCheckResponse: Comprehensive system health with component status
+- DatabaseHealthResponse: Database connectivity and schema validation status
+- ServicesHealthResponse: External service availability and performance metrics
+- SystemMetricsResponse: System resource utilization and performance indicators
+
+Pagination and Search:
+- PaginationParams: Comprehensive pagination parameters with sorting and calculations
+- SearchParams: Advanced search parameters with algorithm selection and filtering
+- PaginatedResponse: Generic paginated response with type safety and metadata
+- Offset and limit calculations for database query optimization
+- Flexible sorting and ordering with validation and constraints
+
+Administrative Schemas:
+- DatabaseStatusResponse: Database administration and management information
+- DatabaseTablesResponse: Table listing and metadata for database operations
+- DatabaseMigrationsResponse: Migration status and history for schema management
+- DatabaseAnalysisResponse: Performance analysis and optimization recommendations
+- DatabaseQueryResponse: Custom query execution results and metrics
+
+File and Bulk Operations:
+- FileUploadResponse: File upload confirmation with metadata and validation
+- BulkOperationResponse: Bulk operation results with success and failure tracking
+- TokenResponse: JWT token information with expiration and security metadata
+- MetricsResponse: System metrics collection and performance monitoring
+- ConfigurationResponse: Application configuration and feature flags
+
+Use Cases:
+- Consistent API response formatting across all endpoints
+- Health monitoring and system diagnostics for operational oversight
+- Pagination support for large datasets and user interfaces
+- Error handling and validation reporting for user experience
+- Administrative operations with comprehensive status reporting
+- File upload and bulk operations with progress tracking
+
+Type Safety and Validation:
+- Generic type variables for type-safe pagination and responses
+- Comprehensive field validation with Pydantic V2 features
+- Custom JSON serialization for datetime and complex type handling
+- Input validation and sanitization for security and data integrity
+- Business rule enforcement through schema validation and constraints
+
+Security and Compliance:
+- Structured error reporting without sensitive information exposure
+- Input validation to prevent injection attacks and malicious data
+- Secure token handling with proper expiration and metadata
+- Audit-friendly response formats for compliance and monitoring
+- Data privacy controls for sensitive information handling
 """
 
 from datetime import datetime
@@ -18,7 +84,55 @@ T = TypeVar("T")
 
 
 class BaseResponse(BaseModel):
-    """Base response schema for API endpoints."""
+    """
+    Foundation response schema for all API endpoints with comprehensive status and metadata.
+
+    Serves as the base class for all API responses providing consistent structure,
+    status reporting, and timestamp information across the application. Implements
+    standardized response format with success indicators, human-readable messages,
+    and automatic timestamp generation for audit and monitoring purposes.
+
+    Response Structure:
+        - success: Boolean indicator for operation success or failure
+        - message: Human-readable description of the operation result
+        - timestamp: Automatic timestamp generation for audit and tracking
+
+    Standardization Features:
+        - Consistent response format across all API endpoints
+        - Automatic timestamp generation for audit trails and monitoring
+        - Success/failure indication for client-side handling
+        - Human-readable messages for user interface display
+        - Custom JSON serialization for proper datetime formatting
+
+    Configuration Benefits:
+        - from_attributes: Enables ORM model to response conversion
+        - populate_by_name: Supports flexible field naming and aliases
+        - use_enum_values: Serializes enum values for consistent JSON output
+        - validate_assignment: Ensures data integrity during field updates
+        - extra="ignore": Accepts additional fields without validation errors
+
+    Use Cases:
+        - Base class for all API endpoint responses
+        - Consistent error and success reporting across endpoints
+        - Audit trail generation with automatic timestamping
+        - Client-side response handling with standardized format
+        - Integration with monitoring and logging systems
+
+    JSON Serialization:
+        - Custom datetime handling with ISO format and timezone indicators
+        - Consistent timestamp formatting for frontend integration
+        - Proper type conversion for JSON compatibility
+        - UTC timezone standardization for global applications
+        - Frontend-compatible response structure
+
+    Example:
+        response = BaseResponse(
+            success=True,
+            message="Operation completed successfully",
+            timestamp=datetime.now()
+        )
+        json_str = response.model_dump_json()  # Proper ISO datetime format
+    """
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -35,7 +149,38 @@ class BaseResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with datetime handling."""
+        """
+        Custom JSON serialization with comprehensive datetime handling for API responses.
+
+        Converts datetime fields to ISO format strings with timezone indicators for
+        consistent API responses and frontend compatibility. Ensures proper timestamp
+        formatting for audit trails and client-side datetime handling.
+
+        Args:
+            **kwargs: Additional arguments passed to model_dump for serialization control
+
+        Returns:
+            str: JSON string with properly formatted datetime fields
+
+        Serialization Features:
+            - Datetime to ISO format conversion with 'Z' suffix for UTC indication
+            - Consistent timestamp formatting for API responses
+            - Frontend-compatible JSON structure for web and mobile applications
+            - Proper timezone handling for global applications
+            - Integration with audit and monitoring systems
+
+        Use Cases:
+            - API response serialization for all endpoints
+            - Frontend integration requiring standard datetime formats
+            - Audit logging with consistent timestamp representation
+            - Monitoring system integration with structured data
+            - Cross-service communication with standardized response format
+
+        Example:
+            response = BaseResponse(success=True, message="Success")
+            json_output = response.model_dump_json()
+            # Result: {"success": true, "message": "Success", "timestamp": "2024-01-01T12:00:00Z"}
+        """
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
