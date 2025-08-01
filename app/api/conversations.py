@@ -25,9 +25,11 @@ from ..models.conversation import Conversation, Message
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.conversation import (ChatRequest, ChatResponse,
-                                    ConversationCreate, ConversationExportResponse, ConversationResponse,
-                                    ConversationStats, ConversationUpdate,
-                                    MessageResponse, StreamCompleteResponse,
+                                    ConversationCreate,
+                                    ConversationExportResponse,
+                                    ConversationResponse, ConversationStats,
+                                    ConversationUpdate, MessageResponse,
+                                    StreamCompleteResponse,
                                     StreamContentResponse, StreamEndResponse,
                                     StreamErrorResponse, StreamStartResponse,
                                     StreamToolCallResponse)

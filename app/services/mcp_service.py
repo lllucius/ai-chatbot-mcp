@@ -38,7 +38,6 @@ from ..schemas.mcp import (MCPDiscoveryResultSchema, MCPHealthStatusSchema,
                            MCPToolCreateSchema, MCPToolExecutionRequestSchema,
                            MCPToolExecutionResultSchema, MCPToolSchema,
                            MCPToolUpdateSchema, MCPToolUsageStatsSchema)
-from ..utils.caching import api_response_cache, make_cache_key
 
 logger = get_api_logger("mcp_service")
 

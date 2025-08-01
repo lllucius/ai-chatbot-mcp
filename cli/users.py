@@ -16,8 +16,7 @@ from typer import Argument, Option
 from client.ai_chatbot_sdk import ApiError, RegisterRequest
 
 from .base import (console, display_key_value_pairs, error_message,
-                   format_timestamp, get_sdk, info_message,
-                   success_message)
+                   format_timestamp, get_sdk, info_message, success_message)
 
 user_app = AsyncTyper(help="👥 User management commands")
 

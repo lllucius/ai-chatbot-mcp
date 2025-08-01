@@ -21,45 +21,33 @@ Author: Your Name
 """
 
 import asyncio
-import sys
+import getpass
+import json
 import os
 import re
 import shlex
 import signal
+import sys
 import textwrap
-import getpass
-import json
 from datetime import datetime
-from typing import Any, Dict, Optional, List, Tuple, Callable
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 try:
     import readline
 except ImportError:
     readline = None  # Windows fallback
 
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
+from ai_chatbot_sdk import (AIChatbotSDK, ApiError, ChatRequest,
+                            DocumentSearchRequest, LLMProfileCreate,
+                            PromptCreate, ToolHandlingMode, UserPasswordUpdate,
+                            UserUpdate)
+from config import (ClientConfig, get_default_backup_dir,
+                    get_default_token_file, load_config)
 from rich import box
-
-from ai_chatbot_sdk import (
-    AIChatbotSDK,
-    ChatRequest,
-    ToolHandlingMode,
-    UserUpdate,
-    UserPasswordUpdate,
-    DocumentSearchRequest,
-    PromptCreate,
-    LLMProfileCreate,
-    ApiError
-)
-from config import (
-    load_config,
-    get_default_token_file,
-    get_default_backup_dir,
-    ClientConfig,
-)
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 console: Console = Console()
 config: ClientConfig = load_config()
@@ -359,7 +347,8 @@ class CommandHandler:
         Parse and execute a command. Returns True if handled, else False.
         """
         if not line.startswith("/"):
-        return False
+            return False
+
         cmd, *args = shlex.split(line)
         cmd = cmd.lower()
 

@@ -6,10 +6,9 @@ suggestions, and search history.
 All fields have an explicit 'description' argument.
 """
 
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import List
 
-from .document import DocumentChunkResponse
+from pydantic import BaseModel, Field
 
 
 class SearchSuggestionResponse(BaseModel):

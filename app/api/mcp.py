@@ -15,7 +15,8 @@ from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
 from ..schemas.common import BaseResponse
 from ..schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
-                           MCPServerListResponse, MCPServerUpdateSchema, MCPToolsResponse)
+                           MCPServerListResponse, MCPServerUpdateSchema,
+                           MCPToolsResponse)
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 

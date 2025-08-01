@@ -8,7 +8,6 @@ All endpoints use explicit Pydantic response models.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
