@@ -55,9 +55,36 @@ logger = get_component_logger("main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Application lifespan manager.
+    Application lifespan manager for startup and shutdown procedures.
 
-    Handles startup and shutdown events for the FastAPI application.
+    Manages the complete lifecycle of the FastAPI application including
+    database initialization, background service startup, monitoring systems,
+    and graceful shutdown procedures.
+
+    Startup Procedures:
+        - Database initialization and connection establishment
+        - Cache system initialization and cleanup task scheduling
+        - Rate limiting system startup and cleanup scheduling
+        - Performance monitoring system activation
+        - Background document processor initialization and startup
+
+    Shutdown Procedures:
+        - Background processor graceful shutdown
+        - Database connection cleanup
+        - Resource cleanup and finalization
+
+    Args:
+        app: FastAPI application instance
+
+    Yields:
+        None: Control is yielded to the application after startup completion
+
+    Raises:
+        Exception: If critical startup procedures fail, preventing application start
+
+    Note:
+        Non-critical service failures are logged but don't prevent application startup.
+        Background processor initialization is considered critical and will fail startup.
     """
     # Startup
     logger.info("Starting AI Chatbot Platform...")
@@ -132,7 +159,26 @@ app = FastAPI(
 
 # Custom OpenAPI schema
 def custom_openapi():
-    """Generate custom OpenAPI schema with additional information."""
+    """
+    Generate custom OpenAPI schema with enhanced documentation and security.
+
+    Creates a customized OpenAPI schema that includes additional branding,
+    security scheme definitions, and enhanced API documentation for better
+    developer experience and integration support.
+
+    Returns:
+        dict: Custom OpenAPI schema with enhanced configuration
+
+    Enhancements:
+        - Custom logo and branding information
+        - JWT Bearer authentication scheme definition
+        - Enhanced API documentation structure
+        - Security scheme integration for all endpoints
+
+    Note:
+        The schema is cached after first generation to improve performance.
+        Changes to the schema require application restart to take effect.
+    """
     if app.openapi_schema:
         return app.openapi_schema
 
