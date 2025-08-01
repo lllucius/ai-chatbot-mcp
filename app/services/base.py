@@ -6,7 +6,7 @@ to eliminate code duplication and ensure consistent patterns across services.
 
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, TypeVar
 from uuid import UUID
 
@@ -354,3 +354,13 @@ class BaseService(ABC):
             "has_db_session": self.db is not None,
             "service_type": "base_service",
         }
+
+    @abstractmethod
+    def get_service_name(self) -> str:
+        """
+        Get the name of this service.
+
+        Returns:
+            str: The service name
+        """
+        pass

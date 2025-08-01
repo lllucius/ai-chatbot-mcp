@@ -153,6 +153,9 @@ class FileProcessor:
             )
             return content.strip()
 
+        except MemoryError:
+            logger.error(f"Out of memory processing {file_path}")
+            raise DocumentError("File too large to process - insufficient memory")
         except Exception as partition_error:
             # Fallback for simple text files when unstructured fails
             if file_type in self.text_formats:
@@ -169,14 +172,10 @@ class FileProcessor:
                         f"Both unstructured and simple text extraction failed: {text_error}"
                     )
             else:
+                logger.error(
+                    f"Text extraction failed for {file_path}: {partition_error}"
+                )
                 raise DocumentError(f"Text extraction failed: {partition_error}")
-
-        except MemoryError:
-            logger.error(f"Out of memory processing {file_path}")
-            raise DocumentError("File too large to process - insufficient memory")
-        except Exception as e:
-            logger.error(f"Text extraction failed for {file_path}: {e}")
-            raise DocumentError(f"Text extraction failed: {e}")
 
     async def extract_text_streaming(
         self, file_path: str, file_type: str

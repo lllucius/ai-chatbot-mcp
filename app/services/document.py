@@ -269,17 +269,6 @@ class DocumentService(BaseService):
                 with contextlib.suppress(OSError):
                     os.unlink(file_path)
             await self.db.rollback()
-            raise
-            await self.db.refresh(document)
-
-            logger.info(f"Document created: {document.id} ({document.filename})")
-            return document
-
-        except Exception as e:
-            logger.error(f"Document creation failed: {e}")
-            # Clean up file if it was saved
-            if "file_path" in locals() and os.path.exists(file_path):
-                os.remove(file_path)
             raise DocumentError(f"Document creation failed: {e}")
 
     async def start_processing(self, document_id: UUID, priority: int = 5) -> str:
