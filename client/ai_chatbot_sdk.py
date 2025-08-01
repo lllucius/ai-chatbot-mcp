@@ -560,6 +560,77 @@ async def fetch_all_pages(
     return items
 
 
+# --- ADDITIONAL RESPONSE MODELS ---
+
+
+class DatabaseHealthResponse(BaseModel):
+    """Database health check response model."""
+    status: str
+    message: str
+    connectivity: str
+    schema_status: Optional[str] = None
+    tables_found: Optional[int] = None
+
+
+class ServicesHealthResponse(BaseModel):
+    """External services health check response model."""
+    openai: Dict[str, Any]
+    fastmcp: Dict[str, Any]
+    timestamp: datetime
+
+
+class SystemMetricsResponse(BaseModel):
+    """System metrics response model."""
+    system: Dict[str, Any]
+    application: Dict[str, Any]
+    timestamp: datetime
+    error: Optional[str] = None
+
+
+class ReadinessResponse(BaseModel):
+    """Readiness check response model."""
+    status: str
+    message: str
+    timestamp: datetime
+
+
+class LivenessResponse(BaseModel):
+    """Liveness check response model."""
+    status: str
+    message: str
+    timestamp: datetime
+
+
+class PerformanceMetricsResponse(BaseModel):
+    """Performance metrics response model."""
+    data: Dict[str, Any]
+
+
+class UserStatisticsResponse(BaseModel):
+    """User statistics response model."""
+    success: bool
+    data: Dict[str, Any]
+
+
+class SearchResponse(BaseModel):
+    """Search response model."""
+    success: bool
+    data: Dict[str, Any]
+
+
+class RegistryStatsResponse(BaseModel):
+    """Registry statistics response model."""
+    success: bool
+    message: str
+    data: Dict[str, Any]
+
+
+class ConversationStatsResponse(BaseModel):
+    """Conversation statistics response model."""
+    success: bool
+    data: Dict[str, Any]
+
+
 # --- SDK SUBCLIENTS ---
 
 
@@ -577,21 +648,29 @@ class HealthClient:
         """Get detailed health status including system information."""
         return await self.sdk._request("/api/v1/health/detailed")
 
-    async def database(self) -> Dict[str, Any]:
+    async def database(self) -> DatabaseHealthResponse:
         """Check database connectivity status."""
-        return await self.sdk._request("/api/v1/health/database")
+        return await self.sdk._request("/api/v1/health/database", DatabaseHealthResponse)
 
-    async def services(self) -> Dict[str, Any]:
+    async def services(self) -> ServicesHealthResponse:
         """Check external services status."""
-        return await self.sdk._request("/api/v1/health/services")
+        return await self.sdk._request("/api/v1/health/services", ServicesHealthResponse)
 
-    async def metrics(self) -> Dict[str, Any]:
+    async def metrics(self) -> SystemMetricsResponse:
         """Get system metrics and performance data."""
-        return await self.sdk._request("/api/v1/health/metrics")
+        return await self.sdk._request("/api/v1/health/metrics", SystemMetricsResponse)
 
-    async def readiness(self) -> Dict[str, Any]:
+    async def readiness(self) -> ReadinessResponse:
         """Check if the service is ready to accept requests."""
-        return await self.sdk._request("/api/v1/health/readiness")
+        return await self.sdk._request("/api/v1/health/readiness", ReadinessResponse)
+
+    async def liveness(self) -> LivenessResponse:
+        """Check if the service is alive."""
+        return await self.sdk._request("/api/v1/health/liveness", LivenessResponse)
+
+    async def performance(self) -> PerformanceMetricsResponse:
+        """Get performance metrics."""
+        return await self.sdk._request("/api/v1/health/performance", PerformanceMetricsResponse)
 
     async def liveness(self) -> Dict[str, Any]:
         """Check if the service is alive and responsive."""
@@ -707,6 +786,10 @@ class UsersClient:
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="DELETE"
         )
+
+    async def statistics(self) -> UserStatisticsResponse:
+        """Get comprehensive user statistics (admin only)."""
+        return await self.sdk._request("/api/v1/users/users/stats", UserStatisticsResponse)
 
 
 class DocumentsClient:
@@ -879,8 +962,35 @@ class ConversationsClient:
                     if data_content.strip():
                         yield data_content
 
-    async def stats(self) -> Dict[str, Any]:
-        return await self.sdk._request("/api/v1/conversations/stats")
+    async def stats(self) -> ConversationStatsResponse:
+        """Get conversation statistics."""
+        return await self.sdk._request("/api/v1/conversations/stats", ConversationStatsResponse)
+
+    async def registry_stats(self) -> RegistryStatsResponse:
+        """Get registry statistics showing prompt, profile, and tool usage."""
+        return await self.sdk._request("/api/v1/conversations/registry-stats", RegistryStatsResponse)
+
+    async def search(
+        self, 
+        query: str, 
+        search_messages: bool = True,
+        user_filter: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        active_only: bool = True,
+        limit: int = 20
+    ) -> SearchResponse:
+        """Search conversations and messages."""
+        params = filter_query({
+            "query": query,
+            "search_messages": search_messages,
+            "user_filter": user_filter,
+            "date_from": date_from,
+            "date_to": date_to,
+            "active_only": active_only,
+            "limit": limit,
+        })
+        return await self.sdk._request("/api/v1/conversations/search", SearchResponse, params=params)
 
 
 class SearchClient:
