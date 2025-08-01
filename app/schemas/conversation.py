@@ -50,7 +50,9 @@ class ConversationResponse(ConversationBase):
     message_count: int = Field(0, description="Number of messages")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-    last_message_at: Optional[datetime] = Field(None, description="Last message timestamp")
+    last_message_at: Optional[datetime] = Field(
+        None, description="Last message timestamp"
+    )
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
 
     model_config = {
@@ -76,7 +78,9 @@ class MessageCreate(MessageBase):
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, ge=0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
-    tool_call_results: Optional[Dict[str, Any]] = Field(None, description="Tool call results")
+    tool_call_results: Optional[Dict[str, Any]] = Field(
+        None, description="Tool call results"
+    )
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
 
 
@@ -87,7 +91,9 @@ class MessageResponse(MessageBase):
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
-    tool_call_results: Optional[Dict[str, Any]] = Field(None, description="Tool call results")
+    tool_call_results: Optional[Dict[str, Any]] = Field(
+        None, description="Tool call results"
+    )
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
     created_at: datetime = Field(..., description="Creation timestamp")
 
@@ -103,7 +109,9 @@ class ChatRequest(BaseSchema):
     user_message: Annotated[str, Field(min_length=1, max_length=10000)] = Field(
         ..., description="User message"
     )
-    conversation_id: Optional[UUID] = Field(None, description="Existing conversation ID")
+    conversation_id: Optional[UUID] = Field(
+        None, description="Existing conversation ID"
+    )
     conversation_title: Optional[Annotated[str, Field(max_length=500)]] = Field(
         None, description="New conversation title"
     )
@@ -113,7 +121,9 @@ class ChatRequest(BaseSchema):
         default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
         description="How to handle tool call results: return_results or complete_with_results",
     )
-    rag_documents: Optional[List[UUID]] = Field(None, description="Specific document IDs for RAG")
+    rag_documents: Optional[List[UUID]] = Field(
+        None, description="Specific document IDs for RAG"
+    )
     prompt_name: Optional[str] = Field(
         None, description="Name of prompt to use from prompt registry"
     )
@@ -131,7 +141,9 @@ class ChatResponse(BaseResponse):
     ai_message: MessageResponse = Field(..., description="AI response message")
     conversation: ConversationResponse = Field(..., description="Updated conversation")
     usage: Optional[Dict[str, Any]] = Field(None, description="Token usage information")
-    rag_context: Optional[List[Dict[str, Any]]] = Field(None, description="RAG context used")
+    rag_context: Optional[List[Dict[str, Any]]] = Field(
+        None, description="RAG context used"
+    )
     tool_calls_made: Optional[List[Dict[str, Any]]] = Field(
         None, description="Tool calls executed (deprecated - use tool_call_summary)"
     )
@@ -144,7 +156,9 @@ class ChatResponse(BaseResponse):
 class ConversationListResponse(BaseResponse):
     """Response schema for conversation list."""
 
-    conversations: List[ConversationResponse] = Field(..., description="List of conversations")
+    conversations: List[ConversationResponse] = Field(
+        ..., description="List of conversations"
+    )
     total: int = Field(..., description="Total number of conversations")
 
 
@@ -165,25 +179,32 @@ class ConversationStats(BaseSchema):
     avg_messages_per_conversation: float = Field(
         ..., description="Average messages per conversation"
     )
-    most_recent_activity: Optional[datetime] = Field(None, description="Most recent activity")
+    most_recent_activity: Optional[datetime] = Field(
+        None, description="Most recent activity"
+    )
 
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}}
+    model_config = {
+        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}
+    }
 
 
 class StreamStartResponse(BaseSchema):
     """Schema for stream start event."""
+
     type: str = Field("start", description="Event type")
     message: str = Field(..., description="Start message")
 
 
 class StreamContentResponse(BaseSchema):
     """Schema for stream content event."""
+
     type: str = Field("content", description="Event type")
     content: str = Field(..., description="Content chunk")
 
 
 class StreamToolCallResponse(BaseSchema):
     """Schema for stream tool call event."""
+
     type: str = Field("tool_call", description="Event type")
     tool: Optional[Dict[str, Any]] = Field(None, description="Tool information")
     result: Optional[Dict[str, Any]] = Field(None, description="Tool result")
@@ -191,23 +212,27 @@ class StreamToolCallResponse(BaseSchema):
 
 class StreamCompleteResponse(BaseSchema):
     """Schema for stream complete event."""
+
     type: str = Field("complete", description="Event type")
     response: Dict[str, Any] = Field(..., description="Complete response data")
 
 
 class StreamEndResponse(BaseSchema):
     """Schema for stream end event."""
+
     type: str = Field("end", description="Event type")
 
 
 class StreamErrorResponse(BaseSchema):
     """Schema for stream error event."""
+
     type: str = Field("error", description="Event type")
     error: str = Field(..., description="Error message")
 
 
 class ConversationExportInfoResponse(BaseSchema):
     """Schema for conversation export metadata."""
+
     format: str = Field(..., description="Export format used")
     exported_at: str = Field(..., description="Export timestamp")
     message_count: int = Field(..., description="Number of messages exported")
@@ -216,11 +241,15 @@ class ConversationExportInfoResponse(BaseSchema):
 
 class ConversationExportDataResponse(BaseSchema):
     """Schema for conversation export data."""
+
     content: str = Field(..., description="Exported content")
     format: str = Field(..., description="Content format")
 
 
 class ConversationExportResponse(BaseResponse):
     """Schema for conversation export response."""
+
     data: ConversationExportDataResponse = Field(..., description="Export data")
-    export_info: ConversationExportInfoResponse = Field(..., description="Export metadata")
+    export_info: ConversationExportInfoResponse = Field(
+        ..., description="Export metadata"
+    )

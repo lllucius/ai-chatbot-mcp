@@ -22,8 +22,7 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import (AuthenticationError, NotFoundError,
-                               ValidationError)
+from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User
@@ -92,12 +91,16 @@ class UserService(BaseService):
             await self._ensure_db_session()
 
             # Check if username already exists
-            existing_username = await self.db.execute(select(User).where(User.username == username))
+            existing_username = await self.db.execute(
+                select(User).where(User.username == username)
+            )
             if existing_username.scalar_one_or_none():
                 raise ValidationError("Username already exists")
 
             # Check if email already exists
-            existing_email = await self.db.execute(select(User).where(User.email == email))
+            existing_email = await self.db.execute(
+                select(User).where(User.email == email)
+            )
             if existing_email.scalar_one_or_none():
                 raise ValidationError("Email already exists")
 
@@ -172,7 +175,9 @@ class UserService(BaseService):
             user = user_result.scalar_one_or_none()
 
             if not user:
-                self.logger.warning("User not found", user_id=str(user_id), operation=operation)
+                self.logger.warning(
+                    "User not found", user_id=str(user_id), operation=operation
+                )
                 raise NotFoundError(f"User not found with ID: {user_id}")
 
             # Get user activity statistics in parallel for better performance
@@ -182,12 +187,16 @@ class UserService(BaseService):
             document_count = doc_count_result.scalar() or 0
 
             conv_count_result = await self.db.execute(
-                select(func.count(Conversation.id)).where(Conversation.user_id == user_id)
+                select(func.count(Conversation.id)).where(
+                    Conversation.user_id == user_id
+                )
             )
             conversation_count = conv_count_result.scalar() or 0
 
             msg_count_result = await self.db.execute(
-                select(func.sum(Conversation.message_count)).where(Conversation.user_id == user_id)
+                select(func.sum(Conversation.message_count)).where(
+                    Conversation.user_id == user_id
+                )
             )
             total_messages = msg_count_result.scalar() or 0
 
@@ -236,7 +245,9 @@ class UserService(BaseService):
             >>> print(f"Updated user email to: {updated_user.email}")
         """
         operation = "update_user"
-        update_fields = {k: v for k, v in user_update.model_dump().items() if v is not None}
+        update_fields = {
+            k: v for k, v in user_update.model_dump().items() if v is not None
+        }
 
         self._log_operation_start(
             operation, user_id=str(user_id), update_fields=list(update_fields.keys())
@@ -256,7 +267,9 @@ class UserService(BaseService):
             # Validate email uniqueness if email is being updated
             if user_update.email and user_update.email != user.email:
                 existing_email = await self.db.execute(
-                    select(User).where(and_(User.email == user_update.email, User.id != user_id))
+                    select(User).where(
+                        and_(User.email == user_update.email, User.id != user_id)
+                    )
                 )
                 if existing_email.scalar_one_or_none():
                     self.logger.warning(
@@ -264,7 +277,9 @@ class UserService(BaseService):
                         email=user_update.email,
                         user_id=str(user_id),
                     )
-                    raise ValidationError(f"Email {user_update.email} is already in use")
+                    raise ValidationError(
+                        f"Email {user_update.email} is already in use"
+                    )
 
             # Apply updates only for non-None fields
             original_values = {}
@@ -350,7 +365,9 @@ class UserService(BaseService):
             user = user_result.scalar_one_or_none()
 
             if not user:
-                self.logger.warning("User not found for password change", user_id=str(user_id))
+                self.logger.warning(
+                    "User not found for password change", user_id=str(user_id)
+                )
                 raise NotFoundError(f"User not found with ID: {user_id}")
 
             # Verify current password for security
@@ -366,7 +383,9 @@ class UserService(BaseService):
             user.hashed_password = get_password_hash(new_password)
             await self.db.commit()
 
-            self._log_operation_success(operation, user_id=str(user_id), username=user.username)
+            self._log_operation_success(
+                operation, user_id=str(user_id), username=user.username
+            )
 
             return True
 

@@ -16,17 +16,32 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (analytics_router, auth_router, conversations_router,
-                  database_router, documents_router, health_router, mcp_router,
-                  profiles_router, prompts_router, search_router, tasks_router,
-                  tools_router, users_router)
+from .api import (
+    analytics_router,
+    auth_router,
+    conversations_router,
+    database_router,
+    documents_router,
+    health_router,
+    mcp_router,
+    profiles_router,
+    prompts_router,
+    search_router,
+    tasks_router,
+    tools_router,
+    users_router,
+)
 from .config import settings
 from .core.exceptions import ChatbotPlatformException
 from .core.logging import get_component_logger, setup_logging
 from .database import close_db, init_db
-from .middleware import (debug_content_middleware, logging_middleware,
-                         rate_limiting_middleware, timing_middleware,
-                         validation_middleware)
+from .middleware import (
+    debug_content_middleware,
+    logging_middleware,
+    rate_limiting_middleware,
+    timing_middleware,
+    validation_middleware,
+)
 from .middleware.performance import start_system_monitoring
 from .middleware.rate_limiting import start_rate_limiter_cleanup
 from .utils.caching import start_cache_cleanup_task
@@ -87,8 +102,7 @@ async def lifespan(app: FastAPI):
     try:
         # Shutdown background processor
         try:
-            from .services.background_processor import \
-                shutdown_background_processor
+            from .services.background_processor import shutdown_background_processor
 
             await shutdown_background_processor()
             logger.info("Background document processor shut down")
@@ -201,7 +215,9 @@ app.add_middleware(
 
 # Trusted host middleware for production
 if settings.is_production:
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])  # Configure based on deployment
+    app.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=["*"]
+    )  # Configure based on deployment
 
 
 # Global exception handlers
@@ -285,7 +301,9 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 # API Routes
 app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
-app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["conversations"])
+app.include_router(
+    conversations_router, prefix="/api/v1/conversations", tags=["conversations"]
+)
 app.include_router(database_router, prefix="/api/v1/database", tags=["database"])
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
 app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
@@ -307,7 +325,9 @@ async def root() -> Dict[str, Any]:
         "version": settings.app_version,
         "description": settings.app_description,
         "status": "operational",
-        "docs": ("/docs" if settings.debug else "Documentation not available in production"),
+        "docs": (
+            "/docs" if settings.debug else "Documentation not available in production"
+        ),
         "timestamp": get_current_timestamp(),
     }
 

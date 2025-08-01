@@ -56,7 +56,9 @@ class PerformanceMonitor:
             history_size: Number of historical data points to keep
         """
         self.history_size = history_size
-        self.metrics_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=history_size))
+        self.metrics_history: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=history_size)
+        )
         self.request_metrics: List[RequestMetric] = []
         self.request_counts: Dict[str, int] = defaultdict(int)
         self.error_counts: Dict[str, int] = defaultdict(int)
@@ -150,9 +152,9 @@ class PerformanceMonitor:
 
     def get_endpoint_stats(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get top endpoints by request count."""
-        sorted_endpoints = sorted(self.request_counts.items(), key=lambda x: x[1], reverse=True)[
-            :limit
-        ]
+        sorted_endpoints = sorted(
+            self.request_counts.items(), key=lambda x: x[1], reverse=True
+        )[:limit]
 
         endpoint_stats = []
         for endpoint, count in sorted_endpoints:

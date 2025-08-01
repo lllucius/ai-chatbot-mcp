@@ -253,9 +253,8 @@ def main():
     success = True
 
     # Setup steps
-    if not args.skip_venv:
-        if not setup_virtual_environment():
-            success = False
+    if not args.skip_venv and not setup_virtual_environment():
+        success = False
 
     if success and not install_dependencies():
         success = False
@@ -263,9 +262,8 @@ def main():
     if success and not setup_environment_file():
         success = False
 
-    if success and not args.skip_hooks:
-        if not setup_pre_commit_hooks():
-            success = False
+    if success and not args.skip_hooks and not setup_pre_commit_hooks():
+        success = False
 
     if success and not create_database_setup_script():
         success = False

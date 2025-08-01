@@ -35,9 +35,15 @@ class PromptResponse(BaseModel):
 class PromptCreate(BaseModel):
     """Create prompt request model."""
 
-    name: str = Field(..., min_length=1, max_length=100, description="Unique prompt name")
-    title: str = Field(..., min_length=1, max_length=200, description="Human-readable title")
-    description: Optional[str] = Field(None, max_length=1000, description="Prompt description")
+    name: str = Field(
+        ..., min_length=1, max_length=100, description="Unique prompt name"
+    )
+    title: str = Field(
+        ..., min_length=1, max_length=200, description="Human-readable title"
+    )
+    description: Optional[str] = Field(
+        None, max_length=1000, description="Prompt description"
+    )
     category: Optional[str] = Field(None, max_length=100, description="Prompt category")
     content: str = Field(..., min_length=1, description="Prompt template content")
     variables: Optional[List[str]] = Field(None, description="Template variables")
@@ -48,10 +54,16 @@ class PromptCreate(BaseModel):
 class PromptUpdate(BaseModel):
     """Update prompt request model."""
 
-    title: Optional[str] = Field(None, min_length=1, max_length=200, description="Human-readable title")
-    description: Optional[str] = Field(None, max_length=1000, description="Prompt description")
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=200, description="Human-readable title"
+    )
+    description: Optional[str] = Field(
+        None, max_length=1000, description="Prompt description"
+    )
     category: Optional[str] = Field(None, max_length=100, description="Prompt category")
-    content: Optional[str] = Field(None, min_length=1, description="Prompt template content")
+    content: Optional[str] = Field(
+        None, min_length=1, description="Prompt template content"
+    )
     variables: Optional[List[str]] = Field(None, description="Template variables")
     tags: Optional[List[str]] = Field(None, description="Tags for categorization")
     is_active: Optional[bool] = Field(None, description="Whether prompt is active")

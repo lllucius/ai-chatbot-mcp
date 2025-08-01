@@ -15,16 +15,27 @@ from rich.prompt import Prompt
 from rich.table import Table
 from typer import Option
 
-from .base import (console, error_message, get_cli_manager, info_message,
-                   success_message, warning_message)
+from .base import (
+    console,
+    error_message,
+    get_cli_manager,
+    info_message,
+    success_message,
+    warning_message,
+)
 
-core_app = AsyncTyper(help="Core commands for authentication, config, and system status.")
+core_app = AsyncTyper(
+    help="Core commands for authentication, config, and system status."
+)
+
 
 @core_app.async_command()
 async def login(
     username: Optional[str] = Option(None, "--username", "-u", help="Username"),
     password: Optional[str] = Option(None, "--password", "-p", help="Password"),
-    save_token: bool = Option(True, "--save-token/--no-save-token", help="Save authentication token"),
+    save_token: bool = Option(
+        True, "--save-token/--no-save-token", help="Save authentication token"
+    ),
 ):
     """
     Authenticate with the API and optionally save the authentication token.
@@ -55,6 +66,7 @@ async def login(
         error_message(f"Login failed: {str(e)}")
         raise SystemExit(1)
 
+
 @core_app.async_command()
 async def logout():
     """
@@ -67,6 +79,7 @@ async def logout():
     except Exception as e:
         error_message(f"Logout failed: {str(e)}")
         raise SystemExit(1)
+
 
 @core_app.async_command("auth-status")
 async def auth_status():
@@ -92,10 +105,13 @@ async def auth_status():
                 error_message(f"Token validation failed: {str(e)}")
                 info_message("Please login again using: python api_manage.py login")
         else:
-            info_message("Not authenticated. Use 'python api_manage.py login' to authenticate.")
+            info_message(
+                "Not authenticated. Use 'python api_manage.py login' to authenticate."
+            )
     except Exception as e:
         error_message(f"Failed to check authentication status: {str(e)}")
         raise SystemExit(1)
+
 
 @core_app.async_command()
 async def version():
@@ -106,6 +122,7 @@ async def version():
         # Load config and create SDK directly for version check
         from client.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
+
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         _ = await sdk.health.basic()
@@ -126,6 +143,7 @@ async def version():
         error_message(f"Failed to get version information: {str(e)}")
         raise SystemExit(1)
 
+
 @core_app.async_command()
 async def health():
     """
@@ -134,6 +152,7 @@ async def health():
     try:
         from client.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
+
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         console.print(
@@ -147,7 +166,11 @@ async def health():
         # Check API connectivity
         try:
             ping_response = await sdk._request("/ping")
-            api_status = "🟢 Online" if ping_response and ping_response.get("status") == "ok" else "🔴 Offline"
+            api_status = (
+                "🟢 Online"
+                if ping_response and ping_response.get("status") == "ok"
+                else "🔴 Offline"
+            )
         except Exception:
             api_status = "🔴 Offline"
 
@@ -170,7 +193,9 @@ async def health():
 
         # Database Status
         db_status = health_data.get("database", {})
-        db_indicator = "🟢 Connected" if db_status.get("connected") else "🔴 Disconnected"
+        db_indicator = (
+            "🟢 Connected" if db_status.get("connected") else "🔴 Disconnected"
+        )
         results.append(
             Panel(
                 f"Connection: {db_indicator}",
@@ -193,7 +218,9 @@ async def health():
 
         # Performance Status
         perf_status = health_data.get("performance", {})
-        perf_indicator = "🟢 Good" if perf_status.get("response_time", 0) < 1000 else "🟡 Slow"
+        perf_indicator = (
+            "🟢 Good" if perf_status.get("response_time", 0) < 1000 else "🟡 Slow"
+        )
         results.append(
             Panel(
                 f"Response: {perf_indicator}",
@@ -217,6 +244,7 @@ async def health():
         error_message(f"Health check failed: {str(e)}")
         raise SystemExit(1)
 
+
 @core_app.async_command()
 async def status():
     """
@@ -225,6 +253,7 @@ async def status():
     try:
         from client.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
+
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         console.print(
@@ -270,6 +299,7 @@ async def status():
         error_message(f"Status check failed: {str(e)}")
         raise SystemExit(1)
 
+
 @core_app.async_command()
 async def quickstart():
     """
@@ -292,6 +322,7 @@ async def quickstart():
             padding=(1, 2),
         )
     )
+
 
 @core_app.async_command()
 async def config():
@@ -316,11 +347,19 @@ async def config():
         config_data = {
             "API Base URL": os.getenv("API_BASE_URL", "http://localhost:8000"),
             "API Timeout": f"{os.getenv('API_TIMEOUT', '30')} seconds",
-            "Authentication": "Token-based" if cli_manager.has_token() else "Not authenticated",
-            "Config File": str(env_file.absolute()) if env_file.exists() else "Not found",
+            "Authentication": (
+                "Token-based" if cli_manager.has_token() else "Not authenticated"
+            ),
+            "Config File": (
+                str(env_file.absolute()) if env_file.exists() else "Not found"
+            ),
             "Debug Mode": os.getenv("DEBUG", "false"),
             "Log Level": os.getenv("LOG_LEVEL", "INFO"),
-            "Database URL": os.getenv("DATABASE_URL", "Not set")[:50] + "..." if len(os.getenv("DATABASE_URL", "")) > 50 else os.getenv("DATABASE_URL", "Not set"),
+            "Database URL": (
+                os.getenv("DATABASE_URL", "Not set")[:50] + "..."
+                if len(os.getenv("DATABASE_URL", "")) > 50
+                else os.getenv("DATABASE_URL", "Not set")
+            ),
             "OpenAI Model": os.getenv("OPENAI_CHAT_MODEL", "Not set"),
             "Admin Username": os.getenv("DEFAULT_ADMIN_USERNAME", "admin"),
         }
@@ -333,9 +372,13 @@ async def config():
         console.print(table)
 
         if cli_manager.has_token():
-            success_message("Authentication token is present and will be used for API calls.")
+            success_message(
+                "Authentication token is present and will be used for API calls."
+            )
         else:
-            info_message("No authentication token found. Use 'python api_manage.py login' to authenticate.")
+            info_message(
+                "No authentication token found. Use 'python api_manage.py login' to authenticate."
+            )
             admin_user = os.getenv("DEFAULT_ADMIN_USERNAME", "admin")
             info_message(f"Default admin username: {admin_user}")
 

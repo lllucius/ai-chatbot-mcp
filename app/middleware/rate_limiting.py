@@ -64,8 +64,12 @@ class RateLimiter:
             # Check if limit exceeded
             if len(client_requests) >= self.max_requests:
                 # Calculate retry after time
-                oldest_request = min(client_requests) if client_requests else current_time
-                retry_after = int(self.time_window - (current_time - oldest_request)) + 1
+                oldest_request = (
+                    min(client_requests) if client_requests else current_time
+                )
+                retry_after = (
+                    int(self.time_window - (current_time - oldest_request)) + 1
+                )
                 return False, retry_after
 
             # Add current request
@@ -81,7 +85,9 @@ class RateLimiter:
             for client_id, requests in self.requests.items():
                 # Remove old requests
                 requests[:] = [
-                    req_time for req_time in requests if current_time - req_time < self.time_window
+                    req_time
+                    for req_time in requests
+                    if current_time - req_time < self.time_window
                 ]
 
                 # Mark clients with no recent requests for removal
@@ -98,7 +104,9 @@ general_limiter = RateLimiter(
     max_requests=settings.rate_limit_requests, time_window=settings.rate_limit_period
 )
 
-auth_limiter = RateLimiter(max_requests=10, time_window=300)  # 10 requests per 5 minutes for auth
+auth_limiter = RateLimiter(
+    max_requests=10, time_window=300
+)  # 10 requests per 5 minutes for auth
 upload_limiter = RateLimiter(max_requests=20, time_window=3600)  # 20 uploads per hour
 
 

@@ -12,16 +12,15 @@ import traceback
 from typing import AsyncGenerator
 
 from sqlalchemy import text
-from sqlalchemy.exc import (DisconnectionError, OperationalError,
-                            SQLAlchemyError)
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.exc import DisconnectionError, OperationalError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .config import settings
 from .core.default_data import initialize_default_data
 from .models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
+
 
 # Create async engine with flexible database configuration
 def _get_engine_config():
@@ -52,6 +51,7 @@ def _get_engine_config():
         )
 
     return base_config
+
 
 engine = create_async_engine(settings.database_url, **_get_engine_config())
 

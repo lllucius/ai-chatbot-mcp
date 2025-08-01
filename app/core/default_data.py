@@ -28,7 +28,8 @@ async def create_default_admin_user(db: AsyncSession):
             email="admin@example.com",
             password="adminpass",
             full_name="Admin User",
-            is_superuser=True)
+            is_superuser=True,
+        )
         logger.info(f"Created default admin user: {default_admin.username}")
         return default_admin
     except Exception as e:
@@ -149,7 +150,7 @@ async def create_default_llm_profile(db: AsyncSession):
                 "max_tokens": 2000,
                 "presence_penalty": 0.0,
                 "frequency_penalty": 0.0,
-            }
+            },
         }
         profile_service = LLMProfileService(db)
         profile = await profile_service.create_profile(
@@ -191,7 +192,7 @@ async def create_sample_llm_profiles(db: AsyncSession):
                 "max_tokens": 1500,
                 "presence_penalty": 0.0,
                 "frequency_penalty": 0.0,
-            }
+            },
         },
         {
             "name": "concise",
@@ -205,7 +206,7 @@ async def create_sample_llm_profiles(db: AsyncSession):
                 "max_tokens": 500,
                 "presence_penalty": 0.2,
                 "frequency_penalty": 0.1,
-            }
+            },
         },
         {
             "name": "detailed",
@@ -219,7 +220,7 @@ async def create_sample_llm_profiles(db: AsyncSession):
                 "max_tokens": 4000,
                 "presence_penalty": 0.1,
                 "frequency_penalty": 0.0,
-            }
+            },
         },
     ]
 
@@ -290,7 +291,7 @@ async def initialize_default_data(db: AsyncSession):
 
     # Create default Admin user
     default_admin = await create_default_admin_user(db)
- 
+
     # Create default prompt
     default_prompt = await create_default_prompt(db)
 
@@ -316,7 +317,10 @@ async def initialize_default_data(db: AsyncSession):
         success_count += 1
 
     total_created = (
-        success_count + sample_prompts_count + sample_profiles_count + sample_servers_count
+        success_count
+        + sample_prompts_count
+        + sample_profiles_count
+        + sample_servers_count
     )
 
     logger.info(f"Default data initialization complete - {total_created} items created")

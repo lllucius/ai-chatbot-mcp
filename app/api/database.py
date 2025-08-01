@@ -129,7 +129,7 @@ async def get_database_status(
         table_count_result = await db.execute(
             text(
                 """
-            SELECT COUNT(*) FROM information_schema.tables 
+            SELECT COUNT(*) FROM information_schema.tables
             WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
         """
             )
@@ -182,12 +182,12 @@ async def list_database_tables(
         tables_result = await db.execute(
             text(
                 """
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 n_live_tup as row_count,
                 pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-            FROM pg_stat_user_tables 
+            FROM pg_stat_user_tables
             ORDER BY n_live_tup DESC
         """
             )
@@ -594,12 +594,12 @@ async def analyze_database(
         table_sizes = await db.execute(
             text(
                 """
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
                 pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
-            FROM pg_stat_user_tables 
+            FROM pg_stat_user_tables
             ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
             LIMIT 10
         """
@@ -621,14 +621,14 @@ async def analyze_database(
         index_stats = await db.execute(
             text(
                 """
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 indexname,
                 idx_scan,
                 idx_tup_read,
                 idx_tup_fetch
-            FROM pg_stat_user_indexes 
+            FROM pg_stat_user_indexes
             ORDER BY idx_scan DESC
             LIMIT 10
         """
@@ -652,7 +652,7 @@ async def analyze_database(
         db_stats = await db.execute(
             text(
                 """
-            SELECT 
+            SELECT
                 numbackends,
                 xact_commit,
                 xact_rollback,
@@ -663,7 +663,7 @@ async def analyze_database(
                 tup_inserted,
                 tup_updated,
                 tup_deleted
-            FROM pg_stat_database 
+            FROM pg_stat_database
             WHERE datname = current_database()
         """
             )

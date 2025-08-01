@@ -60,7 +60,9 @@ class Document(BaseModelDB):
         String(500), nullable=False, doc="Document title or filename"
     )
 
-    filename: Mapped[str] = mapped_column(String(255), nullable=False, doc="Original filename")
+    filename: Mapped[str] = mapped_column(
+        String(255), nullable=False, doc="Original filename"
+    )
 
     file_path: Mapped[Optional[str]] = mapped_column(
         String(1000), nullable=True, doc="Path to stored file"
@@ -96,7 +98,9 @@ class Document(BaseModelDB):
         Text, nullable=True, doc="Extracted text content"
     )
 
-    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True, doc="AI-generated summary")
+    summary: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, doc="AI-generated summary"
+    )
 
     # Processing metadata
     chunk_count: Mapped[int] = mapped_column(
@@ -164,7 +168,9 @@ class DocumentChunk(BaseModelDB):
     __tablename__ = "document_chunks"
 
     # Content information
-    content: Mapped[str] = mapped_column(Text, nullable=False, doc="Text content of the chunk")
+    content: Mapped[str] = mapped_column(
+        Text, nullable=False, doc="Text content of the chunk"
+    )
 
     chunk_index: Mapped[int] = mapped_column(
         Integer, nullable=False, doc="Index of this chunk within the document"
@@ -224,11 +230,11 @@ class DocumentChunk(BaseModelDB):
         Index("idx_chunks_token_count", "token_count"),
         Index("idx_chunks_language", "language"),
         Index("idx_chunks_embedding_model", "embedding_model"),
-        #Index("idx_embedding_vector_cosine", "embedding",
+        # Index("idx_embedding_vector_cosine", "embedding",
         #    postgresql_using="ivfflat",
         #    postgresql_with={"lists": 100},
         #    postgresql_ops={"embedding": "vector_cosine_ops"}
-        #),
+        # ),
     )
 
     def __repr__(self) -> str:

@@ -58,11 +58,15 @@ class Settings(BaseSettings):
     )
 
     # OpenAI Configuration
-    openai_api_key: str = Field(default="your-openai-api-key-here", description="OpenAI API key")
+    openai_api_key: str = Field(
+        default="your-openai-api-key-here", description="OpenAI API key"
+    )
     openai_base_url: str = Field(
         default="https://api.openai.com/v1", description="OpenAI API base URL"
     )
-    openai_chat_model: str = Field(default="gpt-4", description="OpenAI chat model to use")
+    openai_chat_model: str = Field(
+        default="gpt-4", description="OpenAI chat model to use"
+    )
     openai_embedding_model: str = Field(
         default="text-embedding-3-small", description="OpenAI embedding model to use"
     )
@@ -99,7 +103,9 @@ class Settings(BaseSettings):
         default="pdf,docx,txt,md,rtf",
         description="Allowed file types for upload (comma-separated string or JSON list)",
     )
-    upload_directory: str = Field(default="./uploads", description="Directory for file uploads")
+    upload_directory: str = Field(
+        default="./uploads", description="Directory for file uploads"
+    )
 
     # Text Processing Configuration
     default_chunk_size: int = Field(
@@ -132,7 +138,9 @@ class Settings(BaseSettings):
     enable_text_preprocessing: bool = Field(
         default=True, description="Enable advanced text preprocessing"
     )
-    normalize_unicode: bool = Field(default=True, description="Normalize Unicode characters")
+    normalize_unicode: bool = Field(
+        default=True, description="Normalize Unicode characters"
+    )
     remove_extra_whitespace: bool = Field(
         default=True, description="Remove extra whitespace and normalize line endings"
     )
@@ -154,13 +162,17 @@ class Settings(BaseSettings):
         le=7200,
     )
 
-    vector_dimension: int = Field(default=1536, description="Vector embedding dimension", gt=0)
+    vector_dimension: int = Field(
+        default=1536, description="Vector embedding dimension", gt=0
+    )
 
     # Rate Limiting Configuration
     rate_limit_requests: int = Field(
         default=100, description="Rate limit requests per period", gt=0
     )
-    rate_limit_period: int = Field(default=60, description="Rate limit period in seconds", gt=0)
+    rate_limit_period: int = Field(
+        default=60, description="Rate limit period in seconds", gt=0
+    )
 
     @field_validator("mcp_servers", mode="before")
     @classmethod
@@ -173,7 +185,9 @@ class Settings(BaseSettings):
                 return json.loads(v)
             except json.JSONDecodeError:
                 logger.warning(f"Invalid JSON for mcp_servers: {v}")
-                return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
+                return {
+                    "tools": {"url": "http://localhost:9000/mcp", "transport": "http"}
+                }
         elif isinstance(v, dict):
             return v
         return {"tools": {"url": "http://localhost:9000/mcp", "transport": "http"}}
@@ -277,11 +291,16 @@ logger = logging.getLogger(__name__)
 # Validate critical settings on import
 if (
     settings.is_production
-    and settings.secret_key == "change-this-super-secret-key-in-production-must-be-32-chars-minimum"
+    and settings.secret_key
+    == "change-this-super-secret-key-in-production-must-be-32-chars-minimum"
 ):
     raise ValueError("SECRET_KEY must be changed in production environment")
 
 if settings.openai_api_key == "your-openai-api-key-here":
     import warnings
 
-    warnings.warn("OpenAI API key not configured - AI features will not work", UserWarning)
+    warnings.warn(
+        "OpenAI API key not configured - AI features will not work",
+        UserWarning,
+        stacklevel=2,
+    )

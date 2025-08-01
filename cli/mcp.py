@@ -11,25 +11,37 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import (console, error_message, get_sdk, info_message,
-                   success_message, warning_message)
+from .base import (
+    console,
+    error_message,
+    get_sdk,
+    info_message,
+    success_message,
+    warning_message,
+)
 
-mcp_app = AsyncTyper(help="🔌 MCP server and tool management commands", rich_markup_mode="rich")
+mcp_app = AsyncTyper(
+    help="🔌 MCP server and tool management commands", rich_markup_mode="rich"
+)
 
 
 @mcp_app.async_command("list-servers")
 async def list_servers(
-    enabled_only: bool = Option(False, "--enabled-only", help="Show only enabled servers"),
-    connected_only: bool = Option(False, "--connected-only", help="Show only connected servers"),
-    detailed: bool = Option(False, "--detailed", "-d", help="Show detailed information"),
+    enabled_only: bool = Option(
+        False, "--enabled-only", help="Show only enabled servers"
+    ),
+    connected_only: bool = Option(
+        False, "--connected-only", help="Show only connected servers"
+    ),
+    detailed: bool = Option(
+        False, "--detailed", "-d", help="Show detailed information"
+    ),
 ):
     """List all registered MCP servers."""
     try:
         sdk = await get_sdk()
         response = await sdk.mcp.list_servers(
-            enabled_only=enabled_only,
-            connected_only=connected_only,
-            detailed=detailed
+            enabled_only=enabled_only, connected_only=connected_only, detailed=detailed
         )
         if not response or not response.get("success"):
             error_message("Failed to retrieve MCP servers")
@@ -58,7 +70,9 @@ async def show_server(
         if response and response.get("success") and response.get("data"):
             _display_server_details(response["data"])
         else:
-            error_message(f"Failed to get MCP server: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to get MCP server: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to show server: {str(e)}")
         raise SystemExit(1)
@@ -69,8 +83,12 @@ async def add_server(
     name: str = Argument(..., help="Server name"),
     url: str = Argument(..., help="Server URL"),
     description: str = Option("", "--description", "-d", help="Server description"),
-    enabled: bool = Option(True, "--enabled/--disabled", help="Enable server after creation"),
-    transport: str = Option("http", "--transport", help="Transport type (http, websocket)"),
+    enabled: bool = Option(
+        True, "--enabled/--disabled", help="Enable server after creation"
+    ),
+    transport: str = Option(
+        "http", "--transport", help="Transport type (http, websocket)"
+    ),
 ):
     """Add a new MCP server."""
     try:
@@ -80,14 +98,16 @@ async def add_server(
             url=url,
             description=description,
             enabled=enabled,
-            transport=transport
+            transport=transport,
         )
         if response and response.get("success"):
             success_message(f"MCP server '{name}' added successfully")
             if response.get("data"):
                 _display_server_details(response["data"])
         else:
-            error_message(f"Failed to add MCP server: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to add MCP server: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to add MCP server: {str(e)}")
 
@@ -95,13 +115,18 @@ async def add_server(
 @mcp_app.async_command("remove-server")
 async def remove_server(
     name: str = Argument(..., help="Server name to remove"),
-    force: bool = Option(False, "--force", "-f", help="Force removal without confirmation"),
+    force: bool = Option(
+        False, "--force", "-f", help="Force removal without confirmation"
+    ),
 ):
     """Remove an MCP server."""
     try:
         if not force:
             from .base import confirm_action
-            confirmed = confirm_action(f"Are you sure you want to remove MCP server '{name}'?")
+
+            confirmed = confirm_action(
+                f"Are you sure you want to remove MCP server '{name}'?"
+            )
             if not confirmed:
                 info_message("Operation cancelled")
                 return
@@ -110,15 +135,15 @@ async def remove_server(
         if getattr(response, "success", False):
             success_message(f"MCP server '{name}' removed successfully")
         else:
-            error_message(f"Failed to remove MCP server: {getattr(response, 'message', 'Unknown error')}")
+            error_message(
+                f"Failed to remove MCP server: {getattr(response, 'message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to remove MCP server: {str(e)}")
 
 
 @mcp_app.async_command("enable-server")
-async def enable_server(
-    name: str = Argument(..., help="Server name to enable")
-):
+async def enable_server(name: str = Argument(..., help="Server name to enable")):
     """Enable an MCP server."""
     try:
         sdk = await get_sdk()
@@ -126,15 +151,15 @@ async def enable_server(
         if response and response.get("success"):
             success_message(f"MCP server '{name}' enabled successfully")
         else:
-            error_message(f"Failed to enable MCP server: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to enable MCP server: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to enable MCP server: {str(e)}")
 
 
 @mcp_app.async_command("disable-server")
-async def disable_server(
-    name: str = Argument(..., help="Server name to disable")
-):
+async def disable_server(name: str = Argument(..., help="Server name to disable")):
     """Disable an MCP server."""
     try:
         sdk = await get_sdk()
@@ -142,15 +167,15 @@ async def disable_server(
         if response and response.get("success"):
             success_message(f"MCP server '{name}' disabled successfully")
         else:
-            error_message(f"Failed to disable MCP server: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to disable MCP server: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to disable MCP server: {str(e)}")
 
 
 @mcp_app.async_command("test-server")
-async def test_server(
-    name: str = Argument(..., help="Server name to test")
-):
+async def test_server(name: str = Argument(..., help="Server name to test")):
     """Test connection to an MCP server."""
     try:
         sdk = await get_sdk()
@@ -165,24 +190,30 @@ async def test_server(
                 if test_result.get("error"):
                     error_message(f"Error: {test_result['error']}")
         else:
-            error_message(f"Failed to test MCP server: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to test MCP server: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to test MCP server: {str(e)}")
 
 
 @mcp_app.async_command("list-tools")
 async def list_tools(
-    server: Optional[str] = Option(None, "--server", "-s", help="Filter by server name"),
-    enabled_only: bool = Option(False, "--enabled-only", help="Show only enabled tools"),
-    detailed: bool = Option(False, "--detailed", "-d", help="Show detailed information"),
+    server: Optional[str] = Option(
+        None, "--server", "-s", help="Filter by server name"
+    ),
+    enabled_only: bool = Option(
+        False, "--enabled-only", help="Show only enabled tools"
+    ),
+    detailed: bool = Option(
+        False, "--detailed", "-d", help="Show detailed information"
+    ),
 ):
     """List all available MCP tools."""
     try:
         sdk = await get_sdk()
         response = await sdk.mcp.list_tools(
-            server=server,
-            enabled_only=enabled_only,
-            detailed=detailed
+            server=server, enabled_only=enabled_only, detailed=detailed
         )
         if not response or not response.get("success"):
             error_message("Failed to retrieve MCP tools")
@@ -212,7 +243,9 @@ async def show_tool(
         if response and response.get("success") and response.get("data"):
             _display_tool_details(response["data"])
         else:
-            error_message(f"Failed to get MCP tool: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to get MCP tool: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to show tool: {str(e)}")
 
@@ -229,7 +262,9 @@ async def enable_tool(
         if response and response.get("success"):
             success_message(f"MCP tool '{tool_name}' enabled successfully")
         else:
-            error_message(f"Failed to enable MCP tool: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to enable MCP tool: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to enable MCP tool: {str(e)}")
 
@@ -246,7 +281,9 @@ async def disable_tool(
         if response and response.get("success"):
             success_message(f"MCP tool '{tool_name}' disabled successfully")
         else:
-            error_message(f"Failed to disable MCP tool: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to disable MCP tool: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to disable MCP tool: {str(e)}")
 
@@ -268,7 +305,9 @@ async def stats():
 
 @mcp_app.async_command("refresh")
 async def refresh(
-    server: Optional[str] = Option(None, "--server", "-s", help="Refresh specific server"),
+    server: Optional[str] = Option(
+        None, "--server", "-s", help="Refresh specific server"
+    ),
 ):
     """Refresh MCP server connections and tool discovery."""
     try:
@@ -282,7 +321,9 @@ async def refresh(
             if refresh_data.get("tools_discovered"):
                 info_message(f"Discovered {refresh_data['tools_discovered']} tools")
         else:
-            error_message(f"Failed to refresh MCP: {response.get('message', 'Unknown error')}")
+            error_message(
+                f"Failed to refresh MCP: {response.get('message', 'Unknown error')}"
+            )
     except Exception as e:
         error_message(f"Failed to refresh MCP: {str(e)}")
 
@@ -291,6 +332,7 @@ async def refresh(
 def _display_servers_table(servers):
     from rich import box
     from rich.table import Table
+
     table = Table(title="MCP Servers", box=box.ROUNDED)
     table.add_column("Name", style="cyan", no_wrap=True)
     table.add_column("URL", style="blue")
@@ -316,6 +358,7 @@ def _display_servers_table(servers):
 
 def _display_server_details(server):
     from rich.panel import Panel
+
     name = server.get("name", "Unknown")
     status = "🟢 Enabled" if server.get("is_enabled") else "🔴 Disabled"
     details = [
@@ -343,6 +386,7 @@ def _display_server_details(server):
 def _display_tools_table(tools):
     from rich import box
     from rich.table import Table
+
     table = Table(title="MCP Tools", box=box.ROUNDED)
     table.add_column("Name", style="cyan", no_wrap=True)
     table.add_column("Server", style="blue")
@@ -353,7 +397,11 @@ def _display_tools_table(tools):
         table.add_row(
             tool.get("name", "Unknown"),
             tool.get("server_name", ""),
-            tool.get("description", "")[:50] + "..." if len(tool.get("description", "")) > 50 else tool.get("description", ""),
+            (
+                tool.get("description", "")[:50] + "..."
+                if len(tool.get("description", "")) > 50
+                else tool.get("description", "")
+            ),
             status,
         )
     console.print(table)
@@ -361,6 +409,7 @@ def _display_tools_table(tools):
 
 def _display_tool_details(tool):
     from rich.panel import Panel
+
     name = tool.get("name", "Unknown")
     status = "🟢 Enabled" if tool.get("is_enabled") else "🔴 Disabled"
     details = [
@@ -383,6 +432,7 @@ def _display_tool_details(tool):
 
 def _display_connection_details(test_result):
     from rich.panel import Panel
+
     details = [
         f"Connection: {'🟢 Success' if test_result.get('connected') else '🔴 Failed'}",
         f"Response Time: {test_result.get('response_time', 'N/A')}ms",
@@ -402,6 +452,7 @@ def _display_connection_details(test_result):
 def _display_stats(stats_data):
     from rich import box
     from rich.table import Table
+
     servers_stats = stats_data.get("servers", {})
     tools_stats = stats_data.get("tools", {})
     usage_stats = stats_data.get("usage", {})
@@ -435,7 +486,7 @@ def _display_stats(stats_data):
             top_tools_table.add_row(
                 tool.get("name", "Unknown"),
                 tool.get("server", "Unknown"),
-                str(tool.get("count", 0))
+                str(tool.get("count", 0)),
             )
         console.print()
         console.print(top_tools_table)

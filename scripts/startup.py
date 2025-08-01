@@ -156,7 +156,7 @@ async def check_fastmcp_services():
             health = await mcp_client.health_check(db)
 
         # Handle both dict and Pydantic schema responses
-        if hasattr(health, 'mcp_available'):
+        if hasattr(health, "mcp_available"):
             # New Pydantic schema
             mcp_available = health.mcp_available
             healthy_servers = health.healthy_servers
@@ -239,7 +239,7 @@ The AI assistant can read and write files in this directory.
 
 ## Available Operations
 - Read files
-- Write files  
+- Write files
 - List directory contents
 - Create directories
 

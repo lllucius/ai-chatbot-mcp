@@ -130,7 +130,9 @@ class FileProcessor:
             logger.info(f"Processing {file_type} file: {file_path}")
 
             # Run the potentially CPU-intensive operation in a thread pool
-            elements = await asyncio.get_event_loop().run_in_executor(None, partition, file_path)
+            elements = await asyncio.get_event_loop().run_in_executor(
+                None, partition, file_path
+            )
 
             if not elements:
                 raise DocumentError("No content found in file")
@@ -146,9 +148,14 @@ class FileProcessor:
             if not content.strip():
                 raise DocumentError("No text content found in file")
 
-            logger.info(f"Successfully extracted {len(content)} characters from {file_path}")
+            logger.info(
+                f"Successfully extracted {len(content)} characters from {file_path}"
+            )
             return content.strip()
 
+        except MemoryError:
+            logger.error(f"Out of memory processing {file_path}")
+            raise DocumentError("File too large to process - insufficient memory")
         except Exception as partition_error:
             # Fallback for simple text files when unstructured fails
             if file_type in self.text_formats:
@@ -165,16 +172,14 @@ class FileProcessor:
                         f"Both unstructured and simple text extraction failed: {text_error}"
                     )
             else:
+                logger.error(
+                    f"Text extraction failed for {file_path}: {partition_error}"
+                )
                 raise DocumentError(f"Text extraction failed: {partition_error}")
 
-        except MemoryError:
-            logger.error(f"Out of memory processing {file_path}")
-            raise DocumentError("File too large to process - insufficient memory")
-        except Exception as e:
-            logger.error(f"Text extraction failed for {file_path}: {e}")
-            raise DocumentError(f"Text extraction failed: {e}")
-
-    async def extract_text_streaming(self, file_path: str, file_type: str) -> AsyncIterator[str]:
+    async def extract_text_streaming(
+        self, file_path: str, file_type: str
+    ) -> AsyncIterator[str]:
         """
         Extract text content from a file using streaming for large files.
 
@@ -199,7 +204,9 @@ class FileProcessor:
 
         try:
             # For streaming, we'll partition and yield chunks incrementally
-            elements = await asyncio.get_event_loop().run_in_executor(None, partition, file_path)
+            elements = await asyncio.get_event_loop().run_in_executor(
+                None, partition, file_path
+            )
 
             chunk_size = 4096  # 4KB chunks
             current_chunk = ""
@@ -247,7 +254,7 @@ class FileProcessor:
                     # For large files, read in chunks to avoid memory issues
                     if file_size > 10 * 1024 * 1024:  # 10MB
                         content_chunks = []
-                        with open(file_path, "r", encoding=encoding) as file:
+                        with open(file_path, encoding=encoding) as file:
                             while True:
                                 chunk = file.read(self.chunk_size)
                                 if not chunk:
@@ -260,7 +267,7 @@ class FileProcessor:
                         return "".join(content_chunks)
                     else:
                         # Small files can be read normally
-                        with open(file_path, "r", encoding=encoding) as file:
+                        with open(file_path, encoding=encoding) as file:
                             return file.read()
                 except UnicodeDecodeError:
                     continue
@@ -304,7 +311,9 @@ class FileProcessor:
             logger.info(f"Extracting chunks from {file_type} file: {file_path}")
 
             # Run partitioning in thread pool
-            elements = await asyncio.get_event_loop().run_in_executor(None, partition, file_path)
+            elements = await asyncio.get_event_loop().run_in_executor(
+                None, partition, file_path
+            )
 
             if not elements:
                 raise DocumentError("No content found in file")
@@ -313,7 +322,9 @@ class FileProcessor:
             def chunk_elements():
                 return chunk_by_title(elements, max_characters=max_characters)
 
-            chunked_elements = await asyncio.get_event_loop().run_in_executor(None, chunk_elements)
+            chunked_elements = await asyncio.get_event_loop().run_in_executor(
+                None, chunk_elements
+            )
 
             # Convert to structured format
             chunks = []
@@ -402,7 +413,9 @@ class FileProcessor:
 
         # Check file size
         if file_path_obj.stat().st_size > max_size:
-            raise ValidationError(f"File size exceeds maximum allowed ({max_size} bytes)")
+            raise ValidationError(
+                f"File size exceeds maximum allowed ({max_size} bytes)"
+            )
 
         # Check file type
         file_type = file_path_obj.suffix.lower().lstrip(".")

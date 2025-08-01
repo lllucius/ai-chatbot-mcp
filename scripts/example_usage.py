@@ -167,19 +167,19 @@ async def demonstrate_workflow():
         # Create a sample text file for upload
         print("\n4. 📄 Creating sample document...")
         sample_content = """
-        Artificial Intelligence (AI) is a branch of computer science that aims to create 
-        intelligent machines that work and react like humans. Some of the activities 
+        Artificial Intelligence (AI) is a branch of computer science that aims to create
+        intelligent machines that work and react like humans. Some of the activities
         computers with artificial intelligence are designed for include:
-        
+
         - Speech recognition
         - Learning
         - Planning
         - Problem solving
-        
-        Machine Learning is a subset of AI that provides systems the ability to 
+
+        Machine Learning is a subset of AI that provides systems the ability to
         automatically learn and improve from experience without being explicitly programmed.
-        
-        Deep Learning is a subset of machine learning that uses neural networks with 
+
+        Deep Learning is a subset of machine learning that uses neural networks with
         three or more layers to simulate the behavior of the human brain.
         """
 

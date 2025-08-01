@@ -20,8 +20,7 @@ from ..middleware.performance import get_performance_stats
 from ..schemas.common import BaseResponse, DetailedHealthCheckResponse
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.caching import (api_response_cache, embedding_cache,
-                             search_result_cache)
+from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
 from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)
@@ -139,7 +138,7 @@ async def _check_cache_health() -> Dict[str, Any]:
             }
         total_hit_rate = 0
         total_requests = 0
-        for cache_name, stats in cache_stats.items():
+        for _cache_name, stats in cache_stats.items():
             total_requests += stats["hits"] + stats["misses"]
             if stats["hits"] + stats["misses"] > 0:
                 total_hit_rate += stats["hit_rate"]
@@ -169,9 +168,9 @@ async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
         tables_result = await db.execute(
             text(
                 """
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' 
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
             AND table_name IN ('users', 'documents', 'conversations')
         """
             )

@@ -32,12 +32,20 @@ from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..schemas.mcp import (MCPDiscoveryResultSchema, MCPHealthStatusSchema,
-                           MCPListFiltersSchema, MCPServerCreateSchema,
-                           MCPServerSchema, MCPServerUpdateSchema,
-                           MCPToolCreateSchema, MCPToolExecutionRequestSchema,
-                           MCPToolExecutionResultSchema, MCPToolSchema,
-                           MCPToolUpdateSchema, MCPToolUsageStatsSchema)
+from ..schemas.mcp import (
+    MCPDiscoveryResultSchema,
+    MCPHealthStatusSchema,
+    MCPListFiltersSchema,
+    MCPServerCreateSchema,
+    MCPServerSchema,
+    MCPServerUpdateSchema,
+    MCPToolCreateSchema,
+    MCPToolExecutionRequestSchema,
+    MCPToolExecutionResultSchema,
+    MCPToolSchema,
+    MCPToolUpdateSchema,
+    MCPToolUsageStatsSchema,
+)
 
 logger = get_api_logger("mcp_service")
 
@@ -57,7 +65,9 @@ class MCPService:
         self.is_initialized = False
         logger.info("MCPService initialized")
 
-    async def create_server(self, server_data: MCPServerCreateSchema, auto_discover: bool = True) -> MCPServerSchema:
+    async def create_server(
+        self, server_data: MCPServerCreateSchema, auto_discover: bool = True
+    ) -> MCPServerSchema:
         server = MCPServer(
             name=server_data.name,
             url=server_data.url,
@@ -76,13 +86,17 @@ class MCPService:
 
         if server_data.is_enabled and auto_discover:
             try:
-                discovery_result = await self.discover_tools_from_server(server_data.name)
+                discovery_result = await self.discover_tools_from_server(
+                    server_data.name
+                )
                 logger.info(
                     f"Automatic tool discovery for new server {server_data.name}: "
                     f"{discovery_result.new_tools} new, {discovery_result.updated_tools} updated"
                 )
             except Exception as e:
-                logger.warning(f"Failed to auto-discover tools for new server {server_data.name}: {e}")
+                logger.warning(
+                    f"Failed to auto-discover tools for new server {server_data.name}: {e}"
+                )
 
         return MCPServerSchema.model_validate(server)
 
@@ -95,11 +109,13 @@ class MCPService:
         server = result.scalar_one_or_none()
         if server:
             server_dict = server.__dict__.copy()
-            server_dict['tools_count'] = len(server.tools)
+            server_dict["tools_count"] = len(server.tools)
             return MCPServerSchema.model_validate(server_dict)
         return None
 
-    async def list_servers(self, filters: Optional[MCPListFiltersSchema] = None) -> List[MCPServerSchema]:
+    async def list_servers(
+        self, filters: Optional[MCPListFiltersSchema] = None
+    ) -> List[MCPServerSchema]:
         query = select(MCPServer).options(selectinload(MCPServer.tools))
         if filters:
             filter_conditions = []
@@ -118,11 +134,13 @@ class MCPService:
         server_schemas = []
         for server in servers:
             server_dict = server.__dict__.copy()
-            server_dict['tools_count'] = len(server.tools)
+            server_dict["tools_count"] = len(server.tools)
             server_schemas.append(MCPServerSchema.model_validate(server_dict))
         return server_schemas
 
-    async def update_server(self, name: str, updates: MCPServerUpdateSchema) -> Optional[MCPServerSchema]:
+    async def update_server(
+        self, name: str, updates: MCPServerUpdateSchema
+    ) -> Optional[MCPServerSchema]:
         server = await self.db.execute(select(MCPServer).where(MCPServer.name == name))
         server = server.scalar_one_or_none()
         if not server:
@@ -146,7 +164,9 @@ class MCPService:
         logger.info(f"Deleted MCP server: {name}")
         return True
 
-    async def enable_server(self, name: str, auto_discover: bool = True) -> Optional[MCPServerSchema]:
+    async def enable_server(
+        self, name: str, auto_discover: bool = True
+    ) -> Optional[MCPServerSchema]:
         server = await self.get_server(name)
         if not server:
             return None
@@ -160,8 +180,10 @@ class MCPService:
                 name, was_enabled, True
             )
             if discovery_result:
-                logger.info(f"Automatic tool discovery triggered for {name}: "
-                          f"{discovery_result.new_tools} new, {discovery_result.updated_tools} updated")
+                logger.info(
+                    f"Automatic tool discovery triggered for {name}: "
+                    f"{discovery_result.new_tools} new, {discovery_result.updated_tools} updated"
+                )
         return updated_server
 
     async def disable_server(self, name: str) -> Optional[MCPServerSchema]:
@@ -184,7 +206,9 @@ class MCPService:
         updates = MCPServerUpdateSchema(**updates_dict)
         return await self.update_server(name, updates)
 
-    async def register_tool(self, tool_data: MCPToolCreateSchema) -> Optional[MCPToolSchema]:
+    async def register_tool(
+        self, tool_data: MCPToolCreateSchema
+    ) -> Optional[MCPToolSchema]:
         server_result = await self.db.execute(
             select(MCPServer).where(MCPServer.name == tool_data.server_name)
         )
@@ -214,7 +238,9 @@ class MCPService:
         self.db.add(tool)
         await self.db.commit()
         await self.db.refresh(tool, ["server"])
-        logger.info(f"Registered tool: {tool_data.name} for server {tool_data.server_name}")
+        logger.info(
+            f"Registered tool: {tool_data.name} for server {tool_data.server_name}"
+        )
         return MCPToolSchema.model_validate(tool)
 
     async def get_tool(self, tool_name: str) -> Optional[MCPToolSchema]:
@@ -228,7 +254,9 @@ class MCPService:
             return MCPToolSchema.model_validate(tool)
         return None
 
-    async def list_tools(self, filters: Optional[MCPListFiltersSchema] = None) -> List[MCPToolSchema]:
+    async def list_tools(
+        self, filters: Optional[MCPListFiltersSchema] = None
+    ) -> List[MCPToolSchema]:
         query = select(MCPTool).options(selectinload(MCPTool.server))
         if filters:
             filter_conditions = []
@@ -247,7 +275,9 @@ class MCPService:
         tools = result.scalars().all()
         return [MCPToolSchema.model_validate(tool) for tool in tools]
 
-    async def update_tool(self, tool_name: str, updates: MCPToolUpdateSchema) -> Optional[MCPToolSchema]:
+    async def update_tool(
+        self, tool_name: str, updates: MCPToolUpdateSchema
+    ) -> Optional[MCPToolSchema]:
         tool = await self.db.execute(
             select(MCPTool)
             .options(selectinload(MCPTool.server))
@@ -303,10 +333,14 @@ class MCPService:
                 tool_name = record.get("tool_name")
                 success = record.get("success", True)
                 duration_ms = record.get("duration_ms")
-                if tool_name and await self.record_tool_usage(tool_name, success, duration_ms):
+                if tool_name and await self.record_tool_usage(
+                    tool_name, success, duration_ms
+                ):
                     processed_count += 1
             except Exception as e:
-                logger.warning(f"Failed to record usage for tool {record.get('tool_name')}: {e}")
+                logger.warning(
+                    f"Failed to record usage for tool {record.get('tool_name')}: {e}"
+                )
         return processed_count
 
     async def get_tool_stats(
@@ -315,7 +349,9 @@ class MCPService:
         query = select(MCPTool).options(selectinload(MCPTool.server))
         if server_name:
             query = query.join(MCPServer).where(MCPServer.name == server_name)
-        result = await self.db.execute(query.order_by(MCPTool.usage_count.desc()).limit(limit))
+        result = await self.db.execute(
+            query.order_by(MCPTool.usage_count.desc()).limit(limit)
+        )
         tools = result.scalars().all()
         stats = []
         for tool in tools:
@@ -334,25 +370,27 @@ class MCPService:
             )
         return stats
 
-    async def discover_tools_from_server(self, server_name: str) -> MCPDiscoveryResultSchema:
-        server_result = await self.db.execute(select(MCPServer).where(MCPServer.name == server_name))
+    async def discover_tools_from_server(
+        self, server_name: str
+    ) -> MCPDiscoveryResultSchema:
+        server_result = await self.db.execute(
+            select(MCPServer).where(MCPServer.name == server_name)
+        )
         server = server_result.scalar_one_or_none()
         if not server:
             logger.error(f"Server not found: {server_name}")
             return MCPDiscoveryResultSchema(
-                success=False,
-                server_name=server_name,
-                error="Server not found"
+                success=False, server_name=server_name, error="Server not found"
             )
         if not server.is_enabled:
             logger.info(f"Server {server_name} is disabled, skipping discovery")
             return MCPDiscoveryResultSchema(
-                success=False,
-                server_name=server_name,
-                error="Server is disabled"
+                success=False, server_name=server_name, error="Server is disabled"
             )
         try:
-            discovered_tools = await self._discover_server_tools(server.url, server.timeout)
+            discovered_tools = await self._discover_server_tools(
+                server.url, server.timeout
+            )
             new_tools = 0
             updated_tools = 0
             errors = []
@@ -365,13 +403,13 @@ class MCPService:
                         server_name=server_name,
                         description=tool_info.get("description"),
                         parameters=tool_info.get("parameters", {}),
-                        is_enabled=True
+                        is_enabled=True,
                     )
                     existing_tool = await self.get_tool(tool_name)
                     if existing_tool:
                         updates = MCPToolUpdateSchema(
                             description=tool_data.description,
-                            parameters=tool_data.parameters
+                            parameters=tool_data.parameters,
                         )
                         await self.update_tool(tool_name, updates)
                         updated_tools += 1
@@ -428,7 +466,9 @@ class MCPService:
         self, server_name: str, was_enabled: bool, is_enabled: bool
     ) -> Optional[MCPDiscoveryResultSchema]:
         if not was_enabled and is_enabled:
-            logger.info(f"Server {server_name} was enabled, starting automatic tool discovery")
+            logger.info(
+                f"Server {server_name} was enabled, starting automatic tool discovery"
+            )
             return await self.discover_tools_from_server(server_name)
         return None
 
@@ -455,7 +495,9 @@ class MCPService:
             self.clients.pop(server.name, None)
             raise
 
-    async def _discover_server_tools(self, server_url: str, timeout: int) -> List[Dict[str, Any]]:
+    async def _discover_server_tools(
+        self, server_url: str, timeout: int
+    ) -> List[Dict[str, Any]]:
         try:
             transport = StreamableHttpTransport(server_url)
             client = Client(transport, timeout=timeout)
@@ -468,7 +510,9 @@ class MCPService:
                 elif isinstance(tools_response, list):
                     tools_list = tools_response
                 else:
-                    logger.warning(f"Unexpected tools response format: {type(tools_response)}")
+                    logger.warning(
+                        f"Unexpected tools response format: {type(tools_response)}"
+                    )
                     return []
                 discovered_tools = []
                 for tool_info in tools_list:
@@ -481,7 +525,9 @@ class MCPService:
                         tool_desc = tool_info.get("description", "")
                         tool_schema = tool_info.get("inputSchema", None)
                     else:
-                        logger.warning(f"Unexpected tool info format: {type(tool_info)}")
+                        logger.warning(
+                            f"Unexpected tool info format: {type(tool_info)}"
+                        )
                         continue
                     if tool_schema:
                         if hasattr(tool_schema, "model_dump"):
@@ -489,14 +535,24 @@ class MCPService:
                         elif isinstance(tool_schema, dict):
                             schema_dict = tool_schema
                         else:
-                            schema_dict = {"type": "object", "properties": {}, "required": []}
+                            schema_dict = {
+                                "type": "object",
+                                "properties": {},
+                                "required": [],
+                            }
                     else:
-                        schema_dict = {"type": "object", "properties": {}, "required": []}
-                    discovered_tools.append({
-                        "name": tool_name,
-                        "description": tool_desc,
-                        "parameters": schema_dict,
-                    })
+                        schema_dict = {
+                            "type": "object",
+                            "properties": {},
+                            "required": [],
+                        }
+                    discovered_tools.append(
+                        {
+                            "name": tool_name,
+                            "description": tool_desc,
+                            "parameters": schema_dict,
+                        }
+                    )
                 return discovered_tools
         except Exception as e:
             logger.error(f"Failed to discover tools from {server_url}: {e}")
@@ -510,8 +566,8 @@ class MCPService:
         Execute a single tool call (with MCP registry), using FastMCP client proxy.
         Does NOT apply retry or caching logic. For managed execution use 'execute_tool_call'.
         """
-#        if not self.is_initialized:
-#            raise ExternalServiceError("MCP client not initialized")
+        #        if not self.is_initialized:
+        #            raise ExternalServiceError("MCP client not initialized")
         tool = await self.get_tool(request.tool_name)
         if not tool:
             available_tools = [t.name for t in await self.list_tools()]
@@ -533,8 +589,7 @@ class MCPService:
         try:
             async with client:
                 result = await client.call_tool(
-                    name=tool.original_name,
-                    arguments=request.parameters
+                    name=tool.original_name, arguments=request.parameters
                 )
             success = True
             formatted_result = MCPToolExecutionResultSchema(
@@ -560,10 +615,14 @@ class MCPService:
             if request.record_usage:
                 try:
                     duration_ms = int((time.time() - start_time) * 1000)
-                    await self.record_tool_usage(request.tool_name, success, duration_ms)
+                    await self.record_tool_usage(
+                        request.tool_name, success, duration_ms
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to record tool usage: {e}")
-        logger.info(f"Tool '{request.tool_name}' executed successfully on '{server_name}'")
+        logger.info(
+            f"Tool '{request.tool_name}' executed successfully on '{server_name}'"
+        )
         return formatted_result
 
     def _format_tool_content(self, result: Any) -> List[Dict[str, Any]]:
@@ -573,31 +632,43 @@ class MCPService:
                 if hasattr(content_item, "text"):
                     content.append({"type": "text", "text": content_item.text})
                 elif hasattr(content_item, "data"):
-                    content.append({
-                        "type": "data",
-                        "data": content_item.data,
-                        "mimeType": getattr(content_item, "mimeType", "application/octet-stream"),
-                    })
+                    content.append(
+                        {
+                            "type": "data",
+                            "data": content_item.data,
+                            "mimeType": getattr(
+                                content_item, "mimeType", "application/octet-stream"
+                            ),
+                        }
+                    )
                 elif isinstance(content_item, dict):
                     if "text" in content_item:
                         content.append({"type": "text", "text": content_item["text"]})
                     elif "data" in content_item:
-                        content.append({
-                            "type": "data",
-                            "data": content_item["data"],
-                            "mimeType": content_item.get("mimeType", "application/octet-stream"),
-                        })
+                        content.append(
+                            {
+                                "type": "data",
+                                "data": content_item["data"],
+                                "mimeType": content_item.get(
+                                    "mimeType", "application/octet-stream"
+                                ),
+                            }
+                        )
         elif isinstance(result, dict) and "content" in result:
             for content_item in result["content"]:
                 if isinstance(content_item, dict):
                     if "text" in content_item:
                         content.append({"type": "text", "text": content_item["text"]})
                     elif "data" in content_item:
-                        content.append({
-                            "type": "data",
-                            "data": content_item["data"],
-                            "mimeType": content_item.get("mimeType", "application/octet-stream"),
-                        })
+                        content.append(
+                            {
+                                "type": "data",
+                                "data": content_item["data"],
+                                "mimeType": content_item.get(
+                                    "mimeType", "application/octet-stream"
+                                ),
+                            }
+                        )
         if not content:
             content.append({"type": "text", "text": str(result)})
         return content
@@ -620,9 +691,9 @@ class MCPService:
         """
         Return a list of available tools (from DB/registry), optionally filtered.
         """
-#        if not self.is_initialized:
-#            logger.warning("MCP client not initialized - returning empty tools list")
-#            return []
+        #        if not self.is_initialized:
+        #            logger.warning("MCP client not initialized - returning empty tools list")
+        #            return []
         tools = await self.list_tools(filters)
         if filters:
             if filters.enabled_only:
@@ -646,9 +717,11 @@ class MCPService:
                     "type": "function",
                     "function": {
                         "name": tool.name,
-                        "description": tool.description or f"Tool from {tool.server.name}",
-                        "parameters": tool.parameters or {"type": "object", "properties": {}}
-                    }
+                        "description": tool.description
+                        or f"Tool from {tool.server.name}",
+                        "parameters": tool.parameters
+                        or {"type": "object", "properties": {}},
+                    },
                 }
                 openai_tools.append(openai_tool)
         return openai_tools
@@ -673,12 +746,12 @@ class MCPService:
             Dict describing the tool execution result (see below).
         """
         import time
+
         tool_call_id = tool_call.get("id", "")
         tool_name = tool_call.get("name")
         arguments = tool_call.get("arguments", {})
-        cache_key = None
 
-        #if use_cache:
+        # if use_cache:
         #    cache_key = make_cache_key("tool_call", tool_name, arguments)
         #    cached_result = await api_response_cache.get(cache_key)
         #    if cached_result is not None:
@@ -689,11 +762,11 @@ class MCPService:
         for attempt in range(max_retries):
             start_time = time.time()
             try:
-                logger.info(f"Executing tool call '{tool_name}', attempt {attempt + 1}/{max_retries}")
+                logger.info(
+                    f"Executing tool call '{tool_name}', attempt {attempt + 1}/{max_retries}"
+                )
                 req = MCPToolExecutionRequestSchema(
-                    tool_name=tool_name,
-                    parameters=arguments,
-                    record_usage=True
+                    tool_name=tool_name, parameters=arguments, record_usage=True
                 )
                 result = await self.call_tool(req)
                 execution_time = (time.time() - start_time) * 1000
@@ -708,7 +781,7 @@ class MCPService:
                     "execution_time_ms": execution_time,
                 }
                 print("RESULTDICT", result_dict)
-                #if use_cache and cache_key and result.success:
+                # if use_cache and cache_key and result.success:
                 #    await api_response_cache.set(cache_key, result_dict, ttl=cache_ttl)
                 return result_dict
             except Exception as e:
@@ -753,14 +826,14 @@ class MCPService:
         """
         if not tool_calls:
             return []
-        logger.info(f"Executing {len(tool_calls)} tool calls (parallel={parallel_execution})")
+        logger.info(
+            f"Executing {len(tool_calls)} tool calls (parallel={parallel_execution})"
+        )
 
         if parallel_execution:
             tasks = [
                 self.execute_tool_call(
-                    tool_call,
-                    max_retries=max_retries,
-                    use_cache=use_cache
+                    tool_call, max_retries=max_retries, use_cache=use_cache
                 )
                 for tool_call in tool_calls
             ]
@@ -806,7 +879,7 @@ class MCPService:
             healthy_servers=0,
             unhealthy_servers=0,
             tools_count=len(all_tools),
-            server_status={}
+            server_status={},
         )
         if not self.is_initialized:
             return health_status
@@ -818,7 +891,9 @@ class MCPService:
                 try:
                     async with client:
                         await asyncio.wait_for(client.list_tools(), timeout=5)
-                    tools_count = len([t for t in all_tools if t.server.name == server_name])
+                    tools_count = len(
+                        [t for t in all_tools if t.server.name == server_name]
+                    )
                     health_status.server_status[server_name] = {
                         "status": "healthy",
                         "tools_count": tools_count,
@@ -834,11 +909,14 @@ class MCPService:
                     }
                     health_status.unhealthy_servers += 1
             if not healthy:
-                health_status.server_status.setdefault(server_name, {
-                    "status": "disconnected",
-                    "error": "Not connected",
-                    "connected": False,
-                })
+                health_status.server_status.setdefault(
+                    server_name,
+                    {
+                        "status": "disconnected",
+                        "error": "Not connected",
+                        "connected": False,
+                    },
+                )
                 health_status.unhealthy_servers += 1
         try:
             enabled_servers = sum(1 for s in all_servers if s.is_enabled)

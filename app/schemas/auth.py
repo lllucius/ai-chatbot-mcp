@@ -17,28 +17,40 @@ from .base import BaseSchema
 class LoginRequest(BaseSchema):
     """Schema for user login request."""
 
-    username: str = Field(..., min_length=3, max_length=50, description="Username or email")
+    username: str = Field(
+        ..., min_length=3, max_length=50, description="Username or email"
+    )
     password: str = Field(..., min_length=8, max_length=100, description="Password")
 
     model_config = {
-        "json_schema_extra": {"example": {"username": "johndoe", "password": "SecurePass123"}}
+        "json_schema_extra": {
+            "example": {"username": "johndoe", "password": "SecurePass123"}
+        }
     }
 
 
 class RegisterRequest(BaseSchema):
     """Schema for user registration request."""
 
-    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    username: str = Field(
+        ..., min_length=3, max_length=50, description="Unique username"
+    )
     email: EmailStr = Field(..., description="Valid email address")
-    password: str = Field(..., min_length=8, max_length=100, description="Strong password")
-    full_name: Optional[str] = Field(None, max_length=255, description="Full display name")
+    password: str = Field(
+        ..., min_length=8, max_length=100, description="Strong password"
+    )
+    full_name: Optional[str] = Field(
+        None, max_length=255, description="Full display name"
+    )
 
     @field_validator("username")
     @classmethod
     def validate_username(cls, v):
         """Validate username format."""
         if not re.match(r"^[a-zA-Z0-9_-]+$", v):
-            raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
+            raise ValueError(
+                "Username can only contain letters, numbers, underscores, and hyphens"
+            )
         return v
 
     @field_validator("password")
@@ -97,7 +109,9 @@ class PasswordResetConfirm(BaseSchema):
     """Schema for password reset confirmation."""
 
     token: str = Field(..., description="Password reset token")
-    new_password: str = Field(..., min_length=8, max_length=100, description="New password")
+    new_password: str = Field(
+        ..., min_length=8, max_length=100, description="New password"
+    )
 
     @field_validator("new_password")
     @classmethod

@@ -41,6 +41,7 @@ class BaseResponse(BaseModel):
             if isinstance(data["timestamp"], datetime):
                 data["timestamp"] = data["timestamp"].isoformat() + "Z"
         import json
+
         return json.dumps(data)
 
 
@@ -48,21 +49,29 @@ class SuccessResponse(BaseResponse):
     """Standard success response."""
 
     success: bool = Field(default=True, description="Always true for success responses")
-    data: Optional[Dict[str, Any]] = Field(default=None, description="Response data payload")
+    data: Optional[Dict[str, Any]] = Field(
+        default=None, description="Response data payload"
+    )
 
 
 class ErrorResponse(BaseResponse):
     """Standard error response."""
 
     success: bool = Field(default=False, description="Always false for error responses")
-    error_code: Optional[str] = Field(default=None, description="Machine-readable error code")
-    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
+    error_code: Optional[str] = Field(
+        default=None, description="Machine-readable error code"
+    )
+    details: Optional[Dict[str, Any]] = Field(
+        default=None, description="Additional error details"
+    )
 
 
 class ValidationErrorResponse(ErrorResponse):
     """Validation error response with field-specific errors."""
 
-    error_code: str = Field(default="VALIDATION_ERROR", description="Code for validation errors")
+    error_code: str = Field(
+        default="VALIDATION_ERROR", description="Code for validation errors"
+    )
     validation_errors: List[Dict[str, Any]] = Field(
         default_factory=list, description="List of validation errors"
     )
@@ -75,7 +84,9 @@ class HealthCheckResponse(BaseResponse):
 
     status: str = Field(..., description="Overall health status")
     version: str = Field(..., description="Application version")
-    timestamp: datetime = Field(default_factory=utcnow, description="Health check timestamp")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Health check timestamp"
+    )
     components: Optional[Dict[str, Any]] = Field(
         default=None, description="Individual component health statuses"
     )
@@ -86,6 +97,7 @@ class HealthCheckResponse(BaseResponse):
             if isinstance(data["timestamp"], datetime):
                 data["timestamp"] = data["timestamp"].isoformat() + "Z"
         import json
+
         return json.dumps(data)
 
 
@@ -94,12 +106,16 @@ class DetailedHealthCheckResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
-    application: Dict[str, Any] = Field(..., description="Application health information")
+    application: Dict[str, Any] = Field(
+        ..., description="Application health information"
+    )
     database: Dict[str, Any] = Field(..., description="Database health status")
     cache: Dict[str, Any] = Field(..., description="Cache system health status")
     openai: Dict[str, Any] = Field(..., description="OpenAI service health status")
     fastmcp: Dict[str, Any] = Field(..., description="FastMCP service health status")
-    timestamp: datetime = Field(default_factory=utcnow, description="Health check timestamp")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Health check timestamp"
+    )
     overall_status: str = Field(..., description="Overall system health status")
 
     def model_dump_json(self, **kwargs):
@@ -108,6 +124,7 @@ class DetailedHealthCheckResponse(BaseModel):
             if isinstance(data["timestamp"], datetime):
                 data["timestamp"] = data["timestamp"].isoformat() + "Z"
         import json
+
         return json.dumps(data)
 
 
@@ -118,14 +135,18 @@ class FileUploadResponse(BaseResponse):
     file_id: Optional[str] = Field(default=None, description="Generated file ID")
     file_size: int = Field(..., description="File size in bytes")
     mime_type: Optional[str] = Field(default=None, description="MIME content type")
-    upload_url: Optional[str] = Field(default=None, description="URL where file was uploaded")
+    upload_url: Optional[str] = Field(
+        default=None, description="URL where file was uploaded"
+    )
 
 
 class BulkOperationResponse(BaseResponse):
     """Response for bulk operations."""
 
     total_items: int = Field(..., description="Total number of items processed")
-    successful_items: int = Field(..., description="Number of successfully processed items")
+    successful_items: int = Field(
+        ..., description="Number of successfully processed items"
+    )
     failed_items: int = Field(..., description="Number of failed items")
     errors: List[Dict[str, Any]] = Field(
         default_factory=list, description="List of errors that occurred"
@@ -148,6 +169,7 @@ class TokenResponse(BaseModel):
             if isinstance(data["expires_at"], datetime):
                 data["expires_at"] = data["expires_at"].isoformat() + "Z"
         import json
+
         return json.dumps(data)
 
 
@@ -157,15 +179,27 @@ class MetricsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     cpu_usage: Optional[float] = Field(default=None, description="CPU usage percentage")
-    memory_usage: Optional[float] = Field(default=None, description="Memory usage percentage")
-    disk_usage: Optional[float] = Field(default=None, description="Disk usage percentage")
+    memory_usage: Optional[float] = Field(
+        default=None, description="Memory usage percentage"
+    )
+    disk_usage: Optional[float] = Field(
+        default=None, description="Disk usage percentage"
+    )
     active_connections: Optional[int] = Field(
         default=None, description="Active database connections"
     )
-    request_count: Optional[int] = Field(default=None, description="Total request count")
-    error_rate: Optional[float] = Field(default=None, description="Error rate percentage")
-    response_time: Optional[float] = Field(default=None, description="Average response time in ms")
-    timestamp: datetime = Field(default_factory=utcnow, description="Metrics collection timestamp")
+    request_count: Optional[int] = Field(
+        default=None, description="Total request count"
+    )
+    error_rate: Optional[float] = Field(
+        default=None, description="Error rate percentage"
+    )
+    response_time: Optional[float] = Field(
+        default=None, description="Average response time in ms"
+    )
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Metrics collection timestamp"
+    )
 
     def model_dump_json(self, **kwargs):
         data = self.model_dump(**kwargs)
@@ -173,6 +207,7 @@ class MetricsResponse(BaseModel):
             if isinstance(data["timestamp"], datetime):
                 data["timestamp"] = data["timestamp"].isoformat() + "Z"
         import json
+
         return json.dumps(data)
 
 
@@ -186,7 +221,9 @@ class ConfigurationResponse(BaseModel):
     debug_mode: bool = Field(..., description="Whether debug mode is enabled")
     environment: str = Field(..., description="Runtime environment")
     features: Dict[str, bool] = Field(..., description="Enabled features")
-    limits: Dict[str, Union[int, float]] = Field(..., description="Configuration limits")
+    limits: Dict[str, Union[int, float]] = Field(
+        ..., description="Configuration limits"
+    )
 
 
 class PaginationParams(BaseModel):
@@ -216,7 +253,9 @@ class PaginationParams(BaseModel):
 class PaginatedResponse(BaseResponse, Generic[T]):
     """Generic paginated response schema."""
 
-    items: List[Any] = Field(default_factory=list, description="List of paginated items")
+    items: List[Any] = Field(
+        default_factory=list, description="List of paginated items"
+    )
     pagination: PaginationParams = Field(..., description="Pagination parameters")
 
     @classmethod
@@ -254,5 +293,9 @@ class SearchParams(PaginationParams):
         pattern="^(vector|text|hybrid|mmr)$",
         description="Search algorithm to use",
     )
-    threshold: Optional[float] = Field(default=0.7, ge=0.0, le=1.0, description="Threshold to use")
-    filters: Optional[Dict[str, Any]] = Field(default=None, description="Additional search filters")
+    threshold: Optional[float] = Field(
+        default=0.7, ge=0.0, le=1.0, description="Threshold to use"
+    )
+    filters: Optional[Dict[str, Any]] = Field(
+        default=None, description="Additional search filters"
+    )

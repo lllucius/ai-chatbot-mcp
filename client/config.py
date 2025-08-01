@@ -16,7 +16,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ClientConfig(BaseSettings):
     """
     Client configuration that includes all necessary settings for both app and client.
-    
+
     This class contains all settings needed for the client while sharing the same
     .env file structure as the main application.
 
@@ -67,23 +67,25 @@ class ClientConfig(BaseSettings):
     )
 
     # OpenAI Configuration (from main app)
-    openai_api_key: str = Field(default="your-openai-api-key-here", description="OpenAI API key")
+    openai_api_key: str = Field(
+        default="your-openai-api-key-here", description="OpenAI API key"
+    )
     openai_base_url: str = Field(
         default="https://api.openai.com/v1", description="OpenAI API base URL"
     )
-    openai_chat_model: str = Field(default="gpt-4", description="OpenAI chat model to use")
+    openai_chat_model: str = Field(
+        default="gpt-4", description="OpenAI chat model to use"
+    )
     openai_embedding_model: str = Field(
         default="text-embedding-3-small", description="OpenAI embedding model to use"
     )
 
     # API Configuration (shared and client-specific)
     api_base_url: str = Field(
-        default="http://localhost:8000", 
-        description="Base URL of the AI Chatbot API"
+        default="http://localhost:8000", description="Base URL of the AI Chatbot API"
     )
     api_timeout: int = Field(
-        default=120, 
-        description="Timeout for API requests in seconds"
+        default=120, description="Timeout for API requests in seconds"
     )
 
     # Authentication (client-specific)
@@ -96,67 +98,56 @@ class ClientConfig(BaseSettings):
         description="Password for authentication (will prompt if not provided)",
     )
     client_token_file: Optional[str] = Field(
-        default=None, 
-        description="File to store authentication token for reuse"
+        default=None, description="File to store authentication token for reuse"
     )
 
     # Default Chat Settings (client-specific)
     client_default_use_rag: bool = Field(
-        default=True, 
-        description="Enable RAG by default for new conversations"
+        default=True, description="Enable RAG by default for new conversations"
     )
     client_default_use_tools: bool = Field(
-        default=True, 
-        description="Enable tools by default for new conversations"
+        default=True, description="Enable tools by default for new conversations"
     )
     client_default_prompt_name: Optional[str] = Field(
-        default=None, 
-        description="Default prompt to use from registry"
+        default=None, description="Default prompt to use from registry"
     )
     client_default_profile_name: Optional[str] = Field(
-        default=None, 
-        description="Default LLM profile to use from registry"
+        default=None, description="Default LLM profile to use from registry"
     )
 
     # UI Preferences (client-specific)
     client_spinner_enabled: bool = Field(
-        default=True, 
-        description="Show loading spinner during AI responses"
+        default=True, description="Show loading spinner during AI responses"
     )
     client_auto_title: bool = Field(
         default=True,
         description="Automatically generate conversation titles if not provided",
     )
     client_max_history_display: int = Field(
-        default=50, 
-        description="Maximum number of messages to display in history"
+        default=50, description="Maximum number of messages to display in history"
     )
 
     # Advanced Features (client-specific)
     client_enable_streaming: bool = Field(
-        default=False, 
-        description="Enable streaming responses (if supported by API)"
+        default=False, description="Enable streaming responses (if supported by API)"
     )
     client_save_conversations: bool = Field(
-        default=True, 
-        description="Automatically save conversations locally"
+        default=True, description="Automatically save conversations locally"
     )
     client_conversation_backup_dir: Optional[str] = Field(
-        default=None, 
-        description="Directory to save conversation backups"
+        default=None, description="Directory to save conversation backups"
     )
 
     # Debug and Development (client-specific)
     client_debug_mode: bool = Field(
-        default=False, 
-        description="Enable debug output and verbose logging for client"
+        default=False, description="Enable debug output and verbose logging for client"
     )
 
     @property
     def effective_debug(self) -> bool:
         """
         Get effective debug mode considering both app and client settings.
-        
+
         Returns:
             bool: True if either app debug or client debug mode is enabled
         """
@@ -166,7 +157,7 @@ class ClientConfig(BaseSettings):
     def is_development(self) -> bool:
         """
         Check if running in development mode.
-        
+
         Returns:
             bool: True if in development mode
         """
@@ -176,7 +167,7 @@ class ClientConfig(BaseSettings):
     def is_production(self) -> bool:
         """
         Check if running in production mode.
-        
+
         Returns:
             bool: True if in production mode
         """
@@ -213,12 +204,12 @@ def load_config(config_file: Optional[str] = None) -> ClientConfig:
 def get_config_dir() -> Path:
     """
     Get the configuration directory for storing user settings.
-    
+
     Creates the directory if it doesn't exist.
-    
+
     Returns:
         Path: User configuration directory path
-        
+
     Example:
         >>> config_dir = get_config_dir()
         >>> print(config_dir)
@@ -232,10 +223,10 @@ def get_config_dir() -> Path:
 def get_default_token_file() -> str:
     """
     Get the default token file path for storing authentication tokens.
-    
+
     Returns:
         str: Full path to the default token file
-        
+
     Example:
         >>> token_file = get_default_token_file()
         >>> print(token_file)
@@ -247,12 +238,12 @@ def get_default_token_file() -> str:
 def get_default_backup_dir() -> str:
     """
     Get the default conversation backup directory.
-    
+
     Creates the directory if it doesn't exist.
-    
+
     Returns:
         str: Full path to the default backup directory
-        
+
     Example:
         >>> backup_dir = get_default_backup_dir()
         >>> print(backup_dir)
