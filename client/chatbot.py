@@ -466,7 +466,7 @@ class CommandHandler:
             if value.isdigit():
                 value = int(value)
             else:
-        try:
+                try:
                     value = float(value)
                 except ValueError:
                     if value.lower() in ("true", "false"):
@@ -493,8 +493,8 @@ class CommandHandler:
             model_name=model_name,
             parameters=self.settings.get_llm_params(),
             is_default=False,
-            )
-            try:
+        )
+        try:
             result = await self.sdk.profiles.create_profile(data)
             print_success(f"Saved new LLM profile '{result.name}'")
         except ApiError as e:
@@ -525,7 +525,7 @@ class CommandHandler:
             update = UserPasswordUpdate(current_password="", new_password=pw)
             await self.sdk.users.change_password(update)
             print_success("Password changed.")
-                else:
+        else:
             print_warn("Unknown user command.")
 
     async def cmd_mcp(self, args: List[str]) -> None:
@@ -590,7 +590,7 @@ class CommandHandler:
             return
         subcmd = args[0]
         if subcmd == "list":
-                prompts = await self.sdk.prompts.list_prompts()
+            prompts = await self.sdk.prompts.list_prompts()
             prettify_list(prompts.get("prompts", []), columns=["name", "title", "is_active", "created_at"], title="Prompts")
         elif subcmd == "show":
             if len(args) != 2:
@@ -622,7 +622,7 @@ class CommandHandler:
             return
         subcmd = args[0]
         if subcmd == "list":
-                profiles = await self.sdk.profiles.list_profiles()
+            profiles = await self.sdk.profiles.list_profiles()
             prettify_list(profiles.get("profiles", []), columns=["name", "title", "is_active", "is_default", "model_name"], title="LLM Profiles")
         elif subcmd == "show":
             if len(args) != 2:
@@ -663,7 +663,7 @@ class CommandHandler:
             doc_id = args[1]
             await self.sdk.documents.delete(doc_id)
             print_success(f"Deleted document {doc_id}")
-                    else:
+        else:
             print_warn("Unknown documents command.")
 
     async def cmd_analytics(self, args: List[str]) -> None:
@@ -738,10 +738,10 @@ class CommandHandler:
     def display_api_error(self, e: ApiError) -> None:
         print_error(f"HTTP {e.status} {e.reason} {e.url}")
         if e.body:
-                try:
+            try:
                 if isinstance(e.body, dict):
                     prettify_dict(e.body, title="API Error")
-                    else:
+                else:
                     console.print(str(e.body))
             except Exception:
                 pass
@@ -751,14 +751,14 @@ async def auto_generate_title(user_message: str, sdk: AIChatbotSDK, settings: Se
     words = raw.split()
     if len(words) < 12:
         return ellipsis(raw, 80)
-                try:
+    try:
         return ellipsis(" ".join(words[:10]), 80)
     except Exception:
         return "AI Chat"
 
 def get_user_input() -> str:
     prompt_str = "You: "
-        try:
+    try:
         return input(prompt_str)
     except EOFError:
         return ""
@@ -822,9 +822,9 @@ async def chat_loop(
                     latency = None
                     final_content = []
                     async for chunk in stream:
-        try:
+                        try:
                             data = json.loads(chunk)
-        except Exception:
+                        except Exception:
                             data = None
                         if isinstance(data, dict):
                             if data.get("type") == "content":
