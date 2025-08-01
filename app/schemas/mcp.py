@@ -118,6 +118,40 @@ class MCPToolUsageStatsSchema(BaseModel):
     success_rate: float = Field(..., description="Success rate percentage")
     average_duration_ms: Optional[int] = Field(None, description="Average duration in ms")
     last_used_at: Optional[datetime] = Field(None, description="Last usage time")
+
+
+class MCPServerListResponse(BaseModel):
+    """Response schema for listing MCP servers."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    success: bool = Field(default=True, description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    data: List[MCPServerSchema] = Field(..., description="List of MCP servers")
+
+
+class MCPToolListResponse(BaseModel):
+    """Response schema for listing MCP tools."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    success: bool = Field(default=True, description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    available_tools: List[MCPToolSchema] = Field(..., description="List of available tools")
+    openai_tools: List[Dict[str, Any]] = Field(..., description="Tools in OpenAI format")
+    servers: List[Dict[str, Any]] = Field(..., description="Server status information")
+    enabled_count: int = Field(..., description="Number of enabled tools")
+    total_count: int = Field(..., description="Total number of tools")
+
+
+class MCPStatsResponse(BaseModel):
+    """Response schema for MCP statistics."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    success: bool = Field(default=True, description="Whether the request was successful")
+    message: str = Field(..., description="Response message")
+    data: Dict[str, Any] = Field(..., description="Statistics data")
     is_enabled: bool = Field(..., description="Tool enabled status")
 
 

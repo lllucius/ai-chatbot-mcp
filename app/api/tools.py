@@ -23,7 +23,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["tools"])
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=MCPToolListResponse)
 @handle_api_errors("Failed to list tools")
 async def list_tools(
     enabled_only: bool = False,

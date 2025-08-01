@@ -22,7 +22,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["mcp"])
 
 
-@router.get("/servers")
+@router.get("/servers", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to list MCP servers")
 async def list_servers(
     enabled_only: bool = Query(False, description="Show only enabled servers"),
@@ -48,7 +48,7 @@ async def list_servers(
     }
 
 
-@router.post("/servers")
+@router.post("/servers", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to create MCP server")
 async def create_server(
     server_data: MCPServerCreateSchema,
@@ -70,7 +70,7 @@ async def create_server(
     }
 
 
-@router.get("/servers/byname/{server_name}")
+@router.get("/servers/byname/{server_name}", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to get MCP server")
 async def get_server(
     server_name: str,
@@ -96,7 +96,7 @@ async def get_server(
     }
 
 
-@router.patch("/servers/byname/{server_name}")
+@router.patch("/servers/byname/{server_name}", response_model=MCPServerListResponse)
 @handle_api_errors("Failed to update MCP server")
 async def update_server(
     server_name: str,
@@ -214,7 +214,7 @@ async def disable_tool(
         )
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=MCPStatsResponse)
 @handle_api_errors("Failed to get MCP statistics")
 async def get_mcp_stats(
     current_user: User = Depends(get_current_superuser),
@@ -233,7 +233,7 @@ async def get_mcp_stats(
     }
 
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=MCPStatsResponse)
 @handle_api_errors("Failed to refresh MCP")
 async def refresh_mcp(
     current_user: User = Depends(get_current_superuser),
