@@ -23,14 +23,16 @@ numpy
 pydantic
 pydantic-settings
 
-# MCP Client - REQUIRED (Using correct Client class and MCPConfigTransport)
+# MCP Client
 fastmcp
 
 # Utilities
 python-dotenv
 httpx
+psutil
 
 # CLI Framework
+async_typer
 typer
 rich
 

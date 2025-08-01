@@ -3,7 +3,7 @@ User-related Pydantic schemas for API requests and responses.
 
 This module defines schemas for user operations including creation,
 updates, authentication, and API responses using modern Pydantic V2.
-
+All fields have an explicit 'description' argument.
 """
 
 import uuid
@@ -29,12 +29,13 @@ class UserBase(BaseSchema):
     )
 
     username: str = Field(
+        ...,
         min_length=3,
         max_length=50,
         pattern="^[a-zA-Z0-9_-]+$",
-        description="Unique username",
+        description="Unique username"
     )
-    email: EmailStr = Field(description="User email address")
+    email: EmailStr = Field(..., description="User email address")
     full_name: Optional[str] = Field(default=None, max_length=100, description="User's full name")
 
     @field_validator("username")
@@ -54,7 +55,10 @@ class UserCreate(UserBase):
     """Schema for creating a new user."""
 
     password: str = Field(
-        min_length=8, max_length=128, description="User password (minimum 8 characters)"
+        ...,
+        min_length=8,
+        max_length=128,
+        description="User password (minimum 8 characters)"
     )
 
     @field_validator("password")
@@ -87,8 +91,8 @@ class UserPasswordUpdate(BaseSchema):
 
     model_config = ConfigDict(validate_assignment=True)
 
-    current_password: str = Field(description="Current password")
-    new_password: str = Field(min_length=8, max_length=128, description="New password")
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., min_length=8, max_length=128, description="New password")
 
     @field_validator("new_password")
     @classmethod
@@ -108,42 +112,35 @@ class UserPasswordUpdate(BaseSchema):
 class UserResponse(UserBase):
     """Schema for user API responses."""
 
-    id: uuid.UUID = Field(description="Unique user identifier")
-    is_active: bool = Field(description="Whether the user account is active")
-    is_superuser: bool = Field(description="Whether the user has admin privileges")
-    created_at: datetime = Field(description="When the user account was created")
+    id: uuid.UUID = Field(..., description="Unique user identifier")
+    is_active: bool = Field(..., description="Whether the user account is active")
+    is_superuser: bool = Field(..., description="Whether the user has admin privileges")
+    created_at: datetime = Field(..., description="When the user account was created")
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with UUID and datetime handling."""
         data = self.model_dump(**kwargs)
-
-        # Convert UUID to string
         if "id" in data and data["id"] is not None:
             if isinstance(data["id"], uuid.UUID):
                 data["id"] = str(data["id"])
-
-        # Convert datetime fields to ISO format strings
         for field_name in ["created_at", "updated_at"]:
             if field_name in data and data[field_name] is not None:
                 if isinstance(data[field_name], datetime):
                     data[field_name] = data[field_name].isoformat() + "Z"
-
         import json
-
         return json.dumps(data)
 
 
 class UserListResponse(BaseResponse):
     """Response schema for user list endpoints."""
 
-    users: List[UserResponse] = Field(description="List of users")
-    total_count: int = Field(description="Total number of users")
+    users: List[UserResponse] = Field(..., description="List of users")
+    total_count: int = Field(..., description="Total number of users")
 
 
 class UserDetailResponse(BaseResponse):
     """Response schema for user detail endpoints."""
 
-    user: UserResponse = Field(description="User details")
+    user: UserResponse = Field(..., description="User details")
 
 
 class UserSearchParams(PaginationParams):
@@ -160,26 +157,21 @@ class UserStatsResponse(BaseSchema):
 
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
-    total_users: int = Field(description="Total number of users")
-    active_users: int = Field(description="Number of active users")
-    inactive_users: int = Field(description="Number of inactive users")
-    superusers: int = Field(description="Number of superusers")
-    users_created_today: int = Field(description="Users created today")
-    users_created_this_week: int = Field(description="Users created this week")
-    users_created_this_month: int = Field(description="Users created this month")
+    total_users: int = Field(..., description="Total number of users")
+    active_users: int = Field(..., description="Number of active users")
+    inactive_users: int = Field(..., description="Number of inactive users")
+    superusers: int = Field(..., description="Number of superusers")
+    users_created_today: int = Field(..., description="Users created today")
+    users_created_this_week: int = Field(..., description="Users created this week")
+    users_created_this_month: int = Field(..., description="Users created this month")
     last_updated: datetime = Field(
         default_factory=utcnow, description="When statistics were last calculated"
     )
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with datetime handling."""
         data = self.model_dump(**kwargs)
-
-        # Convert last_updated to ISO format string
         if "last_updated" in data and data["last_updated"] is not None:
             if isinstance(data["last_updated"], datetime):
                 data["last_updated"] = data["last_updated"].isoformat() + "Z"
-
         import json
-
         return json.dumps(data)

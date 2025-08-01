@@ -4,49 +4,42 @@ Analytics and reporting API endpoints.
 This module provides endpoints for system analytics, usage statistics,
 performance metrics, and comprehensive reporting capabilities.
 
-Key Features:
-- System overview and health metrics
-- Usage analytics with customizable time periods
-- Performance monitoring and bottleneck identification
-- User activity analytics and engagement metrics
-- Trend analysis for platform growth insights
-- Comprehensive report generation and export
-
+All endpoints use explicit Pydantic response models.
 """
 
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
+from ..schemas.analytics import (
+    AnalyticsOverviewResponse,
+    AnalyticsUsageResponse,
+    AnalyticsPerformanceResponse,
+    AnalyticsUserAnalyticsResponse,
+    AnalyticsTrendsResponse,
+    AnalyticsExportResponse,
+)
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["analytics"])
 
 
-@router.get("/overview", response_model=Dict[str, Any])
+@router.get("/overview", response_model=AnalyticsOverviewResponse)
 @handle_api_errors("Failed to get system overview")
 async def get_system_overview(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> AnalyticsOverviewResponse:
     """
     Get comprehensive system overview and key metrics.
     
     Returns high-level statistics about the platform including user counts,
     document processing stats, conversation metrics, and system health indicators.
-    
-    Returns:
-        Dict containing system overview metrics:
-        - total_users, active_users
-        - total_documents, processed_documents
-        - total_conversations, active_conversations
-        - system_health_score
-        - recent_activity_summary
     """
     log_api_call("get_system_overview", user_id=str(current_user.id))
     
@@ -76,43 +69,42 @@ async def get_system_overview(
     health_factors = {
         "user_activity": min(100, (active_users / max(total_users, 1)) * 100) if total_users else 0,
         "document_processing": processing_rate,
-        "system_availability": 100,  # This would be calculated from actual health checks
+        "system_availability": 100,
     }
     health_score = sum(health_factors.values()) / len(health_factors)
     
-    return {
-        "success": True,
-        "data": {
-            "users": {
+    return AnalyticsOverviewResponse(
+        users={
                 "total": total_users or 0,
                 "active": active_users or 0,
                 "activity_rate": health_factors["user_activity"]
             },
-            "documents": {
+        documents={
                 "total": total_documents or 0,
                 "processed": processed_documents or 0,
                 "processing_rate": processing_rate
             },
-            "conversations": {
+        conversations={
                 "total": total_conversations or 0
             },
-            "system_health": {
+        system_health={
                 "score": round(health_score, 2),
                 "factors": health_factors
             },
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    }
+        timestamp=datetime.utcnow().isoformat(),
+        success=True,
+        message="System overview retrieved successfully"
+    )
 
 
-@router.get("/usage", response_model=Dict[str, Any])
+@router.get("/usage", response_model=AnalyticsUsageResponse)
 @handle_api_errors("Failed to get usage statistics")
 async def get_usage_statistics(
     period: str = Query("7d", description="Time period: 1d, 7d, 30d, 90d"),
     detailed: bool = Query(False, description="Include detailed breakdown"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> AnalyticsUsageResponse:
     """
     Get usage statistics for the specified time period.
     
@@ -121,7 +113,7 @@ async def get_usage_statistics(
         detailed: Whether to include detailed breakdown by day/week
         
     Returns:
-        Dict containing usage statistics for the specified period
+        Usage statistics for the specified period
     """
     log_api_call("get_usage_statistics", user_id=str(current_user.id), period=period)
     
@@ -135,7 +127,7 @@ async def get_usage_statistics(
     
     if period not in period_map:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Invalid period. Use: 1d, 7d, 30d, or 90d"
         )
     
@@ -165,24 +157,8 @@ async def get_usage_statistics(
         select(func.count(Message.id)).where(Message.created_at >= start_date)
     )
     
-    result = {
-        "success": True,
-        "data": {
-            "period": period,
-            "start_date": start_date.isoformat(),
-            "end_date": datetime.utcnow().isoformat(),
-            "metrics": {
-                "new_users": new_users or 0,
-                "new_documents": new_documents or 0,
-                "new_conversations": new_conversations or 0,
-                "total_messages": total_messages or 0,
-                "avg_messages_per_day": round((total_messages or 0) / days, 2)
-            }
-        }
-    }
-    
+    daily_stats = None
     if detailed:
-        # Add daily breakdown for detailed view
         daily_stats = []
         for i in range(days):
             day_start = start_date + timedelta(days=i)
@@ -199,17 +175,29 @@ async def get_usage_statistics(
                 "messages": day_messages or 0
             })
         
-        result["data"]["daily_breakdown"] = daily_stats
-    
-    return result
+    return AnalyticsUsageResponse(
+        period=period,
+        start_date=start_date.isoformat(),
+        end_date=datetime.utcnow().isoformat(),
+        metrics={
+            "new_users": new_users or 0,
+            "new_documents": new_documents or 0,
+            "new_conversations": new_conversations or 0,
+            "total_messages": total_messages or 0,
+            "avg_messages_per_day": round((total_messages or 0) / days, 2)
+        },
+        daily_breakdown=daily_stats,
+        success=True,
+        message="Usage statistics retrieved successfully"
+    )
 
 
-@router.get("/performance", response_model=Dict[str, Any])
+@router.get("/performance", response_model=AnalyticsPerformanceResponse)
 @handle_api_errors("Failed to get performance metrics")
 async def get_performance_metrics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> AnalyticsPerformanceResponse:
     """
     Get system performance metrics and bottleneck analysis.
     
@@ -254,10 +242,8 @@ async def get_performance_metrics(
     except Exception:
         db_performance = []
     
-    return {
-        "success": True,
-        "data": {
-            "document_processing": {
+    return AnalyticsPerformanceResponse(
+        document_processing={
                 "total_documents": stats.total or 0,
                 "completed": stats.completed or 0,
                 "failed": stats.failed or 0,
@@ -265,16 +251,17 @@ async def get_performance_metrics(
                 "success_rate": round(success_rate, 2),
                 "failure_rate": round(100 - success_rate, 2)
             },
-            "database_performance": db_performance,
-            "system_metrics": {
+        database_performance=db_performance,
+        system_metrics={
                 "timestamp": datetime.utcnow().isoformat(),
                 "health_status": "operational"
-            }
-        }
-    }
+        },
+        success=True,
+        message="Performance metrics retrieved successfully"
+    )
 
 
-@router.get("/users", response_model=Dict[str, Any])
+@router.get("/users", response_model=AnalyticsUserAnalyticsResponse)
 @handle_api_errors("Failed to get user analytics")
 async def get_user_analytics(
     metric: str = Query("messages", description="Metric to analyze: messages, documents, conversations"),
@@ -282,19 +269,11 @@ async def get_user_analytics(
     period: str = Query("30d", description="Time period: 7d, 30d, 90d"),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> AnalyticsUserAnalyticsResponse:
     """
     Get user activity analytics and engagement metrics.
     
     Requires superuser access to view analytics across all users.
-    
-    Args:
-        metric: Type of metric to analyze (messages, documents, conversations)
-        top: Number of top users to return
-        period: Time period for analysis
-        
-    Returns:
-        Dict containing user analytics and engagement metrics
     """
     log_api_call("get_user_analytics", user_id=str(current_user.id), metric=metric)
     
@@ -302,7 +281,7 @@ async def get_user_analytics(
     period_map = {"7d": 7, "30d": 30, "90d": 90}
     if period not in period_map:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Invalid period. Use: 7d, 30d, or 90d"
         )
     
@@ -360,7 +339,7 @@ async def get_user_analytics(
         )
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Invalid metric. Use: messages, documents, or conversations"
         )
     
@@ -374,36 +353,29 @@ async def get_user_analytics(
         for row in result.fetchall()
     ]
     
-    return {
-        "success": True,
-        "data": {
-            "metric": metric,
-            "period": period,
-            "top_users": top_users,
-            "total_returned": len(top_users),
-            "generated_at": datetime.utcnow().isoformat()
-        }
-    }
+    return AnalyticsUserAnalyticsResponse(
+        metric=metric,
+        period=period,
+        top_users=top_users,
+        total_returned=len(top_users),
+        generated_at=datetime.utcnow().isoformat(),
+        success=True,
+        message="User analytics retrieved successfully"
+    )
 
 
-@router.get("/trends", response_model=Dict[str, Any])
+@router.get("/trends", response_model=AnalyticsTrendsResponse)
 @handle_api_errors("Failed to get usage trends")
 async def get_usage_trends(
     days: int = Query(14, ge=1, le=90, description="Number of days to analyze"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> AnalyticsTrendsResponse:
     """
     Get usage trends over time.
     
     Analyzes platform usage patterns over the specified number of days
     to identify growth trends and usage patterns.
-    
-    Args:
-        days: Number of days to analyze (1-90)
-        
-    Returns:
-        Dict containing trend analysis data
     """
     log_api_call("get_usage_trends", user_id=str(current_user.id), days=days)
     
@@ -454,34 +426,33 @@ async def get_usage_trends(
         recent_avg = sum(day["messages"] for day in recent_week) / 7
         previous_avg = sum(day["messages"] for day in previous_week) / len(previous_week) if previous_week else recent_avg
         
-        growth_rate = ((recent_avg - previous_avg) / max(previous_avg, 1)) * 100 if previous_avg else 0
+        growth_rate = ((recent_avg - previous_avg) / max(previous_avg, 1)) * 100 if previous_week else 0
     else:
         growth_rate = 0
     
-    return {
-        "success": True,
-        "data": {
-            "period_days": days,
-            "daily_trends": daily_trends,
-            "summary": {
+    return AnalyticsTrendsResponse(
+        period_days=days,
+        daily_trends=daily_trends,
+        summary={
                 "total_new_users": sum(day["new_users"] for day in daily_trends),
                 "total_new_documents": sum(day["new_documents"] for day in daily_trends),
                 "total_messages": sum(day["messages"] for day in daily_trends),
                 "weekly_growth_rate": round(growth_rate, 2)
             },
-            "generated_at": datetime.utcnow().isoformat()
-        }
-    }
+        generated_at=datetime.utcnow().isoformat(),
+        success=True,
+        message="Usage trends retrieved successfully"
+    )
 
 
-@router.post("/export-report", response_model=Dict[str, Any])
+@router.post("/export-report", response_model=AnalyticsExportResponse)
 @handle_api_errors("Failed to export analytics report")
 async def export_analytics_report(
     include_details: bool = Query(True, description="Include detailed breakdowns"),
     format: str = Query("json", description="Export format: json"),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> AnalyticsExportResponse:
     """
     Export comprehensive analytics report.
     
@@ -489,19 +460,12 @@ async def export_analytics_report(
     trends, and detailed breakdowns for administrative analysis.
     
     Requires superuser access.
-    
-    Args:
-        include_details: Whether to include detailed breakdowns
-        format: Export format (currently only JSON supported)
-        
-    Returns:
-        Dict containing comprehensive analytics report
     """
     log_api_call("export_analytics_report", user_id=str(current_user.id))
     
     if format != "json":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Only JSON format is currently supported"
         )
     
@@ -511,33 +475,31 @@ async def export_analytics_report(
     performance_data = await get_performance_metrics(current_user, db)
     trends_data = await get_usage_trends(30, current_user, db)
     
-    report = {
-        "success": True,
-        "data": {
-            "report_metadata": {
-                "generated_at": datetime.utcnow().isoformat(),
-                "generated_by": current_user.username,
-                "period": "30 days",
-                "format": format,
-                "includes_details": include_details
-            },
-            "system_overview": overview_data["data"],
-            "usage_statistics": usage_data["data"],
-            "performance_metrics": performance_data["data"],
-            "usage_trends": trends_data["data"]
-        }
-    }
-    
+    detailed_user_analytics = None
     if include_details:
-        # Add user analytics for all metrics
         user_messages = await get_user_analytics("messages", 20, "30d", current_user, db)
         user_documents = await get_user_analytics("documents", 20, "30d", current_user, db)
         user_conversations = await get_user_analytics("conversations", 20, "30d", current_user, db)
         
-        report["data"]["detailed_user_analytics"] = {
-            "top_by_messages": user_messages["data"]["top_users"],
-            "top_by_documents": user_documents["data"]["top_users"],
-            "top_by_conversations": user_conversations["data"]["top_users"]
+        detailed_user_analytics = {
+            "top_by_messages": user_messages.top_users,
+            "top_by_documents": user_documents.top_users,
+            "top_by_conversations": user_conversations.top_users
         }
     
-    return report
+    return AnalyticsExportResponse(
+        report_metadata={
+            "generated_at": datetime.utcnow().isoformat(),
+            "generated_by": current_user.username,
+            "period": "30 days",
+            "format": format,
+            "includes_details": include_details
+        },
+        system_overview=overview_data,
+        usage_statistics=usage_data,
+        performance_metrics=performance_data,
+        usage_trends=trends_data,
+        detailed_user_analytics=detailed_user_analytics,
+        success=True,
+        message="Analytics report exported successfully"
+    )

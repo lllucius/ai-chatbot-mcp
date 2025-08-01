@@ -3,7 +3,7 @@ Document-related Pydantic schemas.
 
 This module provides schemas for document management, file uploads,
 processing status, and document search operations.
-
+All fields have an explicit 'description' argument.
 """
 
 from datetime import datetime
@@ -170,45 +170,45 @@ class ProcessingStatusResponse(BaseResponse):
 class DocumentListResponse(BaseResponse):
     """Response schema for document list."""
 
-    documents: List[DocumentResponse] = Field([], description="List of documents")
-    total: int = Field(0, description="Total number of documents")
+    documents: List[DocumentResponse] = Field(..., description="List of documents")
+    total: int = Field(..., description="Total number of documents")
 
 
 class DocumentSearchResponse(BaseResponse):
     """Response schema for document search."""
 
-    results: List[DocumentChunkResponse] = Field([], description="Search results")
+    results: List[DocumentChunkResponse] = Field(..., description="Search results")
     query: str = Field(..., description="Original search query")
     algorithm: str = Field(..., description="Search algorithm used")
-    total_results: int = Field(0, description="Total number of results")
-    search_time_ms: float = Field(0.0, description="Search time in milliseconds")
+    total_results: int = Field(..., description="Total number of results")
+    search_time_ms: float = Field(..., description="Search time in milliseconds")
 
 
 class BackgroundTaskResponse(BaseModel):
     """Response schema for background task operations."""
 
-    message: str
-    task_id: str
-    document_id: str
-    status: str
-    priority: Optional[int] = None
-    created_at: Optional[datetime] = None
+    message: str = Field(..., description="Status message")
+    task_id: str = Field(..., description="Background task ID")
+    document_id: str = Field(..., description="Document ID")
+    status: str = Field(..., description="Task status")
+    priority: Optional[int] = Field(None, description="Task priority")
+    created_at: Optional[datetime] = Field(None, description="Task creation timestamp")
 
 
 class ProcessingConfigRequest(BaseModel):
     """Request schema for processing configuration."""
 
-    chunk_size: Optional[int] = Field(None, ge=100, le=4000)
-    chunk_overlap: Optional[int] = Field(None, ge=0, le=1000)
-    enable_metadata_embedding: Optional[bool] = None
-    enable_text_preprocessing: Optional[bool] = None
-    normalize_unicode: Optional[bool] = None
-    remove_extra_whitespace: Optional[bool] = None
-    language_detection: Optional[bool] = None
+    chunk_size: Optional[int] = Field(None, ge=100, le=4000, description="Chunk size")
+    chunk_overlap: Optional[int] = Field(None, ge=0, le=1000, description="Chunk overlap")
+    enable_metadata_embedding: Optional[bool] = Field(None, description="Enable metadata embedding")
+    enable_text_preprocessing: Optional[bool] = Field(None, description="Enable text preprocessing")
+    normalize_unicode: Optional[bool] = Field(None, description="Enable unicode normalization")
+    remove_extra_whitespace: Optional[bool] = Field(None, description="Remove extra whitespace")
+    language_detection: Optional[bool] = Field(None, description="Enable language detection")
 
 
 class ProcessingConfigResponse(BaseModel):
     """Response schema for processing configuration."""
 
-    message: str
-    config: Dict[str, Any]
+    message: str = Field(..., description="Status message")
+    config: Dict[str, Any] = Field(..., description="Processing configuration dictionary")

@@ -3,6 +3,7 @@ Pydantic schemas for MCP (Model Context Protocol) APIs.
 
 This module provides comprehensive Pydantic models for all MCP-related
 API operations, ensuring type safety and consistent validation.
+All fields have an explicit 'description' argument.
 """
 
 from datetime import datetime
@@ -15,9 +16,7 @@ from .base import BaseModelSchema
 
 class MCPServerCreateSchema(BaseModel):
     """Schema for creating a new MCP server."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     name: str = Field(..., description="Unique name for the MCP server")
     url: str = Field(..., description="Connection URL for the server")
     description: Optional[str] = Field(None, description="Optional description of the server")
@@ -29,9 +28,7 @@ class MCPServerCreateSchema(BaseModel):
 
 class MCPServerUpdateSchema(BaseModel):
     """Schema for updating an MCP server."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     url: Optional[str] = Field(None, description="New connection URL")
     description: Optional[str] = Field(None, description="New description")
     transport: Optional[str] = Field(None, description="New transport protocol")
@@ -42,7 +39,6 @@ class MCPServerUpdateSchema(BaseModel):
 
 class MCPServerSchema(BaseModelSchema):
     """Schema for MCP server responses."""
-    
     name: str = Field(..., description="Server name")
     url: str = Field(..., description="Connection URL")
     description: Optional[str] = Field(None, description="Server description")
@@ -53,16 +49,12 @@ class MCPServerSchema(BaseModelSchema):
     is_connected: bool = Field(..., description="Current connection status")
     last_connected_at: Optional[datetime] = Field(None, description="Last successful connection time")
     connection_errors: int = Field(..., description="Number of recent connection errors")
-    
-    # Computed fields
     tools_count: Optional[int] = Field(None, description="Number of tools from this server")
 
 
 class MCPToolCreateSchema(BaseModel):
     """Schema for creating/registering a new MCP tool."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     name: str = Field(..., description="Full name of the tool (server_toolname)")
     original_name: str = Field(..., description="Original tool name from the server")
     server_name: str = Field(..., description="Name of the MCP server providing this tool")
@@ -73,9 +65,7 @@ class MCPToolCreateSchema(BaseModel):
 
 class MCPToolUpdateSchema(BaseModel):
     """Schema for updating an MCP tool."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     description: Optional[str] = Field(None, description="New description")
     parameters: Optional[Dict[str, Any]] = Field(None, description="New parameters schema")
     is_enabled: Optional[bool] = Field(None, description="New enabled status")
@@ -83,7 +73,6 @@ class MCPToolUpdateSchema(BaseModel):
 
 class MCPToolSchema(BaseModelSchema):
     """Schema for MCP tool responses."""
-    
     name: str = Field(..., description="Full tool name")
     original_name: str = Field(..., description="Original tool name from server")
     description: Optional[str] = Field(None, description="Tool description")
@@ -95,16 +84,12 @@ class MCPToolSchema(BaseModelSchema):
     error_count: int = Field(default=0, description="Failed executions count") 
     success_rate: float = Field(default=0.0, description="Success rate percentage")
     average_duration_ms: Optional[int] = Field(None, description="Average execution duration in ms")
-    
-    # Related server info
     server: MCPServerSchema = Field(..., description="Associated MCP server")
 
 
 class MCPToolExecutionRequestSchema(BaseModel):
     """Schema for tool execution requests."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     tool_name: str = Field(..., description="Name of the tool to execute")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
     record_usage: bool = Field(default=True, description="Whether to record usage statistics")
@@ -112,9 +97,7 @@ class MCPToolExecutionRequestSchema(BaseModel):
 
 class MCPToolExecutionResultSchema(BaseModel):
     """Schema for tool execution results."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     success: bool = Field(..., description="Whether execution was successful")
     tool_name: str = Field(..., description="Name of the executed tool")
     server: str = Field(..., description="Server that executed the tool")
@@ -126,9 +109,7 @@ class MCPToolExecutionResultSchema(BaseModel):
 
 class MCPToolUsageStatsSchema(BaseModel):
     """Schema for tool usage statistics."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     tool_name: str = Field(..., description="Tool name")
     server_name: str = Field(..., description="Server name")
     usage_count: int = Field(..., description="Total usage count")
@@ -142,18 +123,14 @@ class MCPToolUsageStatsSchema(BaseModel):
 
 class MCPDiscoveryRequestSchema(BaseModel):
     """Schema for tool discovery requests."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     server_name: Optional[str] = Field(None, description="Specific server to discover from")
     force_refresh: bool = Field(default=False, description="Force refresh even if disabled")
 
 
 class MCPDiscoveryResultSchema(BaseModel):
     """Schema for tool discovery results."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     success: bool = Field(..., description="Whether discovery was successful")
     server_name: str = Field(..., description="Server name")
     new_tools: int = Field(default=0, description="Number of new tools discovered")
@@ -165,9 +142,7 @@ class MCPDiscoveryResultSchema(BaseModel):
 
 class MCPHealthStatusSchema(BaseModel):
     """Schema for MCP health status."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     mcp_available: bool = Field(..., description="Whether MCP is available")
     initialized: bool = Field(..., description="Whether MCP client is initialized")
     total_servers: int = Field(..., description="Total configured servers")
@@ -186,9 +161,7 @@ class MCPHealthStatusSchema(BaseModel):
 
 class MCPConnectionStatusSchema(BaseModel):
     """Schema for connection status updates."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     server_name: str = Field(..., description="Server name")
     is_connected: bool = Field(..., description="Connection status")
     connected_at: Optional[datetime] = Field(None, description="Connection timestamp")
@@ -197,9 +170,7 @@ class MCPConnectionStatusSchema(BaseModel):
 
 class MCPBatchUsageSchema(BaseModel):
     """Schema for batch usage statistics updates."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     tool_usages: List[Dict[str, Any]] = Field(
         ..., 
         description="List of tool usage records to batch update"
@@ -208,9 +179,7 @@ class MCPBatchUsageSchema(BaseModel):
 
 class MCPConnectionTestSchema(BaseModel):
     """Schema for MCP server connection test results."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     connected: bool = Field(..., description="Whether connection was successful")
     server_name: str = Field(..., description="Server name")
     response_time: Optional[int] = Field(None, description="Response time in milliseconds")
@@ -223,9 +192,7 @@ class MCPConnectionTestSchema(BaseModel):
 
 class MCPListFiltersSchema(BaseModel):
     """Schema for list operation filters."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     enabled_only: bool = Field(default=False, description="Filter to enabled items only")
     connected_only: bool = Field(default=False, description="Filter to connected servers only")
     server_name: Optional[str] = Field(None, description="Filter by specific server name")
@@ -233,21 +200,16 @@ class MCPListFiltersSchema(BaseModel):
     offset: Optional[int] = Field(None, ge=0, description="Offset for pagination")
 
 
-# OpenAI-compatible tool schemas (for backwards compatibility)
 class OpenAIToolSchema(BaseModel):
     """OpenAI-compatible tool schema."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     type: str = Field(default="function", description="Tool type")
     function: Dict[str, Any] = Field(..., description="Function definition")
 
 
 class OpenAIToolCallSchema(BaseModel):
     """OpenAI tool call schema."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     id: str = Field(..., description="Tool call ID")
     type: str = Field(default="function", description="Call type") 
     function: Dict[str, Any] = Field(..., description="Function call details")
@@ -255,9 +217,7 @@ class OpenAIToolCallSchema(BaseModel):
 
 class MCPOpenAIToolsResponseSchema(BaseModel):
     """Schema for OpenAI-compatible tools response."""
-    
     model_config = ConfigDict(from_attributes=True)
-    
     tools: List[OpenAIToolSchema] = Field(..., description="Available tools in OpenAI format")
     total_count: int = Field(..., description="Total number of available tools")
     enabled_count: int = Field(..., description="Number of enabled tools")

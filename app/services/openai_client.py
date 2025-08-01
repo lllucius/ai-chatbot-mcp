@@ -9,6 +9,7 @@ functionality including tool calling via ToolExecutor (now dependency-injected).
 import json
 from typing import Any, Dict, List, Optional, Union
 
+import httpx
 import openai
 import tiktoken
 from openai import AsyncOpenAI
@@ -36,9 +37,13 @@ class OpenAIClient:
         """Initialize OpenAI client with dependency-injected MCPService."""
         self.mcp_service = mcp_service
 
+        # Should do proper HTTPS setup...
+        httpx_client = httpx.AsyncClient(verify=False)
+
         self.client = AsyncOpenAI(
             api_key=settings.openai_api_key,
             base_url=settings.openai_base_url,
+            http_client=httpx_client,
         )
 
         self.tokenizer = None
@@ -295,7 +300,7 @@ class OpenAIClient:
             full_content = ""
 
             async for chunk in stream:
-                print("CUNK", chunk)
+                #print("CHUNK", chunk)
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     full_content += content

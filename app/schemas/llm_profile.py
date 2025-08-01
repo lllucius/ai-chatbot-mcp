@@ -3,6 +3,7 @@ LLM Profile registry schemas for API requests and responses.
 
 This module provides Pydantic schemas for LLM profile management
 including creation, updates, and response models.
+All fields have an explicit 'description' argument.
 """
 
 from datetime import datetime
@@ -18,7 +19,7 @@ class LLMProfileResponse(BaseModel):
     title: str = Field(..., description="Human-readable title")
     description: Optional[str] = Field(None, description="Profile description")
     model_name: str = Field(..., description="OpenAI model name")
-    parameters: Dict[str, Any] = Field(..., description="Model parameters")
+    parameters: Dict[str, Any] = Field(..., description="Model parameters dictionary")
     is_default: bool = Field(False, description="Whether this is the default profile")
     is_active: bool = Field(True, description="Whether profile is active")
     usage_count: int = Field(0, description="How many times used")
@@ -36,7 +37,7 @@ class LLMProfileCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200, description="Human-readable title")
     description: Optional[str] = Field(None, max_length=1000, description="Profile description")
     model_name: str = Field(..., description="OpenAI model name")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Model parameters")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Model parameters dictionary")
     is_default: bool = Field(False, description="Whether this is the default profile")
 
 
@@ -46,14 +47,14 @@ class LLMProfileUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=200, description="Human-readable title")
     description: Optional[str] = Field(None, max_length=1000, description="Profile description")
     model_name: Optional[str] = Field(None, description="OpenAI model name")
-    parameters: Optional[Dict[str, Any]] = Field(None, description="Model parameters")
+    parameters: Optional[Dict[str, Any]] = Field(None, description="Model parameters dictionary")
     is_active: Optional[bool] = Field(None, description="Whether profile is active")
 
 
 class LLMProfileListResponse(BaseModel):
     """Response model for listing LLM profiles."""
 
-    profiles: List[LLMProfileResponse] = Field(..., description="List of profiles")
+    profiles: List[LLMProfileResponse] = Field(..., description="List of LLM profiles")
     total: int = Field(..., description="Total number of profiles")
     page: int = Field(..., description="Current page number")
     size: int = Field(..., description="Page size")

@@ -4,18 +4,19 @@ Prompt registry API endpoints.
 This module provides endpoints for managing prompts in the prompt registry,
 including CRUD operations, statistics, and category management.
 
+All endpoints use explicit Pydantic response models.
 """
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.prompt import PromptResponse
+from ..schemas.prompt import PromptResponse, PromptListResponse
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -27,7 +28,7 @@ async def get_prompt_service(db: AsyncSession = Depends(get_db)) -> PromptServic
     return PromptService(db)
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=PromptListResponse)
 @handle_api_errors("Failed to list prompts")
 async def list_prompts(
     active_only: bool = Query(True, description="Show only active prompts"),
@@ -37,7 +38,7 @@ async def list_prompts(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-):
+) -> PromptListResponse:
     """
     List all prompts with optional filtering and pagination.
 
@@ -46,7 +47,6 @@ async def list_prompts(
     """
     log_api_call("list_prompts", user_id=current_user.id)
 
-    try:
         prompts, total = await prompt_service.list_prompts(
             active_only=active_only,
             category=category,
@@ -55,39 +55,32 @@ async def list_prompts(
             size=size,
         )
 
-        return {
-            "success": True,
-            "data": {
-                "prompts": [
-                    {
-                        "name": p.name,
-                        "title": p.title,
-                        "description": p.description,
-                        "category": p.category,
-                        "tags": p.tag_list,
-                        "is_default": p.is_default,
-                        "is_active": p.is_active,
-                        "usage_count": p.usage_count,
-                        "last_used_at": (p.last_used_at.isoformat() if p.last_used_at else None),
-                        "created_at": p.created_at.isoformat(),
-                    }
-                    for p in prompts
-                ],
-                "total": total,
-                "page": page,
-                "size": size,
-                "filters": {
-                    "active_only": active_only,
-                    "category": category,
-                    "search": search,
-                },
-            },
-        }
+    pages = (total + size - 1) // size if size else 1
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve prompts: {str(e)}",
+    prompt_responses = []
+    for p in prompts:
+        prompt_responses.append(PromptResponse(
+            name=p.name,
+            title=p.title,
+            description=p.description,
+            category=p.category,
+            content=p.content,
+            variables=None,
+            tags=p.tag_list,
+            is_active=p.is_active,
+            is_default=p.is_default,
+            usage_count=p.usage_count,
+            last_used_at=p.last_used_at,
+            created_at=p.created_at,
+            updated_at=p.updated_at,
+        ))
+
+    return PromptListResponse(
+        prompts=prompt_responses,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
         )
 
 
@@ -97,7 +90,7 @@ async def get_prompt_details(
     prompt_name: str,
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-):
+) -> PromptResponse:
     """
     Get detailed information about a specific prompt.
 
@@ -109,7 +102,7 @@ async def get_prompt_details(
 
     if not prompt:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail=f"Prompt '{prompt_name}' not found",
         )
 
@@ -119,8 +112,8 @@ async def get_prompt_details(
         content=prompt.content,
         description=prompt.description,
         category=prompt.category,
-        variables=None,  # Not implemented in the current model
-        tags=prompt.tag_list,  # Use the tag_list property
+        variables=None,
+        tags=prompt.tag_list,
         is_active=prompt.is_active,
         is_default=prompt.is_default,
         usage_count=prompt.usage_count,
@@ -135,11 +128,10 @@ async def get_prompt_details(
 async def get_categories(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-):
+) -> Dict[str, Any]:
     """Get all available prompt categories."""
     log_api_call("get_prompt_categories", user_id=current_user.id)
 
-    try:
         categories = await prompt_service.get_categories()
         tags = await prompt_service.get_all_tags()
 
@@ -151,12 +143,6 @@ async def get_categories(
             },
         }
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get categories: {str(e)}",
-        )
-
 
 @router.post("/byname/{prompt_name}/set-default", response_model=BaseResponse)
 @handle_api_errors("Failed to set default prompt")
@@ -164,7 +150,7 @@ async def set_default_prompt(
     prompt_name: str,
     current_user: User = Depends(get_current_superuser),
     prompt_service: PromptService = Depends(get_prompt_service),
-):
+) -> BaseResponse:
     """
     Set a prompt as the default system prompt.
 
@@ -172,24 +158,15 @@ async def set_default_prompt(
     """
     log_api_call("set_default_prompt", user_id=current_user.id, prompt_name=prompt_name)
 
-    try:
         success = await prompt_service.set_default_prompt(prompt_name)
 
         if success:
             return BaseResponse(success=True, message=f"Prompt '{prompt_name}' set as default")
         else:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
                 detail=f"Prompt '{prompt_name}' not found",
             )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to set default prompt: {str(e)}",
-        )
 
 
 @router.get("/stats", response_model=Dict[str, Any])
@@ -197,20 +174,13 @@ async def set_default_prompt(
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-):
+) -> Dict[str, Any]:
     """Get prompt usage statistics and analytics."""
     log_api_call("get_prompt_stats", user_id=current_user.id)
 
-    try:
         stats = await prompt_service.get_prompt_stats()
 
         return {
             "success": True,
             "data": stats,
         }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get prompt statistics: {str(e)}",
-        )

@@ -53,7 +53,6 @@ def _get_engine_config():
 
     return base_config
 
-
 engine = create_async_engine(settings.database_url, **_get_engine_config())
 
 # Create async session factory

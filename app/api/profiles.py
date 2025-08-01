@@ -4,11 +4,12 @@ LLM Profile registry API endpoints.
 This module provides endpoints for managing LLM parameter profiles,
 including CRUD operations, statistics, and parameter validation.
 
+All endpoints use explicit Pydantic response models.
 """
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
@@ -16,7 +17,11 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.llm_profile import LLMProfileCreate, LLMProfileResponse
+from ..schemas.llm_profile import (
+    LLMProfileCreate,
+    LLMProfileResponse,
+    LLMProfileListResponse,
+)
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -34,20 +39,18 @@ async def create_profile(
     request: LLMProfileCreate,
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> LLMProfileResponse:
     """
     Create a new LLM profile.
 
     Creates a new LLM profile.
     """
     log_api_call("create_profile", user_id=current_user.id)
-
     profile = await profile_service.create_profile(request)
-
     return LLMProfileResponse.model_validate(profile)
 
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("/", response_model=LLMProfileListResponse)
 @handle_api_errors("Failed to list profiles")
 async def list_profiles(
     active_only: bool = Query(True, description="Show only active profiles"),
@@ -56,7 +59,7 @@ async def list_profiles(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> LLMProfileListResponse:
     """
     List all LLM parameter profiles with optional filtering and pagination.
 
@@ -64,43 +67,31 @@ async def list_profiles(
     parameters, usage statistics, and metadata.
     """
     log_api_call("list_profiles", user_id=current_user.id)
-
-    try:
         profiles, total = await profile_service.list_profiles(
             active_only=active_only, search=search, page=page, size=size
         )
-
-        # Return format expected by SDK - direct profiles list
-        return {
-            "success": True,
-            "message": f"Retrieved {len(profiles)} profiles",
-            "profiles": [
-                {
-                    "name": p.name,
-                    "title": p.title,
-                    "description": p.description,
-                    "is_default": p.is_default,
-                    "is_active": p.is_active,
-                    "parameters": p.to_openai_params(),
-                    "usage_count": p.usage_count,
-                    "last_used_at": (p.last_used_at.isoformat() if p.last_used_at else None),
-                    "created_at": p.created_at.isoformat(),
-                }
-                for p in profiles
-            ],
-            "total": total,
-            "page": page,
-            "size": size,
-            "filters": {
-                "active_only": active_only,
-                "search": search,
-            },
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve profiles: {str(e)}",
+    pages = (total + size - 1) // size if size else 1
+    profile_responses = []
+    for p in profiles:
+        profile_responses.append(LLMProfileResponse(
+            name=p.name,
+            title=p.title,
+            description=p.description,
+            model_name=settings.openai_chat_model,
+            parameters=p.to_openai_params(),
+            is_default=p.is_default,
+            is_active=p.is_active,
+            usage_count=p.usage_count,
+            last_used_at=p.last_used_at,
+            created_at=p.created_at,
+            updated_at=p.updated_at,
+        ))
+    return LLMProfileListResponse(
+        profiles=profile_responses,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
         )
 
 
@@ -110,28 +101,24 @@ async def get_profile_details(
     profile_name: str,
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> LLMProfileResponse:
     """
     Get detailed information about a specific LLM profile.
 
     Returns the complete profile parameters, metadata, and usage statistics.
     """
     log_api_call("get_profile_details", user_id=current_user.id, profile_name=profile_name)
-
     profile = await profile_service.get_profile(profile_name)
-
     if not profile:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail=f"Profile '{profile_name}' not found",
         )
-
-    # Convert profile model to response schema
     response_data = {
         "name": profile.name,
         "title": profile.title,
         "description": profile.description,
-        "model_name": settings.openai_chat_model,  # Use default model from settings
+        "model_name": settings.openai_chat_model,
         "parameters": {
             "temperature": profile.temperature,
             "top_p": profile.top_p,
@@ -152,7 +139,6 @@ async def get_profile_details(
         "created_at": profile.created_at,
         "updated_at": profile.updated_at,
     }
-
     return LLMProfileResponse(**response_data)
 
 
@@ -162,32 +148,21 @@ async def set_default_profile(
     profile_name: str,
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> BaseResponse:
     """
     Set a profile as the default LLM parameter profile.
 
     Only available to superusers.
     """
     log_api_call("set_default_profile", user_id=current_user.id, profile_name=profile_name)
-
-    try:
         success = await profile_service.set_default_profile(profile_name)
-
         if success:
             return BaseResponse(success=True, message=f"Profile '{profile_name}' set as default")
         else:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
                 detail=f"Profile '{profile_name}' not found",
             )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to set default profile: {str(e)}",
-        )
 
 
 @router.get("/default/parameters", response_model=Dict[str, Any])
@@ -195,17 +170,14 @@ async def set_default_profile(
 async def get_default_profile_parameters(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> Dict[str, Any]:
     """
     Get the parameters from the default LLM profile.
 
     Returns the parameters in OpenAI format ready for use in API calls.
     """
     log_api_call("get_default_profile_parameters", user_id=current_user.id)
-
-    try:
         params = await profile_service.get_profile_for_openai()
-
         return {
             "success": True,
             "data": {
@@ -214,35 +186,20 @@ async def get_default_profile_parameters(
             },
         }
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get default profile parameters: {str(e)}",
-        )
-
 
 @router.get("/stats", response_model=Dict[str, Any])
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> Dict[str, Any]:
     """Get LLM profile usage statistics and analytics."""
     log_api_call("get_profile_stats", user_id=current_user.id)
-
-    try:
         stats = await profile_service.get_profile_stats()
-
         return {
             "success": True,
             "data": stats,
         }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get profile statistics: {str(e)}",
-        )
 
 
 @router.post("/validate", response_model=Dict[str, Any])
@@ -251,17 +208,14 @@ async def validate_parameters(
     parameters: Dict[str, Any],
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> Dict[str, Any]:
     """
     Validate LLM parameters before creating or updating a profile.
 
     Returns validation results with any errors or warnings.
     """
     log_api_call("validate_parameters", user_id=current_user.id)
-
-    try:
         errors = await profile_service.validate_parameters(**parameters)
-
         return {
             "success": len(errors) == 0,
             "data": {
@@ -270,9 +224,3 @@ async def validate_parameters(
                 "parameters": parameters,
             },
         }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to validate parameters: {str(e)}",
-        )

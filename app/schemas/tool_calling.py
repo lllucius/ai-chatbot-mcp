@@ -3,7 +3,7 @@ Tool calling related schemas and enums.
 
 This module provides schemas and enums for tool calling functionality,
 including different modes for handling tool call results.
-
+All fields include a 'description' argument.
 """
 
 from enum import Enum
@@ -21,7 +21,6 @@ class ToolHandlingMode(str, Enum):
     - RETURN_RESULTS: Return tool call results as content without further AI processing
     - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
     """
-
     RETURN_RESULTS = "return_results"
     COMPLETE_WITH_RESULTS = "complete_with_results"
 

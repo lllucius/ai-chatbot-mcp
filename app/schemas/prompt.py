@@ -3,6 +3,7 @@ Prompt registry schemas for API requests and responses.
 
 This module provides Pydantic schemas for prompt management
 including creation, updates, and response models.
+All fields have the 'description' argument.
 """
 
 from datetime import datetime

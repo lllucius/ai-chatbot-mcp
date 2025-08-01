@@ -3,7 +3,7 @@ Authentication-related Pydantic schemas.
 
 This module provides schemas for user authentication, registration,
 and token management.
-
+All fields have an explicit 'description' argument.
 """
 
 import re
