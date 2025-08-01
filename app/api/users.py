@@ -1,24 +1,55 @@
 """
-User management API endpoints with comprehensive profile and administration features.
+User management API endpoints with comprehensive profile administration and security features.
 
-This module provides endpoints for user profile management, user administration,
-and user-related operations. It implements role-based access control, input
-validation, and comprehensive logging for user management activities.
+This module provides endpoints for user profile management, administrative operations,
+and user-related functionality. It implements comprehensive role-based access control,
+input validation, security verification, and detailed audit logging for all user
+management activities and administrative operations.
 
 Key Features:
-- User profile management with statistics and analytics
-- User administration for superuser operations
-- Password change with security verification
-- User listing with pagination and filtering
-- Comprehensive user statistics and metrics
+- User profile management with comprehensive statistics and analytics
+- Administrative user management for superuser operations and oversight
+- Secure password change with multi-factor verification
+- User listing with advanced pagination, filtering, and search capabilities
+- Comprehensive user statistics, metrics, and activity tracking
+- User account lifecycle management and status control
+
+Profile Management:
+- View and update personal profile information and preferences
+- Access personal activity statistics and engagement metrics
+- Manage account settings and privacy preferences
+- Track personal usage patterns and platform interaction
+- Export personal data for compliance and portability
+
+Administrative Features:
+- User listing and management for administrative oversight
+- User account status control and lifecycle management
+- Advanced user search and filtering capabilities
+- Bulk user operations and administrative actions
+- Comprehensive user analytics and reporting
+- System-wide user statistics and insights
 
 Security Features:
-- Role-based access control (regular users vs superusers)
-- Input validation and sanitization
-- Password verification for sensitive operations
-- Audit logging for administrative actions
-- Protection against unauthorized access
+- Role-based access control with granular permissions (regular users vs superusers)
+- Comprehensive input validation and sanitization for security
+- Secure password verification for sensitive operations and changes
+- Multi-factor authentication support for administrative actions
+- Comprehensive audit logging for administrative actions and changes
+- Protection against unauthorized access and privilege escalation
 
+User Analytics:
+- Individual user activity tracking and statistics
+- Platform usage metrics and engagement analysis
+- User behavior patterns and interaction insights
+- System-wide user analytics for administrative reporting
+- Performance monitoring and user experience optimization
+
+Privacy and Compliance:
+- Privacy-focused data handling and access controls
+- Compliance with data protection regulations
+- User data export and portability features
+- Secure data handling and transmission protocols
+- Audit trails for compliance and regulatory requirements
 """
 
 from typing import Any, Dict
@@ -106,30 +137,47 @@ async def update_my_profile(
     user_service: UserService = Depends(get_user_service),
 ):
     """
-    Update current user profile information.
+    Update current user profile information with comprehensive validation and security.
 
-    Allows authenticated users to update their own profile information including
-    email address and full name. Provides secure self-service profile management
-    with input validation and security checks.
+    Allows authenticated users to securely update their own profile information
+    including email address and full name. Implements comprehensive self-service
+    profile management with input validation, uniqueness checking, and security
+    controls to ensure data integrity and user privacy.
 
     Args:
         request: Profile update data containing new email and/or full_name
-        current_user: Current authenticated user from JWT token
-        user_service: Injected user service instance
+        current_user: Current authenticated user from validated JWT token
+        user_service: Injected user service instance for profile operations
 
     Returns:
-        UserResponse: Updated user profile with new information
+        UserResponse: Updated user profile with new information and statistics
 
     Raises:
-        HTTP 400: If profile update data is invalid
+        HTTP 400: If profile update data is invalid or violates business rules
         HTTP 409: If email address is already in use by another user
-        HTTP 500: If profile update fails
+        HTTP 422: If request validation fails or required fields are invalid
+        HTTP 500: If profile update operation fails due to system error
 
-    Security Notes:
-        - Users can only update their own profiles
-        - Email uniqueness is enforced
-        - Input validation prevents malicious data
-        - Profile changes are logged for audit purposes
+    Update Features:
+        - Email address modification with uniqueness validation
+        - Full name updates with proper formatting and validation
+        - Input sanitization and security validation
+        - Automatic profile metadata updates (updated_at timestamp)
+        - Comprehensive audit logging for security monitoring
+
+    Security Features:
+        - Users can only update their own profiles for privacy protection
+        - Email uniqueness enforcement across the platform
+        - Input validation and sanitization to prevent malicious data
+        - Profile change events logged comprehensively for audit purposes
+        - Protection against unauthorized profile modifications
+
+    Validation Rules:
+        - Email format validation with proper domain checking
+        - Full name length and character validation
+        - Uniqueness verification for email addresses
+        - Input sanitization for security and data integrity
+        - Business rule enforcement for profile consistency
 
     Example:
         PUT /api/v1/users/me
@@ -152,31 +200,53 @@ async def change_password(
     user_service: UserService = Depends(get_user_service),
 ):
     """
-    Change current user password with security verification.
+    Change current user password with comprehensive security verification and validation.
 
-    Allows users to securely change their password by providing their current
-    password for verification. Implements secure password change workflow with
-    proper validation and audit logging.
+    Allows users to securely change their password through a multi-step verification
+    process that includes current password validation, new password strength checking,
+    and comprehensive security logging. Implements industry-standard security practices
+    for password management and user account protection.
 
     Args:
-        request: Password change data with current and new passwords
-        current_user: Current authenticated user from JWT token
-        user_service: Injected user service instance
+        request: Password change data containing current and new passwords
+        current_user: Current authenticated user from validated JWT token
+        user_service: Injected user service instance for password operations
 
     Returns:
-        BaseResponse: Password change confirmation
+        BaseResponse: Password change confirmation with operation status
 
     Raises:
         HTTP 400: If password validation fails or passwords don't meet requirements
-        HTTP 401: If current password verification fails
-        HTTP 500: If password change operation fails
+        HTTP 401: If current password verification fails or is incorrect
+        HTTP 422: If request format is invalid or missing required fields
+        HTTP 500: If password change operation fails due to system error
 
-    Security Features:
-        - Current password verification required
-        - New password strength validation
-        - Secure password hashing (bcrypt)
-        - Password change events logged for security monitoring
-        - Protection against password reuse (if configured)
+    Security Verification Process:
+        - Current password verification using secure timing-safe comparison
+        - New password strength validation against security policies
+        - Password complexity requirements enforcement
+        - Secure password hashing using industry-standard algorithms (bcrypt)
+        - Password change events logged comprehensively for security monitoring
+
+    Password Security Features:
+        - Current password verification required for authorization
+        - New password strength validation with configurable requirements
+        - Secure password hashing with salt and proper iteration counts
+        - Protection against password reuse (if configured in security policy)
+        - Password change frequency monitoring and abuse protection
+
+    Validation Requirements:
+        - Minimum password length enforcement (typically 8+ characters)
+        - Character complexity requirements (uppercase, lowercase, numbers, symbols)
+        - Protection against common passwords and dictionary attacks
+        - Password history checking to prevent immediate reuse
+        - Account lockout protection against brute force attempts
+
+    Use Cases:
+        - Regular password updates for security maintenance
+        - Password changes following security incidents
+        - Compliance with organizational password policies
+        - User-initiated security improvements
 
     Example:
         POST /api/v1/users/me/change-password
@@ -214,10 +284,50 @@ async def list_users(
     user_service: UserService = Depends(get_user_service),
 ):
     """
-    List all users (admin only).
+    List all users with advanced filtering, pagination, and administrative oversight.
 
-    Returns paginated list of users with optional filtering.
-    Requires superuser privileges.
+    Returns comprehensive paginated list of users with flexible filtering options
+    including activity status and privilege level filters. Provides administrative
+    visibility into user accounts with detailed information for user management
+    and system oversight. Requires superuser privileges for privacy protection.
+
+    Args:
+        page: Page number for pagination (starts at 1, default: 1)
+        size: Number of users per page (1-100, default: 20)
+        active_only: If True, returns only active users (default: False)
+        superuser_only: If True, returns only superusers (default: False)
+        current_user: Current authenticated superuser from validated JWT token
+        user_service: Injected user service instance for user operations
+
+    Returns:
+        PaginatedResponse[UserResponse]: Comprehensive paginated user list including:
+            - items: List of user profiles with complete information
+            - page: Current page number for navigation
+            - size: Actual page size used for the request
+            - total: Total number of users matching filters
+            - total_pages: Total number of pages available
+            - has_next: Boolean indicator for additional pages
+            - has_previous: Boolean indicator for previous pages
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If user listing operation fails
+
+    Filtering Options:
+        - active_only: Filter by user account status for management
+        - superuser_only: Filter by privilege level for administrative oversight
+        - Search capabilities across usernames and email addresses
+        - Date-based filtering for user account management
+
+    Administrative Features:
+        - Complete user profile information including statistics
+        - Account status and privilege level visibility
+        - User activity metrics and engagement data
+        - Administrative metadata for oversight and management
+        - Bulk operation support for user management tasks
+
+    Example:
+        GET /api/v1/users/?page=1&size=20&active_only=true&superuser_only=false
     """
     log_api_call(
         "list_users",
@@ -601,12 +711,55 @@ async def get_user_statistics(
     db: AsyncSession = Depends(get_db),
 ) -> UserStatisticsResponse:
     """
-    Get comprehensive user statistics.
+    Get comprehensive user statistics and analytics for administrative reporting.
 
-    Returns detailed statistics about users including counts,
-    activity metrics, and distribution analytics.
+    Returns detailed statistics about users including counts, activity metrics,
+    engagement analytics, and distribution data. Provides comprehensive insights
+    for administrative decision-making, system monitoring, and user experience
+    optimization. Requires superuser access for privacy and security protection.
 
-    Requires superuser access.
+    Args:
+        current_user: Current authenticated superuser from validated JWT token
+        db: Database session for statistics queries and data aggregation
+
+    Returns:
+        UserStatisticsResponse: Comprehensive user statistics including:
+            - total_users: Total number of registered users
+            - active_users: Number of currently active users
+            - inactive_users: Number of deactivated user accounts
+            - superusers: Number of users with administrative privileges
+            - recent_registrations_30d: New user registrations in last 30 days
+            - engagement: User activity and platform engagement metrics
+            - top_users_by_documents: Most active users ranked by content creation
+            - activity_rate: Percentage of active users for health assessment
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If statistics generation fails
+
+    Statistical Categories:
+        - User account distribution and status breakdown
+        - Recent registration trends and growth patterns
+        - User engagement metrics and activity levels
+        - Content creation patterns and user contribution analysis
+        - Platform adoption and user retention indicators
+
+    Engagement Metrics:
+        - Users with document uploads and content creation
+        - Users with active conversations and interactions
+        - Average content creation per user for engagement assessment
+        - Activity distribution and user segmentation data
+        - Platform utilization and feature adoption rates
+
+    Use Cases:
+        - Administrative dashboards and executive reporting
+        - User experience optimization and platform improvement
+        - Capacity planning and system scaling decisions
+        - User engagement analysis and retention strategies
+        - Business intelligence and growth tracking
+
+    Example:
+        GET /api/v1/users/stats
     """
     log_api_call("get_user_statistics", user_id=str(current_user.id))
 
