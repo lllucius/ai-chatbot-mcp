@@ -1,9 +1,31 @@
 """
-Document management API endpoints.
+Document management API endpoints with comprehensive processing capabilities.
 
-This module provides endpoints for document upload, processing,
-management, and retrieval operations.
+This module provides endpoints for document upload, processing, management,
+and retrieval operations with full lifecycle support including background
+processing, status monitoring, and advanced search capabilities.
 
+Key Features:
+- Document upload with multiple format support
+- Background processing with priority queuing
+- Real-time status monitoring and progress tracking
+- Document reprocessing and error recovery
+- Bulk operations for administrative management
+- Advanced search and filtering capabilities
+- Export functionality in multiple formats
+
+Processing Pipeline:
+- Text extraction from various file formats
+- Intelligent chunking with configurable parameters
+- Embedding generation for semantic search
+- Metadata extraction and indexing
+- Quality validation and error handling
+
+Security Features:
+- User-based document ownership and access control
+- File type validation and sanitization
+- Processing quota management
+- Comprehensive audit logging
 """
 
 from datetime import datetime, timedelta
@@ -453,7 +475,15 @@ async def get_queue_status(
     Get background processing queue status.
 
     Provides information about current queue size, active tasks, and processing capacity.
+
+    Args:
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        QueueStatusResponse: Current queue status and processing information
     """
+    log_api_call("get_queue_status", user_id=str(user.id))
     background_processor = await get_background_processor(db)
     queue_status = await background_processor.get_queue_status()
 

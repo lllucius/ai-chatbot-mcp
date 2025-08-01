@@ -1,9 +1,31 @@
 """
-Health check API endpoints.
+Health monitoring and system status API endpoints.
 
-This module provides health monitoring endpoints for the application,
-including database connectivity, external services, and system metrics.
+This module provides comprehensive health monitoring endpoints for the application,
+including database connectivity, external services monitoring, system metrics,
+and Kubernetes-style probes for container orchestration.
 
+Key Features:
+- Basic and detailed health checks
+- Database connectivity and schema validation
+- External service status monitoring (OpenAI, FastMCP)
+- System performance metrics and resource utilization
+- Cache system health and statistics
+- Kubernetes-compatible liveness and readiness probes
+
+Monitoring Capabilities:
+- Real-time system resource monitoring
+- Database performance metrics
+- External API availability checks
+- Cache hit rates and performance statistics
+- Background service health validation
+- Detailed error reporting and diagnostics
+
+Integration Support:
+- Load balancer health check endpoints
+- Kubernetes liveness/readiness probes
+- Monitoring system integration
+- Alerting and notification support
 """
 
 import logging
