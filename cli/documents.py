@@ -177,11 +177,10 @@ async def delete(
     from .base import confirm_action
 
     try:
-        if not force:
-            if not confirm_action(
-                f"Are you sure you want to delete document '{document_id}'?"
-            ):
-                return
+        if not force and not confirm_action(
+            f"Are you sure you want to delete document '{document_id}'?"
+        ):
+            return
         sdk = await get_sdk()
         resp = await sdk.documents.delete(UUID(document_id))
         if getattr(resp, "success", False):

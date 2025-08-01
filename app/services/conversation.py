@@ -395,7 +395,7 @@ class ConversationService(BaseService):
             if request.use_tools:
                 try:
                     if self.mcp_service and not self.mcp_service.is_initialized:
-                        await mcp_service.initialize()
+                        await self.mcp_service.initialize()
 
                     if self.mcp_service and self.mcp_service.is_initialized:
                         openai_params["use_tools"] = True

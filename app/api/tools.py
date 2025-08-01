@@ -18,6 +18,7 @@ from ..schemas.common import BaseResponse
 from ..schemas.mcp import (
     MCPListFiltersSchema,
     MCPToolExecutionRequestSchema,
+    MCPToolListResponse,
     OpenAIToolSchema,
 )
 from ..services.mcp_service import MCPService

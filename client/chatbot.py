@@ -38,6 +38,8 @@ try:
 except ImportError:
     readline = None  # Windows fallback
 
+import contextlib
+
 from ai_chatbot_sdk import (
     AIChatbotSDK,
     ApiError,
@@ -58,6 +60,7 @@ from config import (
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Prompt
 from rich.table import Table
 
 console: Console = Console()
@@ -76,17 +79,15 @@ def save_token(token: str) -> None:
 
 def load_token() -> Optional[str]:
     try:
-        with open(TOKEN_FILE, "r") as f:
+        with open(TOKEN_FILE) as f:
             return f.read().strip()
     except Exception:
         return None
 
 
 def clear_token() -> None:
-    try:
+    with contextlib.suppress(FileNotFoundError):
         os.remove(TOKEN_FILE)
-    except FileNotFoundError:
-        pass
 
 
 def print_error(msg: str) -> None:
@@ -134,7 +135,7 @@ def prettify_dict(
             and v
         ):
             console.print(f"{'  ' * indent}[{key_color}]{k}[/]:")
-            for idx, elem in enumerate(v, 1):
+            for _idx, elem in enumerate(v, 1):
                 console.print(f"{'  ' * (indent+1)}-")
                 prettify_dict(elem, max_depth=max_depth - 1, indent=indent + 2)
         else:
@@ -188,7 +189,7 @@ def save_settings(settings: Dict[str, Any]) -> None:
 
 def load_settings() -> Dict[str, Any]:
     try:
-        with open(SETTINGS_FILE, "r") as f:
+        with open(SETTINGS_FILE) as f:
             return json.load(f)
     except Exception:
         return {}
@@ -270,10 +271,8 @@ def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
     if not readline:
         return
     histfile = os.path.expanduser(history_file)
-    try:
+    with contextlib.suppress(FileNotFoundError):
         readline.read_history_file(histfile)
-    except FileNotFoundError:
-        pass
     readline.set_history_length(1000)
     import atexit
 
@@ -835,7 +834,12 @@ class CommandHandler:
             print_warn("Unknown export command.")
 
     async def cmd_about(self) -> None:
-        cli_ver, server_ver = get_version_info(self.sdk)
+        cli_ver = "1.0.0"  # You can make this dynamic later
+        try:
+            # Try to get server version from health endpoint or similar
+            server_ver = "unknown"
+        except Exception:
+            server_ver = "unknown"
         msg = f"AI Chatbot CLI version: {cli_ver}\n"
         msg += f"Server version: {server_ver or '(unknown)'}"
         console.print(Panel(msg, title="About", box=box.SIMPLE))

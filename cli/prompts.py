@@ -160,11 +160,10 @@ async def remove(
     from .base import confirm_action
 
     try:
-        if not force:
-            if not confirm_action(
-                f"Are you sure you want to remove prompt '{prompt_name}'?"
-            ):
-                return
+        if not force and not confirm_action(
+            f"Are you sure you want to remove prompt '{prompt_name}'?"
+        ):
+            return
         sdk = await get_sdk()
         await sdk.prompts.delete_prompt(prompt_name)
         success_message(f"Prompt '{prompt_name}' removed successfully")

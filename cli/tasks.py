@@ -217,11 +217,10 @@ async def purge(
     """Purge all tasks from a queue."""
     from .base import confirm_action
 
-    if not force:
-        if not confirm_action(
-            f"Are you sure you want to purge all tasks from queue '{queue_name}'?"
-        ):
-            return
+    if not force and not confirm_action(
+        f"Are you sure you want to purge all tasks from queue '{queue_name}'?"
+    ):
+        return
     try:
         sdk = await get_sdk()
         await sdk.tasks.purge_queue()

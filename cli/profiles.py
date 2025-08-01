@@ -166,11 +166,10 @@ async def remove(
     from .base import confirm_action
 
     try:
-        if not force:
-            if not confirm_action(
-                f"Are you sure you want to remove profile '{profile_name}'?"
-            ):
-                return
+        if not force and not confirm_action(
+            f"Are you sure you want to remove profile '{profile_name}'?"
+        ):
+            return
         sdk = await get_sdk()
         await sdk.profiles.delete_profile(profile_name)
         success_message(f"Profile '{profile_name}' removed successfully")

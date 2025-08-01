@@ -16,6 +16,7 @@ from ..dependencies import get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
 from ..schemas.document import DocumentSearchRequest, DocumentSearchResponse
+from ..schemas.search import SearchHistoryResponse, SearchSuggestionResponse
 from ..services.search import SearchService
 from ..utils.api_errors import handle_api_errors, log_api_call
 

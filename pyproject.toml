@@ -112,7 +112,7 @@ line_length = 88
 known_first_party = ["app", "cli", "client"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.12"
 check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true
@@ -120,6 +120,7 @@ warn_redundant_casts = true
 warn_unused_configs = true
 no_implicit_reexport = true
 strict_optional = false
+explicit_package_bases = true
 exclude = [
     "migrations/",
     "tests/",

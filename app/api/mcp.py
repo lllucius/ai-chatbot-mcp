@@ -19,6 +19,7 @@ from ..schemas.mcp import (
     MCPServerCreateSchema,
     MCPServerListResponse,
     MCPServerUpdateSchema,
+    MCPStatsResponse,
     MCPToolsResponse,
 )
 from ..services.mcp_service import MCPService
