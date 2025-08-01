@@ -1,17 +1,46 @@
 """
-Background task management API endpoints.
+Background task management API endpoints with comprehensive Celery integration.
 
-This module provides endpoints for managing Celery background tasks,
-monitoring worker status, and controlling task execution.
+This module provides endpoints for managing Celery background tasks including
+task queue monitoring, worker status management, task execution control, and
+comprehensive analytics. It implements real-time task monitoring with detailed
+performance metrics and administrative control capabilities.
 
 Key Features:
-- Task queue monitoring and management
-- Worker status and health monitoring
-- Task scheduling and execution control
-- Failed task retry mechanisms
-- Real-time task statistics
-- Queue management operations
+- Task queue monitoring and management with real-time status
+- Worker health monitoring and performance tracking
+- Task scheduling, execution control, and lifecycle management
+- Failed task retry mechanisms with intelligent backoff
+- Real-time task statistics and performance analytics
+- Queue management operations and capacity monitoring
 
+Task Management:
+- Monitor active, pending, and completed tasks
+- Control task execution with pause, resume, and cancel operations
+- Retry failed tasks with configurable policies
+- Task priority management and queue optimization
+- Background job scheduling and cron-like functionality
+
+Worker Management:
+- Real-time worker status and health monitoring
+- Worker performance metrics and resource utilization
+- Worker pool management and scaling operations
+- Worker restart and maintenance operations
+- Load balancing and task distribution optimization
+
+Performance Analytics:
+- Task execution time tracking and analysis
+- Queue depth monitoring and capacity planning
+- Worker efficiency and throughput metrics
+- Error rate analysis and failure pattern detection
+- Resource utilization and bottleneck identification
+
+Administrative Features:
+- Task queue purging and cleanup operations
+- Worker scaling and capacity management
+- Task retry configuration and policy management
+- Performance tuning and optimization recommendations
+- Comprehensive logging and audit trail
 """
 
 import json
@@ -39,7 +68,23 @@ router = APIRouter(tags=["tasks"])
 
 
 def get_celery_app():
-    """Get Celery app instance."""
+    """
+    Get Celery application instance for task management operations.
+
+    Retrieves the configured Celery application instance used for background
+    task processing, queue management, and worker coordination. Handles import
+    errors gracefully when Celery is not available or properly configured.
+
+    Returns:
+        Celery: Configured Celery application instance
+
+    Raises:
+        HTTPException: If Celery is not configured, available, or properly initialized
+
+    Note:
+        This function serves as a centralized access point for Celery operations
+        and provides consistent error handling across all task management endpoints.
+    """
     try:
         from ..core.celery_app import celery_app
 
@@ -57,10 +102,46 @@ async def get_task_system_status(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Get background task system status.
+    Get comprehensive background task system status and health metrics.
 
-    Returns overall status of the Celery task system including
-    broker connectivity, worker availability, and queue status.
+    Returns detailed status information about the Celery task system including
+    broker connectivity, worker availability, queue status, and performance
+    metrics. Provides real-time insights into system health and capacity.
+
+    Args:
+        current_user: Current authenticated user requesting system status
+
+    Returns:
+        TaskStatusResponse: Task system status including:
+            - broker_status: Message broker connectivity and health
+            - worker_stats: Active worker count and status information
+            - queue_metrics: Task queue depths and processing rates
+            - performance_data: System throughput and response times
+            - health_indicators: Overall system health assessment
+
+    System Health Metrics:
+        - Broker connectivity and message processing status
+        - Worker availability and load distribution
+        - Queue depths and task processing rates
+        - Error rates and failure pattern analysis
+        - Resource utilization and capacity indicators
+
+    Performance Indicators:
+        - Task processing throughput and latency
+        - Worker efficiency and utilization rates
+        - Queue processing speed and backlog status
+        - Error handling and retry success rates
+        - System bottleneck identification
+
+    Use Cases:
+        - System health monitoring and alerting
+        - Performance optimization and capacity planning
+        - Troubleshooting and diagnostic analysis
+        - Administrative dashboard displays
+        - Automated scaling decision support
+
+    Example:
+        GET /api/v1/tasks/status
     """
     log_api_call("get_task_system_status", user_id=str(current_user.id))
 
