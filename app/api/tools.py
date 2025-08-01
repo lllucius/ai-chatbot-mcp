@@ -279,7 +279,7 @@ async def test_tool(
     Test a tool with optional parameters using registry integration.
     """
     log_api_call("test_tool", user_id=current_user.id, tool_name=tool_name)
-    
+
     import time
     start_time = time.time()
 

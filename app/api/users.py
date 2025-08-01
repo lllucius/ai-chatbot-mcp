@@ -52,7 +52,6 @@ Privacy and Compliance:
 - Audit trails for compliance and regulatory requirements
 """
 
-from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status

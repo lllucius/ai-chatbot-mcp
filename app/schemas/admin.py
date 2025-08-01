@@ -6,12 +6,11 @@ tools, tasks, profiles, prompts, and other management functionality.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..utils.timestamp import utcnow
-
 
 # --- Tools Response Models ---
 
