@@ -226,6 +226,7 @@ async def refresh_token(
 
 
 @router.post("/password-reset", response_model=BaseResponse)
+@handle_api_errors("Password reset request failed")
 async def request_password_reset(
     request: PasswordResetRequest, auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -235,7 +236,20 @@ async def request_password_reset(
     Initiates password reset process for the given email address.
     In an admin-only dashboard, this would typically be handled directly
     by administrators through user management interface.
+
+    Args:
+        request: Password reset request containing email address
+        auth_service: Injected authentication service instance
+
+    Returns:
+        BaseResponse: Confirmation message for admin dashboard context
+
+    Note:
+        In this admin-only dashboard implementation, password resets are handled
+        manually by administrators rather than through automated email workflows.
     """
+    log_api_call("request_password_reset", email=request.email)
+
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than self-service email
     return BaseResponse(
@@ -245,6 +259,7 @@ async def request_password_reset(
 
 
 @router.post("/password-reset/confirm", response_model=BaseResponse)
+@handle_api_errors("Password reset confirmation failed")
 async def confirm_password_reset(
     request: PasswordResetConfirm, auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -254,7 +269,20 @@ async def confirm_password_reset(
     Resets user password using the provided reset token.
     In an admin-only dashboard, password resets are handled by administrators
     directly through the user management interface.
+
+    Args:
+        request: Password reset confirmation with token and new password
+        auth_service: Injected authentication service instance
+
+    Returns:
+        BaseResponse: Confirmation message for admin dashboard context
+
+    Note:
+        In this admin-only dashboard implementation, password resets are handled
+        manually by administrators rather than through token-based workflows.
     """
+    log_api_call("confirm_password_reset", token=request.token[:8] + "...")
+
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than token-based reset
     return BaseResponse(

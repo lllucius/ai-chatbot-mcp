@@ -100,7 +100,26 @@ async def list_documents(
 
     Returns paginated list of documents owned by the current user
     with optional filtering by file type and processing status.
+
+    Args:
+        page: Page number for pagination (starting from 1)
+        size: Number of documents per page (1-100)
+        file_type: Optional filter by file type (e.g., 'pdf', 'docx')
+        status_filter: Optional filter by processing status
+        current_user: Current authenticated user
+        document_service: Document service instance
+
+    Returns:
+        PaginatedResponse[DocumentResponse]: Paginated list of user documents
     """
+    log_api_call(
+        "list_documents",
+        user_id=str(current_user.id),
+        page=page,
+        size=size,
+        file_type=file_type,
+        status_filter=status_filter,
+    )
     documents, total = await document_service.list_documents(
         user_id=current_user.id,
         page=page,
@@ -146,8 +165,21 @@ async def get_document(
     Get document by ID.
 
     Returns detailed information about a specific document
-    owned by the current user.
+    owned by the current user, including processing status,
+    metadata, and chunk information.
+
+    Args:
+        document_id: UUID of the document to retrieve
+        current_user: Current authenticated user
+        document_service: Document service instance
+
+    Returns:
+        DocumentResponse: Complete document information
+
+    Raises:
+        HTTP 404: If document not found or not owned by user
     """
+    log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.get_document(document_id, current_user.id)
     response = {
         "id": document.id,
@@ -179,7 +211,20 @@ async def update_document(
 
     Allows updating document title and metadata.
     Cannot change the actual file content.
+
+    Args:
+        document_id: UUID of the document to update
+        request: Document update data (title, metadata)
+        current_user: Current authenticated user
+        document_service: Document service instance
+
+    Returns:
+        DocumentResponse: Updated document information
+
+    Raises:
+        HTTP 404: If document not found or not owned by user
     """
+    log_api_call("update_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.update_document(
         document_id, request, current_user.id
     )
@@ -198,7 +243,19 @@ async def delete_document(
 
     Permanently deletes the document, its chunks, embeddings,
     and removes the file from storage.
+
+    Args:
+        document_id: UUID of the document to delete
+        current_user: Current authenticated user
+        document_service: Document service instance
+
+    Returns:
+        BaseResponse: Confirmation of successful deletion
+
+    Raises:
+        HTTP 404: If document not found or not owned by user
     """
+    log_api_call("delete_document", user_id=str(current_user.id), document_id=str(document_id))
     success = await document_service.delete_document(document_id, current_user.id)
 
     if success:
@@ -224,7 +281,17 @@ async def get_processing_status(
 
     Returns current processing status, progress, and any error information
     for the specified document. Can include background task details if task_id is provided.
+
+    Args:
+        document_id: UUID of the document to check
+        task_id: Optional background task ID for detailed status
+        user: Current authenticated user
+        service: Document service instance
+
+    Returns:
+        ProcessingStatusResponse: Document processing status and progress
     """
+    log_api_call("get_processing_status", user_id=str(user.id), document_id=str(document_id), task_id=task_id)
     if task_id:
         # Enhanced processing status with task details
         status_info = await service.get_processing_status(document_id, task_id)
@@ -250,7 +317,20 @@ async def reprocess_document(
     Triggers reprocessing of the document, including text extraction,
     chunking, and embedding generation. Useful if processing failed
     or if you want to update with new processing parameters.
+
+    Args:
+        document_id: UUID of the document to reprocess
+        current_user: Current authenticated user
+        document_service: Document service instance
+
+    Returns:
+        BaseResponse: Confirmation that reprocessing has started
+
+    Raises:
+        HTTP 400: If document cannot be reprocessed at this time
+        HTTP 404: If document not found or not owned by user
     """
+    log_api_call("reprocess_document", user_id=str(current_user.id), document_id=str(document_id))
     success = await document_service.reprocess_document(document_id, current_user.id)
 
     if success:
@@ -273,7 +353,19 @@ async def download_document(
     Download original document file.
 
     Returns the original uploaded file for download.
+
+    Args:
+        document_id: UUID of the document to download
+        current_user: Current authenticated user
+        document_service: Document service instance
+
+    Returns:
+        FileResponse: Original document file for download
+
+    Raises:
+        HTTP 404: If document not found or not owned by user
     """
+    log_api_call("download_document", user_id=str(current_user.id), document_id=str(document_id))
     file_path, filename, mime_type = await document_service.get_download_info(
         document_id, current_user.id
     )
@@ -297,7 +389,17 @@ async def start_document_processing(
     Start background processing for a document.
 
     Initiates text extraction, chunking, and embedding generation.
+
+    Args:
+        document_id: UUID of the document to process
+        priority: Processing priority from 1 (highest) to 10 (lowest)
+        user: Current authenticated user
+        service: Document service instance
+
+    Returns:
+        BackgroundTaskResponse: Task information including task ID and status
     """
+    log_api_call("start_document_processing", user_id=str(user.id), document_id=str(document_id), priority=priority)
     task_id = await service.start_processing(document_id, priority=priority)
 
     return BackgroundTaskResponse(
@@ -315,7 +417,11 @@ async def get_processing_config() -> ProcessingConfigResponse:
     Get current document processing configuration.
 
     Returns the current settings for chunk sizes, overlaps, and other processing parameters.
+
+    Returns:
+        ProcessingConfigResponse: Current processing configuration settings
     """
+    log_api_call("get_processing_config")
     return ProcessingConfigResponse(
         message="Processing configuration retrieved",
         config={
