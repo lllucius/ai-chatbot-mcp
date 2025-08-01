@@ -1,9 +1,53 @@
 """
-Tools API endpoints for MCP tools management with registry integration.
+Tools API endpoints for comprehensive MCP tools management with advanced registry integration.
 
-This module provides endpoints for managing MCP (Model Context Protocol) tools
-using the MCPService for both registry and client operations.
+This module provides endpoints for managing MCP (Model Context Protocol) tools using
+the MCPService for both registry management and client operations. It implements
+comprehensive tool lifecycle management, discovery, testing, and integration
+capabilities for enhanced AI assistant functionality.
 
+Key Features:
+- Comprehensive MCP tool discovery and listing with advanced filtering
+- Tool lifecycle management (enable, disable, refresh, test)
+- Server status monitoring and health checking
+- Tool execution testing and validation
+- OpenAI-compatible tool schema generation
+- Registry integration for centralized tool management
+
+Tool Management:
+- List all available tools with filtering by enabled status and server
+- Enable and disable tools for conversation use
+- Test tool execution with parameter validation
+- Refresh tool registry and update tool definitions
+- Monitor tool performance and usage statistics
+
+Server Integration:
+- Monitor MCP server status and connectivity
+- Manage server-specific tool collections
+- Handle server failures and reconnection
+- Validate server capabilities and tool availability
+- Integrate with multiple MCP server instances
+
+Tool Discovery:
+- Automatic tool discovery from registered MCP servers
+- Schema validation and OpenAI compatibility checking
+- Tool categorization and metadata management
+- Usage statistics and performance tracking
+- Tool dependency analysis and validation
+
+Administrative Features:
+- Administrative control over tool availability
+- Tool testing and validation capabilities
+- Server management and monitoring
+- Usage analytics and performance insights
+- Tool configuration and parameter management
+
+Security and Access Control:
+- Superuser-only access for tool management operations
+- Tool execution validation and parameter sanitization
+- Server authentication and secure communication
+- Audit logging for all tool management activities
+- Protection against unauthorized tool access
 """
 
 from typing import Any, Dict, Optional
@@ -38,34 +82,61 @@ async def list_tools(
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
     """
-    List all available MCP tools with registry integration.
+    List all available MCP tools with comprehensive registry integration and filtering.
 
-    Returns a comprehensive list of all MCP tools available through registered
-    servers, including their schemas, usage statistics, and OpenAI-compatible
-    function definitions. This endpoint provides the foundation for tool
-    discovery and integration.
+    Returns a detailed list of all MCP tools available through registered servers,
+    including their schemas, usage statistics, OpenAI-compatible function definitions,
+    and server status information. Provides comprehensive tool discovery and
+    management capabilities for administrative oversight and integration.
 
     Args:
-        enabled_only: If True, returns only enabled tools from enabled servers
-        server_name: If specified, returns tools from this server only
-        current_user: Current authenticated superuser
-        db: Database session
-        mcp_service: MCP service instance
+        enabled_only: If True, filters to show only enabled tools from enabled servers
+        server_name: Optional server name filter to show tools from specific server only
+        current_user: Current authenticated superuser requesting tool information
+        db: Database session for tool and server data retrieval
+        mcp_service: Injected MCP service instance for tool operations
 
     Returns:
-        MCPToolListResponse: Comprehensive tool listing with:
-            - available_tools: Tool definitions with metadata
-            - openai_tools: Tools formatted for OpenAI function calling
-            - servers: Server status and tool counts
-            - enabled_count/total_count: Statistics
+        MCPToolListResponse: Comprehensive tool listing including:
+            - available_tools: Complete tool definitions with metadata and schemas
+            - openai_tools: Tools formatted for OpenAI function calling integration
+            - servers: Server status information and tool count statistics
+            - enabled_count: Number of enabled tools available for use
+            - total_count: Total number of tools across all servers
 
     Raises:
         HTTP 403: If user is not a superuser
-        HTTP 500: If tool discovery fails
+        HTTP 500: If tool discovery or listing operation fails
 
-    Note:
-        This endpoint requires superuser privileges and may trigger
-        tool discovery from MCP servers if needed.
+    Tool Information:
+        - Tool name, description, and parameter schemas
+        - Server association and availability status
+        - Usage statistics and performance metrics
+        - OpenAI-compatible function definitions for integration
+        - Enable/disable status for conversation use
+
+    Server Information:
+        - Server connection status and health monitoring
+        - Tool count per server for capacity assessment
+        - Last connection timestamps for monitoring
+        - Server configuration and endpoint information
+        - Enable/disable status for server management
+
+    Use Cases:
+        - Tool discovery and inventory management for administrators
+        - Integration planning and capability assessment
+        - Tool availability monitoring and troubleshooting
+        - OpenAI function calling setup and configuration
+        - Administrative oversight of tool ecosystem
+
+    Security Notes:
+        - Requires superuser privileges for comprehensive tool access
+        - Tool discovery may trigger server connections and validation
+        - Administrative logging for all tool management activities
+        - Secure handling of tool schemas and server information
+
+    Example:
+        GET /api/v1/tools/?enabled_only=true&server_name=file-system
     """
     log_api_call("list_tools", user_id=current_user.id)
 

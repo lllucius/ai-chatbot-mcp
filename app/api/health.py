@@ -1,31 +1,54 @@
 """
-Health monitoring and system status API endpoints.
+Health monitoring and system status API endpoints with comprehensive observability.
 
-This module provides comprehensive health monitoring endpoints for the application,
-including database connectivity, external services monitoring, system metrics,
-and Kubernetes-style probes for container orchestration.
+This module provides comprehensive health monitoring endpoints for the application
+including database connectivity validation, external services monitoring, system
+performance metrics, resource utilization tracking, and Kubernetes-style probes
+for container orchestration and automated monitoring systems.
 
 Key Features:
-- Basic and detailed health checks
-- Database connectivity and schema validation
-- External service status monitoring (OpenAI, FastMCP)
-- System performance metrics and resource utilization
-- Cache system health and statistics
-- Kubernetes-compatible liveness and readiness probes
+- Basic and detailed health checks with configurable depth and scope
+- Database connectivity validation and performance monitoring
+- External service status monitoring (OpenAI, FastMCP, third-party APIs)
+- System performance metrics and resource utilization tracking
+- Cache system health monitoring and performance statistics
+- Kubernetes-compatible liveness and readiness probes for orchestration
+
+Health Check Categories:
+- Basic health: Quick status check without external dependencies
+- Detailed health: Comprehensive system and dependency validation
+- Database health: Database connectivity, performance, and schema validation
+- Services health: External service availability and response time monitoring
+- System metrics: Resource utilization, performance, and capacity monitoring
 
 Monitoring Capabilities:
-- Real-time system resource monitoring
-- Database performance metrics
-- External API availability checks
-- Cache hit rates and performance statistics
-- Background service health validation
-- Detailed error reporting and diagnostics
+- Real-time system resource monitoring (CPU, memory, disk, network)
+- Database performance metrics and connection pool status
+- External API availability checks and response time monitoring
+- Cache hit rates, performance statistics, and optimization insights
+- Background service health validation and status reporting
+- Detailed error reporting and diagnostic information collection
 
 Integration Support:
-- Load balancer health check endpoints
-- Kubernetes liveness/readiness probes
-- Monitoring system integration
-- Alerting and notification support
+- Load balancer health check endpoints for traffic routing
+- Kubernetes liveness and readiness probes for container orchestration
+- Monitoring system integration (Prometheus, Grafana, custom solutions)
+- Alerting and notification support for automated incident response
+- Health dashboard and visualization support
+
+Performance Monitoring:
+- Request processing times and throughput metrics
+- Database query performance and optimization insights
+- Cache effectiveness and memory utilization tracking
+- External service response times and availability statistics
+- Resource usage trends and capacity planning data
+
+Container Orchestration:
+- Liveness probes for container restart decisions
+- Readiness probes for traffic routing and load balancing
+- Startup probes for application initialization monitoring
+- Health check configuration for automated scaling decisions
+- Integration with container health monitoring systems
 """
 
 import logging
@@ -63,14 +86,41 @@ router = APIRouter()
 @handle_api_errors("Basic health check failed")
 async def basic_health_check() -> Dict[str, Any]:
     """
-    Basic health check endpoint.
+    Basic health check endpoint for load balancers and simple monitoring.
 
-    Provides a quick health status check for the application without
-    checking external dependencies. This is suitable for load balancer
-    health checks and basic monitoring.
+    Provides a lightweight health status check for the application core without
+    validating external dependencies or performing resource-intensive operations.
+    Optimized for load balancer health checks, basic monitoring systems, and
+    high-frequency health polling scenarios.
 
     Returns:
-        dict: Basic application status including version and timestamp
+        Dict[str, Any]: Basic application status including:
+            - success: Health check success indicator
+            - message: Application status message
+            - status: Current health status (healthy/unhealthy)
+            - version: Application version information
+            - timestamp: Health check execution time
+
+    Health Check Scope:
+        - Application process status and responsiveness
+        - Basic configuration validation and availability
+        - Core service initialization and readiness
+        - Memory and resource availability check
+        - Quick response time optimization for monitoring
+
+    Use Cases:
+        - Load balancer health check endpoints for traffic routing
+        - Container orchestration basic health validation
+        - High-frequency monitoring system integration
+        - Basic application availability verification
+        - Automated deployment health validation
+
+    Performance:
+        - Optimized for sub-millisecond response times
+        - Minimal resource consumption and overhead
+        - No external dependency validation
+        - Lightweight status reporting and logging
+        - Suitable for high-frequency polling scenarios
 
     Example:
         GET /api/v1/health/
@@ -78,6 +128,10 @@ async def basic_health_check() -> Dict[str, Any]:
             "success": true,
             "message": "AI Chatbot Platform is running",
             "status": "healthy",
+            "version": "1.0.0",
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    """
             "version": "1.0.0",
             "timestamp": "2024-01-01T12:00:00Z"
         }
