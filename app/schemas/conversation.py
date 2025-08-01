@@ -204,3 +204,23 @@ class StreamErrorResponse(BaseSchema):
     """Schema for stream error event."""
     type: str = Field("error", description="Event type")
     error: str = Field(..., description="Error message")
+
+
+class ConversationExportInfoResponse(BaseSchema):
+    """Schema for conversation export metadata."""
+    format: str = Field(..., description="Export format used")
+    exported_at: str = Field(..., description="Export timestamp")
+    message_count: int = Field(..., description="Number of messages exported")
+    includes_metadata: bool = Field(..., description="Whether metadata was included")
+
+
+class ConversationExportDataResponse(BaseSchema):
+    """Schema for conversation export data."""
+    content: str = Field(..., description="Exported content")
+    format: str = Field(..., description="Content format")
+
+
+class ConversationExportResponse(BaseResponse):
+    """Schema for conversation export response."""
+    data: ConversationExportDataResponse = Field(..., description="Export data")
+    export_info: ConversationExportInfoResponse = Field(..., description="Export metadata")

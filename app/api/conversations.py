@@ -25,7 +25,7 @@ from ..models.conversation import Conversation, Message
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.conversation import (ChatRequest, ChatResponse,
-                                    ConversationCreate, ConversationResponse,
+                                    ConversationCreate, ConversationExportResponse, ConversationResponse,
                                     ConversationStats, ConversationUpdate,
                                     MessageResponse, StreamCompleteResponse,
                                     StreamContentResponse, StreamEndResponse,
@@ -420,7 +420,7 @@ async def get_registry_stats(
 
 
 @router.get(
-    "/conversations/byid/{conversation_id}/export", response_model=Dict[str, Any]
+    "/conversations/byid/{conversation_id}/export", response_model=ConversationExportResponse
 )
 @handle_api_errors("Failed to export conversation")
 async def export_conversation(
