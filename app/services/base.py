@@ -118,7 +118,7 @@ class BaseService(ABC):
         class UserService(BaseService):
             def __init__(self, db: AsyncSession):
                 super().__init__(db, "user_service")
-                
+
             async def get_user(self, user_id: UUID) -> User:
                 self._log_operation_start("get_user", user_id=str(user_id))
                 try:

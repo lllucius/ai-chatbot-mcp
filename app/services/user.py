@@ -10,7 +10,7 @@ Key Features:
 - Comprehensive user profile management with embedded statistics and analytics
 - Secure password change operations with current password verification
 - Advanced user listing with flexible filtering, sorting, and pagination
-- User deletion with cascading cleanup and data integrity protection  
+- User deletion with cascading cleanup and data integrity protection
 - System-wide user analytics and metrics for business intelligence
 - Administrative user creation with role and permission management
 
@@ -126,16 +126,16 @@ class UserService(BaseService):
 
     Example:
         user_service = UserService(db_session)
-        
+
         # Create new user account
         user = await user_service.create_user("john_doe", "john@example.com", "password")
-        
+
         # Get user profile with statistics
         profile = await user_service.get_user_profile(user.id)
-        
+
         # Update user information
         await user_service.update_user(user.id, UserUpdate(full_name="John Doe"))
-        
+
         # List users with pagination
         users = await user_service.list_users(skip=0, limit=10)
     """

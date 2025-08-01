@@ -126,13 +126,13 @@ class AuthService(BaseService):
 
     Example:
         auth_service = AuthService(db_session)
-        
+
         # Register new user
         user = await auth_service.register_user(register_data)
-        
+
         # Authenticate user and get token
         token = await auth_service.authenticate_user("username", "password")
-        
+
         # Verify token and get username
         username = auth_service.verify_token(token.access_token)
     """
@@ -315,10 +315,10 @@ class AuthService(BaseService):
         Example:
             # Authenticate with username
             token = await auth_service.authenticate_user("john_doe", "SecurePass123!")
-            
+
             # Authenticate with email
             token = await auth_service.authenticate_user("john@example.com", "SecurePass123!")
-            
+
             # Use token for API requests
             headers = {"Authorization": f"Bearer {token.access_token}"}
         """
@@ -395,10 +395,10 @@ class AuthService(BaseService):
         Example:
             token_data = {"sub": "john_doe", "role": "user", "permissions": ["read"]}
             token = auth_service.create_access_token(token_data)
-            
+
             # Use in HTTP Authorization header
             headers = {"Authorization": f"Bearer {token.access_token}"}
-            
+
             # Token automatically expires after configured time
             print(f"Token expires in {token.expires_in} seconds")
         """
@@ -455,7 +455,7 @@ class AuthService(BaseService):
             # Extract token from Authorization header
             auth_header = request.headers.get("Authorization")
             token = auth_header.replace("Bearer ", "") if auth_header else None
-            
+
             # Verify token and get username
             username = auth_service.verify_token(token)
             if username:

@@ -129,10 +129,10 @@ class EmbeddingService:
 
     Example:
         embedding_service = EmbeddingService(db_session, openai_client)
-        
+
         # Generate embedding for text
         embedding = await embedding_service.generate_embedding("example text")
-        
+
         # Find similar documents
         similar_docs = await embedding_service.find_similar_documents(
             query_embedding=embedding,
