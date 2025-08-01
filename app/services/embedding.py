@@ -1,13 +1,58 @@
 """
-Embedding service for vector operations and similarity calculations.
+Embedding service for vector operations and advanced similarity calculations.
 
-This service provides methods for generating embeddings, calculating similarities,
-and managing vector operations for semantic search, leveraging PGVector and PostgreSQL.
+This service provides enterprise-grade functionality for generating embeddings,
+calculating semantic similarities, and managing vector operations for intelligent
+search, retrieval-augmented generation (RAG), and semantic understanding. Leverages
+PGVector with PostgreSQL for high-performance vector storage and similarity search
+with optimized indexing and query performance.
 
-Embeddings are expected to be 1D dense float vectors of length `vector_dimension`
-(as defined by DocumentChunk.embedding in the data model).
-All values should be floats (typically in the range [-1, 1]), and no NaN or Inf values are allowed.
+Key Features:
+- High-performance embedding generation using OpenAI's state-of-the-art models
+- Advanced similarity calculations with multiple distance metrics and algorithms
+- PGVector integration for scalable vector storage and indexed similarity search
+- Batch processing for efficient large-scale embedding operations
+- Comprehensive caching and optimization for performance and cost management
+- Vector dimension validation and format normalization for data integrity
 
+Vector Operations:
+- Embedding generation with configurable models and parameters for optimal quality
+- Cosine similarity calculations for semantic relationship analysis
+- Euclidean distance calculations for geometric similarity measurements
+- Dot product operations for vector algebra and mathematical analysis
+- Vector normalization and standardization for consistent similarity metrics
+- Batch vector operations for efficient processing of large document collections
+
+Database Integration:
+- PGVector extension integration for native PostgreSQL vector operations
+- Optimized vector indexing (IVFFlat, HNSW) for fast similarity search
+- Scalable vector storage with compression and memory optimization
+- Parallel query execution for high-throughput similarity search operations
+- Vector dimension validation and constraint enforcement for data integrity
+- Migration support for vector schema changes and index optimization
+
+Performance Features:
+- Intelligent caching for frequently accessed embeddings and similarity results
+- Batch processing with configurable batch sizes for optimal API utilization
+- Connection pooling and resource management for high-concurrency operations
+- Query optimization and index selection for minimal latency similarity search
+- Memory-efficient vector processing for large-scale document collections
+- Rate limiting and throttling for external API integration and cost control
+
+Use Cases:
+- Semantic document search and retrieval for RAG (Retrieval-Augmented Generation)
+- Content recommendation systems based on semantic similarity analysis
+- Duplicate content detection and clustering for data quality and organization
+- Question-answering systems with intelligent context retrieval
+- Document classification and categorization using semantic embeddings
+- Knowledge base construction with semantic relationship mapping
+
+Data Requirements:
+- Embeddings are 1D dense float vectors of configurable dimension (default 1536)
+- All values must be valid floats in the range [-1, 1] for normalized embeddings
+- No NaN, Inf, or undefined values allowed for mathematical operation integrity
+- Vector dimensions must match configured model output for consistency
+- Proper encoding and serialization for database storage and retrieval
 """
 
 import logging
@@ -27,15 +72,73 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     """
-    Service for embedding generation and vector operations,
-    with direct integration to PGVector-powered Postgres similarity search.
+    Service for embedding generation and vector operations with PGVector integration.
+
+    This service provides enterprise-grade functionality for generating high-quality
+    embeddings, performing advanced similarity calculations, and managing vector
+    operations for semantic search and RAG applications. Integrates directly with
+    PGVector-powered PostgreSQL for scalable vector storage and optimized similarity
+    search with comprehensive performance monitoring and cost optimization.
+
+    Vector Generation:
+    - OpenAI embedding model integration with configurable parameters and quality settings
+    - Batch processing for efficient large-scale embedding generation with rate limiting
+    - Text preprocessing and normalization for optimal embedding quality
+    - Error handling and retry logic for robust API integration
+    - Cost optimization through intelligent batching and caching strategies
+    - Support for multiple embedding models and dimension configurations
+
+    Similarity Operations:
+    - Cosine similarity calculations for semantic relationship analysis
+    - Euclidean distance measurements for geometric similarity analysis
+    - Dot product operations for mathematical vector analysis
+    - Vector normalization and standardization for consistent metrics
+    - Batch similarity calculations for efficient large-scale operations
+    - Multiple distance metrics and similarity algorithms for diverse use cases
+
+    Database Integration:
+    - Native PGVector integration for high-performance vector storage and retrieval
+    - Optimized vector indexing (IVFFlat, HNSW) for fast similarity search operations
+    - Parallel query execution for high-throughput search with minimal latency
+    - Vector dimension validation and constraint enforcement for data integrity
+    - Connection pooling and resource management for high-concurrency operations
+    - Query optimization and execution planning for optimal performance
+
+    Performance Features:
+    - Intelligent caching for frequently accessed embeddings and similarity results
+    - Memory-efficient vector processing for large document collections
+    - Batch processing with configurable sizes for optimal resource utilization
+    - Rate limiting and throttling for external API integration and cost control
+    - Performance monitoring and metrics collection for operational visibility
+    - Resource optimization and garbage collection for long-running operations
 
     Args:
-        db (AsyncSession): SQLAlchemy async session for database access.
-        openai_client (Optional[OpenAIClient]): Client for generating embeddings. If not provided, a new instance is created.
-        vector_dimension (Optional[int]): Expected dimension of embeddings. If not provided, inferred from DocumentChunk.
-        batch_size (Optional[int]): Maximum API batch size for embedding generation.
-        embedding_encoding (Optional[str]): Encoding format for embedding API.
+        db: SQLAlchemy async session for database operations with transaction support
+        openai_client: Optional OpenAI client for embedding generation. Creates new instance if not provided
+        vector_dimension: Expected dimension of embeddings. Inferred from DocumentChunk model if not specified
+        batch_size: Maximum API batch size for embedding generation (default: 100)
+        embedding_encoding: Encoding format for embedding API operations (default: 'cl100k_base')
+
+    Use Cases:
+        - Semantic document search and retrieval for RAG (Retrieval-Augmented Generation)
+        - Content recommendation systems based on semantic similarity analysis
+        - Duplicate content detection and clustering for data quality management
+        - Question-answering systems with intelligent context retrieval
+        - Document classification and categorization using semantic embeddings
+        - Knowledge base construction with semantic relationship mapping
+
+    Example:
+        embedding_service = EmbeddingService(db_session, openai_client)
+        
+        # Generate embedding for text
+        embedding = await embedding_service.generate_embedding("example text")
+        
+        # Find similar documents
+        similar_docs = await embedding_service.find_similar_documents(
+            query_embedding=embedding,
+            limit=10,
+            threshold=0.8
+        )
     """
 
     def __init__(
