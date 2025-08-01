@@ -17,11 +17,8 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.llm_profile import (
-    LLMProfileCreate,
-    LLMProfileListResponse,
-    LLMProfileResponse,
-)
+from ..schemas.llm_profile import (LLMProfileCreate, LLMProfileListResponse,
+                                   LLMProfileResponse)
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
