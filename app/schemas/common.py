@@ -299,3 +299,287 @@ class SearchParams(PaginationParams):
     filters: Optional[Dict[str, Any]] = Field(
         default=None, description="Additional search filters"
     )
+
+
+# --- Health Check Response Models ---
+
+
+class DatabaseHealthResponse(BaseModel):
+    """Database health check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    status: str = Field(..., description="Database health status")
+    message: str = Field(..., description="Health check message")
+    connectivity: str = Field(..., description="Database connectivity status")
+    schema_status: Optional[str] = Field(default=None, description="Schema validation status")
+    tables_found: Optional[int] = Field(default=None, description="Number of tables found")
+
+
+class ServicesHealthResponse(BaseModel):
+    """External services health check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    openai: Dict[str, Any] = Field(..., description="OpenAI service health status")
+    fastmcp: Dict[str, Any] = Field(..., description="FastMCP service health status")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Health check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class SystemMetricsResponse(BaseModel):
+    """System metrics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    system: Dict[str, Any] = Field(..., description="System metrics")
+    application: Dict[str, Any] = Field(..., description="Application metrics")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Metrics collection timestamp"
+    )
+    error: Optional[str] = Field(default=None, description="Error message if metrics unavailable")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class ReadinessResponse(BaseModel):
+    """Readiness check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    status: str = Field(..., description="Readiness status")
+    message: str = Field(..., description="Readiness message")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class PerformanceMetricsResponse(BaseModel):
+    """Performance metrics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    data: Dict[str, Any] = Field(..., description="Performance metrics data")
+
+
+class LivenessResponse(BaseModel):
+    """Liveness check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    status: str = Field(..., description="Liveness status")
+    message: str = Field(..., description="Liveness message")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+# --- Database Response Models ---
+
+
+class DatabaseStatusResponse(BaseModel):
+    """Database status response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    connection_status: str = Field(..., description="Database connection status")
+    version_info: Dict[str, Any] = Field(..., description="Database version information")
+    schema_info: Dict[str, Any] = Field(..., description="Schema information")
+    performance_metrics: Dict[str, Any] = Field(..., description="Performance metrics")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Status check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class DatabaseTablesResponse(BaseModel):
+    """Database tables response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    tables: List[Dict[str, Any]] = Field(..., description="List of database tables")
+    total_tables: int = Field(..., description="Total number of tables")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Query timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class DatabaseMigrationsResponse(BaseModel):
+    """Database migrations response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    applied_migrations: List[Dict[str, Any]] = Field(..., description="Applied migrations")
+    pending_migrations: List[Dict[str, Any]] = Field(..., description="Pending migrations")
+    migration_status: str = Field(..., description="Overall migration status")
+    last_migration: Optional[Dict[str, Any]] = Field(default=None, description="Last migration")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Query timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class DatabaseAnalysisResponse(BaseModel):
+    """Database analysis response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    table_stats: List[Dict[str, Any]] = Field(..., description="Table statistics")
+    index_analysis: List[Dict[str, Any]] = Field(..., description="Index analysis")
+    performance_insights: Dict[str, Any] = Field(..., description="Performance insights")
+    recommendations: List[str] = Field(default_factory=list, description="Optimization recommendations")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Analysis timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+class DatabaseQueryResponse(BaseModel):
+    """Database query execution response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Query execution success status")
+    query: str = Field(..., description="Executed query")
+    result_type: str = Field(..., description="Type of query result")
+    rows_affected: Optional[int] = Field(default=None, description="Number of rows affected")
+    execution_time_ms: float = Field(..., description="Query execution time in milliseconds")
+    results: Optional[List[Dict[str, Any]]] = Field(default=None, description="Query results")
+    timestamp: datetime = Field(
+        default_factory=utcnow, description="Execution timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+        return json.dumps(data)
+
+
+# --- User Statistics Response Models ---
+
+
+class UserStatisticsResponse(BaseModel):
+    """User statistics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    data: Dict[str, Any] = Field(..., description="User statistics data")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        import json
+        return json.dumps(data)
+
+
+# --- Search and Export Response Models ---
+
+
+class SearchResponse(BaseModel):
+    """Search response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Search operation success status")
+    data: Dict[str, Any] = Field(..., description="Search results data")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        import json
+        return json.dumps(data)
+
+
+class RegistryStatsResponse(BaseModel):
+    """Registry statistics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    message: str = Field(..., description="Status message")
+    data: Dict[str, Any] = Field(..., description="Registry statistics data")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        import json
+        return json.dumps(data)
+
+
+class ConversationStatsResponse(BaseModel):
+    """Conversation statistics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    data: Dict[str, Any] = Field(..., description="Conversation statistics data")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        import json
+        return json.dumps(data)
