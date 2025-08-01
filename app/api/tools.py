@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
+from ..schemas.admin import ServerStatusResponse, ToolResponse, ToolTestResponse
 from ..schemas.common import BaseResponse
 from ..schemas.mcp import (
     MCPListFiltersSchema,
@@ -139,13 +140,13 @@ async def list_tools(
         )
 
 
-@router.get("/byname/{tool_name}", response_model=Dict[str, Any])
+@router.get("/byname/{tool_name}", response_model=ToolResponse)
 @handle_api_errors("Failed to get tool details")
 async def get_tool_details(
     tool_name: str,
     current_user: User = Depends(get_current_superuser),
     mcp_service: MCPService = Depends(get_mcp_service),
-):
+) -> ToolResponse:
     """
     Get detailed information about a specific tool with registry integration.
     """
@@ -160,12 +161,12 @@ async def get_tool_details(
                 detail=f"Tool '{tool_name}' not found in registry",
             )
 
-        return {
-            "success": True,
-            "data": {
+        return ToolResponse(
+            success=True,
+            tool_name=tool.name,
+            tool_info={
                 "name": tool.name,
                 "original_name": tool.original_name,
-                "server": tool.server.name,
                 "description": tool.description,
                 "parameters": tool.parameters,
                 "is_enabled": tool.is_enabled,
@@ -177,14 +178,14 @@ async def get_tool_details(
                     "average_duration_ms": tool.average_duration_ms,
                     "last_used_at": tool.last_used_at,
                 },
-                "server_info": {
-                    "server_name": tool.server.name,
-                    "server_url": tool.server.url,
-                    "server_enabled": tool.server.is_enabled,
-                    "server_connected": tool.server.is_connected,
-                },
             },
-        }
+            server_info={
+                "server_name": tool.server.name,
+                "server_url": tool.server.url,
+                "server_enabled": tool.server.is_enabled,
+                "server_connected": tool.server.is_connected,
+            },
+        )
 
     except HTTPException:
         raise
@@ -195,18 +196,21 @@ async def get_tool_details(
         )
 
 
-@router.post("/byname/{tool_name}/test", response_model=Dict[str, Any])
+@router.post("/byname/{tool_name}/test", response_model=ToolTestResponse)
 @handle_api_errors("Failed to test tool")
 async def test_tool(
     tool_name: str,
     test_params: Optional[Dict[str, Any]] = None,
     current_user: User = Depends(get_current_superuser),
     mcp_service: MCPService = Depends(get_mcp_service),
-):
+) -> ToolTestResponse:
     """
     Test a tool with optional parameters using registry integration.
     """
     log_api_call("test_tool", user_id=current_user.id, tool_name=tool_name)
+    
+    import time
+    start_time = time.time()
 
     try:
         tool = await mcp_service.get_tool(tool_name)
@@ -226,30 +230,36 @@ async def test_tool(
             tool_name=tool_name, parameters=test_params, record_usage=True
         )
         result = await mcp_service.call_tool(request)
+        execution_time = time.time() - start_time
 
-        return {
-            "success": True,
-            "data": {
+        return ToolTestResponse(
+            success=True,
+            tool_name=tool_name,
+            test_result={
                 "tool_name": tool_name,
                 "test_parameters": test_params,
                 "result": result.model_dump(),
                 "status": "success" if result.success else "error",
                 "usage_recorded": True,
             },
-        }
+            execution_time=execution_time,
+        )
 
     except HTTPException:
         raise
     except Exception as e:
-        return {
-            "success": False,
-            "data": {
+        execution_time = time.time() - start_time
+        return ToolTestResponse(
+            success=False,
+            tool_name=tool_name,
+            test_result={
                 "tool_name": tool_name,
                 "test_parameters": test_params,
                 "error": str(e),
                 "status": "error",
             },
-        }
+            execution_time=execution_time,
+        )
 
 
 @router.post("/refresh", response_model=BaseResponse)
@@ -342,12 +352,12 @@ async def disable_tool(
         )
 
 
-@router.get("/servers/status", response_model=Dict[str, Any])
+@router.get("/servers/status", response_model=ServerStatusResponse)
 @handle_api_errors("Failed to get server status")
 async def get_server_status(
     current_user: User = Depends(get_current_superuser),
     mcp_service: MCPService = Depends(get_mcp_service),
-):
+) -> ServerStatusResponse:
     """
     Get status of all configured MCP servers with registry integration.
     """
@@ -395,16 +405,12 @@ async def get_server_status(
             if server.is_enabled:
                 enabled_count += 1
 
-        return {
-            "success": True,
-            "data": {
-                "servers": server_status,
-                "total_servers": len(servers),
-                "connected_servers": connected_count,
-                "enabled_servers": enabled_count,
-                "mcp_enabled": True,
-            },
-        }
+        return ServerStatusResponse(
+            success=True,
+            servers=server_status,
+            total_servers=len(servers),
+            healthy_servers=connected_count,
+        )
 
     except Exception as e:
         raise HTTPException(

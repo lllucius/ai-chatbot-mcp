@@ -31,7 +31,14 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
-from ..schemas.common import BaseResponse
+from ..schemas.common import (
+    BaseResponse,
+    DatabaseAnalysisResponse,
+    DatabaseMigrationsResponse,
+    DatabaseQueryResponse,
+    DatabaseStatusResponse,
+    DatabaseTablesResponse,
+)
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["database"])
@@ -80,12 +87,12 @@ async def initialize_database(
         )
 
 
-@router.get("/status", response_model=Dict[str, Any])
+@router.get("/status", response_model=DatabaseStatusResponse)
 @handle_api_errors("Failed to get database status")
 async def get_database_status(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> DatabaseStatusResponse:
     """
     Get database connection status and basic information.
 
@@ -136,39 +143,42 @@ async def get_database_status(
         )
         table_count = table_count_result.scalar()
 
-        return {
-            "success": True,
-            "data": {
-                "connection_status": connection_status,
+        return DatabaseStatusResponse(
+            success=True,
+            connection_status=connection_status,
+            version_info={
                 "database_version": db_version,
                 "database_size": db_size,
-                "table_count": table_count,
-                "pgvector_installed": pgvector_installed,
                 "database_url": (
                     settings.database_url.split("@")[-1]
                     if settings.database_url
                     else "Not configured"
                 ),
-                "timestamp": datetime.utcnow().isoformat(),
             },
-        }
+            schema_info={
+                "table_count": table_count,
+                "pgvector_installed": pgvector_installed,
+            },
+            performance_metrics={},
+            timestamp=datetime.utcnow(),
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "data": {
-                "connection_status": "failed",
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        }
+        return DatabaseStatusResponse(
+            success=False,
+            connection_status="failed",
+            version_info={"error": str(e)},
+            schema_info={},
+            performance_metrics={},
+            timestamp=datetime.utcnow(),
+        )
 
 
-@router.get("/tables", response_model=Dict[str, Any])
+@router.get("/tables", response_model=DatabaseTablesResponse)
 @handle_api_errors("Failed to list database tables")
 async def list_database_tables(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> DatabaseTablesResponse:
     """
     List all database tables with row counts.
 
@@ -204,14 +214,12 @@ async def list_database_tables(
                 }
             )
 
-        return {
-            "success": True,
-            "data": {
-                "tables": tables,
-                "total_tables": len(tables),
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        }
+        return DatabaseTablesResponse(
+            success=True,
+            tables=tables,
+            total_tables=len(tables),
+            timestamp=datetime.utcnow(),
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -219,11 +227,11 @@ async def list_database_tables(
         )
 
 
-@router.get("/migrations", response_model=Dict[str, Any])
+@router.get("/migrations", response_model=DatabaseMigrationsResponse)
 @handle_api_errors("Failed to get migration status")
 async def get_migration_status(
     current_user: User = Depends(get_current_superuser),
-):
+) -> DatabaseMigrationsResponse:
     """
     Get migration status and available migrations.
 
@@ -271,17 +279,16 @@ async def get_migration_status(
             else "Unable to retrieve history"
         )
 
-        return {
-            "success": True,
-            "data": {
-                "current_revision": current_revision,
-                "available_heads": available_heads,
-                "migration_history": migration_history.split("\n")[
-                    :10
-                ],  # Last 10 entries
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        }
+        migration_status = "up_to_date" if current_revision == available_heads else "pending"
+        
+        return DatabaseMigrationsResponse(
+            success=True,
+            applied_migrations=[],  # Could be expanded to parse history
+            pending_migrations=[],  # Could be expanded to check for pending
+            migration_status=migration_status,
+            last_migration={"revision": current_revision, "heads": available_heads} if current_revision != "Unknown" else None,
+            timestamp=datetime.utcnow(),
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -574,12 +581,12 @@ async def vacuum_database(
         )
 
 
-@router.get("/analyze", response_model=Dict[str, Any])
+@router.get("/analyze", response_model=DatabaseAnalysisResponse)
 @handle_api_errors("Failed to analyze database")
 async def analyze_database(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> DatabaseAnalysisResponse:
     """
     Analyze database and show performance statistics.
 
@@ -687,26 +694,25 @@ async def analyze_database(
         total_reads = stats_row.blks_read + stats_row.blks_hit
         cache_hit_ratio = (stats_row.blks_hit / max(total_reads, 1)) * 100
 
-        return {
-            "success": True,
-            "data": {
-                "largest_tables": largest_tables,
-                "index_usage": index_usage,
+        return DatabaseAnalysisResponse(
+            success=True,
+            table_stats=largest_tables,
+            index_analysis=index_usage,
+            performance_insights={
+                "cache_hit_ratio": round(cache_hit_ratio, 2),
+                "transaction_success_rate": round(
+                    (
+                        stats_row.xact_commit
+                        / max(stats_row.xact_commit + stats_row.xact_rollback, 1)
+                    )
+                    * 100,
+                    2,
+                ),
                 "database_statistics": database_stats,
-                "performance_metrics": {
-                    "cache_hit_ratio": round(cache_hit_ratio, 2),
-                    "transaction_success_rate": round(
-                        (
-                            stats_row.xact_commit
-                            / max(stats_row.xact_commit + stats_row.xact_rollback, 1)
-                        )
-                        * 100,
-                        2,
-                    ),
-                },
-                "timestamp": datetime.utcnow().isoformat(),
             },
-        }
+            recommendations=[],  # Could be populated with actual recommendations
+            timestamp=datetime.utcnow(),
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -714,7 +720,7 @@ async def analyze_database(
         )
 
 
-@router.post("/query", response_model=Dict[str, Any])
+@router.post("/query", response_model=DatabaseQueryResponse)
 @handle_api_errors("Failed to execute query")
 async def execute_custom_query(
     query: str = Query(..., description="SQL query to execute"),
@@ -723,7 +729,7 @@ async def execute_custom_query(
     ),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> DatabaseQueryResponse:
     """
     Execute a custom SQL query.
 
@@ -735,6 +741,9 @@ async def execute_custom_query(
         limit: Result limit for SELECT queries
     """
     log_api_call("execute_custom_query", user_id=str(current_user.id))
+    
+    import time
+    start_time = time.time()
 
     # Safety checks
     dangerous_keywords = [
@@ -780,16 +789,17 @@ async def execute_custom_query(
         for row in rows:
             data.append(dict(zip(columns, row)))
 
-        return {
-            "success": True,
-            "data": {
-                "query": query,
-                "columns": list(columns),
-                "rows": data,
-                "row_count": len(data),
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        }
+        execution_time_ms = (time.time() - start_time) * 1000
+
+        return DatabaseQueryResponse(
+            success=True,
+            query=query,
+            result_type="SELECT",
+            rows_affected=len(data),
+            execution_time_ms=execution_time_ms,
+            results=data,
+            timestamp=datetime.utcnow(),
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

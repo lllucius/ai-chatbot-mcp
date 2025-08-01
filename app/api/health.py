@@ -17,7 +17,16 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
-from ..schemas.common import BaseResponse, DetailedHealthCheckResponse
+from ..schemas.common import (
+    BaseResponse,
+    DatabaseHealthResponse,
+    DetailedHealthCheckResponse,
+    LivenessResponse,
+    PerformanceMetricsResponse,
+    ReadinessResponse,
+    ServicesHealthResponse,
+    SystemMetricsResponse,
+)
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
@@ -92,30 +101,37 @@ async def detailed_health_check(
     return health_status
 
 
-@router.get("/database", response_model=Dict[str, Any])
+@router.get("/database", response_model=DatabaseHealthResponse)
 @handle_api_errors("Database health check failed")
-async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+async def database_health_check(db: AsyncSession = Depends(get_db)) -> DatabaseHealthResponse:
     """
     Database connectivity health check.
     """
     log_api_call("database_health_check")
-    return await _check_database_health(db)
+    health_data = await _check_database_health(db)
+    return DatabaseHealthResponse(
+        status=health_data["status"],
+        message=health_data["message"],
+        connectivity=health_data["connectivity"],
+        schema_status=health_data.get("schema_status"),
+        tables_found=health_data.get("tables_found"),
+    )
 
 
-@router.get("/services", response_model=Dict[str, Any])
+@router.get("/services", response_model=ServicesHealthResponse)
 @handle_api_errors("Services health check failed")
 async def services_health_check(
     mcp_service: MCPService = Depends(get_mcp_service),
-) -> Dict[str, Any]:
+) -> ServicesHealthResponse:
     """
     External services health check.
     """
     log_api_call("services_health_check")
-    return {
-        "openai": await _check_openai_health(),
-        "fastmcp": await _check_fastmcp_health(mcp_service),
-        "timestamp": utcnow(),
-    }
+    return ServicesHealthResponse(
+        openai=await _check_openai_health(),
+        fastmcp=await _check_fastmcp_health(mcp_service),
+        timestamp=utcnow(),
+    )
 
 
 async def _check_cache_health() -> Dict[str, Any]:
@@ -284,9 +300,9 @@ async def _check_fastmcp_health(mcp_service: MCPService) -> Dict[str, Any]:
         }
 
 
-@router.get("/metrics", response_model=Dict[str, Any])
+@router.get("/metrics", response_model=SystemMetricsResponse)
 @handle_api_errors("Failed to get system metrics")
-async def get_system_metrics() -> Dict[str, Any]:
+async def get_system_metrics() -> SystemMetricsResponse:
     log_api_call("get_system_metrics")
     try:
         import time
@@ -296,8 +312,8 @@ async def get_system_metrics() -> Dict[str, Any]:
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
-        return {
-            "system": {
+        return SystemMetricsResponse(
+            system={
                 "cpu_usage_percent": cpu_percent,
                 "memory": {
                     "total_gb": round(memory.total / (1024**3), 2),
@@ -310,25 +326,30 @@ async def get_system_metrics() -> Dict[str, Any]:
                     "percent_used": round((disk.used / disk.total) * 100, 2),
                 },
             },
-            "application": {
+            application={
                 "uptime_seconds": time.time() - psutil.Process().create_time(),
                 "version": settings.app_version,
                 "debug_mode": settings.debug,
             },
-            "timestamp": utcnow(),
-        }
+            timestamp=utcnow(),
+        )
     except ImportError:
-        return {
-            "error": "psutil not available for system metrics",
-            "timestamp": utcnow(),
-        }
+        return SystemMetricsResponse(
+            system={},
+            application={
+                "version": settings.app_version,
+                "debug_mode": settings.debug,
+            },
+            timestamp=utcnow(),
+            error="psutil not available for system metrics",
+        )
 
 
-@router.get("/readiness", response_model=Dict[str, Any])
+@router.get("/readiness", response_model=ReadinessResponse)
 async def readiness_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
-) -> Dict[str, Any]:
+) -> ReadinessResponse:
     try:
         db_health = await _check_database_health(db)
         cache_health = await _check_cache_health()
@@ -349,11 +370,11 @@ async def readiness_check(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="FastMCP not ready",
             )
-        return {
-            "status": "ready",
-            "message": "Application is ready to serve traffic",
-            "timestamp": utcnow(),
-        }
+        return ReadinessResponse(
+            status="ready",
+            message="Application is ready to serve traffic",
+            timestamp=utcnow(),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -364,14 +385,19 @@ async def readiness_check(
         )
 
 
-@router.get("/performance", response_model=Dict[str, Any])
+@router.get("/performance", response_model=PerformanceMetricsResponse)
 @handle_api_errors("Failed to get performance metrics")
-async def get_performance_metrics() -> Dict[str, Any]:
+async def get_performance_metrics() -> PerformanceMetricsResponse:
     log_api_call("get_performance_metrics")
-    return get_performance_stats()
+    performance_data = get_performance_stats()
+    return PerformanceMetricsResponse(data=performance_data)
 
 
-@router.get("/liveness", response_model=Dict[str, Any])
+@router.get("/liveness", response_model=LivenessResponse)
 @handle_api_errors("Liveness check failed")
-async def liveness_check() -> Dict[str, Any]:
-    return {"status": "alive", "message": "Application is alive", "timestamp": utcnow()}
+async def liveness_check() -> LivenessResponse:
+    return LivenessResponse(
+        status="alive", 
+        message="Application is alive", 
+        timestamp=utcnow()
+    )

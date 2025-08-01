@@ -30,7 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.common import BaseResponse, PaginatedResponse
+from ..schemas.common import BaseResponse, PaginatedResponse, UserStatisticsResponse
 from ..schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -288,11 +288,11 @@ async def promote_user_to_superuser(
         user.is_superuser = True
         await user_service.db.commit()
 
-        return {
-            "success": True,
-            "message": f"User {user.username} promoted to superuser successfully",
-            "timestamp": user_service._get_current_timestamp(),
-        }
+        return BaseResponse(
+            success=True,
+            message=f"User {user.username} promoted to superuser successfully",
+            timestamp=user_service._get_current_timestamp(),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -346,11 +346,11 @@ async def demote_user_from_superuser(
         user.is_superuser = False
         await user_service.db.commit()
 
-        return {
-            "success": True,
-            "message": f"User {user.username} demoted from superuser successfully",
-            "timestamp": user_service._get_current_timestamp(),
-        }
+        return BaseResponse(
+            success=True,
+            message=f"User {user.username} demoted from superuser successfully",
+            timestamp=user_service._get_current_timestamp(),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -397,11 +397,11 @@ async def activate_user_account(
         user.is_active = True
         await user_service.db.commit()
 
-        return {
-            "success": True,
-            "message": f"User {user.username} activated successfully",
-            "timestamp": user_service._get_current_timestamp(),
-        }
+        return BaseResponse(
+            success=True,
+            message=f"User {user.username} activated successfully",
+            timestamp=user_service._get_current_timestamp(),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -455,11 +455,11 @@ async def deactivate_user_account(
         user.is_active = False
         await user_service.db.commit()
 
-        return {
-            "success": True,
-            "message": f"User {user.username} deactivated successfully",
-            "timestamp": user_service._get_current_timestamp(),
-        }
+        return BaseResponse(
+            success=True,
+            message=f"User {user.username} deactivated successfully",
+            timestamp=user_service._get_current_timestamp(),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -511,11 +511,11 @@ async def admin_reset_user_password(
         # Update password
         await user_service.update_user_password(user_id, new_password)
 
-        return {
-            "success": True,
-            "message": f"Password reset successfully for user {user.username}",
-            "timestamp": user_service._get_current_timestamp(),
-        }
+        return BaseResponse(
+            success=True,
+            message=f"Password reset successfully for user {user.username}",
+            timestamp=user_service._get_current_timestamp(),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -525,12 +525,12 @@ async def admin_reset_user_password(
         )
 
 
-@router.get("/users/stats", response_model=Dict[str, Any])
+@router.get("/users/stats", response_model=UserStatisticsResponse)
 @handle_api_errors("Failed to get user statistics")
 async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> UserStatisticsResponse:
     """
     Get comprehensive user statistics.
 
@@ -610,9 +610,9 @@ async def get_user_statistics(
             for row in top_users_docs.fetchall()
         ]
 
-        return {
-            "success": True,
-            "data": {
+        return UserStatisticsResponse(
+            success=True,
+            data={
                 "total_users": total_users or 0,
                 "active_users": active_users or 0,
                 "inactive_users": (total_users or 0) - (active_users or 0),
@@ -630,7 +630,7 @@ async def get_user_statistics(
                 ),
                 "timestamp": datetime.utcnow().isoformat(),
             },
-        }
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
