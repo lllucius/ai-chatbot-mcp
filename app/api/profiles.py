@@ -16,6 +16,11 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
+from ..schemas.admin import (
+    ProfileParametersResponse,
+    ProfileStatsResponse,
+    ProfileValidationResponse,
+)
 from ..schemas.common import BaseResponse
 from ..schemas.llm_profile import (
     LLMProfileCreate,
@@ -171,7 +176,7 @@ async def set_default_profile(
         )
 
 
-@router.get("/default/parameters", response_model=Dict[str, Any])
+@router.get("/default/parameters", response_model=ProfileParametersResponse)
 @handle_api_errors("Failed to get default profile parameters")
 async def get_default_profile_parameters(
     current_user: User = Depends(get_current_user),
@@ -193,7 +198,7 @@ async def get_default_profile_parameters(
     }
 
 
-@router.get("/stats", response_model=Dict[str, Any])
+@router.get("/stats", response_model=ProfileStatsResponse)
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),
@@ -208,7 +213,7 @@ async def get_profile_stats(
     }
 
 
-@router.post("/validate", response_model=Dict[str, Any])
+@router.post("/validate", response_model=ProfileValidationResponse)
 @handle_api_errors("Failed to validate parameters")
 async def validate_parameters(
     parameters: Dict[str, Any],

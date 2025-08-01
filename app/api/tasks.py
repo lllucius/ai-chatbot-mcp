@@ -24,6 +24,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
+from ..schemas.admin import (
+    ActiveTasksResponse,
+    QueueResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
+)
 from ..schemas.common import BaseResponse
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -43,7 +51,7 @@ def get_celery_app():
         )
 
 
-@router.get("/status", response_model=Dict[str, Any])
+@router.get("/status", response_model=TaskStatusResponse)
 @handle_api_errors("Failed to get task system status")
 async def get_task_system_status(
     current_user: User = Depends(get_current_user),
@@ -120,7 +128,7 @@ async def get_task_system_status(
         }
 
 
-@router.get("/workers", response_model=Dict[str, Any])
+@router.get("/workers", response_model=WorkersResponse)
 @handle_api_errors("Failed to get worker information")
 async def get_workers_info(
     current_user: User = Depends(get_current_user),
@@ -188,7 +196,7 @@ async def get_workers_info(
         )
 
 
-@router.get("/queue", response_model=Dict[str, Any])
+@router.get("/queue", response_model=QueueResponse)
 @handle_api_errors("Failed to get queue information")
 async def get_queue_info(
     queue_name: Optional[str] = Query(None, description="Specific queue to check"),
@@ -284,7 +292,7 @@ async def get_queue_info(
         )
 
 
-@router.get("/active", response_model=Dict[str, Any])
+@router.get("/active", response_model=ActiveTasksResponse)
 @handle_api_errors("Failed to get active tasks")
 async def get_active_tasks(
     current_user: User = Depends(get_current_user),
@@ -524,7 +532,7 @@ async def purge_queue(
         )
 
 
-@router.get("/stats", response_model=Dict[str, Any])
+@router.get("/stats", response_model=TaskStatsResponse)
 @handle_api_errors("Failed to get task statistics")
 async def get_task_statistics(
     period_hours: int = Query(
@@ -645,7 +653,7 @@ async def get_task_statistics(
         )
 
 
-@router.get("/monitor", response_model=Dict[str, Any])
+@router.get("/monitor", response_model=TaskMonitorResponse)
 @handle_api_errors("Failed to get monitoring data")
 async def get_monitoring_data(
     current_user: User = Depends(get_current_user),

@@ -29,6 +29,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user, get_document_service
 from ..models.document import Document, FileStatus
 from ..models.user import User
+from ..schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
 from ..schemas.common import BaseResponse, PaginatedResponse
 from ..schemas.document import (
     BackgroundTaskResponse,
@@ -483,7 +484,7 @@ async def cleanup_documents(
         )
 
 
-@router.get("/documents/stats", response_model=Dict[str, Any])
+@router.get("/documents/stats", response_model=DocumentStatsResponse)
 @handle_api_errors("Failed to get document statistics")
 async def get_document_statistics(
     current_user: User = Depends(get_current_user),
@@ -736,7 +737,7 @@ async def bulk_reprocess_documents(
         )
 
 
-@router.get("/documents/search/advanced", response_model=Dict[str, Any])
+@router.get("/documents/search/advanced", response_model=AdvancedSearchResponse)
 @handle_api_errors("Failed to perform advanced document search")
 async def advanced_document_search(
     query: str = Query(..., description="Search query"),

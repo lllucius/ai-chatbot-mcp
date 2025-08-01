@@ -22,7 +22,13 @@ from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.conversation import Conversation, Message
 from ..models.user import User
-from ..schemas.common import BaseResponse, PaginatedResponse
+from ..schemas.common import (
+    BaseResponse,
+    ConversationStatsResponse,
+    PaginatedResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+)
 from ..schemas.conversation import (
     ChatRequest,
     ChatResponse,
@@ -401,12 +407,12 @@ async def get_conversation_stats(
     return ConversationStats.model_validate(stats)
 
 
-@router.get("/registry-stats", response_model=Dict[str, Any])
+@router.get("/registry-stats", response_model=RegistryStatsResponse)
 @handle_api_errors("Failed to retrieve registry statistics")
 async def get_registry_stats(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> RegistryStatsResponse:
     """
     Get registry statistics showing prompt, profile, and tool usage.
 
@@ -419,11 +425,11 @@ async def get_registry_stats(
 
     registry_stats = await conversation_service._get_registry_stats()
 
-    return {
-        "success": True,
-        "message": "Registry statistics retrieved successfully",
-        "data": registry_stats,
-    }
+    return RegistryStatsResponse(
+        success=True,
+        message="Registry statistics retrieved successfully",
+        data=registry_stats,
+    )
 
 
 @router.get(
@@ -846,7 +852,7 @@ async def archive_conversations(
         )
 
 
-@router.get("/conversations/search", response_model=Dict[str, Any])
+@router.get("/conversations/search", response_model=SearchResponse)
 @handle_api_errors("Failed to search conversations")
 async def search_conversations_and_messages(
     query: str = Query(..., description="Search query"),
@@ -1018,9 +1024,9 @@ async def search_conversations_and_messages(
                 }
             )
 
-        return {
-            "success": True,
-            "data": {
+        return SearchResponse(
+            success=True,
+            data={
                 "results": results,
                 "total_found": len(results),
                 "search_criteria": {
@@ -1034,7 +1040,7 @@ async def search_conversations_and_messages(
                 },
                 "timestamp": datetime.utcnow().isoformat(),
             },
-        }
+        )
 
     except HTTPException:
         raise
@@ -1045,12 +1051,12 @@ async def search_conversations_and_messages(
         )
 
 
-@router.get("/conversations/stats", response_model=Dict[str, Any])
+@router.get("/conversations/stats", response_model=ConversationStatsResponse)
 @handle_api_errors("Failed to get conversation statistics")
 async def get_conversation_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> ConversationStatsResponse:
     """
     Get comprehensive conversation statistics.
 
@@ -1143,9 +1149,9 @@ async def get_conversation_statistics(
         for row in role_stats.fetchall():
             role_distribution[row.role] = row.count
 
-        return {
-            "success": True,
-            "data": {
+        return ConversationStatsResponse(
+            success=True,
+            data={
                 "conversations": {
                     "total": total_conversations or 0,
                     "active": active_conversations or 0,
@@ -1167,7 +1173,7 @@ async def get_conversation_statistics(
                 },
                 "timestamp": datetime.utcnow().isoformat(),
             },
-        }
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

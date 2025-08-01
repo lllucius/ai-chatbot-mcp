@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
+from ..schemas.admin import PromptCategoriesResponse, PromptStatsResponse
 from ..schemas.common import BaseResponse
 from ..schemas.prompt import PromptListResponse, PromptResponse
 from ..services.prompt_service import PromptService
@@ -121,7 +122,7 @@ async def get_prompt_details(
     )
 
 
-@router.get("/categories/", response_model=Dict[str, Any])
+@router.get("/categories/", response_model=PromptCategoriesResponse)
 @handle_api_errors("Failed to get categories")
 async def get_categories(
     current_user: User = Depends(get_current_user),
@@ -169,7 +170,7 @@ async def set_default_prompt(
         )
 
 
-@router.get("/stats", response_model=Dict[str, Any])
+@router.get("/stats", response_model=PromptStatsResponse)
 @handle_api_errors("Failed to get prompt statistics")
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),
