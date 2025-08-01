@@ -67,9 +67,10 @@ async def list_profiles(
     parameters, usage statistics, and metadata.
     """
     log_api_call("list_profiles", user_id=current_user.id)
-        profiles, total = await profile_service.list_profiles(
-            active_only=active_only, search=search, page=page, size=size
-        )
+    
+    profiles, total = await profile_service.list_profiles(
+        active_only=active_only, search=search, page=page, size=size
+    )
     pages = (total + size - 1) // size if size else 1
     profile_responses = []
     for p in profiles:

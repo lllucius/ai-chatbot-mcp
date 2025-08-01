@@ -123,7 +123,9 @@ async def get_search_suggestions(
     Returns suggested search terms based on document content
     and previous search patterns.
     """
-    log_api_call("get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit)
+    log_api_call(
+        "get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit
+    )
 
     # This is a simplified implementation
     # In a production system, you might want to implement

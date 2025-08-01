@@ -47,13 +47,13 @@ async def list_prompts(
     """
     log_api_call("list_prompts", user_id=current_user.id)
 
-        prompts, total = await prompt_service.list_prompts(
-            active_only=active_only,
-            category=category,
-            search=search,
-            page=page,
-            size=size,
-        )
+    prompts, total = await prompt_service.list_prompts(
+        active_only=active_only,
+        category=category,
+        search=search,
+        page=page,
+        size=size,
+    )
 
     pages = (total + size - 1) // size if size else 1
 

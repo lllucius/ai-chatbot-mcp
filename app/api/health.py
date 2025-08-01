@@ -20,8 +20,7 @@ from ..middleware.performance import get_performance_stats
 from ..schemas.common import BaseResponse
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.caching import (api_response_cache, embedding_cache,
-                             search_result_cache)
+from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
 from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)
@@ -205,6 +204,7 @@ async def _check_database_health(db: AsyncSession) -> Dict[str, Any]:
 async def _check_openai_health() -> Dict[str, Any]:
     try:
         from ..services.openai_client import OpenAIClient
+
         if settings.openai_api_key == "your-openai-api-key-here":
             return {
                 "status": "warning",
@@ -214,7 +214,9 @@ async def _check_openai_health() -> Dict[str, Any]:
         client = OpenAIClient()
         health_result = await client.health_check()
         return {
-            "status": ("healthy" if health_result.get("openai_available") else "unhealthy"),
+            "status": (
+                "healthy" if health_result.get("openai_available") else "unhealthy"
+            ),
             "message": health_result.get("status", "Unknown"),
             "configured": True,
             "models_available": health_result.get("models_available", False),
@@ -258,9 +260,7 @@ async def _check_fastmcp_health(mcp_service: MCPService) -> Dict[str, Any]:
             message = f"Some MCP servers are disconnected ({connected_servers}/{enabled_servers})"
         else:
             status = "healthy"
-            message = (
-                f"All enabled MCP servers are connected ({connected_servers}/{enabled_servers})"
-            )
+            message = f"All enabled MCP servers are connected ({connected_servers}/{enabled_servers})"
         return {
             "status": status,
             "message": message,
@@ -292,6 +292,7 @@ async def get_system_metrics() -> Dict[str, Any]:
         import time
 
         import psutil
+
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
