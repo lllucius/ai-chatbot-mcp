@@ -37,8 +37,32 @@ async def get_system_overview(
     """
     Get comprehensive system overview and key metrics.
 
-    Returns high-level statistics about the platform including user counts,
-    document processing stats, conversation metrics, and system health indicators.
+    Provides high-level statistics about the platform including user activity,
+    document processing metrics, conversation analytics, and system health
+    indicators. This endpoint serves as a dashboard summary for monitoring
+    platform usage and performance.
+
+    Args:
+        current_user: Current authenticated user from JWT token
+        db: Database session for metrics queries
+
+    Returns:
+        AnalyticsOverviewResponse: System overview containing:
+            - user_metrics: Total users, active users, and growth statistics
+            - document_metrics: Upload counts, processing status, and storage stats
+            - conversation_metrics: Total conversations, messages, and engagement
+            - system_health: Performance indicators and resource utilization
+            - timestamp: Overview generation timestamp
+
+    Overview Metrics:
+        - User registration and activity trends
+        - Document processing throughput and success rates
+        - Conversation engagement and usage patterns
+        - System performance and health indicators
+        - Key performance indicators (KPIs) summary
+
+    Example:
+        GET /api/v1/analytics/overview
     """
     log_api_call("get_system_overview", user_id=str(current_user.id))
 
@@ -104,14 +128,39 @@ async def get_usage_statistics(
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsUsageResponse:
     """
-    Get usage statistics for the specified time period.
+    Get detailed usage statistics for the specified time period.
+
+    Analyzes platform usage metrics over a configurable time period with
+    optional detailed daily breakdown. Provides insights into user activity,
+    content creation, and engagement patterns for analytics and reporting.
 
     Args:
         period: Time period for analysis (1d, 7d, 30d, 90d)
-        detailed: Whether to include detailed breakdown by day/week
+        detailed: Whether to include daily breakdown statistics
+        current_user: Current authenticated user from JWT token
+        db: Database session for metrics queries
 
     Returns:
-        Usage statistics for the specified period
+        AnalyticsUsageResponse: Usage statistics containing:
+            - period: Time period analyzed
+            - start_date: Analysis start date
+            - end_date: Analysis end date
+            - metrics: Aggregated usage metrics
+            - daily_stats: Daily breakdown (if detailed=true)
+            - trends: Usage trend analysis
+
+    Usage Metrics:
+        - New user registrations
+        - Document uploads and processing
+        - Conversation creation and activity
+        - Message volume and engagement
+        - Daily activity patterns (when detailed)
+
+    Raises:
+        HTTP 400: If invalid period parameter is provided
+
+    Example:
+        GET /api/v1/analytics/usage?period=7d&detailed=true
     """
     log_api_call("get_usage_statistics", user_id=str(current_user.id), period=period)
 
@@ -192,8 +241,35 @@ async def get_performance_metrics(
     """
     Get system performance metrics and bottleneck analysis.
 
-    Returns performance indicators including processing times,
-    system resource utilization, and identified bottlenecks.
+    Analyzes system performance including processing times, resource utilization,
+    and identifies potential bottlenecks. Provides insights for system optimization
+    and capacity planning.
+
+    Args:
+        current_user: Current authenticated user from JWT token
+        db: Database session for performance queries
+
+    Returns:
+        AnalyticsPerformanceResponse: Performance metrics containing:
+            - processing_times: Average processing durations for operations
+            - throughput: Operations per minute/hour statistics
+            - resource_utilization: System resource usage patterns
+            - bottlenecks: Identified performance bottlenecks
+            - recommendations: Performance optimization suggestions
+
+    Performance Metrics:
+        - Document processing speed and efficiency
+        - Database query performance
+        - API response times and throughput
+        - System resource consumption
+        - Bottleneck identification and analysis
+
+    Note:
+        Performance data is collected from system operations and
+        middleware monitoring components.
+
+    Example:
+        GET /api/v1/analytics/performance
     """
     log_api_call("get_performance_metrics", user_id=str(current_user.id))
 
@@ -278,7 +354,37 @@ async def get_user_analytics(
     """
     Get user activity analytics and engagement metrics.
 
-    Requires superuser access to view analytics across all users.
+    Analyzes user activity patterns and engagement levels across different
+    metrics and time periods. Provides insights into user behavior and
+    platform adoption patterns. Requires superuser access.
+
+    Args:
+        metric: Metric to analyze (messages, documents, conversations)
+        top: Number of top users to return in rankings (1-100)
+        period: Time period for analysis (7d, 30d, 90d)
+        current_user: Current authenticated superuser from JWT token
+        db: Database session for analytics queries
+
+    Returns:
+        AnalyticsUserAnalyticsResponse: User analytics containing:
+            - top_users: Rankings of most active users by selected metric
+            - engagement_patterns: User engagement trends and patterns
+            - activity_distribution: Distribution of user activity levels
+            - period_summary: Summary statistics for the analyzed period
+
+    Analytics Metrics:
+        - messages: User activity by message volume
+        - documents: User activity by document uploads
+        - conversations: User activity by conversation creation
+        - Engagement patterns and trends over time
+        - User distribution and adoption metrics
+
+    Raises:
+        HTTP 400: If invalid metric or period parameter is provided
+        HTTP 403: If user is not a superuser
+
+    Example:
+        GET /api/v1/analytics/users?metric=messages&top=10&period=30d
     """
     log_api_call("get_user_analytics", user_id=str(current_user.id), metric=metric)
 
@@ -372,10 +478,33 @@ async def get_usage_trends(
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsTrendsResponse:
     """
-    Get usage trends over time.
+    Get usage trends and growth patterns over time.
 
-    Analyzes platform usage patterns over the specified number of days
-    to identify growth trends and usage patterns.
+    Analyzes platform usage patterns over a specified time period to identify
+    growth trends, seasonal patterns, and usage fluctuations. Provides insights
+    for capacity planning and user engagement analysis.
+
+    Args:
+        days: Number of days to analyze (1-90)
+        current_user: Current authenticated user from JWT token
+        db: Database session for trend analysis queries
+
+    Returns:
+        AnalyticsTrendsResponse: Trend analysis containing:
+            - daily_metrics: Day-by-day usage statistics
+            - trend_analysis: Growth rates and pattern identification
+            - growth_indicators: Key growth metrics and projections
+            - seasonal_patterns: Identified usage patterns and cycles
+
+    Trend Metrics:
+        - Daily user registrations and activity
+        - Document upload and processing trends
+        - Message volume and conversation patterns
+        - Growth rate calculations and projections
+        - Usage pattern identification
+
+    Example:
+        GET /api/v1/analytics/trends?days=30
     """
     log_api_call("get_usage_trends", user_id=str(current_user.id), days=days)
 
@@ -466,12 +595,42 @@ async def export_analytics_report(
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsExportResponse:
     """
-    Export comprehensive analytics report.
+    Export comprehensive analytics report for administrative analysis.
 
-    Generates a complete analytics report including all major metrics,
-    trends, and detailed breakdowns for administrative analysis.
+    Generates a complete analytics report combining all major metrics,
+    performance indicators, usage trends, and detailed breakdowns.
+    Provides a comprehensive view for executive reporting and analysis.
 
-    Requires superuser access.
+    Args:
+        include_details: Whether to include detailed user analytics breakdowns
+        format: Export format (currently only 'json' supported)
+        current_user: Current authenticated superuser from JWT token
+        db: Database session for report generation
+
+    Returns:
+        AnalyticsExportResponse: Complete analytics export containing:
+            - report_summary: Executive summary of key metrics
+            - detailed_data: Comprehensive analytics data
+            - export_metadata: Export generation information
+            - download_info: Report access and format details
+
+    Report Contents:
+        - System overview and health metrics
+        - Usage statistics and trends
+        - Performance indicators and bottlenecks
+        - User engagement and activity analytics
+        - Detailed breakdowns (when include_details=true)
+
+    Raises:
+        HTTP 400: If unsupported export format is requested
+        HTTP 403: If user is not a superuser
+
+    Note:
+        This operation may take longer for large datasets.
+        Currently only JSON format is supported.
+
+    Example:
+        POST /api/v1/analytics/export-report?include_details=true
     """
     log_api_call("export_analytics_report", user_id=str(current_user.id))
 
