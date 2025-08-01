@@ -1,9 +1,31 @@
 """
-Health check API endpoints.
+Health monitoring and system status API endpoints.
 
-This module provides health monitoring endpoints for the application,
-including database connectivity, external services, and system metrics.
+This module provides comprehensive health monitoring endpoints for the application,
+including database connectivity, external services monitoring, system metrics,
+and Kubernetes-style probes for container orchestration.
 
+Key Features:
+- Basic and detailed health checks
+- Database connectivity and schema validation
+- External service status monitoring (OpenAI, FastMCP)
+- System performance metrics and resource utilization
+- Cache system health and statistics
+- Kubernetes-compatible liveness and readiness probes
+
+Monitoring Capabilities:
+- Real-time system resource monitoring
+- Database performance metrics
+- External API availability checks
+- Cache hit rates and performance statistics
+- Background service health validation
+- Detailed error reporting and diagnostics
+
+Integration Support:
+- Load balancer health check endpoints
+- Kubernetes liveness/readiness probes
+- Monitoring system integration
+- Alerting and notification support
 """
 
 import logging
@@ -38,13 +60,29 @@ router = APIRouter()
 
 
 @router.get("/", response_model=BaseResponse)
+@handle_api_errors("Basic health check failed")
 async def basic_health_check() -> Dict[str, Any]:
     """
     Basic health check endpoint.
 
+    Provides a quick health status check for the application without
+    checking external dependencies. This is suitable for load balancer
+    health checks and basic monitoring.
+
     Returns:
-        dict: Basic application status
+        dict: Basic application status including version and timestamp
+
+    Example:
+        GET /api/v1/health/
+        {
+            "success": true,
+            "message": "AI Chatbot Platform is running",
+            "status": "healthy",
+            "version": "1.0.0",
+            "timestamp": "2024-01-01T12:00:00Z"
+        }
     """
+    log_api_call("basic_health_check")
     return {
         "success": True,
         "message": "AI Chatbot Platform is running",
@@ -346,10 +384,33 @@ async def get_system_metrics() -> SystemMetricsResponse:
 
 
 @router.get("/readiness", response_model=ReadinessResponse)
+@handle_api_errors("Readiness check failed")
 async def readiness_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ) -> ReadinessResponse:
+    """
+    Kubernetes-style readiness probe.
+
+    Checks if the application is ready to serve traffic by verifying
+    that all critical dependencies (database, cache, external services)
+    are operational. Used by orchestrators to determine traffic routing.
+
+    Args:
+        db: Database session for connectivity check
+        mcp_service: MCP service instance
+
+    Returns:
+        ReadinessResponse: Application readiness status
+
+    Raises:
+        HTTP 503: If any critical service is not ready
+
+    Note:
+        This endpoint is designed for Kubernetes readiness probes and
+        should only return 200 when the application can serve traffic.
+    """
+    log_api_call("readiness_check")
     try:
         db_health = await _check_database_health(db)
         cache_health = await _check_cache_health()
@@ -396,6 +457,21 @@ async def get_performance_metrics() -> PerformanceMetricsResponse:
 @router.get("/liveness", response_model=LivenessResponse)
 @handle_api_errors("Liveness check failed")
 async def liveness_check() -> LivenessResponse:
+    """
+    Kubernetes-style liveness probe.
+
+    Simple endpoint that indicates the application process is alive and
+    responding. Used by orchestrators to determine if the container
+    should be restarted.
+
+    Returns:
+        LivenessResponse: Application liveness confirmation
+
+    Note:
+        This endpoint should always return 200 unless the application
+        process is completely unresponsive. It does not check dependencies.
+    """
+    log_api_call("liveness_check")
     return LivenessResponse(
         status="alive", 
         message="Application is alive", 
