@@ -17,11 +17,10 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
-from ..schemas.common import BaseResponse
+from ..schemas.common import BaseResponse, DetailedHealthCheckResponse
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.caching import (api_response_cache, embedding_cache,
-                             search_result_cache)
+from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
 from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ async def basic_health_check() -> Dict[str, Any]:
     }
 
 
-@router.get("/detailed")
+@router.get("/detailed", response_model=DetailedHealthCheckResponse)
 @handle_api_errors("Health check failed")
 async def detailed_health_check(
     db: AsyncSession = Depends(get_db),
@@ -93,7 +92,7 @@ async def detailed_health_check(
     return health_status
 
 
-@router.get("/database")
+@router.get("/database", response_model=Dict[str, Any])
 @handle_api_errors("Database health check failed")
 async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
     """
@@ -103,7 +102,7 @@ async def database_health_check(db: AsyncSession = Depends(get_db)) -> Dict[str,
     return await _check_database_health(db)
 
 
-@router.get("/services")
+@router.get("/services", response_model=Dict[str, Any])
 @handle_api_errors("Services health check failed")
 async def services_health_check(
     mcp_service: MCPService = Depends(get_mcp_service),
@@ -285,7 +284,7 @@ async def _check_fastmcp_health(mcp_service: MCPService) -> Dict[str, Any]:
         }
 
 
-@router.get("/metrics")
+@router.get("/metrics", response_model=Dict[str, Any])
 @handle_api_errors("Failed to get system metrics")
 async def get_system_metrics() -> Dict[str, Any]:
     log_api_call("get_system_metrics")
@@ -325,7 +324,7 @@ async def get_system_metrics() -> Dict[str, Any]:
         }
 
 
-@router.get("/readiness")
+@router.get("/readiness", response_model=Dict[str, Any])
 async def readiness_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
@@ -365,13 +364,14 @@ async def readiness_check(
         )
 
 
-@router.get("/performance")
+@router.get("/performance", response_model=Dict[str, Any])
 @handle_api_errors("Failed to get performance metrics")
 async def get_performance_metrics() -> Dict[str, Any]:
     log_api_call("get_performance_metrics")
     return get_performance_stats()
 
 
-@router.get("/liveness")
+@router.get("/liveness", response_model=Dict[str, Any])
+@handle_api_errors("Liveness check failed")
 async def liveness_check() -> Dict[str, Any]:
     return {"status": "alive", "message": "Application is alive", "timestamp": utcnow()}

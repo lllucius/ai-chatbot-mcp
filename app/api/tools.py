@@ -15,8 +15,11 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.mcp import (MCPListFiltersSchema, MCPToolExecutionRequestSchema,
-                           OpenAIToolSchema)
+from ..schemas.mcp import (
+    MCPListFiltersSchema,
+    MCPToolExecutionRequestSchema,
+    OpenAIToolSchema,
+)
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -34,6 +37,33 @@ async def list_tools(
 ):
     """
     List all available MCP tools with registry integration.
+
+    Returns a comprehensive list of all MCP tools available through registered
+    servers, including their schemas, usage statistics, and OpenAI-compatible
+    function definitions. This endpoint provides the foundation for tool
+    discovery and integration.
+
+    Args:
+        enabled_only: If True, returns only enabled tools from enabled servers
+        server_name: If specified, returns tools from this server only
+        current_user: Current authenticated superuser
+        db: Database session
+        mcp_service: MCP service instance
+
+    Returns:
+        MCPToolListResponse: Comprehensive tool listing with:
+            - available_tools: Tool definitions with metadata
+            - openai_tools: Tools formatted for OpenAI function calling
+            - servers: Server status and tool counts
+            - enabled_count/total_count: Statistics
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If tool discovery fails
+
+    Note:
+        This endpoint requires superuser privileges and may trigger
+        tool discovery from MCP servers if needed.
     """
     log_api_call("list_tools", user_id=current_user.id)
 

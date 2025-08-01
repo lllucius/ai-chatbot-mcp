@@ -109,7 +109,7 @@ async def find_similar_chunks(
     )
 
 
-@router.get("/suggestions")
+@router.get("/suggestions", response_model=SearchSuggestionResponse)
 @handle_api_errors("Failed to generate suggestions")
 async def get_search_suggestions(
     query: str = Query(..., min_length=1),
@@ -147,7 +147,7 @@ async def get_search_suggestions(
     }
 
 
-@router.get("/history")
+@router.get("/history", response_model=SearchHistoryResponse)
 @handle_api_errors("Failed to retrieve search history")
 async def get_search_history(
     limit: int = Query(10, ge=1, le=50), current_user: User = Depends(get_current_user)

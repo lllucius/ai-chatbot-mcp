@@ -25,8 +25,13 @@ from fastapi import APIRouter, Depends
 
 from ..dependencies import get_auth_service, get_current_user
 from ..models.user import User
-from ..schemas.auth import (LoginRequest, PasswordResetConfirm,
-                            PasswordResetRequest, RegisterRequest, Token)
+from ..schemas.auth import (
+    LoginRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    RegisterRequest,
+    Token,
+)
 from ..schemas.common import BaseResponse
 from ..schemas.user import UserResponse
 from ..services.auth import AuthService
@@ -125,6 +130,7 @@ async def login(
 
 
 @router.get("/me", response_model=UserResponse)
+@handle_api_errors("Failed to get current user information")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
     Get current authenticated user information.
@@ -153,6 +159,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout", response_model=BaseResponse)
+@handle_api_errors("Logout failed")
 async def logout():
     """
     Logout current user (client-side token invalidation).

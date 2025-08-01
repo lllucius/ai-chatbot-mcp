@@ -14,8 +14,11 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
 from ..schemas.common import BaseResponse
-from ..schemas.mcp import (MCPListFiltersSchema, MCPServerCreateSchema,
-                           MCPServerUpdateSchema)
+from ..schemas.mcp import (
+    MCPListFiltersSchema,
+    MCPServerCreateSchema,
+    MCPServerUpdateSchema,
+)
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -32,7 +35,33 @@ async def list_servers(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """List all registered MCP servers."""
+    """
+    List all registered MCP servers with optional filtering.
+
+    Returns a list of MCP servers configured in the system with their
+    connection status, configuration details, and metadata. Supports
+    filtering by enabled/connected status and includes detailed information
+    when requested.
+
+    Args:
+        enabled_only: If True, returns only enabled servers
+        connected_only: If True, returns only currently connected servers
+        detailed: If True, includes additional server metadata
+        current_user: Current authenticated superuser
+        db: Database session
+        mcp_service: MCP service instance
+
+    Returns:
+        MCPServerListResponse: List of servers with metadata
+
+    Raises:
+        HTTP 403: If user is not a superuser
+        HTTP 500: If server listing fails
+
+    Note:
+        This endpoint requires superuser privileges as it exposes
+        system configuration details.
+    """
     log_api_call("list_mcp_servers", user_id=current_user.id)
 
     filters = MCPListFiltersSchema(

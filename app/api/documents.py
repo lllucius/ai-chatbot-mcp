@@ -10,22 +10,33 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from uuid import UUID
 
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, Query,
-                     UploadFile, status)
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
-from ..dependencies import (get_current_superuser, get_current_user,
-                            get_document_service)
+from ..dependencies import get_current_superuser, get_current_user, get_document_service
 from ..models.document import Document, FileStatus
 from ..models.user import User
 from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.document import (BackgroundTaskResponse, DocumentResponse,
-                                DocumentUpdate, DocumentUploadResponse,
-                                ProcessingConfigResponse,
-                                ProcessingStatusResponse)
+from ..schemas.document import (
+    BackgroundTaskResponse,
+    DocumentResponse,
+    DocumentUpdate,
+    DocumentUploadResponse,
+    ProcessingConfigResponse,
+    ProcessingStatusResponse,
+)
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
