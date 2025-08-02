@@ -393,7 +393,7 @@ class UserUpdate(BaseSchema):
     Example:
         # Update only email address
         update_data = UserUpdate(email="new_email@example.com")
-        
+
         # Update multiple fields
         update_data = UserUpdate(
             email="updated@example.com",
@@ -502,7 +502,7 @@ class UserPasswordUpdate(BaseSchema):
         Security Requirements:
             - Minimum 8 characters for baseline security protection
             - At least one uppercase letter (A-Z) for character complexity
-            - At least one lowercase letter (a-z) for character diversity  
+            - At least one lowercase letter (a-z) for character diversity
             - At least one digit (0-9) for enhanced security entropy
             - Maximum 128 characters for practical use and system compatibility
 
@@ -599,7 +599,7 @@ class UserResponse(UserBase):
         user_response = UserResponse(
             id=uuid.uuid4(),
             username="john_doe",
-            email="john@example.com", 
+            email="john@example.com",
             full_name="John Doe",
             is_active=True,
             is_superuser=False,
@@ -650,7 +650,7 @@ class UserResponse(UserBase):
         Example:
             user = UserResponse(id=uuid.uuid4(), username="john", ...)
             json_output = user.model_dump_json()
-            # Result: {"id": "12345678-1234-5678-9012-123456789012", 
+            # Result: {"id": "12345678-1234-5678-9012-123456789012",
             #          "created_at": "2024-01-01T12:00:00Z", ...}
         """
         data = self.model_dump(**kwargs)

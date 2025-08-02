@@ -119,7 +119,7 @@ class LoginRequest(BaseSchema):
             username="john_doe",
             password="SecurePassword123!"
         )
-        
+
         # Email-based login
         login_data = LoginRequest(
             username="john@example.com",
@@ -419,7 +419,7 @@ class Token(BaseSchema):
             token_type="bearer",
             expires_in=1800  # 30 minutes
         )
-        
+
         # Client usage:
         # Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     """

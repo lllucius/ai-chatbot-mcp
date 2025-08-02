@@ -141,7 +141,7 @@ class ApiError(Exception):
 
     def __init__(self, status: int, reason: str, url: str, body: Any):
         """Initialize ApiError with HTTP response details.
-        
+
         Args:
             status: HTTP status code of the failed request.
             reason: HTTP reason phrase.
@@ -765,7 +765,7 @@ class HealthClient:
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize health client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 
@@ -810,7 +810,7 @@ class AuthClient:
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize authentication client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 
@@ -870,14 +870,14 @@ class AuthClient:
 
 class UsersClient:
     """Async client for user management operations.
-    
+
     Provides comprehensive user account management including profile updates,
     password changes, user listing, and administrative operations.
     """
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize users client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 
@@ -886,10 +886,10 @@ class UsersClient:
 
     async def me(self) -> UserResponse:
         """Get current authenticated user's profile.
-        
+
         Returns:
             UserResponse: Current user's profile information.
-            
+
         Raises:
             ApiError: If the request fails or user is not authenticated.
 
@@ -898,13 +898,13 @@ class UsersClient:
 
     async def update_me(self, data: UserUpdate) -> UserResponse:
         """Update current user's profile information.
-        
+
         Args:
             data: UserUpdate model with fields to update.
-            
+
         Returns:
             UserResponse: Updated user profile information.
-            
+
         Raises:
             ApiError: If the request fails or validation errors occur.
 
@@ -915,13 +915,13 @@ class UsersClient:
 
     async def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
         """Change current user's password.
-        
+
         Args:
             data: UserPasswordUpdate with current and new password.
-            
+
         Returns:
             BaseResponse: Success/failure status of password change.
-            
+
         Raises:
             ApiError: If the request fails or current password is incorrect.
 
@@ -941,16 +941,16 @@ class UsersClient:
         superuser_only: Optional[bool] = None,
     ) -> PaginatedResponse:
         """List users with optional filtering and pagination.
-        
+
         Args:
             page: Page number for pagination (default: 1).
             size: Number of users per page (default: 20).
             active_only: Filter to only active users if True.
             superuser_only: Filter to only superusers if True.
-            
+
         Returns:
             PaginatedResponse: Paginated list of users.
-            
+
         Raises:
             ApiError: If the request fails or insufficient permissions.
 
@@ -967,13 +967,13 @@ class UsersClient:
 
     async def get(self, user_id: UUID) -> UserResponse:
         """Get user profile by ID.
-        
+
         Args:
             user_id: UUID of the user to retrieve.
-            
+
         Returns:
             UserResponse: User profile information.
-            
+
         Raises:
             ApiError: If user not found or insufficient permissions.
 
@@ -982,14 +982,14 @@ class UsersClient:
 
     async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
         """Update user profile by ID.
-        
+
         Args:
             user_id: UUID of the user to update.
             data: UserUpdate model with fields to update.
-            
+
         Returns:
             UserResponse: Updated user profile information.
-            
+
         Raises:
             ApiError: If user not found or insufficient permissions.
 
@@ -1003,13 +1003,13 @@ class UsersClient:
 
     async def delete(self, user_id: UUID) -> BaseResponse:
         """Delete user account by ID.
-        
+
         Args:
             user_id: UUID of the user to delete.
-            
+
         Returns:
             BaseResponse: Success/failure status of deletion.
-            
+
         Raises:
             ApiError: If user not found or insufficient permissions.
 
@@ -1057,16 +1057,16 @@ class DocumentsClient:
         status: Optional[str] = None,
     ) -> PaginatedResponse:
         """List documents with optional filtering and pagination.
-        
+
         Args:
             page: Page number for pagination (default: 1).
             size: Number of documents per page (default: 20).
             file_type: Filter by file type (e.g., 'pdf', 'txt').
             status: Filter by processing status (e.g., 'completed', 'processing').
-            
+
         Returns:
             PaginatedResponse: Paginated list of documents.
-            
+
         Raises:
             ApiError: If the request fails.
 
@@ -1080,13 +1080,13 @@ class DocumentsClient:
 
     async def get(self, document_id: UUID) -> DocumentResponse:
         """Get document metadata by ID.
-        
+
         Args:
             document_id: UUID of the document to retrieve.
-            
+
         Returns:
             DocumentResponse: Document metadata and status.
-            
+
         Raises:
             ApiError: If document not found or access denied.
 
@@ -1097,14 +1097,14 @@ class DocumentsClient:
 
     async def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
         """Update document metadata.
-        
+
         Args:
             document_id: UUID of the document to update.
             data: DocumentUpdate model with fields to update.
-            
+
         Returns:
             DocumentResponse: Updated document metadata.
-            
+
         Raises:
             ApiError: If document not found or validation errors.
 
@@ -1118,13 +1118,13 @@ class DocumentsClient:
 
     async def delete(self, document_id: UUID) -> BaseResponse:
         """Delete document and all associated data.
-        
+
         Args:
             document_id: UUID of the document to delete.
-            
+
         Returns:
             BaseResponse: Success/failure status of deletion.
-            
+
         Raises:
             ApiError: If document not found or access denied.
 
@@ -1135,13 +1135,13 @@ class DocumentsClient:
 
     async def status(self, document_id: UUID) -> ProcessingStatusResponse:
         """Get document processing status and progress.
-        
+
         Args:
             document_id: UUID of the document to check.
-            
+
         Returns:
             ProcessingStatusResponse: Current processing status and progress.
-            
+
         Raises:
             ApiError: If document not found.
 
@@ -1153,13 +1153,13 @@ class DocumentsClient:
 
     async def reprocess(self, document_id: UUID) -> BaseResponse:
         """Reprocess document for chunk generation and embeddings.
-        
+
         Args:
             document_id: UUID of the document to reprocess.
-            
+
         Returns:
             BaseResponse: Success/failure status of reprocessing request.
-            
+
         Raises:
             ApiError: If document not found or already processing.
 
@@ -1172,13 +1172,13 @@ class DocumentsClient:
 
     async def download(self, document_id: UUID) -> bytes:
         """Download original document file.
-        
+
         Args:
             document_id: UUID of the document to download.
-            
+
         Returns:
             bytes: Binary content of the original document file.
-            
+
         Raises:
             ApiError: If document not found or download failed.
 
@@ -1208,13 +1208,13 @@ class ConversationsClient:
 
     async def create(self, data: ConversationCreate) -> ConversationResponse:
         """Create a new conversation.
-        
+
         Args:
             data: ConversationCreate model with conversation details.
-            
+
         Returns:
             ConversationResponse: Created conversation metadata.
-            
+
         Raises:
             ApiError: If creation fails or validation errors occur.
 
@@ -1230,15 +1230,15 @@ class ConversationsClient:
         self, page: int = 1, size: int = 20, active_only: Optional[bool] = None
     ) -> PaginatedResponse:
         """List conversations with optional filtering and pagination.
-        
+
         Args:
             page: Page number for pagination (default: 1).
             size: Number of conversations per page (default: 20).
             active_only: Filter to only active conversations if True.
-            
+
         Returns:
             PaginatedResponse: Paginated list of conversations.
-            
+
         Raises:
             ApiError: If the request fails.
 
@@ -1250,13 +1250,13 @@ class ConversationsClient:
 
     async def get(self, conversation_id: UUID) -> ConversationResponse:
         """Get conversation metadata by ID.
-        
+
         Args:
             conversation_id: UUID of the conversation to retrieve.
-            
+
         Returns:
             ConversationResponse: Conversation metadata.
-            
+
         Raises:
             ApiError: If conversation not found or access denied.
 
@@ -1270,14 +1270,14 @@ class ConversationsClient:
         self, conversation_id: UUID, data: ConversationUpdate
     ) -> ConversationResponse:
         """Update conversation metadata.
-        
+
         Args:
             conversation_id: UUID of the conversation to update.
             data: ConversationUpdate model with fields to update.
-            
+
         Returns:
             ConversationResponse: Updated conversation metadata.
-            
+
         Raises:
             ApiError: If conversation not found or validation errors.
 
@@ -1291,13 +1291,13 @@ class ConversationsClient:
 
     async def delete(self, conversation_id: UUID) -> BaseResponse:
         """Delete conversation and all associated messages.
-        
+
         Args:
             conversation_id: UUID of the conversation to delete.
-            
+
         Returns:
             BaseResponse: Success/failure status of deletion.
-            
+
         Raises:
             ApiError: If conversation not found or access denied.
 
@@ -1312,15 +1312,15 @@ class ConversationsClient:
         self, conversation_id: UUID, page: int = 1, size: int = 50
     ) -> PaginatedResponse:
         """Get messages from a conversation with pagination.
-        
+
         Args:
             conversation_id: UUID of the conversation.
             page: Page number for pagination (default: 1).
             size: Number of messages per page (default: 50).
-            
+
         Returns:
             PaginatedResponse: Paginated list of messages.
-            
+
         Raises:
             ApiError: If conversation not found or access denied.
 
@@ -1425,14 +1425,14 @@ class SearchClient:
 
     async def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
         """Find similar document chunks to a given chunk.
-        
+
         Args:
             chunk_id: ID of the reference chunk to find similarities for.
             limit: Maximum number of similar chunks to return (default: 5).
-            
+
         Returns:
             Dict[str, Any]: Similar chunks with similarity scores.
-            
+
         Raises:
             ApiError: If chunk not found or search fails.
 
@@ -1444,14 +1444,14 @@ class SearchClient:
 
     async def suggestions(self, query: str, limit: int = 5) -> List[Any]:
         """Get search suggestions based on query.
-        
+
         Args:
             query: Search query to get suggestions for.
             limit: Maximum number of suggestions to return (default: 5).
-            
+
         Returns:
             List[Any]: List of search suggestions.
-            
+
         Raises:
             ApiError: If the request fails.
 
@@ -1463,13 +1463,13 @@ class SearchClient:
 
     async def history(self, limit: int = 10) -> List[Any]:
         """Get user's search history.
-        
+
         Args:
             limit: Maximum number of history entries to return (default: 10).
-            
+
         Returns:
             List[Any]: List of recent search queries.
-            
+
         Raises:
             ApiError: If the request fails.
 
@@ -1479,10 +1479,10 @@ class SearchClient:
 
     async def clear_history(self) -> BaseResponse:
         """Clear user's search history.
-        
+
         Returns:
             BaseResponse: Success/failure status of history clearing.
-            
+
         Raises:
             ApiError: If the request fails.
 
@@ -1714,7 +1714,7 @@ class ProfilesClient:
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize profiles client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 
@@ -1778,7 +1778,7 @@ class AnalyticsClient:
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize analytics client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 
@@ -1900,7 +1900,7 @@ class TasksClient:
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize tasks client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 
@@ -1955,7 +1955,7 @@ class AdminClient:
 
     def __init__(self, sdk: "AIChatbotSDK"):
         """Initialize admin client.
-        
+
         Args:
             sdk: The main SDK instance for making API requests.
 

@@ -667,7 +667,7 @@ async def get_performance_metrics() -> PerformanceMetricsResponse:
     Returns:
         PerformanceMetricsResponse: Application performance data including:
             - Request processing metrics
-            - Throughput statistics  
+            - Throughput statistics
             - Performance indicators
             - Resource utilization metrics
 
@@ -699,7 +699,7 @@ async def liveness_check() -> LivenessResponse:
     """
     log_api_call("liveness_check")
     return LivenessResponse(
-        status="alive", 
-        message="Application is alive", 
+        status="alive",
+        message="Application is alive",
         timestamp=utcnow()
     )

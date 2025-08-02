@@ -261,7 +261,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     Example:
         GET /api/v1/auth/me
         Authorization: Bearer <jwt_token>
-        
+
         Response: {
             "id": "123e4567-e89b-12d3-a456-426614174000",
             "username": "johndoe",
@@ -328,7 +328,7 @@ async def logout():
     Example:
         POST /api/v1/auth/logout
         Authorization: Bearer <jwt_token>
-        
+
         Response: {
             "success": true,
             "message": "Logged out successfully"
@@ -400,7 +400,7 @@ async def refresh_token(
     Example:
         POST /api/v1/auth/refresh
         Authorization: Bearer <current_jwt_token>
-        
+
         Response: {
             "access_token": "eyJ...",
             "token_type": "bearer",

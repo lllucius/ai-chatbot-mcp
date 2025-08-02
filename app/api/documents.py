@@ -122,7 +122,7 @@ async def upload_document(
     Example:
         POST /api/v1/documents/upload
         Content-Type: multipart/form-data
-        
+
         file: [document.pdf]
         title: "Project Requirements"
         auto_process: true

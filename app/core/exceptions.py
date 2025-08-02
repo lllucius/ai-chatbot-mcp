@@ -149,7 +149,7 @@ class ChatbotPlatformException(Exception):
         Example:
             # Basic exception with default error code
             raise ChatbotPlatformException("Operation failed")
-            
+
             # Exception with specific error code and details
             raise ChatbotPlatformException(
                 message="Database connection failed",

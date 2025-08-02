@@ -185,10 +185,10 @@ CLI_VERSION: str = "2.0.0"
 
 def save_token(token: str) -> None:
     """Save authentication token to secure storage.
-    
+
     Args:
         token: JWT access token to save.
-        
+
     Note:
         Creates parent directories if they don't exist.
 
@@ -200,7 +200,7 @@ def save_token(token: str) -> None:
 
 def load_token() -> Optional[str]:
     """Load authentication token from secure storage.
-    
+
     Returns:
         Optional[str]: Stored JWT token if available, None otherwise.
 
@@ -214,7 +214,7 @@ def load_token() -> Optional[str]:
 
 def clear_token() -> None:
     """Remove stored authentication token.
-    
+
     Note:
         Silently succeeds if token file doesn't exist.
 
@@ -225,7 +225,7 @@ def clear_token() -> None:
 
 def print_error(msg: str) -> None:
     """Print error message with red formatting.
-    
+
     Args:
         msg: Error message to display.
 
@@ -235,7 +235,7 @@ def print_error(msg: str) -> None:
 
 def print_success(msg: str) -> None:
     """Print success message with green formatting.
-    
+
     Args:
         msg: Success message to display.
 
@@ -245,7 +245,7 @@ def print_success(msg: str) -> None:
 
 def print_info(msg: str) -> None:
     """Print informational message with cyan formatting.
-    
+
     Args:
         msg: Info message to display.
 
@@ -255,7 +255,7 @@ def print_info(msg: str) -> None:
 
 def print_warn(msg: str) -> None:
     """Print warning message with yellow formatting.
-    
+
     Args:
         msg: Warning message to display.
 
@@ -273,7 +273,7 @@ def prettify_dict(
     title_color: str = "magenta",
 ) -> None:
     """Display dictionary data with rich formatting and nested structure.
-    
+
     Args:
         data: Dictionary or object to display. Objects are converted to dicts.
         title: Optional title to display above the data.
@@ -282,7 +282,7 @@ def prettify_dict(
         key_color: Color for dictionary keys (default: cyan).
         value_color: Color for values (default: white).
         title_color: Color for the title (default: magenta).
-        
+
     Note:
         Automatically handles Pydantic models with model_dump() method.
         Truncates deeply nested structures beyond max_depth.
@@ -324,13 +324,13 @@ def prettify_list(
     max_rows: int = 25,
 ) -> None:
     """Display list of items as a formatted table.
-    
+
     Args:
         items: List of dictionaries or objects to display as table rows.
         columns: Specific columns to display. If None, uses all keys from first item.
         title: Optional table title.
         max_rows: Maximum number of rows to display before truncating (default: 25).
-        
+
     Note:
         Automatically handles Pydantic models and objects with __dict__.
         Limits columns to first 8 if more than 8 are available.
@@ -362,10 +362,10 @@ def prettify_list(
 
 def parse_bool(val: str) -> bool:
     """Parse string value to boolean using common true/false representations.
-    
+
     Args:
         val: String value to parse.
-        
+
     Returns:
         bool: True if val represents a truthy value (1, true, yes, y, on), False otherwise.
 
@@ -375,12 +375,12 @@ def parse_bool(val: str) -> bool:
 
 def save_settings(settings: Dict[str, Any]) -> None:
     """Save user settings to persistent storage.
-    
+
     Args:
         settings: Dictionary of settings to save.
-        
+
     Note:
-        Removes 'llm_overrides' from saved data. 
+        Removes 'llm_overrides' from saved data.
         Prints warning if save fails but doesn't raise exception.
 
     """
@@ -395,7 +395,7 @@ def save_settings(settings: Dict[str, Any]) -> None:
 
 def load_settings() -> Dict[str, Any]:
     """Load user settings from persistent storage.
-    
+
     Returns:
         Dict[str, Any]: Loaded settings dictionary, empty dict if file doesn't exist or is invalid.
 
@@ -409,7 +409,7 @@ def load_settings() -> Dict[str, Any]:
 
 def ensure_backup_dir() -> None:
     """Create backup directory if it doesn't exist.
-    
+
     Note:
         Creates parent directories as needed.
 
@@ -419,14 +419,14 @@ def ensure_backup_dir() -> None:
 
 def save_conversation_to_file(content: str, filename: Optional[str] = None) -> str:
     """Save conversation content to a file in the backup directory.
-    
+
     Args:
         content: Conversation content to save.
         filename: Optional filename. If None, generates timestamp-based name.
-        
+
     Returns:
         str: Full path to the saved file.
-        
+
     Note:
         Creates backup directory if it doesn't exist.
         Default filename format: conversation_YYYYMMDDHHMMSS.txt
@@ -443,13 +443,13 @@ def save_conversation_to_file(content: str, filename: Optional[str] = None) -> s
 
 def extract_ai_content(text: str) -> str:
     """Extract clean AI response content from potentially formatted text.
-    
+
     Args:
         text: Raw AI response text that may contain XML tags or formatting.
-        
+
     Returns:
         str: Cleaned content with XML tags removed and whitespace normalized.
-        
+
     Note:
         Handles various content formats including XML content tags, message tags,
         and plain text. Removes XML declarations and extracts content from tags.
@@ -474,11 +474,11 @@ def display_token_stats(
     usage: Optional[Dict[str, Any]], response_time_ms: Optional[float]
 ) -> None:
     """Display API usage statistics and response timing.
-    
+
     Args:
         usage: Optional dictionary containing token usage stats from API response.
         response_time_ms: Optional response time in milliseconds.
-        
+
     Note:
         Formats and displays token counts, model name, and latency in a user-friendly format.
         Shows individual prompt and completion token counts when available.
@@ -508,11 +508,11 @@ def display_token_stats(
 
 def ellipsis(text: str, max_len: int = 100) -> str:
     """Truncate text with ellipsis if it exceeds maximum length.
-    
+
     Args:
         text: Text to potentially truncate.
         max_len: Maximum allowed length before truncation (default: 100).
-        
+
     Returns:
         str: Original text if under limit, otherwise truncated text with "..." suffix.
 
@@ -524,13 +524,13 @@ def ellipsis(text: str, max_len: int = 100) -> str:
 
 def prompt_password(confirm: bool = False) -> str:
     """Securely prompt for password input with optional confirmation.
-    
+
     Args:
         confirm: If True, prompts for password confirmation and validates match.
-        
+
     Returns:
         str: The entered password.
-        
+
     Note:
         Uses getpass for secure input (no echo to terminal).
         Loops until passwords match when confirmation is required.
@@ -548,10 +548,10 @@ def prompt_password(confirm: bool = False) -> str:
 
 def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
     """Configure readline for command history and line editing.
-    
+
     Args:
         history_file: Path to history file (default: ~/.ai-chatbot-history).
-        
+
     Note:
         Loads existing history if available and configures automatic saving on exit.
         Silently does nothing if readline module is not available (e.g., on Windows).
@@ -571,7 +571,7 @@ def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
 
 class SpinnerContext:
     """Async context manager for displaying a spinner during long operations.
-    
+
     Provides a visual spinner indicator using Rich console status while async
     operations are running. Can be disabled for environments where spinners
     are not desired.
@@ -579,7 +579,7 @@ class SpinnerContext:
 
     def __init__(self, message: str = "Thinking...", enabled: bool = True):
         """Initialize spinner context.
-        
+
         Args:
             message: Status message to display with spinner (default: "Thinking...").
             enabled: Whether to show spinner. If False, context does nothing.
@@ -592,7 +592,7 @@ class SpinnerContext:
 
     async def __aenter__(self) -> "SpinnerContext":
         """Enter async context and start spinner if enabled.
-        
+
         Returns:
             SpinnerContext: Self for context manager protocol.
 
@@ -603,7 +603,7 @@ class SpinnerContext:
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
         """Exit async context and stop spinner.
-        
+
         Args:
             exc_type: Exception type if an exception occurred.
             exc: Exception instance if an exception occurred.
@@ -616,7 +616,7 @@ class SpinnerContext:
 
     async def _spin(self) -> None:
         """Internal method to run the spinner animation.
-        
+
         Note:
             Runs until stop_event is set. Uses Rich console status for display.
 
@@ -628,16 +628,16 @@ class SpinnerContext:
 
 class Settings:
     """Manages CLI user settings with persistence and runtime configuration.
-    
+
     Handles user preferences for chatbot behavior including RAG usage, tool calling,
     streaming, and LLM parameter overrides. Settings are loaded from config and
     can be overridden with persistent user preferences.
-    
+
     Attributes:
         _persist_keys: List of setting keys that are saved to persistent storage.
 
     """
-    
+
     _persist_keys = [
         "use_rag",
         "use_tools",
@@ -650,10 +650,10 @@ class Settings:
 
     def __init__(self, config: ClientConfig):
         """Initialize settings from configuration and load user preferences.
-        
+
         Args:
             config: ClientConfig object with default settings.
-            
+
         Note:
             Loads persistent user settings from file if available, overriding defaults.
 
@@ -674,7 +674,7 @@ class Settings:
 
     def display(self) -> None:
         """Display current settings in a formatted table.
-        
+
         Note:
             Shows all user-configurable settings including LLM parameter overrides.
 
@@ -697,7 +697,7 @@ class Settings:
 
     def settings_dict(self) -> Dict[str, Any]:
         """Get dictionary of persistent settings.
-        
+
         Returns:
             Dict[str, Any]: Dictionary containing only persistable settings.
 
@@ -706,11 +706,11 @@ class Settings:
 
     def set(self, key: str, value: Any) -> None:
         """Set a configuration value and persist it.
-        
+
         Args:
             key: Setting name to update.
             value: New value for the setting.
-            
+
         Note:
             Only updates known settings. Automatically saves to persistent storage.
 
@@ -724,7 +724,7 @@ class Settings:
 
     def reset_llm(self) -> None:
         """Clear all LLM parameter overrides.
-        
+
         Note:
             Resets all custom LLM parameters to use profile or system defaults.
 
@@ -734,11 +734,11 @@ class Settings:
 
     def set_llm_param(self, key: str, value: Any) -> None:
         """Set an LLM parameter override.
-        
+
         Args:
             key: LLM parameter name (e.g., 'temperature', 'max_tokens').
             value: Parameter value.
-            
+
         Note:
             Overrides take precedence over profile settings for this session.
 
@@ -748,7 +748,7 @@ class Settings:
 
     def unset_llm_param(self, key: str) -> None:
         """Remove an LLM parameter override.
-        
+
         Args:
             key: LLM parameter name to remove override for.
 
@@ -759,7 +759,7 @@ class Settings:
 
     def get_llm_params(self) -> Dict[str, Any]:
         """Get copy of current LLM parameter overrides.
-        
+
         Returns:
             Dict[str, Any]: Copy of LLM parameter overrides.
 
@@ -768,7 +768,7 @@ class Settings:
 
     def display_llm_params(self) -> None:
         """Display current LLM parameter overrides in a table.
-        
+
         Note:
             Shows message if no overrides are set.
 
@@ -785,7 +785,7 @@ class Settings:
 
     def available_settings(self) -> List[Tuple[str, str, str]]:
         """Get list of available settings with their types and descriptions.
-        
+
         Returns:
             List[Tuple[str, str, str]]: List of (name, type, description) tuples.
 
@@ -806,7 +806,7 @@ class Settings:
 
 class CommandHandler:
     """Handles slash commands and CLI logic for the chatbot.
-    
+
     Processes user commands starting with '/' and provides command execution,
     help text, and error handling. Integrates with the SDK for all API operations
     and manages user feedback through rich console output.
@@ -814,7 +814,7 @@ class CommandHandler:
 
     def __init__(self, sdk: AIChatbotSDK, settings: Settings, history: List[str]):
         """Initialize command handler.
-        
+
         Args:
             sdk: AIChatbotSDK instance for API operations.
             settings: Settings instance for configuration management.
@@ -827,13 +827,13 @@ class CommandHandler:
 
     async def handle(self, line: str) -> bool:
         """Parse and execute a slash command.
-        
+
         Args:
             line: User input line to process.
-            
+
         Returns:
             bool: True if line was a command and was handled, False if not a command.
-            
+
         Note:
             Commands start with '/'. Non-command input returns False to allow
             normal chat processing. Handles all command parsing, argument validation,
@@ -901,7 +901,7 @@ class CommandHandler:
 
     def show_help(self) -> None:
         """Display comprehensive help text for all available commands.
-        
+
         Note:
             Shows command syntax, descriptions, and usage examples in a formatted panel.
 
@@ -937,7 +937,7 @@ class CommandHandler:
 
     def show_settings_help(self) -> None:
         """Display available settings with types and descriptions in a table.
-        
+
         Note:
             Shows all configurable settings that can be used with /set command.
 
@@ -952,10 +952,10 @@ class CommandHandler:
 
     async def cmd_set(self, args: List[str]) -> None:
         """Handle /set command to change configuration settings.
-        
+
         Args:
             args: Command arguments [key, value].
-            
+
         Note:
             Shows help if no args provided. Automatically converts boolean values.
 
@@ -1316,15 +1316,15 @@ async def auto_generate_title(
     user_message: str, sdk: AIChatbotSDK, settings: Settings
 ) -> str:
     """Generate a conversation title from the user's first message.
-    
+
     Args:
         user_message: User's message to base title on.
         sdk: SDK instance (unused but kept for compatibility).
         settings: Settings instance (unused but kept for compatibility).
-        
+
     Returns:
         str: Generated title, truncated to 80 characters.
-        
+
     Note:
         Uses first 10 words of message if it's long enough, otherwise uses full message.
         Falls back to "AI Chat" if processing fails.
@@ -1342,10 +1342,10 @@ async def auto_generate_title(
 
 def get_user_input() -> str:
     """Get user input with proper prompt formatting.
-    
+
     Returns:
         str: User input string, empty string on EOF.
-        
+
     Note:
         Handles EOF gracefully (e.g., Ctrl+D) by returning empty string.
 
@@ -1361,13 +1361,13 @@ async def chat_loop(
     sdk: AIChatbotSDK, settings: Settings, handler: Any, history: List[str]
 ) -> None:
     """Main interactive chat loop for processing user input and AI responses.
-    
+
     Args:
         sdk: AIChatbotSDK instance for API communication.
         settings: Settings instance for configuration.
         handler: CommandHandler instance for processing slash commands.
         history: List to store conversation history.
-        
+
     Note:
         Runs indefinitely until user exits. Handles both commands and chat messages.
         Supports streaming and non-streaming responses based on settings.
@@ -1416,13 +1416,13 @@ async def chat_loop(
 
             async def fetch_and_retry_on_auth(func: Callable[[], Any]) -> Any:
                 """Execute function with automatic authentication retry on auth errors.
-                
+
                 Args:
                     func: Async function to execute.
-                    
+
                 Returns:
                     Any: Result of the function call.
-                    
+
                 Raises:
                     ApiError: Re-raised if not auth-related or retry fails.
 
@@ -1442,7 +1442,7 @@ async def chat_loop(
 
                 async def do_stream():
                     """Handle streaming chat response with real-time output.
-                    
+
                     Note:
                         Processes streaming chunks and displays content in real-time.
                         Handles various chunk types and displays token stats when complete.
@@ -1502,13 +1502,13 @@ async def chat_loop(
 
 async def ensure_auth(sdk: AIChatbotSDK) -> bool:
     """Ensure user is authenticated, prompting for login if needed.
-    
+
     Args:
         sdk: AIChatbotSDK instance to authenticate.
-        
+
     Returns:
         bool: True if authentication successful, False otherwise.
-        
+
     Note:
         First tries to use saved token, then prompts for credentials if needed.
         Saves new token to secure storage on successful login.
@@ -1537,10 +1537,10 @@ async def ensure_auth(sdk: AIChatbotSDK) -> bool:
 
 def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
     """Configure signal handlers for graceful shutdown.
-    
+
     Args:
         loop: Event loop to add signal handlers to.
-        
+
     Note:
         Handles SIGINT and SIGTERM for clean exit.
         Silently ignores NotImplementedError on platforms without signal support.
@@ -1548,7 +1548,7 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
     """
     def _exit_handler():
         """Internal signal handler for graceful exit.
-        
+
         Note:
             Prints exit message and terminates with exit code 0.
 
@@ -1565,7 +1565,7 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
 
 async def main() -> None:
     """Main entry point for the chatbot CLI application.
-    
+
     Note:
         Initializes all components, handles authentication, and starts the chat loop.
         Configures readline if available and sets up graceful exit handling.

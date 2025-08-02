@@ -1263,7 +1263,7 @@ async def search_conversations_and_messages(
         search_messages: Whether to include message content in search
         user_filter: Filter results by specific username (superuser only)
         date_from: Start date for filtering results (YYYY-MM-DD format)
-        date_to: End date for filtering results (YYYY-MM-DD format)  
+        date_to: End date for filtering results (YYYY-MM-DD format)
         active_only: Limit search to only active conversations
         limit: Maximum number of results to return (1-100)
         current_user: Current authenticated user from JWT token

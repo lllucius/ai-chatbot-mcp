@@ -396,10 +396,10 @@ async def refresh(
 # Display helpers
 def _display_servers_table(servers):
     """Display MCP servers in a formatted table.
-    
+
     Args:
         servers: List of server dictionaries with server information.
-        
+
     Note:
         Shows server name, URL, status (enabled/disabled, connected/disconnected),
         transport type, and tool count in a Rich table format.
@@ -433,10 +433,10 @@ def _display_servers_table(servers):
 
 def _display_server_details(server):
     """Display detailed information for a single MCP server.
-    
+
     Args:
         server: Dictionary containing server details.
-        
+
     Note:
         Shows comprehensive server information including connection status,
         description, and last connection time in a formatted panel.
@@ -470,10 +470,10 @@ def _display_server_details(server):
 
 def _display_tools_table(tools):
     """Display MCP tools in a formatted table.
-    
+
     Args:
         tools: List of tool dictionaries with tool information.
-        
+
     Note:
         Shows tool name, server, description (truncated), and status
         in a Rich table format. Descriptions longer than 50 characters are truncated.
@@ -504,10 +504,10 @@ def _display_tools_table(tools):
 
 def _display_tool_details(tool):
     """Display detailed information for a single MCP tool.
-    
+
     Args:
         tool: Dictionary containing tool details.
-        
+
     Note:
         Shows comprehensive tool information including parameters count,
         usage statistics, and full description in a formatted panel.
@@ -537,10 +537,10 @@ def _display_tool_details(tool):
 
 def _display_connection_details(test_result):
     """Display MCP server connection test results.
-    
+
     Args:
         test_result: Dictionary containing connection test results.
-        
+
     Note:
         Shows connection status, response time, error details if any,
         and discovered capabilities in a formatted panel.
@@ -566,10 +566,10 @@ def _display_connection_details(test_result):
 
 def _display_stats(stats_data):
     """Display comprehensive MCP statistics in formatted tables.
-    
+
     Args:
         stats_data: Dictionary containing server, tool, and usage statistics.
-        
+
     Note:
         Shows three separate tables for server stats, tool stats, and usage stats
         with metrics like totals, enabled/disabled counts, and usage patterns.

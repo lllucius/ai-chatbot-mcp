@@ -117,7 +117,7 @@ class BaseSchema(BaseModel):
         class UserSchema(BaseSchema):
             username: str
             email: str
-            
+
         # Automatic validation and type conversion
         user = UserSchema(username="john", email="john@example.com")
     """
@@ -184,10 +184,10 @@ class TimestampSchema(BaseSchema):
         class DocumentSchema(TimestampSchema):
             title: str
             content: str
-            
+
         # Automatic timestamp serialization
         doc = DocumentSchema(
-            title="Document", 
+            title="Document",
             content="Content",
             created_at=datetime.now(),
             updated_at=datetime.now()
@@ -308,7 +308,7 @@ class UUIDSchema(BaseSchema):
         class EntitySchema(UUIDSchema):
             name: str
             description: str
-            
+
         # UUID handling and serialization
         entity = EntitySchema(
             id=uuid.uuid4(),
@@ -440,7 +440,7 @@ class BaseModelSchema(BaseSchema):
         class UserSchema(BaseModelSchema):
             username: str
             email: str
-            
+
         # Complete entity with ID and timestamps
         user = UserSchema(
             id=uuid.uuid4(),

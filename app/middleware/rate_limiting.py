@@ -156,7 +156,7 @@ class RateLimiter:
         Example:
             # General API rate limiter
             api_limiter = RateLimiter(max_requests=1000, time_window=3600)
-            
+
             # Authentication endpoint limiter
             auth_limiter = RateLimiter(max_requests=5, time_window=300)
         """
