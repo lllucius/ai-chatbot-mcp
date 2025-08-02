@@ -66,7 +66,6 @@ from async_typer import AsyncTyper
 from typer import Argument, Option
 
 from .base import (
-    console,
     error_message,
     format_file_size,
     format_timestamp,
@@ -75,7 +74,7 @@ from .base import (
     success_message,
 )
 
-document_app = AsyncTyper(help="📄 Document management commands")
+document_app = AsyncTyper(help="Document management commands", rich_markup_mode=None)
 
 
 @document_app.async_command()

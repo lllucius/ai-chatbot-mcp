@@ -77,7 +77,6 @@ from async_typer import AsyncTyper
 from typer import Argument, Option
 
 from .base import (
-    console,
     error_message,
     get_sdk,
     info_message,
@@ -86,7 +85,8 @@ from .base import (
 )
 
 mcp_app = AsyncTyper(
-    help="🔌 MCP server and tool management commands", rich_markup_mode="rich"
+    help="MCP server and tool management commands",
+    rich_markup_mode=None,
 )
 
 

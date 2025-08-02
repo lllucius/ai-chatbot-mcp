@@ -78,9 +78,9 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, get_sdk, success_message
+from .base import error_message, get_sdk, success_message
 
-tasks_app = AsyncTyper(help="⚙️ Background task management commands")
+tasks_app = AsyncTyper(help="Background task management commands", rich_markup_mode=None)
 
 
 @tasks_app.async_command()

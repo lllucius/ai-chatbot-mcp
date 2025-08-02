@@ -80,14 +80,9 @@ from pathlib import Path
 from typing import Optional
 
 from async_typer import AsyncTyper
-from rich.columns import Columns
-from rich.panel import Panel
-from rich.prompt import Prompt
-from rich.table import Table
 from typer import Option
 
 from .base import (
-    console,
     error_message,
     get_cli_manager,
     info_message,
@@ -96,7 +91,8 @@ from .base import (
 )
 
 core_app = AsyncTyper(
-    help="Core commands for authentication, config, and system status."
+    help="Core commands for authentication, config, and system status.",
+    rich_markup_mode=None,
 )
 
 
@@ -161,9 +157,10 @@ async def login(
     try:
         cli_manager = await get_cli_manager()
         if not username:
-            username = Prompt.ask("Username")
+            username = input("Username: ")
         if not password:
-            password = Prompt.ask("Password", password=True)
+            import getpass
+            password = getpass.getpass("Password: ")
         token = await cli_manager.login(username, password)
         if save_token:
             cli_manager.save_token(token.access_token)
@@ -172,14 +169,11 @@ async def login(
             success_message(f"Logged in successfully as {username}.")
             info_message("Use --save-token to persist authentication.")
 
-        info_panel = Panel(
-            f"Access Token: [green]{'*' * 20}[/green]\n"
-            f"Token Type: [blue]{token.token_type}[/blue]\n"
-            f"Expires In: [yellow]{token.expires_in} seconds[/yellow]",
-            title="🔐 Authentication Info",
-            border_style="green",
-        )
-        console.print(info_panel)
+        print("\nAuthentication Info:")
+        print("===================")
+        print(f"Access Token: {'*' * 20}")
+        print(f"Token Type: {token.token_type}")
+        print(f"Expires In: {token.expires_in} seconds")
     except Exception as e:
         error_message(f"Login failed: {str(e)}")
         raise SystemExit(1)
@@ -249,16 +243,13 @@ async def auth_status():
         if cli_manager.has_token():
             try:
                 user_info = await cli_manager.get_current_user()
-                status_panel = Panel(
-                    f"Status: [green]Authenticated[/green]\n"
-                    f"Username: [blue]{user_info.get('username', 'Unknown')}[/blue]\n"
-                    f"Email: [cyan]{user_info.get('email', 'Unknown')}[/cyan]\n"
-                    f"Superuser: [yellow]{'Yes' if user_info.get('is_superuser') else 'No'}[/yellow]\n"
-                    f"Active: [green]{'Yes' if user_info.get('is_active') else 'No'}[/green]",
-                    title="🔐 Authentication Status",
-                    border_style="green",
-                )
-                console.print(status_panel)
+                print("\nAuthentication Status:")
+                print("=====================")
+                print(f"Status: Authenticated")
+                print(f"Username: {user_info.get('username', 'Unknown')}")
+                print(f"Email: {user_info.get('email', 'Unknown')}")
+                print(f"Superuser: {'Yes' if user_info.get('is_superuser') else 'No'}")
+                print(f"Active: {'Yes' if user_info.get('is_active') else 'No'}")
             except Exception as e:
                 error_message(f"Token validation failed: {str(e)}")
                 info_message("Please login again using: python api_manage.py login")
@@ -285,18 +276,16 @@ async def version():
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         _ = await sdk.health.basic()
         app_info = await sdk._request("/")
-        version_info = Panel(
-            f"[bold]AI Chatbot Platform API CLI[/bold]\n\n"
-            f"Application Name: [blue]{app_info.get('name', 'Unknown')}[/blue]\n"
-            f"Application Version: [green]{app_info.get('version', 'Unknown')}[/green]\n"
-            f"Description: [cyan]{app_info.get('description', 'N/A')}[/cyan]\n"
-            f"API Status: [green]{app_info.get('status', 'Unknown')}[/green]\n"
-            f"CLI Mode: [magenta]API-based[/magenta]",
-            title="📋 Version Information",
-            border_style="bright_blue",
-            padding=(1, 2),
-        )
-        console.print(version_info)
+        
+        print("\nVersion Information:")
+        print("===================")
+        print("AI Chatbot Platform API CLI")
+        print()
+        print(f"Application Name: {app_info.get('name', 'Unknown')}")
+        print(f"Application Version: {app_info.get('version', 'Unknown')}")
+        print(f"Description: {app_info.get('description', 'N/A')}")
+        print(f"API Status: {app_info.get('status', 'Unknown')}")
+        print(f"CLI Mode: API-based")
     except Exception as e:
         error_message(f"Failed to get version information: {str(e)}")
         raise SystemExit(1)
@@ -313,24 +302,22 @@ async def health():
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
-        console.print(
-            Panel(
-                "Performing comprehensive health check...",
-                title="🏥 Health Check",
-                border_style="blue",
-            )
-        )
+        
+        print("\nHealth Check:")
+        print("=============")
+        print("Performing comprehensive health check...")
+        print()
 
         # Check API connectivity
         try:
             ping_response = await sdk._request("/ping")
             api_status = (
-                "🟢 Online"
+                "Online"
                 if ping_response and ping_response.get("status") == "ok"
-                else "🔴 Offline"
+                else "Offline"
             )
         except Exception:
-            api_status = "🔴 Offline"
+            api_status = "Offline"
 
         # Get detailed health information
         try:
@@ -338,65 +325,36 @@ async def health():
         except Exception:
             health_data = {}
 
-        results = []
-
         # API Status
-        results.append(
-            Panel(
-                f"Status: {api_status}",
-                title="API Server",
-                border_style="green" if "🟢" in api_status else "red",
-            )
-        )
+        print(f"API Server: {api_status}")
 
         # Database Status
         db_status = health_data.get("database", {})
         db_indicator = (
-            "🟢 Connected" if db_status.get("connected") else "🔴 Disconnected"
+            "Connected" if db_status.get("connected") else "Disconnected"
         )
-        results.append(
-            Panel(
-                f"Connection: {db_indicator}",
-                title="Database",
-                border_style="green" if "🟢" in db_indicator else "red",
-            )
-        )
+        print(f"Database: {db_indicator}")
 
         # Services Status
         services_status = health_data.get("services", {})
         services_ok = all(services_status.values()) if services_status else False
-        services_indicator = "🟢 Operational" if services_ok else "🟡 Degraded"
-        results.append(
-            Panel(
-                f"Status: {services_indicator}",
-                title="Services",
-                border_style="green" if services_ok else "yellow",
-            )
-        )
+        services_indicator = "Operational" if services_ok else "Degraded"
+        print(f"Services: {services_indicator}")
 
         # Performance Status
         perf_status = health_data.get("performance", {})
         perf_indicator = (
-            "🟢 Good" if perf_status.get("response_time", 0) < 1000 else "🟡 Slow"
+            "Good" if perf_status.get("response_time", 0) < 1000 else "Slow"
         )
-        results.append(
-            Panel(
-                f"Response: {perf_indicator}",
-                title="Performance",
-                border_style="green" if "🟢" in perf_indicator else "yellow",
-            )
-        )
-
-        console.print(Columns(results, equal=True))
+        print(f"Performance: {perf_indicator}")
 
         # Overall status
-        overall_healthy = "🟢" in api_status and db_status.get("connected", False)
+        overall_healthy = api_status == "Online" and db_status.get("connected", False)
+        print()
         if overall_healthy:
             success_message("System is healthy and ready to use!")
         else:
-            console.print(
-                "\n[yellow]⚠️ Some components need attention. Check the results above.[/yellow]"
-            )
+            warning_message("Some components need attention. Check the results above.")
 
     except Exception as e:
         error_message(f"Health check failed: {str(e)}")
@@ -414,41 +372,38 @@ async def status():
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
-        console.print(
-            Panel(
-                f"[bold]AI Chatbot Platform System Status[/bold]\n"
-                f"Generated: {Path.home()}\n"
-                f"Mode: API-based CLI",
-                title="🖥️ System Status",
-                border_style="bright_blue",
-            )
-        )
+        
+        print("\nSystem Status:")
+        print("==============")
+        print("AI Chatbot Platform System Status")
+        print(f"Generated: {Path.home()}")
+        print("Mode: API-based CLI")
+        print()
 
         try:
             overview_response = await sdk.analytics.get_overview()
             if overview_response and overview_response.get("success", False):
                 data = overview_response["data"]
 
-                table = Table(title="System Overview")
-                table.add_column("Component", style="cyan")
-                table.add_column("Metric", style="white")
-                table.add_column("Value", style="green")
+                print("System Overview:")
+                print("-" * 50)
+                print(f"{'Component':<15} {'Metric':<15} {'Value':<15}")
+                print("-" * 50)
 
                 users_data = data.get("users", {})
-                table.add_row("Users", "Total", str(users_data.get("total", 0)))
-                table.add_row("", "Active", str(users_data.get("active", 0)))
+                print(f"{'Users':<15} {'Total':<15} {str(users_data.get('total', 0)):<15}")
+                print(f"{'':<15} {'Active':<15} {str(users_data.get('active', 0)):<15}")
 
                 docs_data = data.get("documents", {})
-                table.add_row("Documents", "Total", str(docs_data.get("total", 0)))
-                table.add_row("", "Processed", str(docs_data.get("processed", 0)))
+                print(f"{'Documents':<15} {'Total':<15} {str(docs_data.get('total', 0)):<15}")
+                print(f"{'':<15} {'Processed':<15} {str(docs_data.get('processed', 0)):<15}")
 
                 convs_data = data.get("conversations", {})
-                table.add_row("Conversations", "Total", str(convs_data.get("total", 0)))
+                print(f"{'Conversations':<15} {'Total':<15} {str(convs_data.get('total', 0)):<15}")
 
                 health_data = data.get("system_health", {})
-                table.add_row("Health", "Score", f"{health_data.get('score', 0)}/100")
-
-                console.print(table)
+                print(f"{'Health':<15} {'Score':<15} {health_data.get('score', 0)}/100")
+                print()
             else:
                 info_message("Unable to retrieve system status from API")
         except Exception as e:
@@ -463,23 +418,39 @@ async def quickstart():
     """
     Show quick start guide and common commands.
     """
-    quickstart_guide = """
-[bold]🚀 AI Chatbot Platform API CLI - Quick Start[/bold]
-
-[yellow]1. Authentication:[/yellow]
-   • Login: [cyan]python api_manage.py login[/cyan]
-   • Check status: [cyan]python api_manage.py auth-status[/cyan]
-   • Logout: [cyan]python api_manage.py logout[/cyan]
-...
-"""
-    console.print(
-        Panel(
-            quickstart_guide,
-            title="🚀 API CLI Quick Start Guide",
-            border_style="bright_green",
-            padding=(1, 2),
-        )
-    )
+    print("\nAI Chatbot Platform API CLI - Quick Start:")
+    print("==========================================")
+    print()
+    print("1. Authentication:")
+    print("   • Login: python api_manage.py login")
+    print("   • Check status: python api_manage.py auth-status")
+    print("   • Logout: python api_manage.py logout")
+    print()
+    print("2. User Management:")
+    print("   • List users: python api_manage.py users list")
+    print("   • Create user: python api_manage.py users create")
+    print("   • Show user details: python api_manage.py users show <id>")
+    print()
+    print("3. Document Management:")
+    print("   • List documents: python api_manage.py documents list")
+    print("   • Show document: python api_manage.py documents show <id>")
+    print()
+    print("4. Conversation Management:")
+    print("   • List conversations: python api_manage.py conversations list")
+    print("   • Show conversation: python api_manage.py conversations show <id>")
+    print()
+    print("5. System Operations:")
+    print("   • Health check: python api_manage.py health")
+    print("   • System status: python api_manage.py status")
+    print("   • Configuration: python api_manage.py config")
+    print()
+    print("6. Analytics:")
+    print("   • Overview: python api_manage.py analytics overview")
+    print("   • Usage stats: python api_manage.py analytics usage")
+    print()
+    print("For more help on any command, add --help:")
+    print("   python api_manage.py <command> --help")
+    print()
 
 
 @core_app.async_command()
@@ -522,12 +493,12 @@ async def config():
             "Admin Username": os.getenv("DEFAULT_ADMIN_USERNAME", "admin"),
         }
 
-        table = Table(title="Configuration Settings")
-        table.add_column("Setting", style="cyan")
-        table.add_column("Value", style="white")
+        print("\nConfiguration Settings:")
+        print("=======================")
+        max_key_length = max(len(key) for key in config_data.keys())
         for key, value in config_data.items():
-            table.add_row(key, str(value))
-        console.print(table)
+            print(f"{key.ljust(max_key_length)}: {value}")
+        print()
 
         if cli_manager.has_token():
             success_message(

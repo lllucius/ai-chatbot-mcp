@@ -65,9 +65,9 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, get_sdk, success_message
+from .base import error_message, get_sdk, success_message
 
-profile_app = AsyncTyper(help="🎛️ LLM parameter profile management commands")
+profile_app = AsyncTyper(help="LLM parameter profile management commands", rich_markup_mode=None)
 
 
 @profile_app.async_command()

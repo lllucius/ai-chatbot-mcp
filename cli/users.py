@@ -79,15 +79,12 @@ from typing import Optional
 from uuid import UUID
 
 from async_typer import AsyncTyper
-from rich.prompt import Prompt
-from rich.table import Table
 from typer import Argument, Option
 
 from client.ai_chatbot_sdk import ApiError
 from shared.schemas import RegisterRequest
 
 from .base import (
-    console,
     display_key_value_pairs,
     error_message,
     format_timestamp,
@@ -96,7 +93,7 @@ from .base import (
     success_message,
 )
 
-user_app = AsyncTyper(help="👥 User management commands")
+user_app = AsyncTyper(help="User management commands", rich_markup_mode=None)
 
 
 @user_app.async_command()
@@ -169,7 +166,8 @@ async def create(
 
         # Prompt for password if not provided
         if not password:
-            user_password = Prompt.ask("Password", password=True)
+            import getpass
+            user_password = getpass.getpass("Password: ")
         else:
             user_password = password
 
@@ -255,31 +253,25 @@ async def list(
             info_message("No users found matching the criteria")
             return
 
-        table = Table(
-            title=f"Users (Page {pagination.page} of {pagination.total} total)"
-        )
-        table.add_column("ID", style="dim")
-        table.add_column("Username", style="cyan")
-        table.add_column("Email", style="blue")
-        table.add_column("Full Name", style="green")
-        table.add_column("Active", style="yellow")
-        table.add_column("Superuser", style="red")
-        table.add_column("Created", style="magenta")
-
+        # Prepare user data for display
+        user_data = []
         for user in users:
-            table.add_row(
-                str(user.id)[:8] + "...",
-                user.username,
-                user.email,
-                user.full_name or "-",
-                "✓" if user.is_active else "✗",
-                "✓" if user.is_superuser else "✗",
-                format_timestamp(
+            user_data.append({
+                "ID": str(user.id)[:8] + "...",
+                "Username": user.username,
+                "Email": user.email,
+                "Full Name": user.full_name or "-",
+                "Active": "✓" if user.is_active else "✗",
+                "Superuser": "✓" if user.is_superuser else "✗",
+                "Created": format_timestamp(
                     user.created_at.isoformat() if user.created_at else ""
                 ),
-            )
+            })
 
-        console.print(table)
+        # Display using the plain text table function
+        from .base import display_table_data
+        display_table_data(user_data, f"Users (Page {pagination.page} of {pagination.total} total)")
+        
         if getattr(pagination, "total", 0) > size:
             info_message(f"Showing {len(users)} of {pagination.total} total users")
 

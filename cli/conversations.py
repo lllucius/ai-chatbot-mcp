@@ -80,9 +80,9 @@ from uuid import UUID
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, format_timestamp, get_sdk, success_message
+from .base import error_message, format_timestamp, get_sdk, success_message
 
-conversation_app = AsyncTyper(help="💬 Conversation management commands")
+conversation_app = AsyncTyper(help="Conversation management commands", rich_markup_mode=None)
 
 
 @conversation_app.async_command()

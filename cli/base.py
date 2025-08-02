@@ -68,18 +68,14 @@ Example:
 """
 
 import json
+import textwrap
 from pathlib import Path
 from typing import Dict, Optional
-
-from rich.console import Console
-from rich.panel import Panel
 
 from client.ai_chatbot_sdk import AIChatbotSDK
 from client.config import load_config
 
 TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
-
-console = Console()
 
 
 class APIError(Exception):
@@ -496,73 +492,51 @@ async def get_sdk() -> AIChatbotSDK:
 
 
 def success_message(message: str):
-    """Display a success message with green checkmark and consistent formatting.
+    """Display a success message with simple formatting.
 
-    Outputs a success message to the console using Rich formatting with a green
-    checkmark (✓) prefix. This provides consistent visual feedback for successful
-    operations across all CLI commands.
+    Outputs a success message to the console using plain text with a checkmark
+    prefix. This provides consistent visual feedback for successful operations
+    across all CLI commands.
 
     Args:
         message (str): Success message to display to the user
 
-    Performance Notes:
-        - Fast console output with Rich formatting
-        - Consistent styling across all success messages
-        - Non-blocking operation suitable for CLI feedback
-
-    Use Cases:
-        - Confirming successful API operations
-        - Indicating completion of long-running tasks
-        - Providing positive feedback for user actions
-        - Success notifications in batch operations
-
     Example:
         success_message("User created successfully")
-        # Output: ✓ User created successfully (in green)
+        # Output: ✓ User created successfully
 
     """
-    console.print(f"[green]✓[/green] {message}")
+    print(f"✓ {message}")
 
 
 def error_message(message: str):
-    """Display an error message with red X and consistent formatting.
+    """Display an error message with simple formatting.
 
-    Outputs an error message to the console using Rich formatting with a red
-    X (✗) prefix. This provides consistent visual feedback for failed operations
+    Outputs an error message to the console using plain text with an X
+    prefix. This provides consistent visual feedback for failed operations
     and error conditions across all CLI commands.
 
     Args:
         message (str): Error message to display to the user
 
-    Performance Notes:
-        - Fast console output with Rich formatting
-        - Consistent styling across all error messages
-        - Non-blocking operation suitable for error reporting
-
-    Use Cases:
-        - Reporting API operation failures
-        - Indicating validation errors and user input issues
-        - Error notifications during batch operations
-        - Exception handling and debugging information
-
     Example:
         error_message("Authentication failed")
-        # Output: ✗ Authentication failed (in red)
+        # Output: ✗ Authentication failed
 
     """
-    console.print(f"[red]✗[/red] {message}")
+    print(f"✗ {message}")
 
 
 def info_message(message: str):
-    """Display an informational message with a blue info icon.
+    """Display an informational message with a simple info prefix.
     """
-    console.print(f"[blue]ℹ[/blue] {message}")
+    print(f"ℹ {message}")
 
 
 def warning_message(message: str):
-    """Display a warning message with a yellow warning icon.
+    """Display a warning message with a simple warning prefix.
     """
-    console.print(f"[yellow]⚠[/yellow] {message}")
+    print(f"⚠ {message}")
 
 
 def format_json(data: dict) -> str:
@@ -574,28 +548,16 @@ def format_json(data: dict) -> str:
 
 
 def display_table_data(data: list, title: str = "Results"):
-    """Display structured data in a formatted table with Rich styling.
+    """Display structured data in a simple text table format.
 
-    Creates and displays a Rich table with automatic column detection and
-    formatting. Handles both dictionary data (with automatic header creation)
+    Creates and displays a plain text table with automatic column detection and
+    text wrapping. Handles both dictionary data (with automatic header creation)
     and simple value lists. Empty datasets are handled gracefully with
-    informational messages.
+    informational messages. Values are wrapped instead of truncated.
 
     Args:
         data (list): List of dictionaries or simple values to display
         title (str): Table title for display context. Defaults to "Results"
-
-    Performance Notes:
-        - Efficient table rendering with Rich library
-        - Automatic column sizing and formatting
-        - Handles large datasets with proper pagination support
-        - Memory-efficient processing of data structures
-
-    Use Cases:
-        - Displaying API response data in tabular format
-        - Showing lists of users, conversations, or other entities
-        - Presenting structured data from database queries
-        - Formatting search results and analytics data
 
     Example:
         # Display user data
@@ -613,39 +575,101 @@ def display_table_data(data: list, title: str = "Results"):
         info_message("No data to display")
         return
 
-    from rich.table import Table
-
-    table = Table(title=title)
-
+    print(f"\n{title}:")
+    print("=" * len(title))
+    
     if isinstance(data[0], dict):
         headers = list(data[0].keys())
+        
+        # Calculate maximum width for each column (minimum 10, maximum 30)
+        col_widths = {}
         for header in headers:
-            table.add_column(header.replace("_", " ").title(), style="cyan")
+            col_widths[header] = max(10, min(30, len(header)))
+            for item in data:
+                value_str = str(item.get(header, ""))
+                col_widths[header] = max(col_widths[header], min(30, len(value_str)))
+        
+        # Print header
+        header_line = " | ".join(header.replace("_", " ").title().ljust(col_widths[header]) for header in headers)
+        print(header_line)
+        print("-" * len(header_line))
+        
+        # Print data rows with text wrapping
         for item in data:
-            row = [str(item.get(header, "")) for header in headers]
-            table.add_row(*row)
+            row_lines = []
+            max_lines = 1
+            
+            # Prepare wrapped text for each column
+            wrapped_cols = {}
+            for header in headers:
+                value_str = str(item.get(header, ""))
+                if len(value_str) > col_widths[header]:
+                    wrapped_cols[header] = textwrap.wrap(value_str, width=col_widths[header])
+                else:
+                    wrapped_cols[header] = [value_str]
+                max_lines = max(max_lines, len(wrapped_cols[header]))
+            
+            # Print each line of the wrapped row
+            for line_num in range(max_lines):
+                line_parts = []
+                for header in headers:
+                    if line_num < len(wrapped_cols[header]):
+                        line_parts.append(wrapped_cols[header][line_num].ljust(col_widths[header]))
+                    else:
+                        line_parts.append(" " * col_widths[header])
+                print(" | ".join(line_parts))
+                
     else:
-        table.add_column("Value", style="cyan")
+        # Simple list display
+        print("Value")
+        print("-----")
         for item in data:
-            table.add_row(str(item))
-
-    console.print(table)
+            # Wrap long values
+            value_str = str(item)
+            if len(value_str) > 50:
+                wrapped_lines = textwrap.wrap(value_str, width=50)
+                for line in wrapped_lines:
+                    print(line)
+            else:
+                print(value_str)
+    
+    print()  # Empty line after table
 
 
 def display_key_value_pairs(data: dict, title: str = "Information"):
-    """Display key-value pairs in a formatted panel.
+    """Display key-value pairs in a simple text format.
     """
-    content = "\n".join([f"[cyan]{key}:[/cyan] {value}" for key, value in data.items()])
-    panel = Panel(content, title=title, border_style="blue", padding=(1, 2))
-    console.print(panel)
+    print(f"\n{title}:")
+    print("=" * len(title))
+    
+    max_key_length = max(len(str(key)) for key in data.keys()) if data else 0
+    
+    for key, value in data.items():
+        key_str = str(key).replace("_", " ").title()
+        value_str = str(value)
+        
+        # Wrap long values
+        if len(value_str) > 60:
+            print(f"{key_str.ljust(max_key_length)}: ")
+            wrapped_lines = textwrap.wrap(value_str, width=60, initial_indent="  ", subsequent_indent="  ")
+            for line in wrapped_lines:
+                print(line)
+        else:
+            print(f"{key_str.ljust(max_key_length)}: {value_str}")
+    
+    print()  # Empty line after display
 
 
 def confirm_action(message: str, default: bool = False) -> bool:
-    """Ask for user confirmation.
+    """Ask for user confirmation with simple input prompt.
     """
-    from rich.prompt import Confirm
-
-    return Confirm.ask(message, default=default)
+    default_str = "Y/n" if default else "y/N"
+    response = input(f"{message} [{default_str}]: ").strip().lower()
+    
+    if not response:
+        return default
+    
+    return response in ['y', 'yes', 'true', '1']
 
 
 def paginate_results(data: list, page_size: int = 20) -> list:
