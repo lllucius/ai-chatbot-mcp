@@ -3,7 +3,7 @@
 **Generated on: 2025-07-14 03:52:46 UTC**  
 **Current User: lllucius**
 
-A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation) capabilities, document processing, vector search, and MCP (Model Context Protocol) tool integration.
+A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation) capabilities, document processing, vector search, MCP (Model Context Protocol) tool integration, and a comprehensive React frontend for experimentation and management.
 
 ## 🚀 Features
 
@@ -53,9 +53,23 @@ A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation)
 - **Error Tracking**: Structured logging and error handling
 - **Admin Dashboard**: System statistics and user management
 
+### 🎨 Advanced React Frontend
+- **TypeScript Integration**: Full type safety with comprehensive API interfaces
+- **Material-UI v5**: Modern, responsive design system
+- **Real-time Chat**: Advanced chatbot interface with conversation management
+- **Document Management**: Drag-and-drop upload with processing status tracking
+- **Analytics Dashboard**: Interactive charts and visualizations using Chart.js
+- **LLM Profile Management**: Parameter tuning interface for different conversation modes
+- **Prompt Template System**: Manage and organize AI prompts with categorization
+- **MCP Tools Interface**: Server and tool management with usage analytics
+- **Advanced Search**: Multiple algorithms with filtering and result visualization
+- **Responsive Design**: Mobile-friendly interface with optimized navigation
+
 ## 🏗️ Architecture
 
 ### Technology Stack
+
+#### Backend
 - **Backend**: FastAPI with async/await
 - **Database**: PostgreSQL 14+ with pgvector
 - **AI/ML**: OpenAI API, sentence-transformers
@@ -66,88 +80,147 @@ A production-grade AI chatbot platform with RAG (Retrieval-Augmented Generation)
 - **Registry Systems**: Comprehensive management for servers, tools, prompts, and LLM profiles
 - **CLI Framework**: Typer with Rich for beautiful terminal interfaces
 
+#### Frontend
+- **Framework**: React 18 with TypeScript
+- **UI Library**: Material-UI v5
+- **State Management**: React Query (TanStack Query) + React Context
+- **Charts**: Chart.js with react-chartjs-2
+- **Routing**: React Router v6
+- **HTTP Client**: Axios with interceptors
+- **Build Tool**: Create React App with TypeScript template
+
 ### Project Structure
 ```
 ai-chatbot-platform/
-├── app/                          # Main application
+├── app/                          # FastAPI backend
 │   ├── api/                     # REST API endpoints
 │   ├── core/                    # Core functionality
 │   ├── models/                  # Database models
 │   ├── schemas/                 # Pydantic schemas
 │   ├── services/                # Business logic
 │   └── utils/                   # Utilities
+├── frontend/                    # React TypeScript frontend
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   ├── pages/              # Page components
+│   │   ├── hooks/              # React Query hooks
+│   │   ├── services/           # API service layer
+│   │   ├── types/              # TypeScript definitions
+│   │   └── contexts/           # React contexts
+│   ├── public/                 # Static assets
+│   └── package.json            # Dependencies
 ├── scripts/                     # Management scripts
 ├── migrations/                  # Database migrations
-└── requirements.txt             # Dependencies
+└── requirements.txt             # Backend dependencies
 ```
 
 ## 🚦 Quick Start
 
 ### Prerequisites
 - Python 3.11+ or 3.12
+- Node.js 18+ and npm (for frontend)
 - PostgreSQL 14+ with pgvector extension
 - OpenAI API key
 
-### Option 1: Automated Development Setup (Recommended)
+### Option 1: Full Stack Setup with Frontend
 
+1. **Backend Setup**:
 ```bash
 git clone <repository-url>
 cd ai-chatbot-mcp
 
-# Run automated setup script
-python scripts/dev_setup.py
-
-# Follow the printed instructions to complete setup
-```
-
-### Option 2: Manual Installation
-
-1. **Clone and setup environment:**
-```bash
-git clone <repository-url>
-cd ai-chatbot-mcp
+# Setup Python environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-2. **Configure environment:**
-```bash
+# Configure environment
 cp .env.example .env
-# Edit .env with your settings:
-# - DATABASE_URL
-# - SECRET_KEY 
-# - OPENAI_API_KEY
-```
+# Edit .env with your settings (DATABASE_URL, SECRET_KEY, OPENAI_API_KEY)
 
-3. **Setup PostgreSQL with pgvector:**
-```sql
--- Connect to PostgreSQL as superuser
-CREATE DATABASE ai_chatbot;
-\c ai_chatbot;
-CREATE EXTENSION vector;
-```
+# Setup PostgreSQL with pgvector
+# Connect to PostgreSQL as superuser and run:
+# CREATE DATABASE ai_chatbot;
+# \c ai_chatbot;
+# CREATE EXTENSION vector;
 
-4. **Initialize database and create admin user:**
-```bash
+# Initialize database
 python scripts/startup.py
-```
 
-5. **Start the application:**
-```bash
+# Start backend
 uvicorn app.main:app --reload
 ```
 
-6. **Access the application:**
-- API Documentation: http://localhost:8000/docs
-- Health Check: http://localhost:8000/api/v1/health
+2. **Frontend Setup**:
+```bash
+# In a new terminal, from the project root
+./setup-frontend.sh
+
+# Or manually:
+cd frontend
+npm install
+npm start
+```
+
+3. **Access the Application**:
+- **Frontend**: http://localhost:3000 (React app)
+- **Backend API**: http://localhost:8000/docs (Swagger docs)
+- **Health Check**: http://localhost:8000/api/v1/health
+
+### Option 2: Backend Only Setup
+
+```bash
+git clone <repository-url>
+cd ai-chatbot-mcp
+python scripts/dev_setup.py
+# Follow the printed instructions to complete setup
+```
 
 ### Default Admin Credentials
 - **Username**: admin
-- **Email**: admin@example.com
+- **Email**: admin@example.com  
 - **Password**: Admin123!
 
 ⚠️ **IMPORTANT**: Change these credentials immediately in production!
+
+## 📱 Frontend Application
+
+The React TypeScript frontend provides a comprehensive interface for all platform features:
+
+### Key Interfaces
+- **🏠 Dashboard**: System overview with statistics and quick actions
+- **💬 Chat Interface**: Real-time AI conversations with RAG capabilities
+- **📄 Document Manager**: Upload, process, and manage documents
+- **🔍 Advanced Search**: Multiple search algorithms with result visualization
+- **📊 Analytics**: Interactive charts showing usage trends and performance
+- **🎛️ LLM Profiles**: Parameter tuning for different AI behaviors
+- **📝 Prompt Templates**: Manage AI prompts with categorization
+- **🛠️ MCP Tools**: Server and tool management interface
+- **⚙️ Settings**: User preferences and account management
+- **👤 Admin Panel**: User management and system administration
+
+### Frontend Features
+- **TypeScript**: Full type safety with comprehensive API interfaces
+- **Responsive Design**: Mobile-friendly interface with Material-UI
+- **Real-time Updates**: Live status tracking and notifications
+- **Drag & Drop**: Easy file uploads with progress tracking
+- **Interactive Charts**: Chart.js visualizations for analytics
+- **Advanced Forms**: Rich form controls with validation
+- **Error Handling**: User-friendly error messages and recovery
+- **Accessibility**: ARIA labels and keyboard navigation
+
+### Getting Started with Frontend
+```bash
+# Quick setup
+./setup-frontend.sh
+
+# Manual setup
+cd frontend
+npm install
+npm start
+```
+
+For detailed frontend documentation, see [`frontend/FRONTEND_README.md`](frontend/FRONTEND_README.md).
 
 ## 📖 API Usage
 
