@@ -1,7 +1,63 @@
 """
-LLM profile management commands for the API-based CLI.
+LLM parameter profile management commands for the AI Chatbot Platform CLI.
 
-All commands use async/await and the async SDK client.
+This module provides comprehensive management of Large Language Model (LLM)
+parameter profiles through async operations and the AI Chatbot SDK. It enables
+administrators and developers to create, configure, and manage different LLM
+configurations for various use cases and optimization scenarios.
+
+LLM profiles define the parameters and settings used when interacting with
+language models, including temperature, token limits, prompt templates, and
+model-specific configurations. This enables fine-tuned control over AI behavior
+for different applications and use cases.
+
+Key Features:
+    - LLM parameter profile creation and management
+    - Template-based profile configuration
+    - A/B testing and performance comparison
+    - Profile versioning and rollback capabilities
+    - Usage analytics and optimization recommendations
+    - Integration with multiple LLM providers
+
+Profile Configuration:
+    - Temperature and creativity settings
+    - Token limits and response length control
+    - Prompt templates and system instructions
+    - Model selection and provider configuration
+    - Safety filters and content moderation settings
+    - Custom parameter sets for specialized use cases
+
+Performance Optimization:
+    - Response time and quality metrics
+    - Cost optimization and budget management
+    - Usage pattern analysis and recommendations
+    - A/B testing for profile comparison
+    - Automated optimization based on feedback
+
+Use Cases:
+    - Customer service chatbot configuration
+    - Creative writing and content generation
+    - Technical documentation and code assistance
+    - Educational and training applications
+    - Research and experimental AI configurations
+
+Example Usage:
+    ```bash
+    # Profile management
+    ai-chatbot profiles list --active-only
+    ai-chatbot profiles create customer-service --template standard
+    ai-chatbot profiles show profile_id --include-usage
+
+    # Configuration and testing
+    ai-chatbot profiles update profile_id --temperature 0.7
+    ai-chatbot profiles test profile_id --prompt "Hello, world!"
+    ai-chatbot profiles compare profile1 profile2 --metric quality
+
+    # Deployment and monitoring
+    ai-chatbot profiles activate profile_id
+    ai-chatbot profiles usage-report --profile-id profile_id --period week
+    ai-chatbot profiles optimize profile_id --auto-tune
+    ```
 """
 
 from typing import Optional
