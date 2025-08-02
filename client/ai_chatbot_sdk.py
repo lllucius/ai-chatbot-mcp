@@ -126,7 +126,6 @@ import httpx
 # Import all schema models from shared package instead of defining locally
 from shared.schemas import (
     # Auth schemas
-    LoginRequest,
     RegisterRequest,
     Token,
     PasswordResetRequest,
@@ -143,62 +142,25 @@ from shared.schemas import (
     SystemMetricsResponse,
     
     # User schemas
-    UserBase,
-    UserCreate,
     UserUpdate,
     UserPasswordUpdate,
     UserResponse,
-    UserListResponse,
-    UserDetailResponse,
-    UserSearchParams,
     UserStatsResponse,
     
     # Conversation schemas
-    ConversationBase,
     ConversationCreate,
     ConversationUpdate,
     ConversationResponse,
-    MessageBase,
-    MessageCreate,
     MessageResponse,
     ChatRequest,
     ChatResponse,
-    ConversationListResponse,
-    MessageListResponse,
-    ConversationStats,
-    
-    # Document schemas
     DocumentResponse,
-    DocumentListResponse,
     DocumentSearchRequest,
-    DocumentSearchResponse,
-    
-    # LLM Profile schemas
     LLMProfileResponse,
     LLMProfileCreate,
-    LLMProfileListResponse,
-    
-    # MCP schemas
-    MCPServerSchema,
-    MCPServerCreateSchema,
-    MCPServerUpdateSchema,
-    MCPToolSchema,
-    MCPToolExecutionRequestSchema,
-    MCPToolExecutionResultSchema,
-    MCPServerListResponse,
-    MCPToolListResponse,
-    
-    # Prompt schemas
     PromptResponse,
     PromptCreate,
-    PromptListResponse,
-    
-    # Search schemas
     SearchResponse,
-    
-    # Tool calling schemas
-    ToolHandlingMode,
-    ToolCallSummary,
 )
 
 # --- Exceptions ---
