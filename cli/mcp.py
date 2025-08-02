@@ -1,5 +1,4 @@
-"""
-Model Context Protocol (MCP) management commands for the AI Chatbot Platform CLI.
+"""Model Context Protocol (MCP) management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive MCP server and tool management functionality
 through async operations and the AI Chatbot SDK. It enables administrators and
@@ -404,6 +403,7 @@ def _display_servers_table(servers):
     Note:
         Shows server name, URL, status (enabled/disabled, connected/disconnected),
         transport type, and tool count in a Rich table format.
+
     """
     from rich import box
     from rich.table import Table
@@ -440,6 +440,7 @@ def _display_server_details(server):
     Note:
         Shows comprehensive server information including connection status,
         description, and last connection time in a formatted panel.
+
     """
     from rich.panel import Panel
 
@@ -476,6 +477,7 @@ def _display_tools_table(tools):
     Note:
         Shows tool name, server, description (truncated), and status
         in a Rich table format. Descriptions longer than 50 characters are truncated.
+
     """
     from rich import box
     from rich.table import Table
@@ -509,6 +511,7 @@ def _display_tool_details(tool):
     Note:
         Shows comprehensive tool information including parameters count,
         usage statistics, and full description in a formatted panel.
+
     """
     from rich.panel import Panel
 
@@ -541,6 +544,7 @@ def _display_connection_details(test_result):
     Note:
         Shows connection status, response time, error details if any,
         and discovered capabilities in a formatted panel.
+
     """
     from rich.panel import Panel
 
@@ -569,6 +573,7 @@ def _display_stats(stats_data):
     Note:
         Shows three separate tables for server stats, tool stats, and usage stats
         with metrics like totals, enabled/disabled counts, and usage patterns.
+
     """
     from rich import box
     from rich.table import Table

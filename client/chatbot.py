@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Enhanced AI Chatbot Interactive Terminal Client.
+"""Enhanced AI Chatbot Interactive Terminal Client.
 
 This module provides a feature-rich, interactive terminal-based client for the AI Chatbot
 Platform, enabling direct user interaction with AI models through a sophisticated command-line
@@ -192,6 +191,7 @@ def save_token(token: str) -> None:
         
     Note:
         Creates parent directories if they don't exist.
+
     """
     os.makedirs(os.path.dirname(TOKEN_FILE), exist_ok=True)
     with open(TOKEN_FILE, "w") as f:
@@ -203,6 +203,7 @@ def load_token() -> Optional[str]:
     
     Returns:
         Optional[str]: Stored JWT token if available, None otherwise.
+
     """
     try:
         with open(TOKEN_FILE) as f:
@@ -216,6 +217,7 @@ def clear_token() -> None:
     
     Note:
         Silently succeeds if token file doesn't exist.
+
     """
     with contextlib.suppress(FileNotFoundError):
         os.remove(TOKEN_FILE)
@@ -226,6 +228,7 @@ def print_error(msg: str) -> None:
     
     Args:
         msg: Error message to display.
+
     """
     console.print(f"[bold red]Error:[/bold red] {msg}")
 
@@ -235,6 +238,7 @@ def print_success(msg: str) -> None:
     
     Args:
         msg: Success message to display.
+
     """
     console.print(f"[bold green]{msg}[/bold green]")
 
@@ -244,6 +248,7 @@ def print_info(msg: str) -> None:
     
     Args:
         msg: Info message to display.
+
     """
     console.print(f"[bold cyan]{msg}[/bold cyan]")
 
@@ -253,6 +258,7 @@ def print_warn(msg: str) -> None:
     
     Args:
         msg: Warning message to display.
+
     """
     console.print(f"[yellow]{msg}[/yellow]")
 
@@ -280,6 +286,7 @@ def prettify_dict(
     Note:
         Automatically handles Pydantic models with model_dump() method.
         Truncates deeply nested structures beyond max_depth.
+
     """
     if hasattr(data, "model_dump"):
         data = data.model_dump()
@@ -328,6 +335,7 @@ def prettify_list(
         Automatically handles Pydantic models and objects with __dict__.
         Limits columns to first 8 if more than 8 are available.
         Shows truncation message if items exceed max_rows.
+
     """
     if not items:
         console.print("[dim]No items.[/dim]")
@@ -360,6 +368,7 @@ def parse_bool(val: str) -> bool:
         
     Returns:
         bool: True if val represents a truthy value (1, true, yes, y, on), False otherwise.
+
     """
     return str(val).lower() in ("1", "true", "yes", "y", "on")
 
@@ -373,6 +382,7 @@ def save_settings(settings: Dict[str, Any]) -> None:
     Note:
         Removes 'llm_overrides' from saved data. 
         Prints warning if save fails but doesn't raise exception.
+
     """
     try:
         data = settings.copy()
@@ -388,6 +398,7 @@ def load_settings() -> Dict[str, Any]:
     
     Returns:
         Dict[str, Any]: Loaded settings dictionary, empty dict if file doesn't exist or is invalid.
+
     """
     try:
         with open(SETTINGS_FILE) as f:
@@ -401,6 +412,7 @@ def ensure_backup_dir() -> None:
     
     Note:
         Creates parent directories as needed.
+
     """
     os.makedirs(BACKUP_DIR, exist_ok=True)
 
@@ -418,6 +430,7 @@ def save_conversation_to_file(content: str, filename: Optional[str] = None) -> s
     Note:
         Creates backup directory if it doesn't exist.
         Default filename format: conversation_YYYYMMDDHHMMSS.txt
+
     """
     ensure_backup_dir()
     if filename is None:
@@ -440,6 +453,7 @@ def extract_ai_content(text: str) -> str:
     Note:
         Handles various content formats including XML content tags, message tags,
         and plain text. Removes XML declarations and extracts content from tags.
+
     """
     if not text:
         return ""
@@ -468,6 +482,7 @@ def display_token_stats(
     Note:
         Formats and displays token counts, model name, and latency in a user-friendly format.
         Shows individual prompt and completion token counts when available.
+
     """
     if usage:
         tkns = usage.get("total_tokens")
@@ -500,6 +515,7 @@ def ellipsis(text: str, max_len: int = 100) -> str:
         
     Returns:
         str: Original text if under limit, otherwise truncated text with "..." suffix.
+
     """
     if len(text) > max_len:
         return text[: max_len - 3] + "..."
@@ -518,6 +534,7 @@ def prompt_password(confirm: bool = False) -> str:
     Note:
         Uses getpass for secure input (no echo to terminal).
         Loops until passwords match when confirmation is required.
+
     """
     while True:
         pw = getpass.getpass("Password: ")
@@ -539,6 +556,7 @@ def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
         Loads existing history if available and configures automatic saving on exit.
         Silently does nothing if readline module is not available (e.g., on Windows).
         Sets history length limit to 1000 entries.
+
     """
     if not readline:
         return
@@ -565,6 +583,7 @@ class SpinnerContext:
         Args:
             message: Status message to display with spinner (default: "Thinking...").
             enabled: Whether to show spinner. If False, context does nothing.
+
         """
         self.enabled = enabled
         self.message = message
@@ -576,6 +595,7 @@ class SpinnerContext:
         
         Returns:
             SpinnerContext: Self for context manager protocol.
+
         """
         if self.enabled:
             self.task = asyncio.create_task(self._spin())
@@ -588,6 +608,7 @@ class SpinnerContext:
             exc_type: Exception type if an exception occurred.
             exc: Exception instance if an exception occurred.
             tb: Traceback if an exception occurred.
+
         """
         self.stop_event.set()
         if self.task:
@@ -598,6 +619,7 @@ class SpinnerContext:
         
         Note:
             Runs until stop_event is set. Uses Rich console status for display.
+
         """
         with console.status(f"[bold blue]{self.message}"):
             while not self.stop_event.is_set():
@@ -613,6 +635,7 @@ class Settings:
     
     Attributes:
         _persist_keys: List of setting keys that are saved to persistent storage.
+
     """
     
     _persist_keys = [
@@ -633,6 +656,7 @@ class Settings:
             
         Note:
             Loads persistent user settings from file if available, overriding defaults.
+
         """
         self.use_rag: bool = config.client_default_use_rag
         self.use_tools: bool = config.client_default_use_tools
@@ -653,6 +677,7 @@ class Settings:
         
         Note:
             Shows all user-configurable settings including LLM parameter overrides.
+
         """
         t = Table(title="Current Settings", box=box.SIMPLE)
         t.add_column("Setting", style="cyan")
@@ -675,6 +700,7 @@ class Settings:
         
         Returns:
             Dict[str, Any]: Dictionary containing only persistable settings.
+
         """
         return {k: getattr(self, k) for k in self._persist_keys}
 
@@ -687,6 +713,7 @@ class Settings:
             
         Note:
             Only updates known settings. Automatically saves to persistent storage.
+
         """
         if hasattr(self, key):
             setattr(self, key, value)
@@ -700,6 +727,7 @@ class Settings:
         
         Note:
             Resets all custom LLM parameters to use profile or system defaults.
+
         """
         self.llm_overrides.clear()
         print_success("Cleared all LLM parameter overrides.")
@@ -713,6 +741,7 @@ class Settings:
             
         Note:
             Overrides take precedence over profile settings for this session.
+
         """
         self.llm_overrides[key] = value
         print_success(f"LLM parameter override: {key} = {value}")
@@ -722,6 +751,7 @@ class Settings:
         
         Args:
             key: LLM parameter name to remove override for.
+
         """
         if key in self.llm_overrides:
             self.llm_overrides.pop(key)
@@ -732,6 +762,7 @@ class Settings:
         
         Returns:
             Dict[str, Any]: Copy of LLM parameter overrides.
+
         """
         return self.llm_overrides.copy()
 
@@ -740,6 +771,7 @@ class Settings:
         
         Note:
             Shows message if no overrides are set.
+
         """
         if not self.llm_overrides:
             print_info("No LLM parameter overrides set.")
@@ -756,6 +788,7 @@ class Settings:
         
         Returns:
             List[Tuple[str, str, str]]: List of (name, type, description) tuples.
+
         """
         return [
             ("use_rag", "bool", "Enable RAG (true/false)"),
@@ -786,6 +819,7 @@ class CommandHandler:
             sdk: AIChatbotSDK instance for API operations.
             settings: Settings instance for configuration management.
             history: List to store command history.
+
         """
         self.sdk: AIChatbotSDK = sdk
         self.settings: Settings = settings
@@ -804,6 +838,7 @@ class CommandHandler:
             Commands start with '/'. Non-command input returns False to allow
             normal chat processing. Handles all command parsing, argument validation,
             and error handling with user-friendly messages.
+
         """
         if not line.startswith("/"):
             return False
@@ -869,6 +904,7 @@ class CommandHandler:
         
         Note:
             Shows command syntax, descriptions, and usage examples in a formatted panel.
+
         """
         help_text = """
         [bold]AI Chatbot CLI Commands[/bold]
@@ -904,6 +940,7 @@ class CommandHandler:
         
         Note:
             Shows all configurable settings that can be used with /set command.
+
         """
         t = Table(title="Available Settings (for /set)", box=box.SIMPLE)
         t.add_column("Setting", style="cyan")
@@ -921,6 +958,7 @@ class CommandHandler:
             
         Note:
             Shows help if no args provided. Automatically converts boolean values.
+
         """
         if not args:
             self.show_settings_help()
@@ -1290,6 +1328,7 @@ async def auto_generate_title(
     Note:
         Uses first 10 words of message if it's long enough, otherwise uses full message.
         Falls back to "AI Chat" if processing fails.
+
     """
     raw = user_message.strip()
     words = raw.split()
@@ -1309,6 +1348,7 @@ def get_user_input() -> str:
         
     Note:
         Handles EOF gracefully (e.g., Ctrl+D) by returning empty string.
+
     """
     prompt_str = "You: "
     try:
@@ -1332,6 +1372,7 @@ async def chat_loop(
         Runs indefinitely until user exits. Handles both commands and chat messages.
         Supports streaming and non-streaming responses based on settings.
         Manages conversation state and auto-generates titles when enabled.
+
     """
     console.print(
         "[bold green]Welcome to the AI Chatbot CLI! Type /help for commands.[/bold green]"
@@ -1384,6 +1425,7 @@ async def chat_loop(
                     
                 Raises:
                     ApiError: Re-raised if not auth-related or retry fails.
+
                 """
                 try:
                     return await func()
@@ -1404,6 +1446,7 @@ async def chat_loop(
                     Note:
                         Processes streaming chunks and displays content in real-time.
                         Handles various chunk types and displays token stats when complete.
+
                     """
                     stream = sdk.conversations.chat_stream(chat_req)
                     usage = None
@@ -1469,6 +1512,7 @@ async def ensure_auth(sdk: AIChatbotSDK) -> bool:
     Note:
         First tries to use saved token, then prompts for credentials if needed.
         Saves new token to secure storage on successful login.
+
     """
     token = load_token()
     if token:
@@ -1500,12 +1544,14 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
     Note:
         Handles SIGINT and SIGTERM for clean exit.
         Silently ignores NotImplementedError on platforms without signal support.
+
     """
     def _exit_handler():
         """Internal signal handler for graceful exit.
         
         Note:
             Prints exit message and terminates with exit code 0.
+
         """
         print_warn("\nExiting. (Ctrl+C)")
         sys.exit(0)
@@ -1523,6 +1569,7 @@ async def main() -> None:
     Note:
         Initializes all components, handles authentication, and starts the chat loop.
         Configures readline if available and sets up graceful exit handling.
+
     """
     if readline:
         setup_readline()

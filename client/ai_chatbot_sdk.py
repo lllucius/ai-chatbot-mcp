@@ -1,5 +1,4 @@
-"""
-AI Chatbot Platform SDK - Comprehensive Python Client Library.
+"""AI Chatbot Platform SDK - Comprehensive Python Client Library.
 
 This module provides a complete async Python SDK for the AI Chatbot Platform, enabling
 developers to integrate platform capabilities into their applications with full API
@@ -130,14 +129,14 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class ApiError(Exception):
-    """
-    Exception raised when API requests fail.
+    """Exception raised when API requests fail.
 
     Args:
         status: HTTP status code of the failed request.
         reason: HTTP reason phrase.
         url: The URL that was requested.
         body: Response body content.
+
     """
 
     def __init__(self, status: int, reason: str, url: str, body: Any):
@@ -148,6 +147,7 @@ class ApiError(Exception):
             reason: HTTP reason phrase.
             url: The URL that was requested.
             body: Response body content.
+
         """
         super().__init__(f"HTTP {status} {reason}: {body}")
         self.status = status
@@ -162,8 +162,7 @@ T = TypeVar("T")
 
 
 class ToolHandlingMode(str, Enum):
-    """
-    Enum for different tool call result handling modes.
+    """Enum for different tool call result handling modes.
 
     - RETURN_RESULTS: Return tool call results as content without further AI processing
     - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
@@ -545,8 +544,7 @@ def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 async def handle_response(
     resp: httpx.Response, url: str, cls: Optional[Type[T]] = None
 ) -> Any:
-    """
-    Handle API response and raise ApiError on failure.
+    """Handle API response and raise ApiError on failure.
 
     Args:
         resp: The HTTP response object from httpx.
@@ -558,6 +556,7 @@ async def handle_response(
 
     Raises:
         ApiError: If the response indicates an error.
+
     """
     if not resp.is_success:
         try:
@@ -584,8 +583,7 @@ async def handle_response(
 def build_headers(
     token: Optional[str] = None, content_type: Optional[str] = None
 ) -> Dict[str, str]:
-    """
-    Build HTTP headers for API requests.
+    """Build HTTP headers for API requests.
 
     Args:
         token: Optional authentication token.
@@ -593,6 +591,7 @@ def build_headers(
 
     Returns:
         Dictionary of HTTP headers.
+
     """
     headers = {}
     if content_type:
@@ -603,8 +602,7 @@ def build_headers(
 
 
 def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> str:
-    """
-    Construct a URL with optional query parameters.
+    """Construct a URL with optional query parameters.
 
     Args:
         base: Base URL.
@@ -613,6 +611,7 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
 
     Returns:
         Complete URL string.
+
     """
     url = base.rstrip("/") + path
     q = filter_query(query)
@@ -626,8 +625,7 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
 async def fetch_all_pages(
     fetch_page: Callable[[int, int], Any], per_page: int = 50
 ) -> List[Any]:
-    """
-    Fetch all pages of paginated results asynchronously.
+    """Fetch all pages of paginated results asynchronously.
 
     Args:
         fetch_page: Async function that takes page and per_page parameters.
@@ -635,6 +633,7 @@ async def fetch_all_pages(
 
     Returns:
         List of all items from all pages.
+
     """
     all_items = []
     page = 1
@@ -682,6 +681,7 @@ async def fetch_all_pages(
 
 class DatabaseHealthResponse(BaseModel):
     """Database health check response model."""
+
     status: str
     message: str
     connectivity: str
@@ -691,6 +691,7 @@ class DatabaseHealthResponse(BaseModel):
 
 class ServicesHealthResponse(BaseModel):
     """External services health check response model."""
+
     openai: Dict[str, Any]
     fastmcp: Dict[str, Any]
     timestamp: datetime
@@ -698,6 +699,7 @@ class ServicesHealthResponse(BaseModel):
 
 class SystemMetricsResponse(BaseModel):
     """System metrics response model."""
+
     system: Dict[str, Any]
     application: Dict[str, Any]
     timestamp: datetime
@@ -706,6 +708,7 @@ class SystemMetricsResponse(BaseModel):
 
 class ReadinessResponse(BaseModel):
     """Readiness check response model."""
+
     status: str
     message: str
     timestamp: datetime
@@ -713,6 +716,7 @@ class ReadinessResponse(BaseModel):
 
 class LivenessResponse(BaseModel):
     """Liveness check response model."""
+
     status: str
     message: str
     timestamp: datetime
@@ -720,23 +724,27 @@ class LivenessResponse(BaseModel):
 
 class PerformanceMetricsResponse(BaseModel):
     """Performance metrics response model."""
+
     data: Dict[str, Any]
 
 
 class UserStatisticsResponse(BaseModel):
     """User statistics response model."""
+
     success: bool
     data: Dict[str, Any]
 
 
 class SearchResponse(BaseModel):
     """Search response model."""
+
     success: bool
     data: Dict[str, Any]
 
 
 class RegistryStatsResponse(BaseModel):
     """Registry statistics response model."""
+
     success: bool
     message: str
     data: Dict[str, Any]
@@ -744,6 +752,7 @@ class RegistryStatsResponse(BaseModel):
 
 class ConversationStatsResponse(BaseModel):
     """Conversation statistics response model."""
+
     success: bool
     data: Dict[str, Any]
 
@@ -759,6 +768,7 @@ class HealthClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -803,6 +813,7 @@ class AuthClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -869,6 +880,7 @@ class UsersClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -880,6 +892,7 @@ class UsersClient:
             
         Raises:
             ApiError: If the request fails or user is not authenticated.
+
         """
         return await self.sdk._request("/api/v1/users/me", UserResponse)
 
@@ -894,6 +907,7 @@ class UsersClient:
             
         Raises:
             ApiError: If the request fails or validation errors occur.
+
         """
         return await self.sdk._request(
             "/api/v1/users/me", UserResponse, method="PUT", json=data.model_dump()
@@ -910,6 +924,7 @@ class UsersClient:
             
         Raises:
             ApiError: If the request fails or current password is incorrect.
+
         """
         return await self.sdk._request(
             "/api/v1/users/me/change-password",
@@ -938,6 +953,7 @@ class UsersClient:
             
         Raises:
             ApiError: If the request fails or insufficient permissions.
+
         """
         params = filter_query(
             {
@@ -960,6 +976,7 @@ class UsersClient:
             
         Raises:
             ApiError: If user not found or insufficient permissions.
+
         """
         return await self.sdk._request(f"/api/v1/users/byid/{user_id}", UserResponse)
 
@@ -975,6 +992,7 @@ class UsersClient:
             
         Raises:
             ApiError: If user not found or insufficient permissions.
+
         """
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}",
@@ -994,6 +1012,7 @@ class UsersClient:
             
         Raises:
             ApiError: If user not found or insufficient permissions.
+
         """
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="DELETE"
@@ -1008,11 +1027,11 @@ class DocumentsClient:
     """Async client for document management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize documents client.
+        """Initialize documents client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1050,6 +1069,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If the request fails.
+
         """
         params = filter_query(
             {"page": page, "size": size, "file_type": file_type, "status": status}
@@ -1069,6 +1089,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If document not found or access denied.
+
         """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}", DocumentResponse
@@ -1086,6 +1107,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If document not found or validation errors.
+
         """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}",
@@ -1105,6 +1127,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If document not found or access denied.
+
         """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}", BaseResponse, method="DELETE"
@@ -1121,6 +1144,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If document not found.
+
         """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}/status",
@@ -1138,6 +1162,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If document not found or already processing.
+
         """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}/reprocess",
@@ -1156,6 +1181,7 @@ class DocumentsClient:
             
         Raises:
             ApiError: If document not found or download failed.
+
         """
         url = make_url(
             self.sdk.base_url, f"/api/v1/documents/byid/{document_id}/download"
@@ -1172,11 +1198,11 @@ class ConversationsClient:
     """Async client for conversation management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize conversations client.
+        """Initialize conversations client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1191,6 +1217,7 @@ class ConversationsClient:
             
         Raises:
             ApiError: If creation fails or validation errors occur.
+
         """
         return await self.sdk._request(
             "/api/v1/conversations/",
@@ -1214,6 +1241,7 @@ class ConversationsClient:
             
         Raises:
             ApiError: If the request fails.
+
         """
         params = filter_query({"page": page, "size": size, "active_only": active_only})
         return await self.sdk._request(
@@ -1231,6 +1259,7 @@ class ConversationsClient:
             
         Raises:
             ApiError: If conversation not found or access denied.
+
         """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
@@ -1251,6 +1280,7 @@ class ConversationsClient:
             
         Raises:
             ApiError: If conversation not found or validation errors.
+
         """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
@@ -1270,6 +1300,7 @@ class ConversationsClient:
             
         Raises:
             ApiError: If conversation not found or access denied.
+
         """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
@@ -1292,6 +1323,7 @@ class ConversationsClient:
             
         Raises:
             ApiError: If conversation not found or access denied.
+
         """
         params = filter_query({"page": page, "size": size})
         return await self.sdk._request(
@@ -1377,11 +1409,11 @@ class SearchClient:
     """Client for search operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize search client.
+        """Initialize search client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1403,6 +1435,7 @@ class SearchClient:
             
         Raises:
             ApiError: If chunk not found or search fails.
+
         """
         params = {"limit": limit}
         return await self.sdk._request(
@@ -1421,6 +1454,7 @@ class SearchClient:
             
         Raises:
             ApiError: If the request fails.
+
         """
         params = {"query": query, "limit": limit}
         return await self.sdk._request(
@@ -1438,6 +1472,7 @@ class SearchClient:
             
         Raises:
             ApiError: If the request fails.
+
         """
         params = {"limit": limit}
         return await self.sdk._request("/api/v1/search/history", list, params=params)
@@ -1450,6 +1485,7 @@ class SearchClient:
             
         Raises:
             ApiError: If the request fails.
+
         """
         return await self.sdk._request(
             "/api/v1/search/history", BaseResponse, method="DELETE"
@@ -1460,11 +1496,11 @@ class MCPClient:
     """Client for MCP server and tools management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize MCP client.
+        """Initialize MCP client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1607,11 +1643,11 @@ class PromptsClient:
     """Client for prompt registry management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize prompts client.
+        """Initialize prompts client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1681,6 +1717,7 @@ class ProfilesClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -1744,6 +1781,7 @@ class AnalyticsClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -1787,11 +1825,11 @@ class DatabaseClient:
     """Client for database management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize database client.
+        """Initialize database client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1865,6 +1903,7 @@ class TasksClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -1919,6 +1958,7 @@ class AdminClient:
         
         Args:
             sdk: The main SDK instance for making API requests.
+
         """
         self.sdk = sdk
 
@@ -2039,8 +2079,7 @@ class AdminClient:
 
 
 class AIChatbotSDK:
-    """
-    Main async SDK class for AI Chatbot Platform API interactions.
+    """Main async SDK class for AI Chatbot Platform API interactions.
 
     Provides a comprehensive async client for accessing all API endpoints including
     authentication, document management, conversations, search functionality,
@@ -2077,6 +2116,7 @@ class AIChatbotSDK:
         ...         user_message="Hello!",
         ...         prompt_name="helpful_assistant"
         ...     ))
+
     """
 
     def __init__(
