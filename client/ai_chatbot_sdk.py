@@ -1037,6 +1037,20 @@ class DocumentsClient:
         file_type: Optional[str] = None,
         status: Optional[str] = None,
     ) -> PaginatedResponse:
+        """List documents with optional filtering and pagination.
+        
+        Args:
+            page: Page number for pagination (default: 1).
+            size: Number of documents per page (default: 20).
+            file_type: Filter by file type (e.g., 'pdf', 'txt').
+            status: Filter by processing status (e.g., 'completed', 'processing').
+            
+        Returns:
+            PaginatedResponse: Paginated list of documents.
+            
+        Raises:
+            ApiError: If the request fails.
+        """
         params = filter_query(
             {"page": page, "size": size, "file_type": file_type, "status": status}
         )
@@ -1045,11 +1059,34 @@ class DocumentsClient:
         )
 
     async def get(self, document_id: UUID) -> DocumentResponse:
+        """Get document metadata by ID.
+        
+        Args:
+            document_id: UUID of the document to retrieve.
+            
+        Returns:
+            DocumentResponse: Document metadata and status.
+            
+        Raises:
+            ApiError: If document not found or access denied.
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}", DocumentResponse
         )
 
     async def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
+        """Update document metadata.
+        
+        Args:
+            document_id: UUID of the document to update.
+            data: DocumentUpdate model with fields to update.
+            
+        Returns:
+            DocumentResponse: Updated document metadata.
+            
+        Raises:
+            ApiError: If document not found or validation errors.
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}",
             DocumentResponse,
@@ -1058,17 +1095,50 @@ class DocumentsClient:
         )
 
     async def delete(self, document_id: UUID) -> BaseResponse:
+        """Delete document and all associated data.
+        
+        Args:
+            document_id: UUID of the document to delete.
+            
+        Returns:
+            BaseResponse: Success/failure status of deletion.
+            
+        Raises:
+            ApiError: If document not found or access denied.
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}", BaseResponse, method="DELETE"
         )
 
     async def status(self, document_id: UUID) -> ProcessingStatusResponse:
+        """Get document processing status and progress.
+        
+        Args:
+            document_id: UUID of the document to check.
+            
+        Returns:
+            ProcessingStatusResponse: Current processing status and progress.
+            
+        Raises:
+            ApiError: If document not found.
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}/status",
             ProcessingStatusResponse,
         )
 
     async def reprocess(self, document_id: UUID) -> BaseResponse:
+        """Reprocess document for chunk generation and embeddings.
+        
+        Args:
+            document_id: UUID of the document to reprocess.
+            
+        Returns:
+            BaseResponse: Success/failure status of reprocessing request.
+            
+        Raises:
+            ApiError: If document not found or already processing.
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}/reprocess",
             BaseResponse,
@@ -1076,6 +1146,17 @@ class DocumentsClient:
         )
 
     async def download(self, document_id: UUID) -> bytes:
+        """Download original document file.
+        
+        Args:
+            document_id: UUID of the document to download.
+            
+        Returns:
+            bytes: Binary content of the original document file.
+            
+        Raises:
+            ApiError: If document not found or download failed.
+        """
         url = make_url(
             self.sdk.base_url, f"/api/v1/documents/byid/{document_id}/download"
         )
@@ -1100,6 +1181,17 @@ class ConversationsClient:
         self.sdk = sdk
 
     async def create(self, data: ConversationCreate) -> ConversationResponse:
+        """Create a new conversation.
+        
+        Args:
+            data: ConversationCreate model with conversation details.
+            
+        Returns:
+            ConversationResponse: Created conversation metadata.
+            
+        Raises:
+            ApiError: If creation fails or validation errors occur.
+        """
         return await self.sdk._request(
             "/api/v1/conversations/",
             ConversationResponse,
@@ -1110,12 +1202,36 @@ class ConversationsClient:
     async def list(
         self, page: int = 1, size: int = 20, active_only: Optional[bool] = None
     ) -> PaginatedResponse:
+        """List conversations with optional filtering and pagination.
+        
+        Args:
+            page: Page number for pagination (default: 1).
+            size: Number of conversations per page (default: 20).
+            active_only: Filter to only active conversations if True.
+            
+        Returns:
+            PaginatedResponse: Paginated list of conversations.
+            
+        Raises:
+            ApiError: If the request fails.
+        """
         params = filter_query({"page": page, "size": size, "active_only": active_only})
         return await self.sdk._request(
             "/api/v1/conversations/", ConversationResponse, params=params
         )
 
     async def get(self, conversation_id: UUID) -> ConversationResponse:
+        """Get conversation metadata by ID.
+        
+        Args:
+            conversation_id: UUID of the conversation to retrieve.
+            
+        Returns:
+            ConversationResponse: Conversation metadata.
+            
+        Raises:
+            ApiError: If conversation not found or access denied.
+        """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
             ConversationResponse,
@@ -1124,6 +1240,18 @@ class ConversationsClient:
     async def update(
         self, conversation_id: UUID, data: ConversationUpdate
     ) -> ConversationResponse:
+        """Update conversation metadata.
+        
+        Args:
+            conversation_id: UUID of the conversation to update.
+            data: ConversationUpdate model with fields to update.
+            
+        Returns:
+            ConversationResponse: Updated conversation metadata.
+            
+        Raises:
+            ApiError: If conversation not found or validation errors.
+        """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
             ConversationResponse,
@@ -1132,6 +1260,17 @@ class ConversationsClient:
         )
 
     async def delete(self, conversation_id: UUID) -> BaseResponse:
+        """Delete conversation and all associated messages.
+        
+        Args:
+            conversation_id: UUID of the conversation to delete.
+            
+        Returns:
+            BaseResponse: Success/failure status of deletion.
+            
+        Raises:
+            ApiError: If conversation not found or access denied.
+        """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
             BaseResponse,
@@ -1141,6 +1280,19 @@ class ConversationsClient:
     async def messages(
         self, conversation_id: UUID, page: int = 1, size: int = 50
     ) -> PaginatedResponse:
+        """Get messages from a conversation with pagination.
+        
+        Args:
+            conversation_id: UUID of the conversation.
+            page: Page number for pagination (default: 1).
+            size: Number of messages per page (default: 50).
+            
+        Returns:
+            PaginatedResponse: Paginated list of messages.
+            
+        Raises:
+            ApiError: If conversation not found or access denied.
+        """
         params = filter_query({"page": page, "size": size})
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}/messages",
