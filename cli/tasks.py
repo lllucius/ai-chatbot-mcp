@@ -80,7 +80,9 @@ from typer import Argument, Option
 
 from .base import error_message, get_sdk, success_message
 
-tasks_app = AsyncTyper(help="Background task management commands", rich_markup_mode=None)
+tasks_app = AsyncTyper(
+    help="Background task management commands", rich_markup_mode=None
+)
 
 
 @tasks_app.async_command()
@@ -111,21 +113,24 @@ async def workers():
         data = await sdk.tasks.get_workers()
         if data:
             workers = data.get("workers", [])
-            
+
             # Convert to table data
             worker_data = []
             for worker in workers:
-                worker_data.append({
-                    "Name": worker.get("name", ""),
-                    "Status": worker.get("status", "Unknown"),
-                    "Pool": worker.get("pool", ""),
-                    "Processes": str(worker.get("processes", 0)),
-                    "Max Concurrency": str(worker.get("max_concurrency", 0)),
-                })
-            
-            from .base import display_table_data
-            display_table_data(worker_data, f"Celery Workers ({len(workers)} total)")
-            
+                worker_data.append(
+                    {
+                        "Name": worker.get("name", ""),
+                        "Status": worker.get("status", "Unknown"),
+                        "Pool": worker.get("pool", ""),
+                        "Processes": str(worker.get("processes", 0)),
+                        "Max Concurrency": str(worker.get("max_concurrency", 0)),
+                    }
+                )
+
+            from .base import display_rich_table
+
+            display_rich_table(worker_data, f"Celery Workers ({len(workers)} total)")
+
             summary = f"Total: {data.get('total_workers', 0)}, Online: {data.get('online_workers', 0)}"
             print(summary)
             print()
@@ -144,7 +149,7 @@ async def queue(
         data = await sdk.tasks.get_queue()
         if data:
             queues = data.get("queues", [])
-            
+
             # Convert to table data
             queue_data = []
             for queue in queues:
@@ -153,16 +158,19 @@ async def queue(
                     + queue.get("reserved", 0)
                     + queue.get("scheduled", 0)
                 )
-                queue_data.append({
-                    "Queue Name": queue.get("name", ""),
-                    "Active": str(queue.get("active", 0)),
-                    "Reserved": str(queue.get("reserved", 0)),
-                    "Scheduled": str(queue.get("scheduled", 0)),
-                    "Total Tasks": str(total_tasks),
-                })
-            
-            from .base import display_table_data
-            display_table_data(queue_data, f"Task Queues ({len(queues)} total)")
+                queue_data.append(
+                    {
+                        "Queue Name": queue.get("name", ""),
+                        "Active": str(queue.get("active", 0)),
+                        "Reserved": str(queue.get("reserved", 0)),
+                        "Scheduled": str(queue.get("scheduled", 0)),
+                        "Total Tasks": str(total_tasks),
+                    }
+                )
+
+            from .base import display_rich_table
+
+            display_rich_table(queue_data, f"Task Queues ({len(queues)} total)")
     except Exception as e:
         error_message(f"Failed to get queue information: {str(e)}")
         raise SystemExit(1)
@@ -179,19 +187,22 @@ async def active():
             if not active_tasks:
                 print("No active tasks")
                 return
-            
+
             # Convert to table data
             task_data = []
             for task in active_tasks:
-                task_data.append({
-                    "Task ID": task.get("id", "")[:8] + "...",
-                    "Name": task.get("name", ""),
-                    "Worker": task.get("worker", ""),
-                    "Started": task.get("time_start", ""),
-                })
-            
-            from .base import display_table_data
-            display_table_data(task_data, f"Active Tasks ({len(active_tasks)} total)")
+                task_data.append(
+                    {
+                        "Task ID": task.get("id", "")[:8] + "...",
+                        "Name": task.get("name", ""),
+                        "Worker": task.get("worker", ""),
+                        "Started": task.get("time_start", ""),
+                    }
+                )
+
+            from .base import display_rich_table
+
+            display_rich_table(task_data, f"Active Tasks ({len(active_tasks)} total)")
     except Exception as e:
         error_message(f"Failed to get active tasks: {str(e)}")
         raise SystemExit(1)
@@ -248,7 +259,7 @@ async def retry_failed(
             print(f"Retried: {data.get('retried_count', 0)}")
             print(f"Total Failed: {data.get('total_failed', 0)}")
             print(f"Errors: {len(data.get('errors', []))}")
-            
+
             errors = data.get("errors", [])
             if errors:
                 print("\nErrors:")
@@ -292,7 +303,7 @@ async def stats(
         data = await sdk.tasks.monitor(refresh=None, duration=period_hours)
         if data:
             doc_processing = data.get("document_processing", {})
-            
+
             print(f"\nDocument Processing ({period_hours}h):")
             print("=" * (25 + len(str(period_hours))))
             print(f"Total: {doc_processing.get('total', 0)}")
@@ -300,8 +311,10 @@ async def stats(
             print(f"Failed: {doc_processing.get('failed', 0)}")
             print(f"Processing: {doc_processing.get('processing', 0)}")
             print(f"Success Rate: {doc_processing.get('success_rate', 0):.1f}%")
-            print(f"Avg Time: {doc_processing.get('avg_processing_time_seconds', 0):.1f}s")
-            
+            print(
+                f"Avg Time: {doc_processing.get('avg_processing_time_seconds', 0):.1f}s"
+            )
+
             recent_errors = data.get("recent_errors", [])
             if recent_errors:
                 print("\nRecent Errors (Sample):")
@@ -323,37 +336,39 @@ async def monitor():
             system_status = data.get("system_status", {})
             active_tasks = data.get("active_tasks", {})
             workers = data.get("workers", {})
-            
+
             print("\nTask System Monitoring:")
             print("=======================")
-            
+
             # System status
             print("System:")
             print(f"  Status: {system_status.get('broker_status', 'Unknown')}")
             print(f"  Workers: {system_status.get('active_workers', 0)}")
             print(f"  Tasks: {system_status.get('active_tasks', 0)}")
             print()
-            
+
             # Tasks info
             print("Tasks:")
             print(f"  Active: {active_tasks.get('count', 0)}")
             print(f"  Workers Busy: {active_tasks.get('workers_busy', 0)}")
             print()
-            
+
             # Workers info
             print("Workers:")
             print(f"  Total: {workers.get('total', 0)}")
             print(f"  Online: {workers.get('online', 0)}")
             print()
-            
+
             # Performance data
             recent_perf = data.get("recent_performance", {})
             if recent_perf:
                 print("Recent Performance:")
                 print(f"  Success Rate: {recent_perf.get('success_rate', 0):.1f}%")
-                print(f"  Avg Processing: {recent_perf.get('avg_processing_time_seconds', 0):.1f}s")
+                print(
+                    f"  Avg Processing: {recent_perf.get('avg_processing_time_seconds', 0):.1f}s"
+                )
                 print()
-            
+
             refresh_interval = data.get("refresh_interval", 30)
             print(f"Suggested refresh interval: {refresh_interval} seconds")
     except Exception as e:

@@ -62,7 +62,7 @@ Example:
 
     # Display formatted output
     success_message("Authentication successful")
-    display_table_data(user_data, "User Information")
+    display_rich_table(user_data, "User Information")
     ```
 
 """
@@ -72,10 +72,17 @@ import textwrap
 from pathlib import Path
 from typing import Dict, Optional
 
+from rich import box
+from rich.console import Console
+from rich.table import Table
+
 from client.ai_chatbot_sdk import AIChatbotSDK
 from client.config import load_config
 
 TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
+
+# Console instance for Rich formatting
+console = Console()
 
 
 class APIError(Exception):
@@ -370,8 +377,7 @@ class CLIManager:
                 raise APIError(f"Login failed: {error_msg}")
 
     async def logout(self):
-        """Log out from the API and clear the stored token.
-        """
+        """Log out from the API and clear the stored token."""
         if not self.has_token():
             return
         try:
@@ -528,32 +534,29 @@ def error_message(message: str):
 
 
 def info_message(message: str):
-    """Display an informational message with a simple info prefix.
-    """
+    """Display an informational message with a simple info prefix."""
     print(f"ℹ {message}")
 
 
 def warning_message(message: str):
-    """Display a warning message with a simple warning prefix.
-    """
+    """Display a warning message with a simple warning prefix."""
     print(f"⚠ {message}")
 
 
 def format_json(data: dict) -> str:
-    """Format a dictionary as pretty-printed JSON.
-    """
+    """Format a dictionary as pretty-printed JSON."""
     import json
 
     return json.dumps(data, indent=2, default=str)
 
 
-def display_table_data(data: list, title: str = "Results"):
-    """Display structured data in a simple text table format.
+def display_rich_table(data: list, title: str = "Results"):
+    """Display structured data using Rich table formatting.
 
-    Creates and displays a plain text table with automatic column detection and
-    text wrapping. Handles both dictionary data (with automatic header creation)
+    Creates and displays a table using Rich library with automatic column detection
+    and proper styling. Handles both dictionary data (with automatic header creation)
     and simple value lists. Empty datasets are handled gracefully with
-    informational messages. Values are wrapped instead of truncated.
+    informational messages.
 
     Args:
         data (list): List of dictionaries or simple values to display
@@ -565,116 +568,91 @@ def display_table_data(data: list, title: str = "Results"):
             {"id": 1, "username": "admin", "email": "admin@example.com"},
             {"id": 2, "username": "user", "email": "user@example.com"}
         ]
-        display_table_data(users, "User List")
+        display_rich_table(users, "User List")
 
         # Display simple values
-        display_table_data(["item1", "item2", "item3"], "Items")
+        display_rich_table(["item1", "item2", "item3"], "Items")
 
     """
     if not data:
         info_message("No data to display")
         return
 
-    print(f"\n{title}:")
-    print("=" * len(title))
-    
     if isinstance(data[0], dict):
+        # Create table with headers from first dictionary
         headers = list(data[0].keys())
-        
-        # Calculate maximum width for each column (minimum 10, maximum 30)
-        col_widths = {}
+        table = Table(
+            title=title, box=box.SIMPLE, show_header=True, header_style="bold cyan"
+        )
+
+        # Add columns with header formatting
         for header in headers:
-            col_widths[header] = max(10, min(30, len(header)))
-            for item in data:
-                value_str = str(item.get(header, ""))
-                col_widths[header] = max(col_widths[header], min(30, len(value_str)))
-        
-        # Print header
-        header_line = " | ".join(header.replace("_", " ").title().ljust(col_widths[header]) for header in headers)
-        print(header_line)
-        print("-" * len(header_line))
-        
-        # Print data rows with text wrapping
+            table.add_column(header.replace("_", " ").title(), style="white")
+
+        # Add data rows
         for item in data:
-            row_lines = []
-            max_lines = 1
-            
-            # Prepare wrapped text for each column
-            wrapped_cols = {}
+            row_data = []
             for header in headers:
-                value_str = str(item.get(header, ""))
-                if len(value_str) > col_widths[header]:
-                    wrapped_cols[header] = textwrap.wrap(value_str, width=col_widths[header])
+                value = item.get(header, "")
+                # Handle different data types
+                if value is None:
+                    row_data.append("")
+                elif isinstance(value, bool):
+                    row_data.append("✓" if value else "✗")
                 else:
-                    wrapped_cols[header] = [value_str]
-                max_lines = max(max_lines, len(wrapped_cols[header]))
-            
-            # Print each line of the wrapped row
-            for line_num in range(max_lines):
-                line_parts = []
-                for header in headers:
-                    if line_num < len(wrapped_cols[header]):
-                        line_parts.append(wrapped_cols[header][line_num].ljust(col_widths[header]))
-                    else:
-                        line_parts.append(" " * col_widths[header])
-                print(" | ".join(line_parts))
-                
+                    row_data.append(str(value))
+            table.add_row(*row_data)
     else:
         # Simple list display
-        print("Value")
-        print("-----")
+        table = Table(
+            title=title, box=box.SIMPLE, show_header=True, header_style="bold cyan"
+        )
+        table.add_column("Value", style="white")
+
         for item in data:
-            # Wrap long values
-            value_str = str(item)
-            if len(value_str) > 50:
-                wrapped_lines = textwrap.wrap(value_str, width=50)
-                for line in wrapped_lines:
-                    print(line)
-            else:
-                print(value_str)
-    
-    print()  # Empty line after table
+            table.add_row(str(item))
+
+    console.print(table)
 
 
 def display_key_value_pairs(data: dict, title: str = "Information"):
-    """Display key-value pairs in a simple text format.
-    """
+    """Display key-value pairs in a simple text format."""
     print(f"\n{title}:")
     print("=" * len(title))
-    
+
     max_key_length = max(len(str(key)) for key in data.keys()) if data else 0
-    
+
     for key, value in data.items():
         key_str = str(key).replace("_", " ").title()
         value_str = str(value)
-        
+
         # Wrap long values
         if len(value_str) > 60:
             print(f"{key_str.ljust(max_key_length)}: ")
-            wrapped_lines = textwrap.wrap(value_str, width=60, initial_indent="  ", subsequent_indent="  ")
+            wrapped_lines = textwrap.wrap(
+                value_str, width=60, initial_indent="  ", subsequent_indent="  "
+            )
             for line in wrapped_lines:
                 print(line)
         else:
             print(f"{key_str.ljust(max_key_length)}: {value_str}")
-    
+
     print()  # Empty line after display
 
 
 def confirm_action(message: str, default: bool = False) -> bool:
-    """Ask for user confirmation with simple input prompt.
-    """
+    """Ask for user confirmation with simple input prompt."""
     default_str = "Y/n" if default else "y/N"
     response = input(f"{message} [{default_str}]: ").strip().lower()
-    
+
     if not response:
         return default
-    
-    return response in ['y', 'yes', 'true', '1']
+
+    return response in ["y", "yes", "true", "1"]
 
 
 def paginate_results(data: list, page_size: int = 20) -> list:
-    """Paginate results for display.
-    """
+    """Paginate results for display."""
     if len(data) <= page_size:
         return data
     total_pages = (len(data) + page_size - 1) // page_size
@@ -685,8 +663,7 @@ def paginate_results(data: list, page_size: int = 20) -> list:
 
 
 def format_timestamp(timestamp: str) -> str:
-    """Format ISO timestamp for display.
-    """
+    """Format ISO timestamp for display."""
     try:
         from datetime import datetime
 
@@ -697,8 +674,7 @@ def format_timestamp(timestamp: str) -> str:
 
 
 def format_file_size(size_bytes: int) -> str:
-    """Format file size for display.
-    """
+    """Format file size for display."""
     if size_bytes == 0:
         return "0 B"
     size_names = ["B", "KB", "MB", "GB", "TB"]
@@ -711,8 +687,7 @@ def format_file_size(size_bytes: int) -> str:
 
 
 def handle_api_response(response: dict, operation: str = "operation"):
-    """Handle API response and display appropriate messages.
-    """
+    """Handle API response and display appropriate messages."""
     if not response:
         error_message(f"No response received from API for {operation}")
         return None
