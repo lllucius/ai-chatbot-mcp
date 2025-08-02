@@ -83,7 +83,8 @@ from rich.prompt import Prompt
 from rich.table import Table
 from typer import Argument, Option
 
-from client.ai_chatbot_sdk import ApiError, RegisterRequest
+from client.ai_chatbot_sdk import ApiError
+from shared.schemas import RegisterRequest
 
 from .base import (
     console,

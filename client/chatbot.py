@@ -155,6 +155,8 @@ import contextlib
 from ai_chatbot_sdk import (
     AIChatbotSDK,
     ApiError,
+)
+from shared.schemas import (
     ChatRequest,
     DocumentSearchRequest,
     LLMProfileCreate,
