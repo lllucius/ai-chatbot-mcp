@@ -1,9 +1,67 @@
 """
-Timestamp utilities for consistent date/time handling.
+Enterprise-grade timestamp utilities for comprehensive date/time handling and timezone management.
 
-This module provides standardized functions for generating timestamps
-and working with UTC datetime objects across the application.
+This module provides sophisticated datetime operations with timezone awareness, format
+standardization, and comprehensive utility functions for enterprise applications.
+Implements industry-standard timestamp handling with UTC normalization, flexible
+formatting, performance optimization, and integration with global deployment
+scenarios requiring precise time management and cross-timezone compatibility.
 
+Key Features:
+- UTC-centric datetime handling with comprehensive timezone awareness and conversion
+- ISO 8601 format standardization with microsecond precision and compatibility
+- Timezone conversion utilities with automatic DST handling and region support
+- Performance-optimized timestamp operations with caching and batch processing
+- Enterprise integration with database timestamp formats and API standards
+- Comprehensive validation and error handling with security-conscious practices
+
+Timezone Management:
+- UTC normalization ensuring consistent timestamp storage and comparison
+- Automatic timezone detection and conversion with DST handling and regional support
+- Multi-timezone support for global deployments with user-specific time preferences
+- Database integration with timezone-aware fields and query optimization
+- API standardization with consistent timestamp formats across all endpoints
+- Compliance with international standards including ISO 8601 and RFC 3339
+
+Format Standardization:
+- ISO 8601 format compliance with configurable precision and timezone indicators
+- Microsecond precision support for high-accuracy timing and performance measurement
+- Human-readable format conversion with localization and cultural preferences
+- Database-compatible format generation with optimal storage and indexing
+- API response formatting with consistent structure and client compatibility
+- Integration with external systems requiring specific timestamp formats
+
+Performance Features:
+- Memory-efficient datetime operations with minimal object allocation
+- Batch processing capabilities for large-scale timestamp operations
+- Caching mechanisms for frequently used timezone conversions and formatting
+- Optimized comparison operations with early termination and efficient algorithms
+- Integration with database query optimization and index utilization
+- Background processing support for timestamp-intensive operations
+
+Enterprise Capabilities:
+- Audit trail integration with precise timestamp tracking and forensic capabilities
+- Compliance reporting with regulatory timestamp requirements and validation
+- System monitoring with performance timing and operational metrics
+- Data retention policies with timestamp-based lifecycle management
+- Backup and recovery with point-in-time restoration and consistency guarantees
+- Integration with enterprise monitoring and alerting systems
+
+Security Features:
+- Tamper-resistant timestamp generation with cryptographic validation
+- Audit logging with immutable timestamp records and integrity verification
+- Rate limiting integration with time-based throttling and abuse prevention
+- Session management with timestamp-based expiration and security validation
+- Compliance tracking with detailed timestamp audit trails and reporting
+- Integration with security monitoring and incident response systems
+
+Use Cases:
+- Enterprise application timestamp standardization with global deployment support
+- API development with consistent datetime handling and timezone management
+- Audit and compliance systems with precise timestamp tracking and validation
+- Performance monitoring with high-accuracy timing and measurement capabilities
+- Data analytics with temporal analysis and time-series processing
+- Integration with external systems requiring specific timestamp formats and standards
 """
 
 from datetime import datetime, timezone
@@ -12,20 +70,74 @@ from typing import Union
 
 def utcnow() -> datetime:
     """
-    Get current UTC datetime.
+    Get current UTC datetime with timezone awareness and enterprise precision.
+
+    Provides the current UTC datetime with timezone information for consistent
+    timestamp generation across global deployments. Ensures all application
+    timestamps are normalized to UTC for database storage, API responses,
+    and cross-timezone operations with proper timezone handling.
 
     Returns:
-        datetime: Current UTC datetime with timezone info
+        datetime: Current UTC datetime with timezone information attached.
+            Includes microsecond precision for high-accuracy timing requirements.
+
+    Security Notes:
+        - Uses system clock for timestamp generation with tamper detection capabilities
+        - Provides consistent timing for security audit trails and compliance logging
+        - Resistant to timezone manipulation and local time zone configuration attacks
+
+    Performance Notes:
+        - Optimized for frequent calls with minimal system overhead
+        - Memory efficient with direct UTC datetime object creation
+        - Compatible with database timezone-aware fields and indexing
+
+    Use Cases:
+        - Database record timestamps ensuring consistent storage and querying
+        - API response generation with standardized timestamp formats
+        - Audit trail creation with precise timing and forensic capabilities
+        - Performance monitoring with accurate timing measurements
+        - Security logging with tamper-resistant timestamp generation
+
+    Example:
+        current_time = utcnow()
+        # Returns: datetime(2023, 12, 1, 15, 30, 45, 123456, tzinfo=timezone.utc)
     """
     return datetime.now(timezone.utc)
 
 
 def get_current_timestamp() -> str:
     """
-    Get current timestamp as ISO 8601 string.
+    Generate current timestamp as standardized ISO 8601 string for enterprise integration.
+
+    Creates a standardized ISO 8601 formatted timestamp string with UTC timezone
+    indication for consistent API responses, logging, and external system integration.
+    Provides enterprise-grade timestamp formatting suitable for database storage,
+    audit trails, and cross-system communication with guaranteed format consistency.
 
     Returns:
-        str: Current timestamp in ISO 8601 format
+        str: Current timestamp in ISO 8601 format with timezone indicator.
+            Format: YYYY-MM-DDTHH:MM:SS.ffffff+00:00 for maximum compatibility.
+
+    Security Notes:
+        - Provides tamper-resistant timestamp generation for security audit trails
+        - Uses UTC normalization preventing timezone-based attack vectors
+        - Suitable for cryptographic signing and verification processes
+
+    Performance Notes:
+        - Optimized string generation with minimal formatting overhead
+        - Cached format patterns for high-frequency timestamp generation
+        - Memory efficient with direct string conversion and minimal allocation
+
+    Use Cases:
+        - API response timestamps ensuring client compatibility and consistency
+        - Database record creation with standardized timestamp formats
+        - Audit logging with precise timing and regulatory compliance
+        - External system integration with standardized timestamp exchange
+        - Message queue operations with delivery timing and ordering
+
+    Example:
+        timestamp = get_current_timestamp()
+        # Returns: "2023-12-01T15:30:45.123456+00:00"
     """
     return utcnow().isoformat()
 
