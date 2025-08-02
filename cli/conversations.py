@@ -82,7 +82,9 @@ from typer import Argument, Option
 
 from .base import error_message, format_timestamp, get_sdk, success_message
 
-conversation_app = AsyncTyper(help="Conversation management commands", rich_markup_mode=None)
+conversation_app = AsyncTyper(
+    help="Conversation management commands", rich_markup_mode=None
+)
 
 
 @conversation_app.async_command()
@@ -150,16 +152,21 @@ async def list(
             # Convert to table data
             conv_data = []
             for conv in resp.items:
-                conv_data.append({
-                    "ID": str(conv.id)[:8] + "...",
-                    "Title": conv.title,
-                    "Active": "✓" if conv.is_active else "✗",
-                    "Messages": str(conv.message_count),
-                    "Created": format_timestamp(str(conv.created_at)),
-                })
-            
-            from .base import display_table_data
-            display_table_data(conv_data, f"Conversations (Page {resp.pagination.page})")
+                conv_data.append(
+                    {
+                        "ID": str(conv.id)[:8] + "...",
+                        "Title": conv.title,
+                        "Active": "✓" if conv.is_active else "✗",
+                        "Messages": str(conv.message_count),
+                        "Created": format_timestamp(str(conv.created_at)),
+                    }
+                )
+
+            from .base import display_rich_table
+
+            display_rich_table(
+                conv_data, f"Conversations (Page {resp.pagination.page})"
+            )
         else:
             print("No conversations found.")
     except Exception as e:
@@ -183,8 +190,9 @@ async def show(
                 "Messages": str(conv.message_count),
                 "Created": format_timestamp(str(conv.created_at)),
             }
-            
+
             from .base import display_key_value_pairs
+
             display_key_value_pairs(conv_details, "Conversation Details")
     except Exception as e:
         error_message(f"Failed to get conversation details: {str(e)}")

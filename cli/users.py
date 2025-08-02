@@ -167,6 +167,7 @@ async def create(
         # Prompt for password if not provided
         if not password:
             import getpass
+
             user_password = getpass.getpass("Password: ")
         else:
             user_password = password
@@ -256,22 +257,27 @@ async def list(
         # Prepare user data for display
         user_data = []
         for user in users:
-            user_data.append({
-                "ID": str(user.id)[:8] + "...",
-                "Username": user.username,
-                "Email": user.email,
-                "Full Name": user.full_name or "-",
-                "Active": "✓" if user.is_active else "✗",
-                "Superuser": "✓" if user.is_superuser else "✗",
-                "Created": format_timestamp(
-                    user.created_at.isoformat() if user.created_at else ""
-                ),
-            })
+            user_data.append(
+                {
+                    "ID": str(user.id)[:8] + "...",
+                    "Username": user.username,
+                    "Email": user.email,
+                    "Full Name": user.full_name or "-",
+                    "Active": "✓" if user.is_active else "✗",
+                    "Superuser": "✓" if user.is_superuser else "✗",
+                    "Created": format_timestamp(
+                        user.created_at.isoformat() if user.created_at else ""
+                    ),
+                }
+            )
 
-        # Display using the plain text table function
-        from .base import display_table_data
-        display_table_data(user_data, f"Users (Page {pagination.page} of {pagination.total} total)")
-        
+        # Display using Rich table formatting
+        from .base import display_rich_table
+
+        display_rich_table(
+            user_data, f"Users (Page {pagination.page} of {pagination.total} total)"
+        )
+
         if getattr(pagination, "total", 0) > size:
             info_message(f"Showing {len(users)} of {pagination.total} total users")
 

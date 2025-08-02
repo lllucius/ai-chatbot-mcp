@@ -67,7 +67,9 @@ from typer import Argument, Option
 
 from .base import error_message, get_sdk, success_message
 
-profile_app = AsyncTyper(help="LLM parameter profile management commands", rich_markup_mode=None)
+profile_app = AsyncTyper(
+    help="LLM parameter profile management commands", rich_markup_mode=None
+)
 
 
 @profile_app.async_command()
@@ -83,20 +85,23 @@ async def list(
         data = await sdk.profiles.list_profiles(active_only=active_only, search=search)
         if data:
             profiles = data.get("profiles", [])
-            
+
             # Convert to table data
             profile_data = []
             for profile in profiles:
-                profile_data.append({
-                    "Name": profile.get("name", ""),
-                    "Title": profile.get("title", ""),
-                    "Model": profile.get("model_name", ""),
-                    "Default": "Yes" if profile.get("is_default") else "No",
-                    "Active": "Yes" if profile.get("is_active") else "No",
-                })
-            
-            from .base import display_table_data
-            display_table_data(profile_data, f"LLM Profiles ({len(profiles)} total)")
+                profile_data.append(
+                    {
+                        "Name": profile.get("name", ""),
+                        "Title": profile.get("title", ""),
+                        "Model": profile.get("model_name", ""),
+                        "Default": "Yes" if profile.get("is_default") else "No",
+                        "Active": "Yes" if profile.get("is_active") else "No",
+                    }
+                )
+
+            from .base import display_rich_table
+
+            display_rich_table(profile_data, f"LLM Profiles ({len(profiles)} total)")
         else:
             print("No profiles found.")
     except Exception as e:
@@ -124,8 +129,9 @@ async def show(
                 "Created": str(data.created_at),
                 "Updated": str(data.updated_at),
             }
-            
+
             from .base import display_key_value_pairs
+
             display_key_value_pairs(profile_details, "Profile Details")
     except Exception as e:
         error_message(f"Failed to show profile: {str(e)}")
