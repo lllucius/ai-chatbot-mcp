@@ -141,6 +141,14 @@ class ApiError(Exception):
     """
 
     def __init__(self, status: int, reason: str, url: str, body: Any):
+        """Initialize ApiError with HTTP response details.
+        
+        Args:
+            status: HTTP status code of the failed request.
+            reason: HTTP reason phrase.
+            url: The URL that was requested.
+            body: Response body content.
+        """
         super().__init__(f"HTTP {status} {reason}: {body}")
         self.status = status
         self.reason = reason
@@ -747,6 +755,11 @@ class HealthClient:
     """Async client for health check endpoints."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize health client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     async def basic(self) -> BaseResponse:
@@ -786,6 +799,11 @@ class AuthClient:
     """Async client for authentication operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize authentication client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     async def register(self, data: RegisterRequest) -> UserResponse:
@@ -840,18 +858,59 @@ class AuthClient:
 
 
 class UsersClient:
+    """Async client for user management operations.
+    
+    Provides comprehensive user account management including profile updates,
+    password changes, user listing, and administrative operations.
+    """
+
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize users client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     async def me(self) -> UserResponse:
+        """Get current authenticated user's profile.
+        
+        Returns:
+            UserResponse: Current user's profile information.
+            
+        Raises:
+            ApiError: If the request fails or user is not authenticated.
+        """
         return await self.sdk._request("/api/v1/users/me", UserResponse)
 
     async def update_me(self, data: UserUpdate) -> UserResponse:
+        """Update current user's profile information.
+        
+        Args:
+            data: UserUpdate model with fields to update.
+            
+        Returns:
+            UserResponse: Updated user profile information.
+            
+        Raises:
+            ApiError: If the request fails or validation errors occur.
+        """
         return await self.sdk._request(
             "/api/v1/users/me", UserResponse, method="PUT", json=data.model_dump()
         )
 
     async def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
+        """Change current user's password.
+        
+        Args:
+            data: UserPasswordUpdate with current and new password.
+            
+        Returns:
+            BaseResponse: Success/failure status of password change.
+            
+        Raises:
+            ApiError: If the request fails or current password is incorrect.
+        """
         return await self.sdk._request(
             "/api/v1/users/me/change-password",
             BaseResponse,
@@ -866,6 +925,20 @@ class UsersClient:
         active_only: Optional[bool] = None,
         superuser_only: Optional[bool] = None,
     ) -> PaginatedResponse:
+        """List users with optional filtering and pagination.
+        
+        Args:
+            page: Page number for pagination (default: 1).
+            size: Number of users per page (default: 20).
+            active_only: Filter to only active users if True.
+            superuser_only: Filter to only superusers if True.
+            
+        Returns:
+            PaginatedResponse: Paginated list of users.
+            
+        Raises:
+            ApiError: If the request fails or insufficient permissions.
+        """
         params = filter_query(
             {
                 "page": page,
@@ -877,9 +950,32 @@ class UsersClient:
         return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
     async def get(self, user_id: UUID) -> UserResponse:
+        """Get user profile by ID.
+        
+        Args:
+            user_id: UUID of the user to retrieve.
+            
+        Returns:
+            UserResponse: User profile information.
+            
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+        """
         return await self.sdk._request(f"/api/v1/users/byid/{user_id}", UserResponse)
 
     async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
+        """Update user profile by ID.
+        
+        Args:
+            user_id: UUID of the user to update.
+            data: UserUpdate model with fields to update.
+            
+        Returns:
+            UserResponse: Updated user profile information.
+            
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+        """
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}",
             UserResponse,
@@ -888,6 +984,17 @@ class UsersClient:
         )
 
     async def delete(self, user_id: UUID) -> BaseResponse:
+        """Delete user account by ID.
+        
+        Args:
+            user_id: UUID of the user to delete.
+            
+        Returns:
+            BaseResponse: Success/failure status of deletion.
+            
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+        """
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="DELETE"
         )
