@@ -268,10 +268,27 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
+# CORS middleware - Must be added FIRST to be outermost middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=settings.allowed_methods,
+    allow_headers=settings.allowed_headers,
+)
+
+# Trusted host middleware for production - Second outermost
+if settings.is_production:
+    app.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=["*"]
+    )  # Configure based on deployment
+
+
 # Apply middleware in the correct order (innermost to outermost)
+# Note: @app.middleware decorators are applied in reverse order (last decorated = outermost)
 
 
-# Debug content middleware (only active when debug=True)
+# Debug content middleware (innermost - applied last)
 @app.middleware("http")
 async def debug_content_middleware_wrapper(request: Request, call_next):
     """Debug content logging middleware wrapper."""
@@ -299,28 +316,11 @@ async def validation_middleware_wrapper(request: Request, call_next):
     return await validation_middleware(request, call_next)
 
 
-# Rate limiting middleware (applied first, outermost)
+# Rate limiting middleware (outermost of the @middleware decorators)
 @app.middleware("http")
 async def rate_limiting_middleware_wrapper(request: Request, call_next):
     """Rate limiting middleware wrapper."""
     return await rate_limiting_middleware(request, call_next)
-
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=settings.allowed_methods,
-    allow_headers=settings.allowed_headers,
-)
-
-
-# Trusted host middleware for production
-if settings.is_production:
-    app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["*"]
-    )  # Configure based on deployment
 
 
 # Global exception handlers
@@ -353,7 +353,7 @@ async def chatbot_platform_exception_handler(
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    """Handle HTTP exceptions with consistent format."""
+    """Handle HTTP exceptions with consistent format and preserve headers."""
     logger.warning(
         f"HTTP error {exc.status_code}: {exc.detail}",
         extra={
@@ -363,6 +363,9 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         },
     )
 
+    # Preserve any headers from the original exception (e.g., Retry-After for rate limiting)
+    headers = getattr(exc, 'headers', None) or {}
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -371,6 +374,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             "message": exc.detail,
             "timestamp": get_current_timestamp(),
         },
+        headers=headers,
     )
 
 
