@@ -1,137 +1,181 @@
 """
-Pydantic schemas for the AI Chatbot Platform.
+Schema imports from shared package.
 
-This module provides request/response schemas for API endpoints,
-data validation, and serialization.
-
+This module re-exports schemas from the shared package to maintain
+backwards compatibility with existing imports.
 """
 
-from .auth import (
+# Re-export all schemas from shared package
+from shared.schemas import *
+
+# Re-export specific schemas that were previously defined locally
+from shared.schemas import (
+    # Auth schemas
     LoginRequest,
-    PasswordResetConfirm,
-    PasswordResetRequest,
     RegisterRequest,
     Token,
-)
-from .common import (
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    
+    # Base schemas
+    BaseSchema,
+    
+    # Common schemas
     BaseResponse,
-    ErrorResponse,
-    PaginatedResponse,
     PaginationParams,
-    SearchParams,
-)
-from .common import HealthCheckResponse as HealthResponse
-from .conversation import (
+    ConversationStatsResponse,
+    RegistryStatsResponse,
+    DatabaseHealthResponse,
+    ServicesHealthResponse,
+    SystemMetricsResponse,
+    
+    # Conversation schemas
+    ConversationBase,
+    ConversationCreate,
+    ConversationUpdate,
+    ConversationResponse,
+    MessageBase,
+    MessageCreate,
+    MessageResponse,
     ChatRequest,
     ChatResponse,
-    ConversationCreate,
     ConversationListResponse,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageCreate,
     MessageListResponse,
-    MessageResponse,
-)
-from .document import (
-    DocumentChunkResponse,
+    ConversationStats,
+    
+    # Document schemas
     DocumentResponse,
+    DocumentListResponse,
     DocumentSearchRequest,
-    DocumentUpdate,
-    DocumentUploadResponse,
-    ProcessingStatusResponse,
-)
-from .llm_profile import (
+    DocumentSearchResponse,
+    
+    # LLM Profile schemas
+    LLMProfileResponse,
     LLMProfileCreate,
     LLMProfileListResponse,
-    LLMProfileResponse,
-    LLMProfileUpdate,
+    
+    # MCP schemas
+    MCPServerResponse,
+    MCPServerCreate,
+    MCPServerUpdate,
+    MCPToolResponse,
+    MCPToolExecutionRequest,
+    MCPToolExecutionResult,
+    MCPServerListResponse,
+    MCPToolListResponse,
+    
+    # Prompt schemas
+    PromptResponse,
+    PromptCreate,
+    PromptListResponse,
+    
+    # Search schemas
+    SearchResponse,
+    
+    # Tool calling schemas
+    ToolHandlingMode,
+    ToolCallSummary,
+    
+    # User schemas
+    UserBase,
+    UserCreate,
+    UserUpdate,
+    UserPasswordUpdate,
+    UserResponse,
+    UserListResponse,
+    UserDetailResponse,
+    UserSearchParams,
+    UserStatsResponse,
 )
-from .mcp import (
-    MCPBatchUsageSchema,
-    MCPConnectionStatusSchema,
-    MCPDiscoveryRequestSchema,
-    MCPDiscoveryResultSchema,
-    MCPHealthStatusSchema,
-    MCPListFiltersSchema,
-    MCPOpenAIToolsResponseSchema,
-    MCPServerCreateSchema,
-    MCPServerSchema,
-    MCPServerUpdateSchema,
-    MCPToolCreateSchema,
-    MCPToolExecutionRequestSchema,
-    MCPToolExecutionResultSchema,
-    MCPToolSchema,
-    MCPToolUpdateSchema,
-    MCPToolUsageStatsSchema,
-    OpenAIToolSchema,
-)
-from .prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
-from .user import UserPasswordUpdate, UserResponse, UserStatsResponse, UserUpdate
+
+# Re-export schemas with different names that may be used in existing code
+MCPServerSchema = MCPServerResponse
+MCPServerCreateSchema = MCPServerCreate
+MCPServerUpdateSchema = MCPServerUpdate
+MCPToolSchema = MCPToolResponse
+MCPToolExecutionRequestSchema = MCPToolExecutionRequest
+MCPToolExecutionResultSchema = MCPToolExecutionResult
+
+# Additional aliases for backwards compatibility
+HealthResponse = BaseResponse
+ErrorResponse = BaseResponse
+PaginatedResponse = BaseResponse
 
 __all__ = [
-    # Common schemas
+    # Base
+    "BaseSchema",
+    # Common
     "BaseResponse",
-    "ErrorResponse",
     "PaginationParams",
-    "PaginatedResponse",
     "HealthResponse",
-    "SearchParams",
-    # Auth schemas
+    "ErrorResponse", 
+    "PaginatedResponse",
+    # User
+    "UserBase",
+    "UserCreate",
+    "UserUpdate",
+    "UserPasswordUpdate",
+    "UserResponse",
+    "UserListResponse",
+    "UserDetailResponse",
+    "UserSearchParams",
+    "UserStatsResponse",
+    # Auth
     "LoginRequest",
     "RegisterRequest",
     "Token",
     "PasswordResetRequest",
     "PasswordResetConfirm",
-    # User schemas
-    "UserResponse",
-    "UserUpdate",
-    "UserPasswordUpdate",
-    "UserStatsResponse",
-    # Document schemas
-    "DocumentResponse",
-    "DocumentUpdate",
-    "DocumentChunkResponse",
-    "DocumentSearchRequest",
-    "DocumentUploadResponse",
-    "ProcessingStatusResponse",
-    # LLM Profile schemas
-    "LLMProfileResponse",
-    "LLMProfileCreate",
-    "LLMProfileUpdate",
-    "LLMProfileListResponse",
-    # MCP schemas
-    "MCPServerCreateSchema",
-    "MCPServerUpdateSchema",
-    "MCPServerSchema",
-    "MCPToolCreateSchema",
-    "MCPToolUpdateSchema",
-    "MCPToolSchema",
-    "MCPToolExecutionRequestSchema",
-    "MCPToolExecutionResultSchema",
-    "MCPToolUsageStatsSchema",
-    "MCPDiscoveryRequestSchema",
-    "MCPDiscoveryResultSchema",
-    "MCPHealthStatusSchema",
-    "MCPConnectionStatusSchema",
-    "MCPBatchUsageSchema",
-    "MCPListFiltersSchema",
-    "OpenAIToolSchema",
-    "MCPOpenAIToolsResponseSchema",
-    # Prompt schemas
-    "PromptResponse",
-    "PromptCreate",
-    "PromptUpdate",
-    "PromptListResponse",
-    # Conversation schemas
-    "ConversationResponse",
+    # Conversation
+    "ConversationBase",
     "ConversationCreate",
     "ConversationUpdate",
-    "MessageResponse",
+    "ConversationResponse",
+    "MessageBase",
     "MessageCreate",
+    "MessageResponse",
     "ChatRequest",
     "ChatResponse",
     "ConversationListResponse",
     "MessageListResponse",
     "ConversationStats",
+    # Document
+    "DocumentResponse",
+    "DocumentListResponse",
+    "DocumentSearchRequest",
+    "DocumentSearchResponse",
+    # LLM Profile
+    "LLMProfileResponse",
+    "LLMProfileCreate",
+    "LLMProfileListResponse",
+    # MCP
+    "MCPServerSchema",
+    "MCPServerCreateSchema",
+    "MCPServerUpdateSchema",
+    "MCPToolSchema",
+    "MCPToolExecutionRequestSchema",
+    "MCPToolExecutionResultSchema",
+    "MCPServerListResponse",
+    "MCPToolListResponse",
+    "MCPServerResponse",
+    "MCPServerCreate",
+    "MCPServerUpdate",
+    "MCPToolResponse",
+    "MCPToolExecutionRequest",
+    "MCPToolExecutionResult",
+    # Prompt
+    "PromptResponse",
+    "PromptCreate",
+    "PromptListResponse",
+    # Search
+    "SearchResponse",
+    # Tool calling
+    "ToolHandlingMode",
+    "ToolCallSummary",
+    # Health and status
+    "DatabaseHealthResponse",
+    "ServicesHealthResponse",
+    "SystemMetricsResponse",
+    "ConversationStatsResponse",
+    "RegistryStatsResponse",
 ]
