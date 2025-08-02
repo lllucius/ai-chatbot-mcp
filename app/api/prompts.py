@@ -45,7 +45,7 @@ from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..schemas.admin import PromptCategoriesResponse, PromptStatsResponse
 from ..schemas.common import BaseResponse
-from ..schemas.prompt import PromptListResponse, PromptResponse
+from ..schemas.prompt import PromptCreate, PromptListResponse, PromptResponse
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -231,6 +231,87 @@ async def get_prompt_details(
         last_used_at=prompt.last_used_at,
         created_at=prompt.created_at,
         updated_at=prompt.updated_at,
+    )
+
+
+@router.post("/", response_model=PromptResponse)
+@handle_api_errors("Failed to create prompt")
+async def create_prompt(
+    request: PromptCreate,
+    current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
+) -> PromptResponse:
+    """
+    Create a new prompt template in the registry.
+    """
+    log_api_call("create_prompt", user_id=current_user.id)
+    
+    prompt = await prompt_service.create_prompt(request)
+    
+    return PromptResponse(
+        name=prompt.name,
+        title=prompt.title,
+        description=prompt.description,
+        category=prompt.category,
+        content=prompt.content,
+        variables=prompt.variables,
+        tags=prompt.tags,
+        is_active=prompt.is_active,
+        usage_count=prompt.usage_count,
+        last_used_at=prompt.last_used_at,
+        created_at=prompt.created_at,
+        updated_at=prompt.updated_at,
+    )
+
+
+@router.put("/byname/{prompt_name}", response_model=PromptResponse)
+@handle_api_errors("Failed to update prompt")
+async def update_prompt(
+    prompt_name: str,
+    data: Dict[str, Any],
+    current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
+) -> PromptResponse:
+    """
+    Update an existing prompt template.
+    """
+    log_api_call("update_prompt", user_id=current_user.id, prompt_name=prompt_name)
+    
+    prompt = await prompt_service.update_prompt(prompt_name, data)
+    
+    return PromptResponse(
+        name=prompt.name,
+        title=prompt.title,
+        description=prompt.description,
+        category=prompt.category,
+        content=prompt.content,
+        variables=prompt.variables,
+        tags=prompt.tags,
+        is_active=prompt.is_active,
+        usage_count=prompt.usage_count,
+        last_used_at=prompt.last_used_at,
+        created_at=prompt.created_at,
+        updated_at=prompt.updated_at,
+    )
+
+
+@router.delete("/byname/{prompt_name}", response_model=BaseResponse)
+@handle_api_errors("Failed to delete prompt")
+async def delete_prompt(
+    prompt_name: str,
+    current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
+) -> BaseResponse:
+    """
+    Delete a prompt template from the registry.
+    """
+    log_api_call("delete_prompt", user_id=current_user.id, prompt_name=prompt_name)
+    
+    await prompt_service.delete_prompt(prompt_name)
+    
+    return BaseResponse(
+        success=True,
+        message=f"Prompt '{prompt_name}' deleted successfully"
     )
 
 

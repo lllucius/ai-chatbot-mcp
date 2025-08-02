@@ -279,6 +279,57 @@ async def get_profile_details(
     return LLMProfileResponse(**response_data)
 
 
+@router.put("/byname/{profile_name}", response_model=LLMProfileResponse)
+@handle_api_errors("Failed to update profile")
+async def update_profile(
+    profile_name: str,
+    profile_data: Dict[str, Any],
+    current_user: User = Depends(get_current_superuser),
+    profile_service: LLMProfileService = Depends(get_profile_service),
+) -> LLMProfileResponse:
+    """
+    Update an existing LLM profile with new parameters or metadata.
+    """
+    log_api_call("update_llm_profile", user_id=current_user.id, profile_name=profile_name)
+    
+    updated_profile = await profile_service.update_profile(profile_name, profile_data)
+    
+    response_data = {
+        "name": updated_profile.name,
+        "title": updated_profile.title,
+        "description": updated_profile.description,
+        "model_name": updated_profile.model_name,
+        "parameters": updated_profile.parameters,
+        "is_default": updated_profile.is_default,
+        "is_active": updated_profile.is_active,
+        "usage_count": updated_profile.usage_count,
+        "last_used_at": updated_profile.last_used_at,
+        "created_at": updated_profile.created_at,
+        "updated_at": updated_profile.updated_at,
+    }
+    return LLMProfileResponse(**response_data)
+
+
+@router.delete("/byname/{profile_name}", response_model=BaseResponse)
+@handle_api_errors("Failed to delete profile")
+async def delete_profile(
+    profile_name: str,
+    current_user: User = Depends(get_current_superuser),
+    profile_service: LLMProfileService = Depends(get_profile_service),
+) -> BaseResponse:
+    """
+    Delete an LLM profile from the system.
+    """
+    log_api_call("delete_llm_profile", user_id=current_user.id, profile_name=profile_name)
+    
+    await profile_service.delete_profile(profile_name)
+    
+    return BaseResponse(
+        success=True,
+        message=f"Profile '{profile_name}' deleted successfully"
+    )
+
+
 @router.post("/byname/{profile_name}/set-default", response_model=BaseResponse)
 @handle_api_errors("Failed to set default profile")
 async def set_default_profile(
