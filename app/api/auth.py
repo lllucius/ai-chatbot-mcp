@@ -56,15 +56,15 @@ from fastapi import APIRouter, Depends
 
 from ..dependencies import get_auth_service, get_current_user
 from ..models.user import User
-from ..schemas.auth import (
+from shared.schemas.auth import (
     LoginRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     RegisterRequest,
     Token,
 )
-from ..schemas.common import BaseResponse
-from ..schemas.user import UserResponse
+from shared.schemas.common import BaseResponse
+from shared.schemas.user import UserResponse
 from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
 

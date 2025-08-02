@@ -43,9 +43,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.admin import PromptCategoriesResponse, PromptStatsResponse
-from ..schemas.common import BaseResponse
-from ..schemas.prompt import PromptCreate, PromptListResponse, PromptResponse
+from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
+from shared.schemas.common import BaseResponse
+from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 

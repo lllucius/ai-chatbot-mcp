@@ -44,8 +44,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
-from ..schemas.common import BaseResponse
-from ..schemas.mcp import (
+from shared.schemas.common import BaseResponse
+from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
     MCPServerListResponse,

@@ -51,9 +51,9 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user, get_document_service
 from ..models.document import Document, FileStatus
 from ..models.user import User
-from ..schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
-from ..schemas.common import BaseResponse, PaginatedResponse
-from ..schemas.document import (
+from shared.schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
+from shared.schemas.common import BaseResponse, PaginatedResponse
+from shared.schemas.document import (
     BackgroundTaskResponse,
     DocumentResponse,
     DocumentUpdate,

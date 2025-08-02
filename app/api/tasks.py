@@ -53,7 +53,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.admin import (
+from shared.schemas.admin import (
     ActiveTasksResponse,
     QueueResponse,
     TaskMonitorResponse,
@@ -61,7 +61,7 @@ from ..schemas.admin import (
     TaskStatusResponse,
     WorkersResponse,
 )
-from ..schemas.common import BaseResponse
+from shared.schemas.common import BaseResponse
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["tasks"])

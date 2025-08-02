@@ -43,7 +43,7 @@ from sqlalchemy.orm import joinedload
 
 from ..core.exceptions import NotFoundError, SearchError
 from ..models.document import Document, DocumentChunk
-from ..schemas.document import DocumentChunkResponse, DocumentSearchRequest
+from shared.schemas.document import DocumentChunkResponse, DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from .base import BaseService
 

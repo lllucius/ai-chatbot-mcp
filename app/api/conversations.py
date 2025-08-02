@@ -68,14 +68,14 @@ from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.conversation import Conversation, Message
 from ..models.user import User
-from ..schemas.common import (
+from shared.schemas.common import (
     BaseResponse,
     ConversationStatsResponse,
     PaginatedResponse,
     RegistryStatsResponse,
     SearchResponse,
 )
-from ..schemas.conversation import (
+from shared.schemas.conversation import (
     ChatRequest,
     ChatResponse,
     ConversationCreate,
@@ -1062,7 +1062,7 @@ async def import_conversation(
             f"Imported conversation {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
         )
 
-        from ..schemas.conversation import ConversationCreate
+        from shared.schemas.conversation import ConversationCreate
 
         conversation_create = ConversationCreate(title=conv_title)
 

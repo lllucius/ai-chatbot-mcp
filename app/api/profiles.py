@@ -37,13 +37,13 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from ..schemas.admin import (
+from shared.schemas.admin import (
     ProfileParametersResponse,
     ProfileStatsResponse,
     ProfileValidationResponse,
 )
-from ..schemas.common import BaseResponse
-from ..schemas.llm_profile import (
+from shared.schemas.common import BaseResponse
+from shared.schemas.llm_profile import (
     LLMProfileCreate,
     LLMProfileListResponse,
     LLMProfileResponse,
