@@ -88,7 +88,7 @@ function ServerFormDialog({
   onClose: () => void;
   server?: McpServer;
   onSave: (server: Omit<McpServer, 'id' | 'created_at' | 'updated_at' | 'status' | 'last_connected'>) => void;
-}): JSX.Element {
+}): React.ReactElement {
   const [formData, setFormData] = useState({
     name: server?.name || '',
     url: server?.url || '',
@@ -193,7 +193,7 @@ function ServerCard({
   server: McpServer;
   onEdit: (server: McpServer) => void;
   onDelete: (serverId: string) => void;
-}): JSX.Element {
+}): React.ReactElement {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -314,7 +314,7 @@ function ToolCard({
 }: {
   tool: McpTool;
   onToggle: (toolId: string, enabled: boolean) => void;
-}): JSX.Element {
+}): React.ReactElement {
   return (
     <Card>
       <CardContent>
@@ -370,7 +370,7 @@ function ToolStatsTable({
 }: {
   stats: ToolUsageStats[];
   loading: boolean;
-}): JSX.Element {
+}): React.ReactElement {
   const columns: DataTableColumn<ToolUsageStats>[] = [
     {
       id: 'tool',
@@ -447,7 +447,7 @@ function ToolStatsTable({
 /**
  * Main tools page component
  */
-export default function ToolsPage(): JSX.Element {
+export default function ToolsPage(): React.ReactElement {
   const [serverDialogOpen, setServerDialogOpen] = useState(false);
   const [editingServer, setEditingServer] = useState<McpServer | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

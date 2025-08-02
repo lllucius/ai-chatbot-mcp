@@ -55,7 +55,7 @@ interface TabPanelProps {
 /**
  * Tab panel component for organizing settings sections
  */
-function TabPanel({ children, value, index }: TabPanelProps): JSX.Element {
+function TabPanel({ children, value, index }: TabPanelProps): React.ReactElement {
   return (
     <div
       role="tabpanel"
@@ -75,7 +75,7 @@ function TabPanel({ children, value, index }: TabPanelProps): JSX.Element {
 /**
  * Profile settings tab component
  */
-function ProfileSettingsTab(): JSX.Element {
+function ProfileSettingsTab(): React.ReactElement {
   const { user } = useAuth();
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
@@ -148,7 +148,7 @@ function ProfileSettingsTab(): JSX.Element {
 /**
  * Security settings tab component
  */
-function SecuritySettingsTab(): JSX.Element {
+function SecuritySettingsTab(): React.ReactElement {
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
 
   const handlePasswordChangeSuccess = () => {
@@ -212,7 +212,7 @@ function SecuritySettingsTab(): JSX.Element {
 /**
  * Notifications settings tab component
  */
-function NotificationsSettingsTab(): JSX.Element {
+function NotificationsSettingsTab(): React.ReactElement {
   return (
     <Stack spacing={3}>
       <Card>
@@ -273,7 +273,7 @@ function NotificationsSettingsTab(): JSX.Element {
 /**
  * Data and privacy settings tab component
  */
-function DataPrivacySettingsTab(): JSX.Element {
+function DataPrivacySettingsTab(): React.ReactElement {
   const handleExportData = () => {
     // This would typically call an API endpoint to export user data
     console.log('Exporting user data...');
@@ -377,7 +377,7 @@ function DataPrivacySettingsTab(): JSX.Element {
 /**
  * Application settings tab component
  */
-function ApplicationSettingsTab(): JSX.Element {
+function ApplicationSettingsTab(): React.ReactElement {
   return (
     <Stack spacing={3}>
       <Card>
@@ -460,7 +460,7 @@ function ApplicationSettingsTab(): JSX.Element {
 /**
  * Main settings page component
  */
-export default function SettingsPage(): JSX.Element {
+export default function SettingsPage(): React.ReactElement {
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useAuth();
 

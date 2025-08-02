@@ -13,7 +13,7 @@ import { LoginForm, RegisterForm } from '../components/auth/AuthComponents';
 /**
  * Login page component with toggle between login and register
  */
-export default function LoginPage(): JSX.Element {
+export default function LoginPage(): React.ReactElement {
   const [isRegistering, setIsRegistering] = useState(false);
 
   return (

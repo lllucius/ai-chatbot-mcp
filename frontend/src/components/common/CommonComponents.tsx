@@ -80,7 +80,7 @@ export function LoadingSpinner({
   size = 40, 
   message = 'Loading...', 
   centered = true 
-}: LoadingSpinnerProps): JSX.Element {
+}: LoadingSpinnerProps): React.ReactElement {
   const content = (
     <Stack 
       direction="column" 
@@ -166,7 +166,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
           <Alert severity="error">
             <AlertTitle>Something went wrong</AlertTitle>
             An unexpected error occurred. Please try refreshing the page.
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <Box component="pre" sx={{ mt: 2, fontSize: '0.75rem', overflow: 'auto' }}>
                 {this.state.error.toString()}
               </Box>
@@ -219,7 +219,7 @@ export function PageHeader({
   actions,
   showRefresh = false,
   onRefresh,
-}: PageHeaderProps): JSX.Element {
+}: PageHeaderProps): React.ReactElement {
   return (
     <Box
       sx={{
@@ -276,7 +276,7 @@ interface StatusChipProps {
   /** Whether to show an icon */
   showIcon?: boolean;
   /** Custom icon to display */
-  icon?: ReactNode;
+  icon?: React.ReactElement;
 }
 
 /**
@@ -290,7 +290,7 @@ export function StatusChip({
   label, 
   showIcon = true, 
   icon 
-}: StatusChipProps): JSX.Element {
+}: StatusChipProps): React.ReactElement {
   // Map status types to colors and default icons
   const statusConfig = {
     success: { color: 'success' as const, icon: <SuccessIcon /> },
@@ -301,14 +301,25 @@ export function StatusChip({
   };
 
   const config = statusConfig[status];
-  const chipIcon = icon || (showIcon ? config.icon : undefined);
+  const chipIcon = icon || (showIcon && config.icon ? config.icon : undefined);
+
+  if (chipIcon) {
+    return (
+      <Chip
+        label={label}
+        color={config.color}
+        size="small"
+        icon={chipIcon}
+        variant="outlined"
+      />
+    );
+  }
 
   return (
     <Chip
       label={label}
       color={config.color}
       size="small"
-      icon={chipIcon}
       variant="outlined"
     />
   );
@@ -358,7 +369,7 @@ export function ConfirmDialog({
   loading = false,
   onConfirm,
   onCancel,
-}: ConfirmDialogProps): JSX.Element {
+}: ConfirmDialogProps): React.ReactElement {
   return (
     <Dialog
       open={open}
@@ -421,7 +432,7 @@ export function EmptyState({
   title,
   description,
   action,
-}: EmptyStateProps): JSX.Element {
+}: EmptyStateProps): React.ReactElement {
   return (
     <Box
       sx={{
@@ -539,7 +550,7 @@ export function DataTable<T extends Record<string, any>>({
   onSearchChange,
   searchPlaceholder = 'Search...',
   emptyState,
-}: DataTableProps<T>): JSX.Element {
+}: DataTableProps<T>): React.ReactElement {
   const [localSearchValue, setLocalSearchValue] = useState(searchValue);
 
   // Handle search input change with debouncing

@@ -59,7 +59,7 @@ import type { SearchRequest, SearchResult, SearchAlgorithm } from '../types/api'
 /**
  * Empty search placeholder
  */
-function SearchPlaceholder(): JSX.Element {
+function SearchPlaceholder(): React.ReactElement {
   return (
     <EmptyState
       icon={<SearchIcon sx={{ fontSize: 64 }} />}
@@ -84,7 +84,7 @@ function SearchResults({
   query: string;
   totalMatches: number;
   searchTime: number;
-}): JSX.Element {
+}): React.ReactElement {
   if (loading) {
     return <LoadingSpinner message="Searching documents..." />;
   }
@@ -183,7 +183,7 @@ function SearchResults({
 /**
  * Main search page component
  */
-export default function SearchPage(): JSX.Element {
+export default function SearchPage(): React.ReactElement {
   // Search state
   const [query, setQuery] = useState('');
   const [algorithm, setAlgorithm] = useState<SearchAlgorithm>('hybrid');

@@ -98,7 +98,7 @@ function PromptFormDialog({
   onClose: () => void;
   prompt?: PromptTemplate;
   onSave: (prompt: Omit<PromptTemplate, 'id' | 'created_at' | 'updated_at' | 'usage_count'>) => void;
-}): JSX.Element {
+}): React.ReactElement {
   const [formData, setFormData] = useState({
     name: prompt?.name || '',
     title: prompt?.title || '',
@@ -266,7 +266,7 @@ function PromptCard({
   onEdit: (prompt: PromptTemplate) => void;
   onDelete: (promptName: string) => void;
   onSetDefault: (promptName: string) => void;
-}): JSX.Element {
+}): React.ReactElement {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -422,7 +422,7 @@ function PromptCard({
 /**
  * Main prompts page component
  */
-export default function PromptsPage(): JSX.Element {
+export default function PromptsPage(): React.ReactElement {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<PromptTemplate | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

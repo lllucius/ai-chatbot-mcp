@@ -284,7 +284,7 @@ const App: React.FC = () => {
           </BrowserRouter>
           
           {/* React Query DevTools - only shown in development */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <ReactQueryDevtools 
               initialIsOpen={false} 
               position="bottom"

@@ -70,7 +70,7 @@ function StatsCard({
   icon: React.ReactNode;
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
   action?: React.ReactNode;
-}): JSX.Element {
+}): React.ReactElement {
   return (
     <Card>
       <CardContent>
@@ -105,7 +105,7 @@ function StatsCard({
 /**
  * Quick actions component with common tasks
  */
-function QuickActions(): JSX.Element {
+function QuickActions(): React.ReactElement {
   const navigate = useNavigate();
 
   const actions = [
@@ -163,7 +163,7 @@ function QuickActions(): JSX.Element {
 /**
  * Recent conversations list component
  */
-function RecentConversations(): JSX.Element {
+function RecentConversations(): React.ReactElement {
   const navigate = useNavigate();
   const { data: conversationsData, isLoading } = useConversations(1, 5);
 
@@ -213,7 +213,7 @@ function RecentConversations(): JSX.Element {
             {conversations.map((conversation) => (
               <ListItem
                 key={conversation.id}
-                button
+                component="button"
                 onClick={() => navigate(`/chat/${conversation.id}`)}
               >
                 <ListItemAvatar>
@@ -267,7 +267,7 @@ function RecentConversations(): JSX.Element {
 /**
  * Document processing status component
  */
-function DocumentStatus(): JSX.Element {
+function DocumentStatus(): React.ReactElement {
   const navigate = useNavigate();
   const { data: documentsData, isLoading } = useDocuments(1, 5);
 
@@ -367,7 +367,7 @@ function DocumentStatus(): JSX.Element {
 /**
  * System health overview component
  */
-function SystemHealthOverview(): JSX.Element {
+function SystemHealthOverview(): React.ReactElement {
   const { data: health, isLoading } = useSystemHealth();
 
   if (isLoading) {
@@ -455,7 +455,7 @@ function SystemHealthOverview(): JSX.Element {
 /**
  * Main dashboard page component
  */
-export default function DashboardPage(): JSX.Element {
+export default function DashboardPage(): React.ReactElement {
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useSystemStats();
 

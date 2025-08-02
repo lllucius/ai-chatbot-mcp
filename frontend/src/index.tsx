@@ -30,7 +30,7 @@ root.render(
 
 // Performance monitoring - logs performance metrics in development
 // In production, you might want to send these to an analytics service
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   reportWebVitals(console.log);
 } else {
   // In production, you could send metrics to an analytics endpoint
