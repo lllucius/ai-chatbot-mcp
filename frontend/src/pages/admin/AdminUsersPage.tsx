@@ -10,7 +10,7 @@ import { PageHeader } from '../../components/common/CommonComponents';
 /**
  * Admin Users Page - placeholder for user management
  */
-export default function AdminUsersPage(): JSX.Element {
+export default function AdminUsersPage(): React.ReactElement {
   return (
     <Box>
       <PageHeader

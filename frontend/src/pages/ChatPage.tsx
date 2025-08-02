@@ -86,7 +86,7 @@ interface ChatMessageProps {
 /**
  * Individual chat message component with user/AI styling
  */
-function ChatMessage({ message, onCopy }: ChatMessageProps): JSX.Element {
+function ChatMessage({ message, onCopy }: ChatMessageProps): React.ReactElement {
   const [expanded, setExpanded] = useState(false);
 
   const handleCopy = () => {
@@ -274,7 +274,7 @@ function ChatSettings({
   prompts,
   expanded,
   onExpandedChange,
-}: ChatSettingsProps): JSX.Element {
+}: ChatSettingsProps): React.ReactElement {
   return (
     <Card>
       <CardContent sx={{ pb: expanded ? 2 : 1, '&:last-child': { pb: expanded ? 2 : 1 } }}>
@@ -366,7 +366,7 @@ function ChatSettings({
 /**
  * Main chat page component
  */
-export default function ChatPage(): JSX.Element {
+export default function ChatPage(): React.ReactElement {
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -385,8 +385,7 @@ export default function ChatPage(): JSX.Element {
 
   // API hooks
   const { data: conversation, isLoading: conversationLoading } = useConversation(
-    conversationId || '',
-    { enabled: !!conversationId }
+    conversationId || ''
   );
   
   const { 
@@ -396,8 +395,7 @@ export default function ChatPage(): JSX.Element {
   } = useConversationMessages(
     conversationId || '',
     1,
-    50,
-    { enabled: !!conversationId }
+    50
   );
 
   const sendMessageMutation = useSendMessage();

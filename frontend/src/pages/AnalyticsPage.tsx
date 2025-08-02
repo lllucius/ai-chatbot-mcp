@@ -122,7 +122,7 @@ function AnalyticsStatsCard({
   icon,
   color = 'primary',
   trend,
-}: AnalyticsStatsCardProps): JSX.Element {
+}: AnalyticsStatsCardProps): React.ReactElement {
   return (
     <Card>
       <CardContent>
@@ -179,7 +179,7 @@ interface UsageTrendsChartProps {
 /**
  * Line chart showing usage trends over time
  */
-function UsageTrendsChart({ data, period }: UsageTrendsChartProps): JSX.Element {
+function UsageTrendsChart({ data, period }: UsageTrendsChartProps): React.ReactElement {
   const chartData = useMemo(() => {
     const labels = data.map(item => new Date(item.date).toLocaleDateString());
     
@@ -274,7 +274,7 @@ interface TokenUsageChartProps {
 /**
  * Bar chart showing token usage over time
  */
-function TokenUsageChart({ data }: TokenUsageChartProps): JSX.Element {
+function TokenUsageChart({ data }: TokenUsageChartProps): React.ReactElement {
   const chartData = useMemo(() => {
     const labels = data.map(item => new Date(item.date).toLocaleDateString());
     
@@ -346,7 +346,7 @@ interface PerformanceChartProps {
 /**
  * Line chart showing response time performance
  */
-function PerformanceChart({ data }: PerformanceChartProps): JSX.Element {
+function PerformanceChart({ data }: PerformanceChartProps): React.ReactElement {
   const chartData = useMemo(() => {
     const labels = data.map(item => new Date(item.date).toLocaleDateString());
     
@@ -419,7 +419,7 @@ interface UserActivityChartProps {
 /**
  * Doughnut chart showing user activity distribution
  */
-function UserActivityChart({ stats }: UserActivityChartProps): JSX.Element {
+function UserActivityChart({ stats }: UserActivityChartProps): React.ReactElement {
   const chartData = useMemo(() => {
     const activeUsers = stats.active_users;
     const inactiveUsers = Math.max(0, stats.total_users - activeUsers);
@@ -483,7 +483,7 @@ interface TopUsersTableProps {
 /**
  * Table showing top users by activity
  */
-function TopUsersTable({ users, loading }: TopUsersTableProps): JSX.Element {
+function TopUsersTable({ users, loading }: TopUsersTableProps): React.ReactElement {
   const columns: DataTableColumn<UserStats>[] = [
     {
       id: 'user',
@@ -558,7 +558,7 @@ function TopUsersTable({ users, loading }: TopUsersTableProps): JSX.Element {
 /**
  * Main analytics page component
  */
-export default function AnalyticsPage(): JSX.Element {
+export default function AnalyticsPage(): React.ReactElement {
   const [period, setPeriod] = useState(30);
 
   // API hooks

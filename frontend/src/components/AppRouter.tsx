@@ -208,7 +208,7 @@ const DRAWER_WIDTH = 280;
 /**
  * Component that protects routes requiring authentication
  */
-function ProtectedRoute({ children }: { children: React.ReactNode }): JSX.Element {
+function ProtectedRoute({ children }: { children: React.ReactNode }): React.ReactElement {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -229,7 +229,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }): JSX.Elemen
 /**
  * Generate breadcrumb items based on current path
  */
-function AppBreadcrumbs(): JSX.Element {
+function AppBreadcrumbs(): React.ReactElement {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter((x) => x);
 
@@ -285,7 +285,7 @@ function AppBreadcrumbs(): JSX.Element {
 /**
  * User menu in the top app bar
  */
-function UserMenu(): JSX.Element {
+function UserMenu(): React.ReactElement {
   const { user, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
@@ -370,7 +370,7 @@ function UserMenu(): JSX.Element {
 /**
  * Main application layout with sidebar and content area
  */
-function AppLayout({ children }: { children: React.ReactNode }): JSX.Element {
+function AppLayout({ children }: { children: React.ReactNode }): React.ReactElement {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -574,7 +574,7 @@ function AppLayout({ children }: { children: React.ReactNode }): JSX.Element {
  * Main application router component
  * Handles all routing, authentication, and layout
  */
-export function AppRouter(): JSX.Element {
+export function AppRouter(): React.ReactElement {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Show loading spinner while checking authentication

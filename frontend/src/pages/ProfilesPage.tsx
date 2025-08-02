@@ -74,7 +74,7 @@ function ProfileFormDialog({
   onClose: () => void;
   profile?: LlmProfile;
   onSave: (profile: Omit<LlmProfile, 'id' | 'created_at' | 'updated_at' | 'usage_count'>) => void;
-}): JSX.Element {
+}): React.ReactElement {
   const [formData, setFormData] = useState({
     name: profile?.name || '',
     title: profile?.title || '',
@@ -320,7 +320,7 @@ function ProfileCard({
   onEdit: (profile: LlmProfile) => void;
   onDelete: (profileName: string) => void;
   onSetDefault: (profileName: string) => void;
-}): JSX.Element {
+}): React.ReactElement {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -455,7 +455,7 @@ function ProfileCard({
 /**
  * Main profiles page component
  */
-export default function ProfilesPage(): JSX.Element {
+export default function ProfilesPage(): React.ReactElement {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<LlmProfile | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

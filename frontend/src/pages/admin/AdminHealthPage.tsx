@@ -6,7 +6,7 @@ import React from 'react';
 import { Box, Card, CardContent, Alert } from '@mui/material';
 import { PageHeader } from '../../components/common/CommonComponents';
 
-export default function AdminHealthPage(): JSX.Element {
+export default function AdminHealthPage(): React.ReactElement {
   return (
     <Box>
       <PageHeader

@@ -64,7 +64,7 @@ import type {
  */
 const API_CONFIG = {
   // Base URL for the FastAPI backend - defaults to development server
-  baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   // Default request timeout in milliseconds
   timeout: 30000,
   // API version prefix
@@ -98,7 +98,7 @@ class ApiClient {
         }
         
         // Log outgoing requests in development
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
           console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, config.data);
         }
         
@@ -114,7 +114,7 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response: AxiosResponse) => {
         // Log successful responses in development
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
           console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
         }
         return response;

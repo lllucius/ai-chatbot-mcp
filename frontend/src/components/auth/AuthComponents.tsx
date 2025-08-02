@@ -57,7 +57,7 @@ interface LoginFormProps {
  * @param props - Component props
  * @returns Login form component
  */
-export function LoginForm({ onSwitchToRegister, onLoginSuccess }: LoginFormProps): JSX.Element {
+export function LoginForm({ onSwitchToRegister, onLoginSuccess }: LoginFormProps): React.ReactElement {
   const { login, error, clearError, isLoading } = useAuth();
   
   // Form state
@@ -241,7 +241,7 @@ interface RegisterFormProps {
  * @param props - Component props
  * @returns Registration form component
  */
-export function RegisterForm({ onSwitchToLogin, onRegisterSuccess }: RegisterFormProps): JSX.Element {
+export function RegisterForm({ onSwitchToLogin, onRegisterSuccess }: RegisterFormProps): React.ReactElement {
   const registerMutation = useRegister();
   
   // Form state
@@ -530,7 +530,7 @@ interface ProfileFormProps {
  * @param props - Component props
  * @returns Profile form component
  */
-export function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps): JSX.Element {
+export function ProfileForm({ user, onUpdateSuccess }: ProfileFormProps): React.ReactElement {
   const updateProfileMutation = useUpdateProfile();
   
   // Form state - initialize with current user data
@@ -683,7 +683,7 @@ interface PasswordChangeFormProps {
  * @param props - Component props
  * @returns Password change form component
  */
-export function PasswordChangeForm({ onChangeSuccess }: PasswordChangeFormProps): JSX.Element {
+export function PasswordChangeForm({ onChangeSuccess }: PasswordChangeFormProps): React.ReactElement {
   const changePasswordMutation = useChangePassword();
   
   // Form state

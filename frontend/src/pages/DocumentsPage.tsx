@@ -89,7 +89,7 @@ interface FileUploadProps {
 /**
  * File upload component with drag-and-drop support
  */
-function FileUpload({ onUpload, disabled = false }: FileUploadProps): JSX.Element {
+function FileUpload({ onUpload, disabled = false }: FileUploadProps): React.ReactElement {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   // Supported file types
@@ -199,7 +199,7 @@ function FileUpload({ onUpload, disabled = false }: FileUploadProps): JSX.Elemen
             variant="contained"
             onClick={() => {
               if (acceptedFiles.length > 0) {
-                onUpload(acceptedFiles);
+                onUpload([...acceptedFiles]);
                 setUploadDialogOpen(false);
               }
             }}
@@ -230,7 +230,7 @@ interface DocumentActionsProps {
 /**
  * Document actions menu component
  */
-function DocumentActions({ document, onDelete, onReprocess, onView }: DocumentActionsProps): JSX.Element {
+function DocumentActions({ document, onDelete, onReprocess, onView }: DocumentActionsProps): React.ReactElement {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -295,7 +295,7 @@ interface DocumentDetailsProps {
 /**
  * Document details dialog component
  */
-function DocumentDetails({ document, open, onClose }: DocumentDetailsProps): JSX.Element {
+function DocumentDetails({ document, open, onClose }: DocumentDetailsProps): React.ReactElement {
   if (!document) return <div />;
 
   const getFileIcon = (contentType: string) => {
@@ -409,7 +409,7 @@ function DocumentDetails({ document, open, onClose }: DocumentDetailsProps): JSX
 /**
  * Main documents page component
  */
-export default function DocumentsPage(): JSX.Element {
+export default function DocumentsPage(): React.ReactElement {
   // State management
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);

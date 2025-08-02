@@ -90,7 +90,7 @@ export function useAuth(): AuthContextValue {
  * @param props - Component props
  * @returns Provider component with authentication context
  */
-export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
+export function AuthProvider({ children }: AuthProviderProps): React.ReactElement {
   // Local state for authentication errors
   const [error, setError] = useState<string | null>(null);
   
@@ -100,19 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     isLoading: isUserLoading,
     error: userError,
     refetch: refetchUser,
-  } = useCurrentUser({
-    retry: (failureCount, error: any) => {
-      // Don't retry on authentication errors
-      if (error?.status_code === 401) return false;
-      return failureCount < 2;
-    },
-    // Only show error in development, as 401 is expected when not logged in
-    onError: (error: any) => {
-      if (process.env.NODE_ENV === 'development' && error?.status_code !== 401) {
-        console.error('User fetch error:', error);
-      }
-    },
-  });
+  } = useCurrentUser();
 
   const loginMutation = useLogin();
   const logoutMutation = useLogout();
@@ -266,7 +254,7 @@ export function useIsAdmin(): { isAdmin: boolean; isLoading: boolean } {
  * @param props - Component props
  * @returns Admin-only content or null
  */
-export function AdminOnly({ children }: { children: ReactNode }): JSX.Element | null {
+export function AdminOnly({ children }: { children: ReactNode }): React.ReactElement | null {
   const { isAdmin } = useIsAdmin();
   
   return isAdmin ? <>{children}</> : null;
@@ -286,7 +274,7 @@ export function AuthGuard({
   children: ReactNode; 
   fallback?: ReactNode; 
   loading?: ReactNode;
-}): JSX.Element {
+}): React.ReactElement {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {

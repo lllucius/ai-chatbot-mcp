@@ -6,7 +6,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-export default function RegisterPage(): JSX.Element {
+export default function RegisterPage(): React.ReactElement {
   // Redirect to login page where registration is handled
   return <Navigate to="/login" replace />;
 }
