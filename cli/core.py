@@ -1,7 +1,78 @@
 """
-Core CLI commands for authentication, config, health, version, and help.
+Core CLI commands for authentication, configuration, and system management.
 
-Implements all root-level commands using async-typer.
+This module implements the foundational CLI commands that provide user authentication,
+system configuration management, health monitoring, and version information. These
+commands form the core functionality required for all other CLI operations and
+administrative tasks.
+
+The module uses AsyncTyper for modern async command handling and Rich for beautiful
+terminal output with progress indicators, panels, and formatted displays. All commands
+include comprehensive error handling and user feedback.
+
+Key Commands:
+    - login: User authentication with secure token management
+    - logout: Session termination and token cleanup
+    - whoami: Current user information and session status
+    - config: Configuration management and environment setup
+    - health: System health checks and connectivity testing
+    - version: Version information and build details
+
+Architecture Features:
+    - Async command processing for non-blocking operations
+    - Rich terminal interface with colors and formatting
+    - Secure credential handling with masked input
+    - Comprehensive error handling and user feedback
+    - Modular command structure for maintainability
+
+Security Features:
+    - Secure password input with masking
+    - JWT token-based authentication
+    - Automatic token validation and refresh
+    - Secure token storage with proper file permissions
+    - Session management and cleanup
+
+Performance Optimizations:
+    - Async operations for improved responsiveness
+    - Efficient API communication patterns
+    - Minimal startup overhead
+    - Fast command execution and feedback
+    - Optimized token validation
+
+Use Cases:
+    - Initial CLI setup and authentication
+    - Session management for development workflows
+    - System health monitoring and diagnostics
+    - Configuration validation and troubleshooting
+    - User account management and verification
+
+Example Usage:
+    ```bash
+    # Authenticate with the platform
+    ai-chatbot login --username admin
+
+    # Check current user and session
+    ai-chatbot whoami
+
+    # View system health and connectivity
+    ai-chatbot health
+
+    # Display version and build information
+    ai-chatbot version
+
+    # Manage configuration settings
+    ai-chatbot config show
+    ai-chatbot config set api_timeout 30
+
+    # Logout and cleanup
+    ai-chatbot logout
+    ```
+
+Integration:
+    - Works with all other CLI modules for authentication
+    - Integrates with CI/CD pipelines for automated operations
+    - Supports development and production environments
+    - Compatible with monitoring and alerting systems
 """
 
 import os
@@ -38,7 +109,54 @@ async def login(
     ),
 ):
     """
-    Authenticate with the API and optionally save the authentication token.
+    Authenticate with the AI Chatbot Platform API and manage session tokens.
+
+    Performs user authentication against the platform's authentication system,
+    obtaining a JWT token for subsequent API operations. The command supports
+    interactive credential entry or command-line arguments for automation.
+
+    Authentication tokens can be saved to secure local storage for persistent
+    sessions across CLI invocations. The token is stored with restrictive file
+    permissions in the user's home directory.
+
+    Args:
+        username (Optional[str]): Platform username. If not provided, will prompt interactively
+        password (Optional[str]): User password. If not provided, will prompt with masking
+        save_token (bool): Whether to save token to disk for persistent sessions. Defaults to True
+
+    Security Notes:
+        - Passwords are masked during interactive input
+        - Tokens are stored with 0o600 permissions (owner read/write only)
+        - Failed authentication attempts are logged for security monitoring
+        - Tokens include expiration information for automatic refresh
+
+    Performance Notes:
+        - Fast authentication with JWT token generation
+        - Minimal network overhead for login process
+        - Efficient token storage and retrieval
+        - Non-blocking async operations
+
+    Use Cases:
+        - Initial CLI setup and user authentication
+        - Development workflow automation
+        - CI/CD pipeline integration with service accounts
+        - Production system administration
+        - Troubleshooting and debugging sessions
+
+    Example:
+        ```bash
+        # Interactive login with saved token
+        ai-chatbot login
+
+        # Command-line login for automation
+        ai-chatbot login --username admin --password secret
+
+        # Login without saving token (temporary session)
+        ai-chatbot login --no-save-token
+        ```
+
+    Raises:
+        SystemExit: On authentication failure or network errors
     """
     try:
         cli_manager = await get_cli_manager()
@@ -70,7 +188,47 @@ async def login(
 @core_app.async_command()
 async def logout():
     """
-    Log out and remove the saved authentication token.
+    Terminate current session and remove stored authentication tokens.
+
+    Performs a secure logout operation by invalidating the current session
+    on the server and removing all stored authentication tokens from local
+    storage. This ensures complete session cleanup and prevents unauthorized
+    access to user credentials.
+
+    The logout process includes both server-side session invalidation and
+    local token cleanup, providing comprehensive security for user sessions.
+    If the server is unreachable, local tokens are still removed to prevent
+    potential security issues.
+
+    Security Notes:
+        - Server-side session invalidation prevents token reuse
+        - Local token files are securely removed from disk
+        - All authentication state is cleared from memory
+        - Graceful handling of network failures during logout
+
+    Performance Notes:
+        - Fast local token cleanup regardless of server status
+        - Non-blocking async operation for responsiveness
+        - Minimal network overhead for session invalidation
+        - Immediate feedback to user on completion
+
+    Use Cases:
+        - Ending development sessions securely
+        - Security incident response and token invalidation
+        - Multi-user system cleanup procedures
+        - Automated logout in CI/CD pipelines
+        - Session management in shared environments
+
+    Example:
+        ```bash
+        # Standard logout operation
+        ai-chatbot logout
+        ```
+
+    Note:
+        This command can be safely executed multiple times without error,
+        even if no active session exists. It will always ensure clean
+        authentication state.
     """
     try:
         cli_manager = await get_cli_manager()
