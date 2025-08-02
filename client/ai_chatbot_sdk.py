@@ -1,11 +1,120 @@
 """
-AI Chatbot SDK - Python client library for the AI Chatbot Platform.
+AI Chatbot Platform SDK - Comprehensive Python Client Library.
 
-This module provides a comprehensive async SDK for interacting with the AI Chatbot Platform,
-including authentication, document management, conversation handling, and search capabilities.
+This module provides a complete async Python SDK for the AI Chatbot Platform, enabling
+developers to integrate platform capabilities into their applications with full API
+coverage, type safety, and enterprise-grade reliability. The SDK is designed for
+high-performance async operations and provides comprehensive error handling and
+retry mechanisms.
 
-All methods are async and should be called with await. The SDK uses httpx for async HTTP
-requests and supports all the same features as the original synchronous version.
+The SDK covers all platform functionality including authentication, user management,
+conversation handling, document processing, analytics, MCP integration, and
+administrative operations. All methods are async and should be called with await
+for optimal performance.
+
+Key Features:
+    - Complete platform API coverage with async operations
+    - Type-safe operations with Pydantic models and validation
+    - Comprehensive error handling with detailed exception information
+    - Automatic retry mechanisms with exponential backoff
+    - Streaming support for real-time operations
+    - Authentication management with automatic token refresh
+
+API Coverage:
+    - Authentication: Login, logout, token management, user verification
+    - Users: User creation, management, profile updates, administrative operations
+    - Conversations: Chat management, message handling, conversation analytics
+    - Documents: Upload, processing, search, vector embedding generation
+    - Analytics: System metrics, user analytics, performance monitoring
+    - Database: Administrative operations, health checks, maintenance
+    - Tasks: Background job management, queue monitoring, worker scaling
+    - MCP: Model Context Protocol integration, tool management
+    - Profiles: LLM parameter management, optimization, A/B testing
+    - Prompts: Template management, versioning, performance analytics
+
+Authentication Flow:
+    The SDK implements secure JWT-based authentication with automatic token
+    management and refresh capabilities. Tokens are managed transparently
+    for all authenticated operations.
+
+Error Handling:
+    The SDK provides comprehensive error handling with structured exceptions
+    that include HTTP status codes, detailed error messages, and context
+    information for debugging and monitoring.
+
+Performance Features:
+    - Async operations for non-blocking I/O and high throughput
+    - Connection pooling and keep-alive for efficient HTTP operations
+    - Request batching for bulk operations
+    - Streaming support for large data transfers
+    - Configurable timeouts and retry policies
+
+Type Safety:
+    All SDK operations use Pydantic models for request/response validation,
+    providing compile-time type checking and runtime validation for robust
+    application development.
+
+Use Cases:
+    - Application development and platform integration
+    - Automated testing and validation workflows
+    - Data analysis and reporting applications
+    - System administration and monitoring tools
+    - Custom AI applications and workflow automation
+
+Example Usage:
+    ```python
+    import asyncio
+    from ai_chatbot_sdk import AIChatbotSDK, ChatRequest
+
+    async def main():
+        # Initialize SDK
+        sdk = AIChatbotSDK(
+            base_url="https://api.chatbot.example.com",
+            timeout=30
+        )
+
+        # Authenticate
+        token = await sdk.auth.login("username", "password")
+        sdk.set_token(token.access_token)
+
+        # Create conversation
+        conversation = await sdk.conversations.create(
+            title="Customer Support Session"
+        )
+
+        # Send message
+        chat_request = ChatRequest(
+            conversation_id=conversation.id,
+            message="Hello, how can you help me today?"
+        )
+        response = await sdk.conversations.chat(chat_request)
+
+        # Search documents
+        search_results = await sdk.documents.search(
+            query="machine learning best practices",
+            limit=10
+        )
+
+        # Get analytics
+        overview = await sdk.analytics.get_overview()
+
+    # Run the example
+    asyncio.run(main())
+    ```
+
+Integration Patterns:
+    - Microservices architecture with async service communication
+    - Event-driven applications with real-time data processing
+    - Data pipeline integration for document processing and analysis
+    - Monitoring and alerting system integration
+    - Custom dashboard and reporting application development
+
+Performance Considerations:
+    - Use connection pooling for multiple concurrent operations
+    - Implement proper error handling and retry logic
+    - Consider rate limiting for high-volume operations
+    - Use streaming operations for large data transfers
+    - Monitor token expiration and refresh proactively
 """
 
 from collections.abc import AsyncIterator
@@ -672,10 +781,6 @@ class HealthClient:
         """Get performance metrics."""
         return await self.sdk._request("/api/v1/health/performance", PerformanceMetricsResponse)
 
-    async def liveness(self) -> Dict[str, Any]:
-        """Check if the service is alive and responsive."""
-        return await self.sdk._request("/api/v1/health/liveness")
-
 
 class AuthClient:
     """Async client for authentication operations."""
@@ -971,8 +1076,8 @@ class ConversationsClient:
         return await self.sdk._request("/api/v1/conversations/registry-stats", RegistryStatsResponse)
 
     async def search(
-        self, 
-        query: str, 
+        self,
+        query: str,
         search_messages: bool = True,
         user_filter: Optional[str] = None,
         date_from: Optional[str] = None,

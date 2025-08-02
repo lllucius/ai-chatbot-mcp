@@ -1,7 +1,62 @@
 """
-Document management commands for the API-based CLI.
+Document management commands for the AI Chatbot Platform CLI.
 
-All commands use async/await and the async SDK client.
+This module provides comprehensive document processing and management functionality
+through async operations and the AI Chatbot SDK. It enables users to upload,
+process, search, and manage documents with full support for various file formats,
+text extraction, and vector embedding generation.
+
+Key Features:
+    - Document upload and processing with format validation
+    - Text extraction and content analysis
+    - Vector embedding generation for similarity search
+    - Document search and retrieval with advanced filtering
+    - Bulk document operations and batch processing
+    - Document metadata management and tagging
+
+Document Processing:
+    - Support for multiple file formats (PDF, DOCX, TXT, HTML)
+    - Automatic text extraction and content normalization
+    - Vector embedding generation for semantic search
+    - Document chunking and segmentation for large files
+    - Content quality validation and error handling
+
+Search and Retrieval:
+    - Vector similarity search with relevance scoring
+    - Full-text search with keyword matching
+    - Advanced filtering by metadata, date, and file type
+    - Semantic search with natural language queries
+    - Search result ranking and pagination
+
+Performance Features:
+    - Async document processing for responsiveness
+    - Efficient batch operations for bulk uploads
+    - Optimized vector search with PGVector integration
+    - Progress tracking for long-running operations
+    - Memory-efficient streaming for large files
+
+Use Cases:
+    - Knowledge base creation and management
+    - Document search and discovery systems
+    - Content analysis and information extraction
+    - Bulk document migration and processing
+    - Research and academic document management
+
+Example Usage:
+    ```bash
+    # Upload and process documents
+    ai-chatbot documents upload file.pdf --extract-text --generate-embeddings
+    ai-chatbot documents batch-upload docs/ --recursive --filter "*.pdf"
+
+    # Search and retrieve documents
+    ai-chatbot documents search --query "machine learning" --limit 10
+    ai-chatbot documents list --file-type pdf --page 1 --size 20
+
+    # Document management
+    ai-chatbot documents show doc_id --include-content
+    ai-chatbot documents delete doc_id --confirm
+    ai-chatbot documents update doc_id --title "New Title"
+    ```
 """
 
 from typing import Optional

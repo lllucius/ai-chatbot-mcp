@@ -1,8 +1,76 @@
 """
-Task management commands for the API-based CLI.
+Background task management commands for the AI Chatbot Platform CLI.
 
-This module provides background task management functionality through API calls.
-All commands are fully async and use async-typer.
+This module provides comprehensive management of background tasks and job queues
+through async operations and the AI Chatbot SDK. It enables administrators and
+developers to monitor, control, and optimize background processing systems
+including Celery workers and task queues.
+
+Background tasks handle asynchronous operations such as document processing,
+email notifications, data exports, and other long-running operations that
+should not block the main application. This module provides tools for managing
+these tasks effectively in production environments.
+
+Key Features:
+    - Task queue monitoring and status reporting
+    - Worker management and scaling operations
+    - Task scheduling and cron job management
+    - Performance monitoring and optimization
+    - Error tracking and retry management
+    - Resource utilization and capacity planning
+
+Queue Management:
+    - Real-time queue status and backlog monitoring
+    - Task prioritization and scheduling
+    - Dead letter queue management
+    - Queue cleanup and maintenance operations
+    - Performance metrics and throughput analysis
+
+Worker Operations:
+    - Worker status monitoring and health checks
+    - Dynamic worker scaling and load balancing
+    - Worker restart and recovery operations
+    - Resource utilization tracking
+    - Error rate monitoring and alerting
+
+Task Lifecycle:
+    - Task creation and submission
+    - Progress tracking and status updates
+    - Result retrieval and processing
+    - Error handling and retry mechanisms
+    - Task cancellation and cleanup
+
+Performance Monitoring:
+    - Task execution time analysis
+    - Queue throughput and latency metrics
+    - Worker efficiency and utilization rates
+    - Error rate tracking and alerting
+    - Capacity planning and resource optimization
+
+Use Cases:
+    - Document processing and analysis pipelines
+    - Bulk email and notification systems
+    - Data export and report generation
+    - Machine learning model training
+    - System maintenance and cleanup tasks
+
+Example Usage:
+    ```bash
+    # System monitoring
+    ai-chatbot tasks status --detailed
+    ai-chatbot tasks workers --show-inactive
+    ai-chatbot tasks queues --include-metrics
+
+    # Task management
+    ai-chatbot tasks list --status running --limit 20
+    ai-chatbot tasks show task_id --include-logs
+    ai-chatbot tasks cancel task_id --force
+
+    # Performance and optimization
+    ai-chatbot tasks performance --period week
+    ai-chatbot tasks cleanup --older-than 30d
+    ai-chatbot tasks scale-workers --queue default --count 5
+    ```
 """
 
 from typing import Optional

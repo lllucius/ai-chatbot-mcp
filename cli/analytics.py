@@ -1,7 +1,76 @@
 """
-Analytics and reporting commands for the API-based CLI.
+Analytics and reporting commands for the AI Chatbot Platform CLI.
 
-All commands use async/await and the async SDK client.
+This module provides comprehensive analytics and business intelligence functionality
+through async operations and the AI Chatbot SDK. It enables administrators, analysts,
+and stakeholders to access detailed platform metrics, generate reports, and monitor
+system performance and user engagement.
+
+The module implements enterprise-grade analytics patterns including real-time
+dashboards, historical reporting, and customizable metrics visualization. All
+analytics operations integrate seamlessly with the platform's data processing
+and business intelligence systems.
+
+Key Features:
+    - Real-time analytics dashboards and overviews
+    - Historical data analysis and trending
+    - User engagement and behavior analytics
+    - Performance monitoring and system metrics
+    - Custom report generation and export
+    - Automated alerting and threshold monitoring
+
+Analytics Domains:
+    - Platform Overview: High-level system metrics and KPIs
+    - User Analytics: User activity, engagement, and retention metrics
+    - Conversation Analytics: Chat volume, response times, and satisfaction
+    - Performance Metrics: System performance, API response times, uptime
+    - Business Intelligence: Revenue metrics, usage patterns, growth trends
+
+Reporting Capabilities:
+    - Flexible date range selection and filtering
+    - Multiple export formats (JSON, CSV, Excel, PDF)
+    - Automated report scheduling and delivery
+    - Custom dashboard creation and sharing
+    - Integration with external BI tools
+
+Performance Optimizations:
+    - Async operations for responsive data retrieval
+    - Efficient data aggregation and processing
+    - Optimized API calls with intelligent caching
+    - Fast visualization rendering and display
+    - Minimal memory footprint for large datasets
+
+Use Cases:
+    - Executive dashboard monitoring and reporting
+    - Performance analysis and optimization
+    - User behavior analysis and insights
+    - Capacity planning and resource allocation
+    - Compliance reporting and audit trails
+
+Example Usage:
+    ```bash
+    # Platform overview and dashboards
+    ai-chatbot analytics overview
+    ai-chatbot analytics dashboard --date-range 30d
+
+    # User and engagement analytics
+    ai-chatbot analytics users --metrics engagement,retention
+    ai-chatbot analytics activity --group-by hour --period week
+
+    # Performance and system metrics
+    ai-chatbot analytics performance --include-api-metrics
+    ai-chatbot analytics system --real-time
+
+    # Custom reports and exports
+    ai-chatbot analytics report --template monthly --format excel
+    ai-chatbot analytics export --start-date 2024-01-01 --format csv
+    ```
+
+Integration:
+    - Business intelligence platform connectivity
+    - Data warehouse and ETL system integration
+    - Monitoring and alerting system compatibility
+    - External reporting tool integration
 """
 
 from typing import Optional

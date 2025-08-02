@@ -1,11 +1,109 @@
 #!/usr/bin/env python3
 """
-API-based Management CLI for the AI Chatbot Platform.
+AI Chatbot Platform Management CLI - Main Entry Point.
 
-This CLI provides comprehensive management via the platform's REST API,
-routing all functionality through modular subcommands.
+This module serves as the primary entry point for the AI Chatbot Platform command-line
+interface, providing a comprehensive management system for all platform operations
+through a modern async architecture and intuitive sub-command structure.
 
-All CLI entrypoints are now defined in the cli submodules.
+The CLI integrates multiple functional domains into a cohesive management experience,
+enabling developers, administrators, and operators to interact with the platform
+through well-organized command hierarchies. Each sub-command area provides specialized
+functionality while maintaining consistent authentication, error handling, and output
+formatting.
+
+Architecture Features:
+    - AsyncTyper framework for high-performance async operations
+    - Rich terminal interface with beautiful formatting and progress indicators
+    - Modular sub-command structure organized by functional domain
+    - Comprehensive error handling and user feedback
+    - Consistent authentication and session management across all commands
+
+Command Domains:
+    - Core Commands: Authentication, configuration, health checks
+    - User Management: Account creation, modification, and administration
+    - Conversation Management: Chat operations, history, and analytics
+    - Document Management: File upload, processing, and search
+    - Analytics: Performance metrics, usage reports, and dashboards
+    - Database: Schema management, migrations, and maintenance
+    - Tasks: Background job monitoring and queue management
+    - MCP Integration: Model Context Protocol server management
+    - Prompts: Template management and customization
+    - Profiles: User profile and preference management
+
+Security Features:
+    - JWT-based authentication with secure token storage
+    - Role-based access control for administrative operations
+    - Comprehensive audit logging for all CLI actions
+    - Secure credential handling and validation
+    - Session management with automatic token refresh
+
+Performance Optimizations:
+    - Async operations for non-blocking I/O and responsiveness
+    - Efficient API communication with request batching
+    - Lazy loading of heavy operations and large datasets
+    - Progress indicators for long-running operations
+    - Optimized startup time with modular command loading
+
+Enterprise Features:
+    - Comprehensive logging and monitoring integration
+    - CI/CD pipeline compatibility for automation
+    - Configuration management for multi-environment support
+    - Bulk operations for large-scale administration
+    - Integration with monitoring and alerting systems
+
+Use Cases:
+    - Development workflow automation and testing
+    - Production system administration and monitoring
+    - Data migration and bulk operation management
+    - Troubleshooting and diagnostic operations
+    - Integration testing and validation workflows
+
+Example Usage:
+    ```bash
+    # Authentication and setup
+    ai-chatbot login --username admin
+    ai-chatbot config show
+
+    # User management
+    ai-chatbot users create john john@example.com
+    ai-chatbot users list --active-only
+
+    # Conversation operations
+    ai-chatbot conversations create --title "Customer Support"
+    ai-chatbot conversations list --page 1 --size 20
+
+    # Analytics and monitoring
+    ai-chatbot analytics dashboard --date-range 7d
+    ai-chatbot health check --detailed
+
+    # Database administration
+    ai-chatbot database migrate --auto-approve
+    ai-chatbot database backup --compress
+    ```
+
+Installation and Setup:
+    The CLI is distributed as part of the ai-chatbot-mcp package:
+
+    ```bash
+    pip install ai-chatbot-mcp
+    ai-chatbot --help
+    ```
+
+Configuration:
+    Configuration is managed through environment variables and .env files:
+
+    ```bash
+    export API_BASE_URL="https://api.chatbot.example.com"
+    export CLIENT_TIMEOUT=30
+    ai-chatbot config show
+    ```
+
+Integration:
+    - CI/CD pipelines for automated testing and deployment
+    - Monitoring systems for health checks and alerts
+    - Development tools for debugging and validation
+    - Production operations for administration and maintenance
 """
 import sys
 

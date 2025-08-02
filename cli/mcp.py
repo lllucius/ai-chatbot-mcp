@@ -1,9 +1,75 @@
 """
-MCP management API CLI commands.
+Model Context Protocol (MCP) management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive MCP server and tool management functionality
-through the API-based command line interface using the AI Chatbot SDK.
-All commands are async.
+through async operations and the AI Chatbot SDK. It enables administrators and
+developers to configure, monitor, and manage MCP servers and their associated
+tools for enhanced AI model capabilities.
+
+The Model Context Protocol (MCP) is a standard for connecting AI models with
+external tools and data sources. This module facilitates the management of
+MCP servers, tool discovery, and integration with the AI Chatbot Platform.
+
+Key Features:
+    - MCP server registration and configuration management
+    - Tool discovery and capability enumeration
+    - Server health monitoring and status reporting
+    - Integration testing and validation
+    - Security configuration and access control
+    - Performance monitoring and optimization
+
+Server Management:
+    - Server registration with validation and security checks
+    - Configuration management for connection parameters
+    - Health monitoring and automatic failover capabilities
+    - Version management and compatibility checking
+    - Authentication and authorization setup
+
+Tool Integration:
+    - Automatic tool discovery and registration
+    - Tool capability testing and validation
+    - Permission management and access control
+    - Performance monitoring and usage analytics
+    - Integration with AI model workflows
+
+Security Features:
+    - Secure server communication with encryption
+    - Authentication and authorization management
+    - Access control and permission validation
+    - Audit logging for all MCP operations
+    - Security scanning and vulnerability assessment
+
+Performance Monitoring:
+    - Real-time server health and status monitoring
+    - Tool usage analytics and performance metrics
+    - Error tracking and diagnostic reporting
+    - Capacity planning and resource optimization
+    - Integration with monitoring and alerting systems
+
+Use Cases:
+    - External tool integration for AI models
+    - Third-party service connectivity and management
+    - Custom tool development and deployment
+    - Enterprise system integration and workflow automation
+    - AI model capability extension and enhancement
+
+Example Usage:
+    ```bash
+    # Server management
+    ai-chatbot mcp list-servers --enabled-only
+    ai-chatbot mcp register-server server_config.json
+    ai-chatbot mcp test-server server_id --full-test
+
+    # Tool management
+    ai-chatbot mcp list-tools --server-id server_id
+    ai-chatbot mcp test-tool tool_id --validate
+    ai-chatbot mcp enable-tool tool_id
+
+    # Monitoring and diagnostics
+    ai-chatbot mcp health-check --detailed
+    ai-chatbot mcp server-logs server_id --tail 100
+    ai-chatbot mcp performance-report --date-range 7d
+    ```
 """
 
 from typing import Optional

@@ -1,7 +1,63 @@
 """
-Prompt management commands for the API-based CLI.
+Prompt management commands for the AI Chatbot Platform CLI.
 
-This module provides prompt management functionality through API calls, all async.
+This module provides comprehensive prompt template management functionality
+through async operations and the AI Chatbot SDK. It enables developers and
+content creators to create, manage, and optimize prompt templates for various
+AI applications and use cases.
+
+Prompt templates are reusable, parameterized prompts that can be customized
+for different scenarios while maintaining consistency and best practices.
+This module facilitates the entire prompt lifecycle from creation to deployment
+and optimization.
+
+Key Features:
+    - Prompt template creation and management
+    - Variable substitution and parameterization
+    - Template versioning and change tracking
+    - Performance analytics and optimization
+    - Category-based organization and filtering
+    - A/B testing and effectiveness measurement
+
+Template Management:
+    - Rich text editor integration for prompt creation
+    - Variable placeholder system for dynamic content
+    - Template inheritance and composition
+    - Version control with rollback capabilities
+    - Collaborative editing and review workflows
+    - Import/export functionality for backup and sharing
+
+Performance Optimization:
+    - Response quality metrics and analysis
+    - Token usage optimization and cost management
+    - Effectiveness scoring and ranking
+    - A/B testing framework for template comparison
+    - Automated optimization recommendations
+
+Use Cases:
+    - Customer service response templates
+    - Content generation and marketing copy
+    - Educational and training prompts
+    - Technical documentation assistance
+    - Creative writing and storytelling
+
+Example Usage:
+    ```bash
+    # Template management
+    ai-chatbot prompts list --category customer-service
+    ai-chatbot prompts create support-template --category support
+    ai-chatbot prompts show template_id --include-variables
+
+    # Testing and optimization
+    ai-chatbot prompts test template_id --variables key=value
+    ai-chatbot prompts compare template1 template2 --metric effectiveness
+    ai-chatbot prompts optimize template_id --auto-tune
+
+    # Deployment and monitoring
+    ai-chatbot prompts publish template_id --version 1.2
+    ai-chatbot prompts usage-stats template_id --period month
+    ai-chatbot prompts performance-report --category all
+    ```
 """
 
 from typing import Optional
