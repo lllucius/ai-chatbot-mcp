@@ -96,6 +96,15 @@ class OpenAIClient:
             return False
 
     def count_tokens(self, text: str) -> int:
+        """
+        Count tokens in a text string.
+
+        Args:
+            text: Text string to count tokens for
+
+        Returns:
+            int: Number of tokens in the text
+        """
         if not text:
             return 0
 
