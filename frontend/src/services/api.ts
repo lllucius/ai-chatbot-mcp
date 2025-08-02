@@ -84,6 +84,7 @@ class ApiClient {
     this.client = axios.create({
       baseURL: `${API_CONFIG.baseUrl}/api/${API_CONFIG.apiVersion}`,
       timeout: API_CONFIG.timeout,
+      withCredentials: true, // Enable credentials for CORS requests
       headers: {
         'Content-Type': 'application/json',
       },
