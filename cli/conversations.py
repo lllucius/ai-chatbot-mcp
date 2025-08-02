@@ -147,25 +147,21 @@ async def list(
             page=page, size=size, active_only=active_only
         )
         if resp and resp.items:
-            from rich.table import Table
-
-            table = Table(title=f"Conversations (Page {resp.pagination.page})")
-            table.add_column("ID", style="cyan")
-            table.add_column("Title", style="white")
-            table.add_column("Active", style="green")
-            table.add_column("Messages", style="yellow")
-            table.add_column("Created", style="blue")
+            # Convert to table data
+            conv_data = []
             for conv in resp.items:
-                table.add_row(
-                    str(conv.id)[:8] + "...",
-                    conv.title,
-                    "✓" if conv.is_active else "✗",
-                    str(conv.message_count),
-                    format_timestamp(str(conv.created_at)),
-                )
-            console.print(table)
+                conv_data.append({
+                    "ID": str(conv.id)[:8] + "...",
+                    "Title": conv.title,
+                    "Active": "✓" if conv.is_active else "✗",
+                    "Messages": str(conv.message_count),
+                    "Created": format_timestamp(str(conv.created_at)),
+                })
+            
+            from .base import display_table_data
+            display_table_data(conv_data, f"Conversations (Page {resp.pagination.page})")
         else:
-            console.print("[yellow]No conversations found.[/yellow]")
+            print("No conversations found.")
     except Exception as e:
         error_message(f"Failed to list conversations: {str(e)}")
         raise SystemExit(1)
@@ -180,17 +176,16 @@ async def show(
         sdk = await get_sdk()
         conv = await sdk.conversations.get(UUID(conversation_id))
         if conv:
-            from rich.panel import Panel
-
-            details = (
-                f"ID: [cyan]{conv.id}[/cyan]\n"
-                f"Title: [white]{conv.title}[/white]\n"
-                f"Active: [green]{'Yes' if conv.is_active else 'No'}[/green]\n"
-                f"Messages: [yellow]{conv.message_count}[/yellow]\n"
-                f"Created: [blue]{format_timestamp(str(conv.created_at))}[/blue]"
-            )
-            panel = Panel(details, title="Conversation Details", border_style="magenta")
-            console.print(panel)
+            conv_details = {
+                "ID": str(conv.id),
+                "Title": conv.title,
+                "Active": "Yes" if conv.is_active else "No",
+                "Messages": str(conv.message_count),
+                "Created": format_timestamp(str(conv.created_at)),
+            }
+            
+            from .base import display_key_value_pairs
+            display_key_value_pairs(conv_details, "Conversation Details")
     except Exception as e:
         error_message(f"Failed to get conversation details: {str(e)}")
         raise SystemExit(1)

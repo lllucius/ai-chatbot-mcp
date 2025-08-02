@@ -137,7 +137,7 @@ async def show(
                 console.print(content_panel)
             tags = getattr(data, "tags", [])
             if tags:
-                console.print(f"\n[bold]Tags:[/bold] {', '.join(tags)}")
+                print(f"\nTags: {', '.join(tags)}")
     except Exception as e:
         error_message(f"Failed to show prompt: {str(e)}")
         raise SystemExit(1)
@@ -297,7 +297,7 @@ async def categories():
 async def tags():
     """List all available prompt tags."""
     try:
-        console.print("[yellow]Tag listing not yet implemented in API[/yellow]")
+        print("Tag listing not yet implemented in API")
     except Exception as e:
         error_message(f"Failed to get tags: {str(e)}")
         raise SystemExit(1)
