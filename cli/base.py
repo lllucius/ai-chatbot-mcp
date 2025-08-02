@@ -137,6 +137,13 @@ class CLIManager:
     """
 
     def __init__(self):
+        """Initialize CLI manager with configuration and token loading.
+        
+        Note:
+            Creates necessary directories, loads configuration from environment,
+            initializes SDK with base URL and timeout, and attempts to load
+            existing authentication token.
+        """
         self.token_file = TOKEN_FILE
         self.token_file.parent.mkdir(parents=True, exist_ok=True)
         self._config = load_config()
