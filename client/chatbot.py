@@ -1,23 +1,136 @@
 #!/usr/bin/env python3
 """
-Enhanced AI Chatbot CLI
+Enhanced AI Chatbot Interactive Terminal Client.
 
-Terminal-based AI Chatbot client for advanced LLM experimentation, runtime configuration,
-and full management of users, MCP servers, search, registry, analytics, and more.
+This module provides a feature-rich, interactive terminal-based client for the AI Chatbot
+Platform, enabling direct user interaction with AI models through a sophisticated command-line
+interface. The client supports real-time conversations, advanced configuration management,
+and comprehensive platform administration capabilities.
 
-Features:
-- Modern async SDK usage (from ai_chatbot_sdk.py)
-- Robust error handling, spinner, and streaming support
-- Interactive runtime settings via /set, /config
-- LLM profile parameter experimentation and saving with /llmparam, /llmreset, /llmsave
-- User and MCP server management commands
-- Semantic search across documents and conversations
-- Registry, analytics, export, DB, and document management
-- Settings persistence and CLI/server version info
-- Arrow-key history navigation and line editing support
-- Detailed docstrings for all commands and classes
+The terminal client is designed for developers, researchers, and power users who need direct
+access to platform capabilities with rich formatting, real-time streaming, and extensive
+customization options. It provides both conversational AI interaction and full platform
+management functionality.
 
-Author: Your Name
+Key Features:
+    - Interactive AI conversations with real-time streaming responses
+    - Advanced LLM parameter experimentation and runtime configuration
+    - Comprehensive user and system management capabilities
+    - Document upload, processing, and semantic search functionality
+    - Analytics and reporting with rich terminal visualizations
+    - MCP server integration and tool management
+    - Settings persistence and session management
+    - Command history with arrow-key navigation and line editing
+
+Conversation Features:
+    - Real-time streaming responses with typing indicators
+    - Conversation history and context management
+    - Message formatting with syntax highlighting
+    - Interactive parameter adjustment during conversations
+    - Multiple conversation session management
+    - Export and backup functionality
+
+Configuration Management:
+    - Runtime LLM parameter adjustment with /set commands
+    - Profile management for different use cases and scenarios
+    - Settings persistence across sessions
+    - Environment-specific configuration support
+    - Advanced debugging and logging options
+
+Administrative Capabilities:
+    - User account management and authentication
+    - System health monitoring and diagnostics
+    - Database operations and maintenance
+    - Background task monitoring and management
+    - Analytics dashboard and reporting
+    - Document management and search operations
+
+Terminal Interface:
+    - Rich formatting with colors, tables, and progress indicators
+    - Responsive design that adapts to terminal size
+    - Modern CLI patterns with intuitive command structure
+    - Error handling with helpful error messages and suggestions
+    - Interactive prompts and confirmation dialogs
+
+Performance Features:
+    - Async operations for responsive user interface
+    - Efficient streaming for real-time responses
+    - Optimized API communication with connection pooling
+    - Memory-efficient handling of large conversations
+    - Fast startup time with lazy loading
+
+Security Features:
+    - Secure authentication with JWT token management
+    - Encrypted communication with the platform
+    - Session management with automatic cleanup
+    - Audit logging for administrative operations
+    - Secure credential handling and storage
+
+Use Cases:
+    - Interactive AI model testing and experimentation
+    - Customer support agent training and simulation
+    - Research and development with language models
+    - System administration and platform management
+    - Educational and training applications
+    - Debugging and troubleshooting platform issues
+
+Command Categories:
+    - Conversation: /chat, /history, /export, /clear
+    - Configuration: /set, /config, /llmparam, /llmreset, /llmsave
+    - User Management: /users, /whoami, /login, /logout
+    - Documents: /upload, /search, /documents
+    - Analytics: /analytics, /dashboard, /metrics
+    - System: /health, /version, /db, /tasks
+    - MCP: /mcp, /tools, /servers
+
+Example Usage:
+    ```bash
+    # Start interactive client
+    python -m client.chatbot
+
+    # Quick conversation
+    > Hello, how can you help me today?
+    AI: I'm here to assist you with...
+
+    # Adjust parameters
+    > /set temperature 0.8
+    > /set max_tokens 1000
+
+    # Upload and search documents
+    > /upload document.pdf
+    > /search machine learning best practices
+
+    # System administration
+    > /users list --active-only
+    > /health check --detailed
+    > /analytics overview
+    ```
+
+Installation and Setup:
+    The client is included with the ai-chatbot-mcp package:
+
+    ```bash
+    pip install ai-chatbot-mcp
+    python -m client.chatbot
+    ```
+
+Configuration:
+    Client behavior is controlled through environment variables and configuration files:
+
+    ```bash
+    export API_BASE_URL="https://api.chatbot.example.com"
+    export CLIENT_TIMEOUT=30
+    export CLIENT_DEBUG=false
+    ```
+
+Integration:
+    - Development workflow integration for testing and validation
+    - Customer support training and simulation environments
+    - Research and academic applications for language model studies
+    - Administrative tools for platform operators and system administrators
+
+Author: AI Chatbot Platform Team
+Version: 2.0.0
 """
 
 import asyncio
