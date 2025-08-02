@@ -552,29 +552,69 @@ def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
 
 
 class SpinnerContext:
+    """Async context manager for displaying a spinner during long operations.
+    
+    Provides a visual spinner indicator using Rich console status while async
+    operations are running. Can be disabled for environments where spinners
+    are not desired.
+    """
+
     def __init__(self, message: str = "Thinking...", enabled: bool = True):
+        """Initialize spinner context.
+        
+        Args:
+            message: Status message to display with spinner (default: "Thinking...").
+            enabled: Whether to show spinner. If False, context does nothing.
+        """
         self.enabled = enabled
         self.message = message
         self.task: Optional[asyncio.Task] = None
         self.stop_event: asyncio.Event = asyncio.Event()
 
     async def __aenter__(self) -> "SpinnerContext":
+        """Enter async context and start spinner if enabled.
+        
+        Returns:
+            SpinnerContext: Self for context manager protocol.
+        """
         if self.enabled:
             self.task = asyncio.create_task(self._spin())
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
+        """Exit async context and stop spinner.
+        
+        Args:
+            exc_type: Exception type if an exception occurred.
+            exc: Exception instance if an exception occurred.
+            tb: Traceback if an exception occurred.
+        """
         self.stop_event.set()
         if self.task:
             await self.task
 
     async def _spin(self) -> None:
+        """Internal method to run the spinner animation.
+        
+        Note:
+            Runs until stop_event is set. Uses Rich console status for display.
+        """
         with console.status(f"[bold blue]{self.message}"):
             while not self.stop_event.is_set():
                 await asyncio.sleep(0.05)
 
 
 class Settings:
+    """Manages CLI user settings with persistence and runtime configuration.
+    
+    Handles user preferences for chatbot behavior including RAG usage, tool calling,
+    streaming, and LLM parameter overrides. Settings are loaded from config and
+    can be overridden with persistent user preferences.
+    
+    Attributes:
+        _persist_keys: List of setting keys that are saved to persistent storage.
+    """
+    
     _persist_keys = [
         "use_rag",
         "use_tools",
@@ -586,6 +626,14 @@ class Settings:
     ]
 
     def __init__(self, config: ClientConfig):
+        """Initialize settings from configuration and load user preferences.
+        
+        Args:
+            config: ClientConfig object with default settings.
+            
+        Note:
+            Loads persistent user settings from file if available, overriding defaults.
+        """
         self.use_rag: bool = config.client_default_use_rag
         self.use_tools: bool = config.client_default_use_tools
         self.prompt_name: Optional[str] = config.client_default_prompt_name
@@ -601,6 +649,11 @@ class Settings:
                 setattr(self, key, loaded[key])
 
     def display(self) -> None:
+        """Display current settings in a formatted table.
+        
+        Note:
+            Shows all user-configurable settings including LLM parameter overrides.
+        """
         t = Table(title="Current Settings", box=box.SIMPLE)
         t.add_column("Setting", style="cyan")
         t.add_column("Value", style="magenta")
@@ -618,9 +671,23 @@ class Settings:
         console.print(t)
 
     def settings_dict(self) -> Dict[str, Any]:
+        """Get dictionary of persistent settings.
+        
+        Returns:
+            Dict[str, Any]: Dictionary containing only persistable settings.
+        """
         return {k: getattr(self, k) for k in self._persist_keys}
 
     def set(self, key: str, value: Any) -> None:
+        """Set a configuration value and persist it.
+        
+        Args:
+            key: Setting name to update.
+            value: New value for the setting.
+            
+        Note:
+            Only updates known settings. Automatically saves to persistent storage.
+        """
         if hasattr(self, key):
             setattr(self, key, value)
             print_success(f"Set {key} = {value}")
@@ -629,22 +696,51 @@ class Settings:
             print_warn(f"Unknown setting: {key}")
 
     def reset_llm(self) -> None:
+        """Clear all LLM parameter overrides.
+        
+        Note:
+            Resets all custom LLM parameters to use profile or system defaults.
+        """
         self.llm_overrides.clear()
         print_success("Cleared all LLM parameter overrides.")
 
     def set_llm_param(self, key: str, value: Any) -> None:
+        """Set an LLM parameter override.
+        
+        Args:
+            key: LLM parameter name (e.g., 'temperature', 'max_tokens').
+            value: Parameter value.
+            
+        Note:
+            Overrides take precedence over profile settings for this session.
+        """
         self.llm_overrides[key] = value
         print_success(f"LLM parameter override: {key} = {value}")
 
     def unset_llm_param(self, key: str) -> None:
+        """Remove an LLM parameter override.
+        
+        Args:
+            key: LLM parameter name to remove override for.
+        """
         if key in self.llm_overrides:
             self.llm_overrides.pop(key)
             print_success(f"Removed override for {key}")
 
     def get_llm_params(self) -> Dict[str, Any]:
+        """Get copy of current LLM parameter overrides.
+        
+        Returns:
+            Dict[str, Any]: Copy of LLM parameter overrides.
+        """
         return self.llm_overrides.copy()
 
     def display_llm_params(self) -> None:
+        """Display current LLM parameter overrides in a table.
+        
+        Note:
+            Shows message if no overrides are set.
+        """
         if not self.llm_overrides:
             print_info("No LLM parameter overrides set.")
         else:
@@ -656,6 +752,11 @@ class Settings:
             console.print(t)
 
     def available_settings(self) -> List[Tuple[str, str, str]]:
+        """Get list of available settings with their types and descriptions.
+        
+        Returns:
+            List[Tuple[str, str, str]]: List of (name, type, description) tuples.
+        """
         return [
             ("use_rag", "bool", "Enable RAG (true/false)"),
             ("use_tools", "bool", "Enable tool calling (true/false)"),
@@ -671,18 +772,38 @@ class Settings:
 
 
 class CommandHandler:
-    """
-    Handles slash commands and CLI logic for the chatbot.
+    """Handles slash commands and CLI logic for the chatbot.
+    
+    Processes user commands starting with '/' and provides command execution,
+    help text, and error handling. Integrates with the SDK for all API operations
+    and manages user feedback through rich console output.
     """
 
     def __init__(self, sdk: AIChatbotSDK, settings: Settings, history: List[str]):
+        """Initialize command handler.
+        
+        Args:
+            sdk: AIChatbotSDK instance for API operations.
+            settings: Settings instance for configuration management.
+            history: List to store command history.
+        """
         self.sdk: AIChatbotSDK = sdk
         self.settings: Settings = settings
         self.history: List[str] = history
 
     async def handle(self, line: str) -> bool:
-        """
-        Parse and execute a command. Returns True if handled, else False.
+        """Parse and execute a slash command.
+        
+        Args:
+            line: User input line to process.
+            
+        Returns:
+            bool: True if line was a command and was handled, False if not a command.
+            
+        Note:
+            Commands start with '/'. Non-command input returns False to allow
+            normal chat processing. Handles all command parsing, argument validation,
+            and error handling with user-friendly messages.
         """
         if not line.startswith("/"):
             return False
@@ -744,7 +865,11 @@ class CommandHandler:
     # ---- Command Implementations ----
 
     def show_help(self) -> None:
-        """Prints all supported commands and help."""
+        """Display comprehensive help text for all available commands.
+        
+        Note:
+            Shows command syntax, descriptions, and usage examples in a formatted panel.
+        """
         help_text = """
         [bold]AI Chatbot CLI Commands[/bold]
         /help                   Show this help
@@ -775,7 +900,11 @@ class CommandHandler:
         )
 
     def show_settings_help(self) -> None:
-        """Show available settings and their types."""
+        """Display available settings with types and descriptions in a table.
+        
+        Note:
+            Shows all configurable settings that can be used with /set command.
+        """
         t = Table(title="Available Settings (for /set)", box=box.SIMPLE)
         t.add_column("Setting", style="cyan")
         t.add_column("Type", style="magenta")
@@ -785,6 +914,14 @@ class CommandHandler:
         console.print(t)
 
     async def cmd_set(self, args: List[str]) -> None:
+        """Handle /set command to change configuration settings.
+        
+        Args:
+            args: Command arguments [key, value].
+            
+        Note:
+            Shows help if no args provided. Automatically converts boolean values.
+        """
         if not args:
             self.show_settings_help()
             return
@@ -1140,6 +1277,20 @@ class CommandHandler:
 async def auto_generate_title(
     user_message: str, sdk: AIChatbotSDK, settings: Settings
 ) -> str:
+    """Generate a conversation title from the user's first message.
+    
+    Args:
+        user_message: User's message to base title on.
+        sdk: SDK instance (unused but kept for compatibility).
+        settings: Settings instance (unused but kept for compatibility).
+        
+    Returns:
+        str: Generated title, truncated to 80 characters.
+        
+    Note:
+        Uses first 10 words of message if it's long enough, otherwise uses full message.
+        Falls back to "AI Chat" if processing fails.
+    """
     raw = user_message.strip()
     words = raw.split()
     if len(words) < 12:
@@ -1151,6 +1302,14 @@ async def auto_generate_title(
 
 
 def get_user_input() -> str:
+    """Get user input with proper prompt formatting.
+    
+    Returns:
+        str: User input string, empty string on EOF.
+        
+    Note:
+        Handles EOF gracefully (e.g., Ctrl+D) by returning empty string.
+    """
     prompt_str = "You: "
     try:
         return input(prompt_str)
@@ -1161,6 +1320,19 @@ def get_user_input() -> str:
 async def chat_loop(
     sdk: AIChatbotSDK, settings: Settings, handler: Any, history: List[str]
 ) -> None:
+    """Main interactive chat loop for processing user input and AI responses.
+    
+    Args:
+        sdk: AIChatbotSDK instance for API communication.
+        settings: Settings instance for configuration.
+        handler: CommandHandler instance for processing slash commands.
+        history: List to store conversation history.
+        
+    Note:
+        Runs indefinitely until user exits. Handles both commands and chat messages.
+        Supports streaming and non-streaming responses based on settings.
+        Manages conversation state and auto-generates titles when enabled.
+    """
     console.print(
         "[bold green]Welcome to the AI Chatbot CLI! Type /help for commands.[/bold green]"
     )
@@ -1202,6 +1374,17 @@ async def chat_loop(
             spinner_msg = "Waiting for AI response..."
 
             async def fetch_and_retry_on_auth(func: Callable[[], Any]) -> Any:
+                """Execute function with automatic authentication retry on auth errors.
+                
+                Args:
+                    func: Async function to execute.
+                    
+                Returns:
+                    Any: Result of the function call.
+                    
+                Raises:
+                    ApiError: Re-raised if not auth-related or retry fails.
+                """
                 try:
                     return await func()
                 except ApiError as e:
@@ -1216,6 +1399,12 @@ async def chat_loop(
             if settings.enable_streaming:
 
                 async def do_stream():
+                    """Handle streaming chat response with real-time output.
+                    
+                    Note:
+                        Processes streaming chunks and displays content in real-time.
+                        Handles various chunk types and displays token stats when complete.
+                    """
                     stream = sdk.conversations.chat_stream(chat_req)
                     usage = None
                     latency = None
@@ -1269,6 +1458,18 @@ async def chat_loop(
 
 
 async def ensure_auth(sdk: AIChatbotSDK) -> bool:
+    """Ensure user is authenticated, prompting for login if needed.
+    
+    Args:
+        sdk: AIChatbotSDK instance to authenticate.
+        
+    Returns:
+        bool: True if authentication successful, False otherwise.
+        
+    Note:
+        First tries to use saved token, then prompts for credentials if needed.
+        Saves new token to secure storage on successful login.
+    """
     token = load_token()
     if token:
         sdk.set_token(token)
@@ -1291,7 +1492,21 @@ async def ensure_auth(sdk: AIChatbotSDK) -> bool:
 
 
 def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
+    """Configure signal handlers for graceful shutdown.
+    
+    Args:
+        loop: Event loop to add signal handlers to.
+        
+    Note:
+        Handles SIGINT and SIGTERM for clean exit.
+        Silently ignores NotImplementedError on platforms without signal support.
+    """
     def _exit_handler():
+        """Internal signal handler for graceful exit.
+        
+        Note:
+            Prints exit message and terminates with exit code 0.
+        """
         print_warn("\nExiting. (Ctrl+C)")
         sys.exit(0)
 
@@ -1303,6 +1518,12 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
 
 
 async def main() -> None:
+    """Main entry point for the chatbot CLI application.
+    
+    Note:
+        Initializes all components, handles authentication, and starts the chat loop.
+        Configures readline if available and sets up graceful exit handling.
+    """
     if readline:
         setup_readline()
     history: List[str] = []
