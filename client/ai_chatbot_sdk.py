@@ -898,7 +898,15 @@ class UsersClient:
 
 
 class DocumentsClient:
+    """Async client for document management operations."""
+
     def __init__(self, sdk: "AIChatbotSDK"):
+        """
+        Initialize documents client.
+
+        Args:
+            sdk: The main SDK instance for making API requests
+        """
         self.sdk = sdk
 
     async def upload(self, file, title: Optional[str] = None) -> DocumentUploadResponse:
@@ -973,7 +981,15 @@ class DocumentsClient:
 
 
 class ConversationsClient:
+    """Async client for conversation management operations."""
+
     def __init__(self, sdk: "AIChatbotSDK"):
+        """
+        Initialize conversations client.
+
+        Args:
+            sdk: The main SDK instance for making API requests
+        """
         self.sdk = sdk
 
     async def create(self, data: ConversationCreate) -> ConversationResponse:
@@ -1102,6 +1118,12 @@ class SearchClient:
     """Client for search operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """
+        Initialize search client.
+
+        Args:
+            sdk: The main SDK instance for making API requests
+        """
         self.sdk = sdk
 
     async def search(self, data: DocumentSearchRequest) -> Dict[str, Any]:
@@ -1136,6 +1158,12 @@ class MCPClient:
     """Client for MCP server and tools management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """
+        Initialize MCP client.
+
+        Args:
+            sdk: The main SDK instance for making API requests
+        """
         self.sdk = sdk
 
     # Server management methods
@@ -1277,6 +1305,12 @@ class PromptsClient:
     """Client for prompt registry management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """
+        Initialize prompts client.
+
+        Args:
+            sdk: The main SDK instance for making API requests
+        """
         self.sdk = sdk
 
     async def list_prompts(
@@ -1441,6 +1475,12 @@ class DatabaseClient:
     """Client for database management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """
+        Initialize database client.
+
+        Args:
+            sdk: The main SDK instance for making API requests
+        """
         self.sdk = sdk
 
     async def init_database(self) -> BaseResponse:

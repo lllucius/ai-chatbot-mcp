@@ -153,6 +153,12 @@ class Document(BaseModelDB):
     )
 
     def __repr__(self) -> str:
+        """
+        Return string representation of Document.
+
+        Returns:
+            str: String representation including ID, title, and status
+        """
         return f"<Document(id={self.id}, title='{self.title}', status='{self.status}')>"
 
 
@@ -237,4 +243,10 @@ class DocumentChunk(BaseModelDB):
     )
 
     def __repr__(self) -> str:
+        """
+        Return string representation of DocumentChunk.
+
+        Returns:
+            str: String representation including ID, document ID, and chunk index
+        """
         return f"<DocumentChunk(id={self.id}, document_id={self.document_id}, index={self.chunk_index})>"
