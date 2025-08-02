@@ -532,16 +532,17 @@ class PromptCreate(BaseModel):
 
 
 class LLMProfileResponse(BaseModel):
-    """LLM profile registry response model."""
+    """LLM profile registry response model - matches app/schemas/llm_profile.py LLMProfileResponse."""
 
     name: str = Field(..., description="Unique profile name")
     title: str = Field(..., description="Human-readable title")
     description: Optional[str] = Field(None, description="Profile description")
     model_name: str = Field(..., description="OpenAI model name")
-    parameters: Dict[str, Any] = Field(..., description="Model parameters")
+    parameters: Dict[str, Any] = Field(..., description="Model parameters dictionary")
     is_default: bool = Field(False, description="Whether this is the default profile")
     is_active: bool = Field(True, description="Whether profile is active")
     usage_count: int = Field(0, description="How many times used")
+    last_used_at: Optional[datetime] = Field(None, description="Last usage timestamp")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -549,7 +550,7 @@ class LLMProfileResponse(BaseModel):
 
 
 class LLMProfileCreate(BaseModel):
-    """Create LLM profile request model."""
+    """Create LLM profile request model - matches app/schemas/llm_profile.py."""
 
     name: str = Field(..., description="Unique profile name")
     title: str = Field(..., description="Human-readable title")
@@ -574,7 +575,7 @@ class ToolResponse(BaseModel):
 
 
 class ToolsListResponse(BaseResponse):
-    """Tools list response model."""
+    """Tools list response model - replaced by MCPToolListResponse but kept for compatibility."""
 
     available_tools: List[ToolResponse] = Field([], description="Available MCP tools")
     openai_tools: List[Dict[str, Any]] = Field([], description="OpenAI-formatted tools")
@@ -695,7 +696,137 @@ class MCPToolExecutionResult(BaseModel):
     raw_result: Optional[str] = Field(None, description="Raw result for debugging")
 
 
-# --- Helper Functions ---
+# --- LIST RESPONSE MODELS ---
+
+
+class UserListResponse(BaseResponse):
+    """User list response model - matches app/schemas/user.py UserListResponse."""
+
+    users: List[UserResponse] = Field(..., description="List of users")
+    total_count: int = Field(..., description="Total number of users")
+
+
+class ConversationListResponse(BaseResponse):
+    """Conversation list response model - matches app/schemas/conversation.py ConversationListResponse."""
+
+    conversations: List[ConversationResponse] = Field(
+        ..., description="List of conversations"
+    )
+    total: int = Field(..., description="Total number of conversations")
+
+
+class MessageListResponse(BaseResponse):
+    """Message list response model - matches app/schemas/conversation.py MessageListResponse."""
+
+    messages: List[MessageResponse] = Field(..., description="List of messages")
+    conversation: ConversationResponse = Field(..., description="Parent conversation")
+    total: int = Field(..., description="Total number of messages")
+
+
+class DocumentListResponse(BaseResponse):
+    """Document list response model - matches app/schemas/document.py DocumentListResponse."""
+
+    documents: List[DocumentResponse] = Field(..., description="List of documents")
+    total: int = Field(..., description="Total number of documents")
+
+
+class PromptListResponse(BaseModel):
+    """Prompt list response model - matches app/schemas/prompt.py PromptListResponse."""
+
+    prompts: List[PromptResponse] = Field(..., description="List of prompts")
+    total: int = Field(..., description="Total number of prompts")
+    page: int = Field(..., description="Current page number")
+    size: int = Field(..., description="Page size")
+    pages: int = Field(..., description="Total number of pages")
+
+    model_config = {"from_attributes": True}
+
+
+class LLMProfileListResponse(BaseModel):
+    """LLM profile list response model - matches app/schemas/llm_profile.py LLMProfileListResponse."""
+
+    profiles: List[LLMProfileResponse] = Field(..., description="List of profiles")
+    total: int = Field(..., description="Total number of profiles")
+    page: int = Field(..., description="Current page number")
+    size: int = Field(..., description="Page size")
+    pages: int = Field(..., description="Total number of pages")
+
+    model_config = {"from_attributes": True}
+
+
+class MCPServerListResponse(BaseModel):
+    """MCP server list response model - matches app/schemas/mcp.py MCPServerListResponse."""
+
+    success: bool = Field(
+        default=True, description="Whether the request was successful"
+    )
+    message: str = Field(..., description="Response message")
+    data: List[MCPServerResponse] = Field(..., description="List of MCP servers")
+
+
+class MCPToolListResponse(BaseModel):
+    """MCP tool list response model - matches app/schemas/mcp.py MCPToolListResponse."""
+
+    success: bool = Field(
+        default=True, description="Whether the request was successful"
+    )
+    message: str = Field(..., description="Response message")
+    available_tools: List[MCPToolResponse] = Field(
+        ..., description="List of available tools"
+    )
+    openai_tools: List[Dict[str, Any]] = Field(
+        ..., description="Tools in OpenAI format"
+    )
+    servers: List[Dict[str, Any]] = Field(..., description="Server status information")
+    enabled_count: int = Field(..., description="Number of enabled tools")
+    total_count: int = Field(..., description="Total number of tools")
+
+
+# --- STATISTICS RESPONSE MODELS ---
+
+
+class UserStatsResponse(BaseModel):
+    """User statistics response model - matches app/schemas/user.py UserStatsResponse."""
+
+    total_users: int = Field(..., description="Total number of users")
+    active_users: int = Field(..., description="Number of active users")
+    inactive_users: int = Field(..., description="Number of inactive users")
+    superusers: int = Field(..., description="Number of superusers")
+    recent_registrations: int = Field(..., description="Recent registrations count")
+    user_growth_rate: float = Field(..., description="User growth rate percentage")
+    last_activity_summary: Dict[str, Any] = Field(
+        ..., description="Summary of last user activities"
+    )
+
+    model_config = {"from_attributes": True}
+
+
+class ConversationStatsResponse(BaseModel):
+    """Conversation statistics response model - matches app/schemas/common.py ConversationStatsResponse."""
+
+    success: bool = Field(..., description="Response success status")
+    data: Dict[str, Any] = Field(..., description="Conversation statistics data")
+
+
+class RegistryStatsResponse(BaseModel):
+    """Registry statistics response model - matches app/schemas/common.py RegistryStatsResponse."""
+
+    success: bool = Field(..., description="Response success status")
+    message: str = Field(..., description="Response message")
+    data: Dict[str, Any] = Field(..., description="Registry statistics data")
+
+
+# --- SEARCH RESPONSE MODELS ---
+
+
+class DocumentSearchResponse(BaseResponse):
+    """Document search response model - matches app/schemas/document.py DocumentSearchResponse."""
+
+    results: List[Dict[str, Any]] = Field(..., description="Search results")
+    query: str = Field(..., description="Original search query")
+    algorithm: str = Field(..., description="Search algorithm used")
+    total_results: int = Field(..., description="Total number of results")
+    search_time_ms: float = Field(..., description="Search time in milliseconds")
 
 
 def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -841,82 +972,63 @@ async def fetch_all_pages(
 # --- ADDITIONAL RESPONSE MODELS ---
 
 
-class DatabaseHealthResponse(BaseModel):
-    """Database health check response model."""
+# --- HEALTH CHECK RESPONSE MODELS (updated to match app/schemas) ---
 
-    status: str
-    message: str
-    connectivity: str
-    schema_status: Optional[str] = None
-    tables_found: Optional[int] = None
+
+class DatabaseHealthResponse(BaseModel):
+    """Database health check response model - matches app/schemas/common.py."""
+
+    status: str = Field(..., description="Database health status")
+    message: str = Field(..., description="Health check message")
+    connectivity: str = Field(..., description="Database connectivity status")
+    schema_status: Optional[str] = Field(None, description="Schema validation status")
+    tables_found: Optional[int] = Field(None, description="Number of tables found")
 
 
 class ServicesHealthResponse(BaseModel):
-    """External services health check response model."""
+    """External services health check response model - matches app/schemas/common.py."""
 
-    openai: Dict[str, Any]
-    fastmcp: Dict[str, Any]
-    timestamp: datetime
+    openai: Dict[str, Any] = Field(..., description="OpenAI service health status")
+    fastmcp: Dict[str, Any] = Field(..., description="FastMCP service health status")
+    timestamp: datetime = Field(..., description="Health check timestamp")
 
 
 class SystemMetricsResponse(BaseModel):
-    """System metrics response model."""
+    """System metrics response model - matches app/schemas/common.py."""
 
-    system: Dict[str, Any]
-    application: Dict[str, Any]
-    timestamp: datetime
-    error: Optional[str] = None
+    system: Dict[str, Any] = Field(..., description="System metrics")
+    application: Dict[str, Any] = Field(..., description="Application metrics")
+    timestamp: datetime = Field(..., description="Metrics collection timestamp")
+    error: Optional[str] = Field(None, description="Error message if metrics unavailable")
 
 
 class ReadinessResponse(BaseModel):
     """Readiness check response model."""
 
-    status: str
-    message: str
-    timestamp: datetime
+    status: str = Field(..., description="Readiness status")
+    message: str = Field(..., description="Readiness message")
+    timestamp: datetime = Field(..., description="Check timestamp")
 
 
 class LivenessResponse(BaseModel):
     """Liveness check response model."""
 
-    status: str
-    message: str
-    timestamp: datetime
+    status: str = Field(..., description="Liveness status")
+    message: str = Field(..., description="Liveness message")
+    timestamp: datetime = Field(..., description="Check timestamp")
 
 
 class PerformanceMetricsResponse(BaseModel):
     """Performance metrics response model."""
 
-    data: Dict[str, Any]
-
-
-class UserStatisticsResponse(BaseModel):
-    """User statistics response model."""
-
-    success: bool
-    data: Dict[str, Any]
+    data: Dict[str, Any] = Field(..., description="Performance metrics data")
 
 
 class SearchResponse(BaseModel):
     """Search response model."""
 
-    success: bool
-    data: Dict[str, Any]
-
-
-class RegistryStatsResponse(BaseModel):
-    """Registry statistics response model."""
-
-    success: bool
-    message: str
-    data: Dict[str, Any]
-
-
-class ConversationStatsResponse(BaseModel):
-    """Conversation statistics response model."""
-
-    success: bool
-    data: Dict[str, Any]
+    success: bool = Field(..., description="Search success status")
+    data: Dict[str, Any] = Field(..., description="Search results data")
 
 
 # --- SDK SUBCLIENTS ---
@@ -1180,9 +1292,9 @@ class UsersClient:
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="DELETE"
         )
 
-    async def statistics(self) -> UserStatisticsResponse:
+    async def statistics(self) -> UserStatsResponse:
         """Get comprehensive user statistics (admin only)."""
-        return await self.sdk._request("/api/v1/users/users/stats", UserStatisticsResponse)
+        return await self.sdk._request("/api/v1/users/users/stats", UserStatsResponse)
 
 
 class DocumentsClient:
