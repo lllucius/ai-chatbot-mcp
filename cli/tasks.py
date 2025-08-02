@@ -90,17 +90,14 @@ async def status():
         sdk = await get_sdk()
         data = await sdk.tasks.get_status()
         if data:
-            from rich.table import Table
-
-            table = Table(title="Task System Status")
-            table.add_column("Property", style="cyan")
-            table.add_column("Value", style="white")
-            table.add_row("Broker Status", data.get("broker_status", "Unknown"))
-            table.add_row("Active Workers", str(data.get("active_workers", 0)))
-            table.add_row("Active Tasks", str(data.get("active_tasks", 0)))
-            table.add_row("Reserved Tasks", str(data.get("reserved_tasks", 0)))
-            table.add_row("System Status", data.get("system_status", "Unknown"))
-            console.print(table)
+            print("\nTask System Status:")
+            print("===================")
+            print(f"Broker Status: {data.get('broker_status', 'Unknown')}")
+            print(f"Active Workers: {data.get('active_workers', 0)}")
+            print(f"Active Tasks: {data.get('active_tasks', 0)}")
+            print(f"Reserved Tasks: {data.get('reserved_tasks', 0)}")
+            print(f"System Status: {data.get('system_status', 'Unknown')}")
+            print()
     except Exception as e:
         error_message(f"Failed to get task status: {str(e)}")
         raise SystemExit(1)
@@ -113,27 +110,25 @@ async def workers():
         sdk = await get_sdk()
         data = await sdk.tasks.get_workers()
         if data:
-            from rich.table import Table
-
             workers = data.get("workers", [])
-            table = Table(title=f"Celery Workers ({len(workers)} total)")
-            table.add_column("Name", style="cyan")
-            table.add_column("Status", style="white")
-            table.add_column("Pool", style="blue")
-            table.add_column("Processes", style="green")
-            table.add_column("Max Concurrency", style="yellow")
+            
+            # Convert to table data
+            worker_data = []
             for worker in workers:
-                status_color = "green" if worker.get("status") == "online" else "red"
-                table.add_row(
-                    worker.get("name", ""),
-                    f"[{status_color}]{worker.get('status', 'Unknown')}[/{status_color}]",
-                    worker.get("pool", ""),
-                    str(worker.get("processes", 0)),
-                    str(worker.get("max_concurrency", 0)),
-                )
-            console.print(table)
+                worker_data.append({
+                    "Name": worker.get("name", ""),
+                    "Status": worker.get("status", "Unknown"),
+                    "Pool": worker.get("pool", ""),
+                    "Processes": str(worker.get("processes", 0)),
+                    "Max Concurrency": str(worker.get("max_concurrency", 0)),
+                })
+            
+            from .base import display_table_data
+            display_table_data(worker_data, f"Celery Workers ({len(workers)} total)")
+            
             summary = f"Total: {data.get('total_workers', 0)}, Online: {data.get('online_workers', 0)}"
-            console.print(f"\n[dim]{summary}[/dim]")
+            print(summary)
+            print()
     except Exception as e:
         error_message(f"Failed to get worker information: {str(e)}")
         raise SystemExit(1)
@@ -148,29 +143,26 @@ async def queue(
         sdk = await get_sdk()
         data = await sdk.tasks.get_queue()
         if data:
-            from rich.table import Table
-
             queues = data.get("queues", [])
-            table = Table(title=f"Task Queues ({len(queues)} total)")
-            table.add_column("Queue Name", style="cyan")
-            table.add_column("Active", style="green")
-            table.add_column("Reserved", style="yellow")
-            table.add_column("Scheduled", style="blue")
-            table.add_column("Total Tasks", style="white")
+            
+            # Convert to table data
+            queue_data = []
             for queue in queues:
                 total_tasks = (
                     queue.get("active", 0)
                     + queue.get("reserved", 0)
                     + queue.get("scheduled", 0)
                 )
-                table.add_row(
-                    queue.get("name", ""),
-                    str(queue.get("active", 0)),
-                    str(queue.get("reserved", 0)),
-                    str(queue.get("scheduled", 0)),
-                    str(total_tasks),
-                )
-            console.print(table)
+                queue_data.append({
+                    "Queue Name": queue.get("name", ""),
+                    "Active": str(queue.get("active", 0)),
+                    "Reserved": str(queue.get("reserved", 0)),
+                    "Scheduled": str(queue.get("scheduled", 0)),
+                    "Total Tasks": str(total_tasks),
+                })
+            
+            from .base import display_table_data
+            display_table_data(queue_data, f"Task Queues ({len(queues)} total)")
     except Exception as e:
         error_message(f"Failed to get queue information: {str(e)}")
         raise SystemExit(1)
@@ -183,25 +175,23 @@ async def active():
         sdk = await get_sdk()
         data = await sdk.tasks.get_active()
         if data:
-            from rich.table import Table
-
             active_tasks = data.get("active_tasks", [])
             if not active_tasks:
-                console.print("[green]No active tasks[/green]")
+                print("No active tasks")
                 return
-            table = Table(title=f"Active Tasks ({len(active_tasks)} total)")
-            table.add_column("Task ID", style="cyan")
-            table.add_column("Name", style="white")
-            table.add_column("Worker", style="blue")
-            table.add_column("Started", style="yellow")
+            
+            # Convert to table data
+            task_data = []
             for task in active_tasks:
-                table.add_row(
-                    task.get("id", "")[:8] + "...",
-                    task.get("name", ""),
-                    task.get("worker", ""),
-                    task.get("time_start", ""),
-                )
-            console.print(table)
+                task_data.append({
+                    "Task ID": task.get("id", "")[:8] + "...",
+                    "Name": task.get("name", ""),
+                    "Worker": task.get("worker", ""),
+                    "Started": task.get("time_start", ""),
+                })
+            
+            from .base import display_table_data
+            display_table_data(task_data, f"Active Tasks ({len(active_tasks)} total)")
     except Exception as e:
         error_message(f"Failed to get active tasks: {str(e)}")
         raise SystemExit(1)
@@ -230,16 +220,12 @@ async def schedule(
             params["countdown"] = countdown
         data = await sdk.tasks.schedule_task(**params)
         if data:
-            from rich.panel import Panel
-
-            task_panel = Panel(
-                f"Task: [green]{data.get('task_id', '')}[/green]\n"
-                f"Queue: [blue]{data.get('queue', '')}[/blue]\n"
-                f"Countdown: [yellow]{data.get('countdown', 'None')} seconds[/yellow]",
-                title=f"Task Scheduled: {task_name}",
-                border_style="green",
-            )
-            console.print(task_panel)
+            print(f"\nTask Scheduled: {task_name}")
+            print("=" * (len(task_name) + 15))
+            print(f"Task: {data.get('task_id', '')}")
+            print(f"Queue: {data.get('queue', '')}")
+            print(f"Countdown: {data.get('countdown', 'None')} seconds")
+            print()
     except Exception as e:
         error_message(f"Failed to schedule task: {str(e)}")
         raise SystemExit(1)
@@ -257,21 +243,18 @@ async def retry_failed(
         sdk = await get_sdk()
         data = await sdk.tasks.retry_failed()
         if data:
-            from rich.panel import Panel
-
-            retry_panel = Panel(
-                f"Retried: [green]{data.get('retried_count', 0)}[/green]\n"
-                f"Total Failed: [yellow]{data.get('total_failed', 0)}[/yellow]\n"
-                f"Errors: [red]{len(data.get('errors', []))}[/red]",
-                title="Retry Results",
-                border_style="blue",
-            )
-            console.print(retry_panel)
+            print("\nRetry Results:")
+            print("==============")
+            print(f"Retried: {data.get('retried_count', 0)}")
+            print(f"Total Failed: {data.get('total_failed', 0)}")
+            print(f"Errors: {len(data.get('errors', []))}")
+            
             errors = data.get("errors", [])
             if errors:
-                console.print("\n[bold]Errors:[/bold]")
+                print("\nErrors:")
                 for error in errors:
-                    console.print(f"• {error}")
+                    print(f"• {error}")
+            print()
     except Exception as e:
         error_message(f"Failed to retry tasks: {str(e)}")
         raise SystemExit(1)
@@ -308,25 +291,23 @@ async def stats(
         # Let's assume get_stats returns a summary and recent_errors
         data = await sdk.tasks.monitor(refresh=None, duration=period_hours)
         if data:
-            from rich.panel import Panel
-
             doc_processing = data.get("document_processing", {})
-            stats_panel = Panel(
-                f"Total: [white]{doc_processing.get('total', 0)}[/white]\n"
-                f"Completed: [green]{doc_processing.get('completed', 0)}[/green]\n"
-                f"Failed: [red]{doc_processing.get('failed', 0)}[/red]\n"
-                f"Processing: [yellow]{doc_processing.get('processing', 0)}[/yellow]\n"
-                f"Success Rate: [blue]{doc_processing.get('success_rate', 0):.1f}%[/blue]\n"
-                f"Avg Time: [cyan]{doc_processing.get('avg_processing_time_seconds', 0):.1f}s[/cyan]",
-                title=f"Document Processing ({period_hours}h)",
-                border_style="blue",
-            )
-            console.print(stats_panel)
+            
+            print(f"\nDocument Processing ({period_hours}h):")
+            print("=" * (25 + len(str(period_hours))))
+            print(f"Total: {doc_processing.get('total', 0)}")
+            print(f"Completed: {doc_processing.get('completed', 0)}")
+            print(f"Failed: {doc_processing.get('failed', 0)}")
+            print(f"Processing: {doc_processing.get('processing', 0)}")
+            print(f"Success Rate: {doc_processing.get('success_rate', 0):.1f}%")
+            print(f"Avg Time: {doc_processing.get('avg_processing_time_seconds', 0):.1f}s")
+            
             recent_errors = data.get("recent_errors", [])
             if recent_errors:
-                console.print("\n[bold]Recent Errors (Sample):[/bold]")
+                print("\nRecent Errors (Sample):")
                 for i, error in enumerate(recent_errors[:3], 1):
-                    console.print(f"{i}. {error}")
+                    print(f"{i}. {error}")
+            print()
     except Exception as e:
         error_message(f"Failed to get task statistics: {str(e)}")
         raise SystemExit(1)
@@ -339,52 +320,42 @@ async def monitor():
         sdk = await get_sdk()
         data = await sdk.tasks.monitor()
         if data:
-            from rich.columns import Columns
-            from rich.panel import Panel
-
             system_status = data.get("system_status", {})
             active_tasks = data.get("active_tasks", {})
             workers = data.get("workers", {})
-            panels = []
-            panels.append(
-                Panel(
-                    f"Status: [green]{system_status.get('broker_status', 'Unknown')}[/green]\n"
-                    f"Workers: [blue]{system_status.get('active_workers', 0)}[/blue]\n"
-                    f"Tasks: [yellow]{system_status.get('active_tasks', 0)}[/yellow]",
-                    title="System",
-                    border_style="cyan",
-                )
-            )
-            panels.append(
-                Panel(
-                    f"Active: [green]{active_tasks.get('count', 0)}[/green]\n"
-                    f"Workers Busy: [yellow]{active_tasks.get('workers_busy', 0)}[/yellow]",
-                    title="Tasks",
-                    border_style="green",
-                )
-            )
-            panels.append(
-                Panel(
-                    f"Total: [blue]{workers.get('total', 0)}[/blue]\n"
-                    f"Online: [green]{workers.get('online', 0)}[/green]",
-                    title="Workers",
-                    border_style="blue",
-                )
-            )
-            console.print(Columns(panels))
+            
+            print("\nTask System Monitoring:")
+            print("=======================")
+            
+            # System status
+            print("System:")
+            print(f"  Status: {system_status.get('broker_status', 'Unknown')}")
+            print(f"  Workers: {system_status.get('active_workers', 0)}")
+            print(f"  Tasks: {system_status.get('active_tasks', 0)}")
+            print()
+            
+            # Tasks info
+            print("Tasks:")
+            print(f"  Active: {active_tasks.get('count', 0)}")
+            print(f"  Workers Busy: {active_tasks.get('workers_busy', 0)}")
+            print()
+            
+            # Workers info
+            print("Workers:")
+            print(f"  Total: {workers.get('total', 0)}")
+            print(f"  Online: {workers.get('online', 0)}")
+            print()
+            
+            # Performance data
             recent_perf = data.get("recent_performance", {})
             if recent_perf:
-                perf_panel = Panel(
-                    f"Success Rate: [green]{recent_perf.get('success_rate', 0):.1f}%[/green]\n"
-                    f"Avg Processing: [blue]{recent_perf.get('avg_processing_time_seconds', 0):.1f}s[/blue]",
-                    title="Recent Performance",
-                    border_style="yellow",
-                )
-                console.print(perf_panel)
+                print("Recent Performance:")
+                print(f"  Success Rate: {recent_perf.get('success_rate', 0):.1f}%")
+                print(f"  Avg Processing: {recent_perf.get('avg_processing_time_seconds', 0):.1f}s")
+                print()
+            
             refresh_interval = data.get("refresh_interval", 30)
-            console.print(
-                f"\n[dim]Suggested refresh interval: {refresh_interval} seconds[/dim]"
-            )
+            print(f"Suggested refresh interval: {refresh_interval} seconds")
     except Exception as e:
         error_message(f"Failed to get monitoring data: {str(e)}")
         raise SystemExit(1)
