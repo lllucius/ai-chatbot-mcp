@@ -185,12 +185,25 @@ CLI_VERSION: str = "2.0.0"
 
 
 def save_token(token: str) -> None:
+    """Save authentication token to secure storage.
+    
+    Args:
+        token: JWT access token to save.
+        
+    Note:
+        Creates parent directories if they don't exist.
+    """
     os.makedirs(os.path.dirname(TOKEN_FILE), exist_ok=True)
     with open(TOKEN_FILE, "w") as f:
         f.write(token)
 
 
 def load_token() -> Optional[str]:
+    """Load authentication token from secure storage.
+    
+    Returns:
+        Optional[str]: Stored JWT token if available, None otherwise.
+    """
     try:
         with open(TOKEN_FILE) as f:
             return f.read().strip()
@@ -199,23 +212,48 @@ def load_token() -> Optional[str]:
 
 
 def clear_token() -> None:
+    """Remove stored authentication token.
+    
+    Note:
+        Silently succeeds if token file doesn't exist.
+    """
     with contextlib.suppress(FileNotFoundError):
         os.remove(TOKEN_FILE)
 
 
 def print_error(msg: str) -> None:
+    """Print error message with red formatting.
+    
+    Args:
+        msg: Error message to display.
+    """
     console.print(f"[bold red]Error:[/bold red] {msg}")
 
 
 def print_success(msg: str) -> None:
+    """Print success message with green formatting.
+    
+    Args:
+        msg: Success message to display.
+    """
     console.print(f"[bold green]{msg}[/bold green]")
 
 
 def print_info(msg: str) -> None:
+    """Print informational message with cyan formatting.
+    
+    Args:
+        msg: Info message to display.
+    """
     console.print(f"[bold cyan]{msg}[/bold cyan]")
 
 
 def print_warn(msg: str) -> None:
+    """Print warning message with yellow formatting.
+    
+    Args:
+        msg: Warning message to display.
+    """
     console.print(f"[yellow]{msg}[/yellow]")
 
 
@@ -228,6 +266,21 @@ def prettify_dict(
     value_color: str = "white",
     title_color: str = "magenta",
 ) -> None:
+    """Display dictionary data with rich formatting and nested structure.
+    
+    Args:
+        data: Dictionary or object to display. Objects are converted to dicts.
+        title: Optional title to display above the data.
+        max_depth: Maximum nesting depth to display (default: 2).
+        indent: Current indentation level (used internally for recursion).
+        key_color: Color for dictionary keys (default: cyan).
+        value_color: Color for values (default: white).
+        title_color: Color for the title (default: magenta).
+        
+    Note:
+        Automatically handles Pydantic models with model_dump() method.
+        Truncates deeply nested structures beyond max_depth.
+    """
     if hasattr(data, "model_dump"):
         data = data.model_dump()
     if hasattr(data, "__dict__") and not isinstance(data, dict):
@@ -263,6 +316,19 @@ def prettify_list(
     title: Optional[str] = None,
     max_rows: int = 25,
 ) -> None:
+    """Display list of items as a formatted table.
+    
+    Args:
+        items: List of dictionaries or objects to display as table rows.
+        columns: Specific columns to display. If None, uses all keys from first item.
+        title: Optional table title.
+        max_rows: Maximum number of rows to display before truncating (default: 25).
+        
+    Note:
+        Automatically handles Pydantic models and objects with __dict__.
+        Limits columns to first 8 if more than 8 are available.
+        Shows truncation message if items exceed max_rows.
+    """
     if not items:
         console.print("[dim]No items.[/dim]")
         return
@@ -287,10 +353,27 @@ def prettify_list(
 
 
 def parse_bool(val: str) -> bool:
+    """Parse string value to boolean using common true/false representations.
+    
+    Args:
+        val: String value to parse.
+        
+    Returns:
+        bool: True if val represents a truthy value (1, true, yes, y, on), False otherwise.
+    """
     return str(val).lower() in ("1", "true", "yes", "y", "on")
 
 
 def save_settings(settings: Dict[str, Any]) -> None:
+    """Save user settings to persistent storage.
+    
+    Args:
+        settings: Dictionary of settings to save.
+        
+    Note:
+        Removes 'llm_overrides' from saved data. 
+        Prints warning if save fails but doesn't raise exception.
+    """
     try:
         data = settings.copy()
         data.pop("llm_overrides", None)
@@ -301,6 +384,11 @@ def save_settings(settings: Dict[str, Any]) -> None:
 
 
 def load_settings() -> Dict[str, Any]:
+    """Load user settings from persistent storage.
+    
+    Returns:
+        Dict[str, Any]: Loaded settings dictionary, empty dict if file doesn't exist or is invalid.
+    """
     try:
         with open(SETTINGS_FILE) as f:
             return json.load(f)
@@ -309,10 +397,28 @@ def load_settings() -> Dict[str, Any]:
 
 
 def ensure_backup_dir() -> None:
+    """Create backup directory if it doesn't exist.
+    
+    Note:
+        Creates parent directories as needed.
+    """
     os.makedirs(BACKUP_DIR, exist_ok=True)
 
 
 def save_conversation_to_file(content: str, filename: Optional[str] = None) -> str:
+    """Save conversation content to a file in the backup directory.
+    
+    Args:
+        content: Conversation content to save.
+        filename: Optional filename. If None, generates timestamp-based name.
+        
+    Returns:
+        str: Full path to the saved file.
+        
+    Note:
+        Creates backup directory if it doesn't exist.
+        Default filename format: conversation_YYYYMMDDHHMMSS.txt
+    """
     ensure_backup_dir()
     if filename is None:
         filename = f"conversation_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.txt"
@@ -323,6 +429,18 @@ def save_conversation_to_file(content: str, filename: Optional[str] = None) -> s
 
 
 def extract_ai_content(text: str) -> str:
+    """Extract clean AI response content from potentially formatted text.
+    
+    Args:
+        text: Raw AI response text that may contain XML tags or formatting.
+        
+    Returns:
+        str: Cleaned content with XML tags removed and whitespace normalized.
+        
+    Note:
+        Handles various content formats including XML content tags, message tags,
+        and plain text. Removes XML declarations and extracts content from tags.
+    """
     if not text:
         return ""
     text = re.sub(r"<\?xml[^>]*\?>", "", text).strip()
@@ -341,6 +459,16 @@ def extract_ai_content(text: str) -> str:
 def display_token_stats(
     usage: Optional[Dict[str, Any]], response_time_ms: Optional[float]
 ) -> None:
+    """Display API usage statistics and response timing.
+    
+    Args:
+        usage: Optional dictionary containing token usage stats from API response.
+        response_time_ms: Optional response time in milliseconds.
+        
+    Note:
+        Formats and displays token counts, model name, and latency in a user-friendly format.
+        Shows individual prompt and completion token counts when available.
+    """
     if usage:
         tkns = usage.get("total_tokens")
         prompt_tkns = usage.get("prompt_tokens")
@@ -364,12 +492,33 @@ def display_token_stats(
 
 
 def ellipsis(text: str, max_len: int = 100) -> str:
+    """Truncate text with ellipsis if it exceeds maximum length.
+    
+    Args:
+        text: Text to potentially truncate.
+        max_len: Maximum allowed length before truncation (default: 100).
+        
+    Returns:
+        str: Original text if under limit, otherwise truncated text with "..." suffix.
+    """
     if len(text) > max_len:
         return text[: max_len - 3] + "..."
     return text
 
 
 def prompt_password(confirm: bool = False) -> str:
+    """Securely prompt for password input with optional confirmation.
+    
+    Args:
+        confirm: If True, prompts for password confirmation and validates match.
+        
+    Returns:
+        str: The entered password.
+        
+    Note:
+        Uses getpass for secure input (no echo to terminal).
+        Loops until passwords match when confirmation is required.
+    """
     while True:
         pw = getpass.getpass("Password: ")
         if not confirm:
@@ -381,6 +530,16 @@ def prompt_password(confirm: bool = False) -> str:
 
 
 def setup_readline(history_file: str = "~/.ai-chatbot-history") -> None:
+    """Configure readline for command history and line editing.
+    
+    Args:
+        history_file: Path to history file (default: ~/.ai-chatbot-history).
+        
+    Note:
+        Loads existing history if available and configures automatic saving on exit.
+        Silently does nothing if readline module is not available (e.g., on Windows).
+        Sets history length limit to 1000 entries.
+    """
     if not readline:
         return
     histfile = os.path.expanduser(history_file)
