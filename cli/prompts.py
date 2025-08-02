@@ -155,7 +155,7 @@ async def add(
     """Add a new prompt."""
     try:
         sdk = await get_sdk()
-        from client.ai_chatbot_sdk import PromptCreate
+        from shared.schemas import PromptCreate
 
         prompt_data = PromptCreate(
             name=name,

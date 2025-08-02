@@ -156,7 +156,7 @@ async def add(
         import json
 
         sdk = await get_sdk()
-        from client.ai_chatbot_sdk import LLMProfileCreate
+        from shared.schemas import LLMProfileCreate
 
         params = json.loads(parameters) if parameters else {}
         profile_data = LLMProfileCreate(

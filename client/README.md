@@ -98,7 +98,14 @@ from client.ai_chatbot_sdk import AIChatbotSDK
 ## Quick Start
 
 ```python
-from client.ai_chatbot_sdk import AIChatbotSDK, ChatRequest, RegisterRequest
+from client.ai_chatbot_sdk import AIChatbotSDK
+from shared.schemas import (
+    ChatRequest, 
+    RegisterRequest, 
+    PromptCreate, 
+    LLMProfileCreate, 
+    DocumentSearchRequest
+)
 
 # Initialize the SDK
 sdk = AIChatbotSDK("http://localhost:8000")
