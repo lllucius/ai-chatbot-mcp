@@ -225,7 +225,12 @@ export const authApi = {
    */
   async register(userData: UserRegistration): Promise<User> {
     const response = await apiClient.getClient().post<ApiResponse<User>>('/auth/register', userData);
-    return response.data.data!;
+    
+    if (!response.data.data) {
+      throw new Error('User data not found in registration response');
+    }
+    
+    return response.data.data;
   },
 
   /**
@@ -265,7 +270,12 @@ export const authApi = {
    */
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.getClient().get<ApiResponse<User>>('/auth/me');
-    return response.data.data!;
+    
+    if (!response.data.data) {
+      throw new Error('User data not found in response');
+    }
+    
+    return response.data.data;
   },
 
   /**
@@ -275,7 +285,12 @@ export const authApi = {
    */
   async updateProfile(updates: Partial<Pick<User, 'full_name' | 'email'>>): Promise<User> {
     const response = await apiClient.getClient().patch<ApiResponse<User>>('/auth/me', updates);
-    return response.data.data!;
+    
+    if (!response.data.data) {
+      throw new Error('Updated user data not found in response');
+    }
+    
+    return response.data.data;
   },
 
   /**

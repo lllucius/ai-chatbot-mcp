@@ -178,13 +178,27 @@ export function useLogout() {
 export function useCurrentUser(options?: UseQueryOptions<User>) {
   return useQuery({
     queryKey: queryKeys.currentUser(),
-    queryFn: authApi.getCurrentUser,
+    queryFn: async () => {
+      try {
+        return await authApi.getCurrentUser();
+      } catch (error: any) {
+        // If it's an authentication error, rethrow to be handled by error boundary
+        if (error?.response?.status === 401 || error?.status_code === 401) {
+          throw error;
+        }
+        // For other errors, log and rethrow
+        console.error('Failed to fetch current user:', error);
+        throw error;
+      }
+    },
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     retry: (failureCount, error: any) => {
       // Don't retry if it's an authentication error
-      if (error?.status_code === 401) return false;
+      if (error?.response?.status === 401 || error?.status_code === 401) return false;
       return failureCount < 3;
     },
+    // Only enable this query if we might have a token
+    enabled: !!localStorage.getItem('auth_token'),
     ...options,
   });
 }
