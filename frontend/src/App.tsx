@@ -269,7 +269,7 @@ const globalStyles = (
  * 
  * @returns The complete application with all providers
  */
-function App(): JSX.Element {
+const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
@@ -287,13 +287,13 @@ function App(): JSX.Element {
           {process.env.NODE_ENV === 'development' && (
             <ReactQueryDevtools 
               initialIsOpen={false} 
-              position="bottom-right"
+              position="bottom"
             />
           )}
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
-}
+};
 
 export default App;
