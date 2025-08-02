@@ -1392,22 +1392,65 @@ class SearchClient:
         )
 
     async def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
+        """Find similar document chunks to a given chunk.
+        
+        Args:
+            chunk_id: ID of the reference chunk to find similarities for.
+            limit: Maximum number of similar chunks to return (default: 5).
+            
+        Returns:
+            Dict[str, Any]: Similar chunks with similarity scores.
+            
+        Raises:
+            ApiError: If chunk not found or search fails.
+        """
         params = {"limit": limit}
         return await self.sdk._request(
             f"/api/v1/search/similar/{chunk_id}", dict, params=params
         )
 
     async def suggestions(self, query: str, limit: int = 5) -> List[Any]:
+        """Get search suggestions based on query.
+        
+        Args:
+            query: Search query to get suggestions for.
+            limit: Maximum number of suggestions to return (default: 5).
+            
+        Returns:
+            List[Any]: List of search suggestions.
+            
+        Raises:
+            ApiError: If the request fails.
+        """
         params = {"query": query, "limit": limit}
         return await self.sdk._request(
             "/api/v1/search/suggestions", list, params=params
         )
 
     async def history(self, limit: int = 10) -> List[Any]:
+        """Get user's search history.
+        
+        Args:
+            limit: Maximum number of history entries to return (default: 10).
+            
+        Returns:
+            List[Any]: List of recent search queries.
+            
+        Raises:
+            ApiError: If the request fails.
+        """
         params = {"limit": limit}
         return await self.sdk._request("/api/v1/search/history", list, params=params)
 
     async def clear_history(self) -> BaseResponse:
+        """Clear user's search history.
+        
+        Returns:
+            BaseResponse: Success/failure status of history clearing.
+            
+        Raises:
+            ApiError: If the request fails.
+        """
         return await self.sdk._request(
             "/api/v1/search/history", BaseResponse, method="DELETE"
         )
@@ -1634,6 +1677,11 @@ class ProfilesClient:
     """Client for LLM profile registry management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize profiles client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     async def list_profiles(
@@ -1692,6 +1740,11 @@ class AnalyticsClient:
     """Client for analytics and reporting."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize analytics client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     async def get_overview(self) -> Dict[str, Any]:
@@ -1808,6 +1861,11 @@ class TasksClient:
     """Client for background task management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize tasks client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     async def get_status(self) -> Dict[str, Any]:
@@ -1857,6 +1915,11 @@ class AdminClient:
     """Client for admin operations across different resources."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize admin client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+        """
         self.sdk = sdk
 
     # User admin operations
