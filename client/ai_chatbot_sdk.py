@@ -192,15 +192,26 @@ class Token(BaseModel):
 
 
 class UserResponse(BaseModel):
-    """User profile response model - matches app/schemas/user.py UserResponse."""
+    """User profile response model - matches app/schemas/user.py UserResponse exactly."""
 
-    username: str = Field(..., description="Unique username")
+    # Fields from UserBase
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=50,
+        pattern="^[a-zA-Z0-9_-]+$",
+        description="Unique username",
+    )
     email: EmailStr = Field(..., description="User email address")
+    full_name: Optional[str] = Field(
+        default=None, max_length=100, description="User's full name"
+    )
+
+    # Fields from UserResponse
     id: UUID = Field(..., description="Unique user identifier")
     is_active: bool = Field(..., description="Whether the user account is active")
     is_superuser: bool = Field(..., description="Whether the user has admin privileges")
     created_at: datetime = Field(..., description="When the user account was created")
-    full_name: Optional[str] = Field(None, description="User's full name")
 
     model_config = {"from_attributes": True}
 
@@ -242,19 +253,47 @@ class PasswordResetConfirm(BaseModel):
     new_password: str
 
 
-class UserUpdate(BaseModel):
-    """User profile update request model."""
+class UserCreate(BaseModel):
+    """User creation request model - matches app/schemas/user.py UserCreate."""
 
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    is_active: Optional[bool] = None
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=50,
+        pattern="^[a-zA-Z0-9_-]+$",
+        description="Unique username",
+    )
+    email: EmailStr = Field(..., description="User email address")
+    full_name: Optional[str] = Field(
+        default=None, max_length=100, description="User's full name"
+    )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="User password (minimum 8 characters)",
+    )
+
+
+class UserUpdate(BaseModel):
+    """User profile update request model - matches app/schemas/user.py UserUpdate."""
+
+    email: Optional[EmailStr] = Field(default=None, description="New email address")
+    full_name: Optional[str] = Field(
+        default=None, max_length=100, description="Updated full name"
+    )
+    is_active: Optional[bool] = Field(
+        default=None, description="Whether user is active"
+    )
 
 
 class UserPasswordUpdate(BaseModel):
-    """User password update request model."""
+    """User password update request model - matches app/schemas/user.py UserPasswordUpdate."""
 
-    current_password: str
-    new_password: str
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(
+        ..., min_length=8, max_length=128, description="New password"
+    )
 
 
 class PaginationParams(BaseModel):
@@ -313,9 +352,12 @@ class DocumentUpdate(BaseModel):
 class ConversationResponse(BaseModel):
     """Conversation metadata response model - matches app/schemas/conversation.py ConversationResponse."""
 
-    id: UUID = Field(..., description="Conversation ID")
-    title: str = Field(..., description="Conversation title")
+    # Fields from ConversationBase
+    title: str = Field(..., min_length=1, max_length=500, description="Conversation title")
     is_active: bool = Field(True, description="Whether conversation is active")
+
+    # Fields from ConversationResponse
+    id: UUID = Field(..., description="Conversation ID")
     user_id: UUID = Field(..., description="Owner user ID")
     message_count: int = Field(0, description="Number of messages")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -329,27 +371,32 @@ class ConversationResponse(BaseModel):
 
 
 class ConversationCreate(BaseModel):
-    """Conversation creation request model."""
+    """Conversation creation request model - matches app/schemas/conversation.py ConversationCreate."""
 
-    title: str
-    is_active: Optional[bool] = True
-    metainfo: Optional[Dict[str, Any]] = None
+    title: str = Field(..., min_length=1, max_length=500, description="Conversation title")
+    is_active: bool = Field(True, description="Whether conversation is active")
+    metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
 
 
 class ConversationUpdate(BaseModel):
-    """Conversation update request model."""
+    """Conversation update request model - matches app/schemas/conversation.py ConversationUpdate."""
 
-    title: Optional[str] = None
-    is_active: Optional[bool] = None
-    metainfo: Optional[Dict[str, Any]] = None
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=500, description="New title"
+    )
+    is_active: Optional[bool] = Field(None, description="New active status")
+    metainfo: Optional[Dict[str, Any]] = Field(None, description="Updated metainfo")
 
 
 class MessageResponse(BaseModel):
     """Chat message response model - matches app/schemas/conversation.py MessageResponse."""
 
+    # Fields from MessageBase
+    role: str = Field(..., pattern="^(user|assistant|system)$", description="Message role")
+    content: str = Field(..., min_length=1, max_length=10000, description="Message content")
+
+    # Fields from MessageResponse
     id: UUID = Field(..., description="Message ID")
-    role: str = Field(..., description="Message role")
-    content: str = Field(..., description="Message content")
     conversation_id: UUID = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
@@ -378,16 +425,27 @@ class ProcessingStatusResponse(BaseResponse):
 class DocumentSearchRequest(BaseModel):
     """Document search request model - matches app/schemas/document.py DocumentSearchRequest."""
 
-    query: str = Field(..., min_length=1, description="Search query")
-    limit: Optional[int] = Field(
-        10, ge=1, le=100, description="Maximum number of results"
+    # Fields from PaginationParams (inherited by SearchParams)
+    page: int = Field(default=1, ge=1, description="Page number")
+    per_page: int = Field(default=10, ge=1, le=100, description="Items per page")
+    sort_by: Optional[str] = Field(default=None, description="Field to sort by")
+    total: Optional[int] = Field(default=None, description="Total number of items")
+
+    # Fields from SearchParams
+    query: str = Field(..., min_length=1, max_length=500, description="Search query string")
+    algorithm: str = Field(
+        default="hybrid",
+        pattern="^(vector|text|hybrid|mmr)$",
+        description="Search algorithm to use",
     )
     threshold: Optional[float] = Field(
-        0.7, ge=0.0, le=1.0, description="Similarity threshold"
+        default=0.7, ge=0.0, le=1.0, description="Similarity threshold"
     )
-    algorithm: str = Field(
-        "hybrid", description="Search algorithm: vector, text, hybrid, mmr"
+    filters: Optional[Dict[str, Any]] = Field(
+        default=None, description="Additional search filters"
     )
+
+    # Fields from DocumentSearchRequest
     document_ids: Optional[List[UUID]] = Field(
         None, description="Specific document IDs to search"
     )
@@ -425,14 +483,6 @@ class ChatRequest(BaseModel):
     )
     llm_profile: Optional[Dict[str, Any]] = Field(
         None, description="LLM profile object with parameter configuration"
-    )
-
-    # Legacy fields for backward compatibility (deprecated)
-    max_tokens: Optional[int] = Field(
-        None, description="Max tokens (deprecated - use profile)"
-    )
-    temperature: Optional[float] = Field(
-        None, description="Temperature (deprecated - use profile)"
     )
 
 
@@ -531,6 +581,118 @@ class ToolsListResponse(BaseResponse):
     servers: List[Dict[str, Any]] = Field([], description="MCP servers status")
     enabled_count: int = Field(0, description="Number of enabled tools")
     total_count: int = Field(0, description="Total number of tools")
+
+
+# --- MCP SCHEMA MODELS ---
+
+
+class MCPServerResponse(BaseModel):
+    """MCP server response model - matches app/schemas/mcp.py MCPServerSchema."""
+
+    name: str = Field(..., description="Server name")
+    url: str = Field(..., description="Connection URL")
+    description: Optional[str] = Field(None, description="Server description")
+    transport: str = Field(..., description="Transport protocol")
+    timeout: int = Field(..., description="Connection timeout in seconds")
+    config: Dict[str, Any] = Field(
+        default_factory=dict, description="Server configuration"
+    )
+    is_enabled: bool = Field(..., description="Whether the server is enabled")
+    is_connected: bool = Field(..., description="Current connection status")
+    last_connected_at: Optional[datetime] = Field(
+        None, description="Last successful connection time"
+    )
+    connection_errors: int = Field(
+        ..., description="Number of recent connection errors"
+    )
+    tools_count: Optional[int] = Field(
+        None, description="Number of tools from this server"
+    )
+
+    model_config = {"from_attributes": True}
+
+
+class MCPServerCreate(BaseModel):
+    """MCP server creation request model - matches app/schemas/mcp.py MCPServerCreateSchema."""
+
+    name: str = Field(..., description="Unique name for the MCP server")
+    url: str = Field(..., description="Connection URL for the server")
+    description: Optional[str] = Field(
+        None, description="Optional description of the server"
+    )
+    transport: str = Field(
+        default="http", description="Transport protocol (http, stdio, etc.)"
+    )
+    timeout: int = Field(
+        default=30, ge=1, le=300, description="Connection timeout in seconds"
+    )
+    config: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional server configuration"
+    )
+    is_enabled: bool = Field(default=True, description="Whether the server is enabled")
+
+
+class MCPServerUpdate(BaseModel):
+    """MCP server update request model - matches app/schemas/mcp.py MCPServerUpdateSchema."""
+
+    url: Optional[str] = Field(None, description="New connection URL")
+    description: Optional[str] = Field(None, description="New description")
+    transport: Optional[str] = Field(None, description="New transport protocol")
+    timeout: Optional[int] = Field(
+        None, ge=1, le=300, description="New timeout in seconds"
+    )
+    config: Optional[Dict[str, Any]] = Field(None, description="New configuration")
+    is_enabled: Optional[bool] = Field(None, description="New enabled status")
+
+
+class MCPToolResponse(BaseModel):
+    """MCP tool response model - matches app/schemas/mcp.py MCPToolSchema."""
+
+    name: str = Field(..., description="Full tool name")
+    original_name: str = Field(..., description="Original tool name from server")
+    description: Optional[str] = Field(None, description="Tool description")
+    parameters: Dict[str, Any] = Field(
+        default_factory=dict, description="Tool parameters schema"
+    )
+    is_enabled: bool = Field(..., description="Whether the tool is enabled")
+    usage_count: int = Field(default=0, description="Total usage count")
+    last_used_at: Optional[datetime] = Field(None, description="Last usage timestamp")
+    success_count: int = Field(default=0, description="Successful executions count")
+    error_count: int = Field(default=0, description="Failed executions count")
+    success_rate: float = Field(default=0.0, description="Success rate percentage")
+    average_duration_ms: Optional[int] = Field(
+        None, description="Average execution duration in ms"
+    )
+
+    model_config = {"from_attributes": True}
+
+
+class MCPToolExecutionRequest(BaseModel):
+    """MCP tool execution request model - matches app/schemas/mcp.py MCPToolExecutionRequestSchema."""
+
+    tool_name: str = Field(..., description="Name of the tool to execute")
+    parameters: Dict[str, Any] = Field(
+        default_factory=dict, description="Tool parameters"
+    )
+    record_usage: bool = Field(
+        default=True, description="Whether to record usage statistics"
+    )
+
+
+class MCPToolExecutionResult(BaseModel):
+    """MCP tool execution result model - matches app/schemas/mcp.py MCPToolExecutionResultSchema."""
+
+    success: bool = Field(..., description="Whether execution was successful")
+    tool_name: str = Field(..., description="Name of the executed tool")
+    server: str = Field(..., description="Server that executed the tool")
+    content: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Execution result content"
+    )
+    error: Optional[str] = Field(None, description="Error message if execution failed")
+    duration_ms: Optional[int] = Field(
+        None, description="Execution duration in milliseconds"
+    )
+    raw_result: Optional[str] = Field(None, description="Raw result for debugging")
 
 
 # --- Helper Functions ---
