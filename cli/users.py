@@ -74,6 +74,7 @@ Integration:
     - Compliance and audit system integration
 """
 
+import traceback
 from typing import Optional
 from uuid import UUID
 
@@ -212,6 +213,7 @@ async def create(
         raise SystemExit(1)
     except Exception as e:
         error_message(f"Unexpected error: {e}")
+        traceback.print_exc()
         raise SystemExit(1)
 
 
@@ -285,6 +287,7 @@ async def list(
         raise SystemExit(1)
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
+        traceback.print_exc()
         raise SystemExit(1)
 
 
@@ -328,6 +331,7 @@ async def show(
         raise SystemExit(1)
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
+        traceback.print_exc()
         raise SystemExit(1)
 
 
@@ -356,4 +360,5 @@ async def stats():
         raise SystemExit(1)
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
+        traceback.print_exc()
         raise SystemExit(1)

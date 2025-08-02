@@ -1497,7 +1497,9 @@ async def chat_loop(
         except ApiError as e:
             handler.display_api_error(e)
         except Exception as e:
+            import traceback
             print_error(f"Unexpected error: {e}")
+            traceback.print_exc()
 
 
 async def ensure_auth(sdk: AIChatbotSDK) -> bool:
