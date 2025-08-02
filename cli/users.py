@@ -1,8 +1,77 @@
 """
-Async user management commands for the API-based CLI.
+User management commands for the AI Chatbot Platform CLI.
 
-This module provides all user management functionality through the async SDK,
-duplicating the functionality of the original CLI but using the async SDK client.
+This module provides comprehensive user account management functionality through
+async operations and the AI Chatbot SDK. It enables administrators and authorized
+users to create, modify, and manage user accounts with full validation, security
+controls, and audit logging.
+
+The module implements enterprise-grade user management patterns including role-based
+access control, secure password handling, and comprehensive user lifecycle management.
+All operations integrate seamlessly with the platform's authentication and
+authorization systems.
+
+Key Features:
+    - User account creation with validation and setup
+    - Comprehensive user listing with filtering and pagination
+    - User profile management and updates
+    - Account activation and deactivation
+    - Role and permission management
+    - Bulk user operations for administrative efficiency
+
+Security Features:
+    - Secure password handling with masked input prompts
+    - Role-based access control for user operations
+    - Comprehensive audit logging for all user actions
+    - Input validation and sanitization
+    - Protection against common user management vulnerabilities
+
+Administrative Capabilities:
+    - Superuser account creation and management
+    - Bulk user import and export operations
+    - User activity monitoring and reporting
+    - Account lockout and security management
+    - Integration with external authentication systems
+
+Performance Optimizations:
+    - Async operations for responsive user interface
+    - Efficient pagination for large user datasets
+    - Optimized API calls with request batching
+    - Fast user search and filtering capabilities
+    - Minimal memory footprint for bulk operations
+
+Use Cases:
+    - User onboarding and account provisioning
+    - Administrative user management tasks
+    - Bulk user operations for organizational changes
+    - Security incident response and account management
+    - User activity monitoring and compliance reporting
+
+Example Usage:
+    ```bash
+    # Create new user accounts
+    ai-chatbot users create john john@example.com --full-name "John Doe"
+    ai-chatbot users create admin admin@example.com --superuser
+
+    # List and filter users
+    ai-chatbot users list --active-only --page 1 --size 20
+    ai-chatbot users search --query "john" --role user
+
+    # Manage user accounts
+    ai-chatbot users activate user_id
+    ai-chatbot users deactivate user_id
+    ai-chatbot users update user_id --role admin
+
+    # Bulk operations
+    ai-chatbot users import users.csv --validate
+    ai-chatbot users export --format json --active-only
+    ```
+
+Integration:
+    - LDAP/Active Directory synchronization
+    - Single sign-on (SSO) provider integration
+    - HR system integration for automated provisioning
+    - Compliance and audit system integration
 """
 
 from typing import Optional
@@ -41,7 +110,57 @@ async def create(
     superuser: bool = Option(False, "--superuser", help="Create as superuser"),
 ):
     """
-    Create a new user account with comprehensive validation and setup.
+    Create a new user account with comprehensive validation and security setup.
+
+    Creates a new user account in the AI Chatbot Platform with full validation,
+    security controls, and proper initialization. The command handles password
+    security, role assignment, and account setup according to enterprise best
+    practices.
+
+    User accounts are created with appropriate default settings and can be
+    immediately activated for platform access. All creation operations are
+    logged for audit and compliance purposes.
+
+    Args:
+        username (str): Unique username for the new account (alphanumeric, underscores, hyphens)
+        email (str): Valid email address for account notifications and recovery
+        password (Optional[str]): Account password. If not provided, will prompt securely
+        full_name (Optional[str]): Display name for the user account
+        superuser (bool): Whether to create account with administrative privileges
+
+    Security Notes:
+        - Passwords are prompted securely with masking if not provided
+        - Username and email uniqueness is validated server-side
+        - Superuser creation requires appropriate administrative privileges
+        - All account creation is logged for security audit trails
+
+    Performance Notes:
+        - Fast account creation with minimal API calls
+        - Efficient validation and error handling
+        - Non-blocking async operations for responsiveness
+        - Immediate feedback on account creation status
+
+    Use Cases:
+        - Onboarding new team members and users
+        - Creating administrative accounts for system management
+        - Bulk user provisioning for organizational setup
+        - Service account creation for automated systems
+        - Testing and development account creation
+
+    Example:
+        ```bash
+        # Interactive user creation
+        ai-chatbot users create john john@example.com
+
+        # Admin user with full details
+        ai-chatbot users create admin admin@example.com --full-name "System Admin" --superuser
+
+        # Automated user creation
+        ai-chatbot users create service service@example.com --password secret123
+        ```
+
+    Raises:
+        SystemExit: On validation errors, authentication failures, or creation conflicts
     """
     try:
         sdk = await get_sdk()
