@@ -116,6 +116,15 @@ class OpenAIClient:
         return len(text.split()) + len(text) // 4
 
     def count_messages_tokens(self, messages: List[Dict[str, Any]]) -> int:
+        """
+        Count tokens in a list of chat messages.
+
+        Args:
+            messages: List of message dictionaries with role, content, etc.
+
+        Returns:
+            int: Total number of tokens in all messages
+        """
         total_tokens = 0
         for message in messages:
             total_tokens += 4
