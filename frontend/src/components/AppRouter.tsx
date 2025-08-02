@@ -63,6 +63,7 @@ import {
   Logout,
   ChevronRight,
   Notifications as NotificationsIcon,
+  Verified as ValidatedIcon,
 } from '@mui/icons-material';
 
 import { useAuth, AdminOnly } from '../contexts/AuthContext';
@@ -91,6 +92,9 @@ const SettingsPage = React.lazy(() => import('../pages/SettingsPage'));
 const AdminUsersPage = React.lazy(() => import('../pages/admin/AdminUsersPage'));
 const AdminSystemPage = React.lazy(() => import('../pages/admin/AdminSystemPage'));
 const AdminHealthPage = React.lazy(() => import('../pages/admin/AdminHealthPage'));
+
+// Demo pages
+const OpenApiValidationDemo = React.lazy(() => import('../components/demo/OpenApiValidationDemo').then(module => ({ default: module.OpenApiValidationDemo })));
 
 // =============================================================================
 // Navigation Configuration
@@ -165,6 +169,12 @@ const navigationItems: NavItem[] = [
     label: 'Settings',
     icon: <SettingsIcon />,
     path: '/settings',
+  },
+  {
+    id: 'validation-demo',
+    label: 'API Validation Demo',
+    icon: <ValidatedIcon />,
+    path: '/validation-demo',
   },
 ];
 
@@ -617,6 +627,7 @@ export function AppRouter(): React.ReactElement {
                   <Route path="/prompts" element={<PromptsPage />} />
                   <Route path="/tools" element={<ToolsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/validation-demo" element={<OpenApiValidationDemo />} />
 
                   {/* Admin routes */}
                   <Route
