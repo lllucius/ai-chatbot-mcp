@@ -65,9 +65,9 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import console, error_message, get_sdk, success_message
+from .base import error_message, get_sdk, success_message
 
-profile_app = AsyncTyper(help="🎛️ LLM parameter profile management commands")
+profile_app = AsyncTyper(help="LLM parameter profile management commands", rich_markup_mode=None)
 
 
 @profile_app.async_command()
@@ -82,26 +82,23 @@ async def list(
         sdk = await get_sdk()
         data = await sdk.profiles.list_profiles(active_only=active_only, search=search)
         if data:
-            from rich.table import Table
-
             profiles = data.get("profiles", [])
-            table = Table(title=f"LLM Profiles ({len(profiles)} total)")
-            table.add_column("Name", style="cyan")
-            table.add_column("Title", style="white")
-            table.add_column("Model", style="blue")
-            table.add_column("Default", style="green")
-            table.add_column("Active", style="yellow")
+            
+            # Convert to table data
+            profile_data = []
             for profile in profiles:
-                table.add_row(
-                    profile.get("name", ""),
-                    profile.get("title", ""),
-                    profile.get("model_name", ""),
-                    "Yes" if profile.get("is_default") else "No",
-                    "Yes" if profile.get("is_active") else "No",
-                )
-            console.print(table)
+                profile_data.append({
+                    "Name": profile.get("name", ""),
+                    "Title": profile.get("title", ""),
+                    "Model": profile.get("model_name", ""),
+                    "Default": "Yes" if profile.get("is_default") else "No",
+                    "Active": "Yes" if profile.get("is_active") else "No",
+                })
+            
+            from .base import display_table_data
+            display_table_data(profile_data, f"LLM Profiles ({len(profiles)} total)")
         else:
-            console.print("[yellow]No profiles found.[/yellow]")
+            print("No profiles found.")
     except Exception as e:
         error_message(f"Failed to list profiles: {str(e)}")
         raise SystemExit(1)
@@ -116,25 +113,20 @@ async def show(
         sdk = await get_sdk()
         data = await sdk.profiles.get_profile(profile_name)
         if data:
-            from rich.table import Table
-
-            table = Table(title="Profile Details")
-            table.add_column("Field", style="cyan")
-            table.add_column("Value", style="white")
-            table.add_row("Name", data.name)
-            table.add_row("Title", data.title)
-            table.add_row("Model", data.model_name)
-            table.add_row(
-                "Default", "Yes" if getattr(data, "is_default", False) else "No"
-            )
-            table.add_row(
-                "Active", "Yes" if getattr(data, "is_active", False) else "No"
-            )
-            table.add_row("Description", data.description or "")
-            table.add_row("Parameters", str(data.parameters or ""))
-            table.add_row("Created", str(data.created_at))
-            table.add_row("Updated", str(data.updated_at))
-            console.print(table)
+            profile_details = {
+                "Name": data.name,
+                "Title": data.title,
+                "Model": data.model_name,
+                "Default": "Yes" if getattr(data, "is_default", False) else "No",
+                "Active": "Yes" if getattr(data, "is_active", False) else "No",
+                "Description": data.description or "",
+                "Parameters": str(data.parameters or ""),
+                "Created": str(data.created_at),
+                "Updated": str(data.updated_at),
+            }
+            
+            from .base import display_key_value_pairs
+            display_key_value_pairs(profile_details, "Profile Details")
     except Exception as e:
         error_message(f"Failed to show profile: {str(e)}")
         raise SystemExit(1)
@@ -255,22 +247,16 @@ async def stats():
         sdk = await get_sdk()
         data = await sdk.profiles.get_profile_stats()
         if data:
-            from rich.columns import Columns
-            from rich.panel import Panel
-
-            basic_panel = Panel(
-                f"Total Profiles: [green]{data.get('total_profiles', 0)}[/green]\n"
-                f"Active: [blue]{data.get('active_profiles', 0)}[/blue]",
-                title="📊 Profile Stats",
-                border_style="cyan",
-            )
-            usage_panel = Panel(
-                f"Default Profile: [green]{data.get('default_profile', 'None')}[/green]\n"
-                f"Most Used: [blue]{data.get('most_used_profile', 'N/A')}[/blue]",
-                title="📈 Usage",
-                border_style="green",
-            )
-            console.print(Columns([basic_panel, usage_panel]))
+            print("\nProfile Statistics:")
+            print("===================")
+            print("Profile Stats:")
+            print(f"  Total Profiles: {data.get('total_profiles', 0)}")
+            print(f"  Active: {data.get('active_profiles', 0)}")
+            print()
+            print("Usage:")
+            print(f"  Default Profile: {data.get('default_profile', 'None')}")
+            print(f"  Most Used: {data.get('most_used_profile', 'N/A')}")
+            print()
     except Exception as e:
         error_message(f"Failed to get profile statistics: {str(e)}")
         raise SystemExit(1)

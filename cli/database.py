@@ -87,9 +87,9 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Option
 
-from .base import console, error_message, get_sdk, success_message
+from .base import error_message, get_sdk, success_message
 
-database_app = AsyncTyper(help="🗄️ Database management commands")
+database_app = AsyncTyper(help="Database management commands", rich_markup_mode=None)
 
 
 @database_app.async_command()

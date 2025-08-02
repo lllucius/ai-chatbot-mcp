@@ -110,7 +110,6 @@ import sys
 from async_typer import AsyncTyper
 
 from cli.analytics import analytics_app
-from cli.base import console
 from cli.conversations import conversation_app
 from cli.core import core_app  # New: core commands (login, auth-status, config, etc.)
 from cli.database import database_app
@@ -122,9 +121,9 @@ from cli.tasks import tasks_app
 from cli.users import user_app
 
 app = AsyncTyper(
-    help="🚀 AI Chatbot Platform - API-based Management CLI",
+    help="AI Chatbot Platform - API-based Management CLI",
     context_settings={"help_option_names": ["-h", "--help"]},
-    rich_markup_mode="rich",
+    rich_markup_mode=None,  # Disable rich markup completely
 )
 
 # Register sub-applications
@@ -145,9 +144,9 @@ if __name__ == "__main__":
     try:
         app()
     except KeyboardInterrupt:
-        console.print("\n[yellow]Operation cancelled by user[/yellow]")
+        print("\nOperation cancelled by user")
         sys.exit(0)
     except Exception as e:
-        console.print(f"[red]CLI Error: {e}[/red]")
-        console.print("\n[dim]For help, run: python api_manage.py --help[/dim]")
+        print(f"CLI Error: {e}")
+        print("\nFor help, run: python api_manage.py --help")
         sys.exit(1)

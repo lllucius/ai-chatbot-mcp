@@ -77,7 +77,6 @@ from async_typer import AsyncTyper
 from typer import Argument, Option
 
 from .base import (
-    console,
     error_message,
     get_sdk,
     info_message,
@@ -86,7 +85,8 @@ from .base import (
 )
 
 mcp_app = AsyncTyper(
-    help="🔌 MCP server and tool management commands", rich_markup_mode="rich"
+    help="MCP server and tool management commands",
+    rich_markup_mode=None,
 )
 
 
@@ -375,7 +375,7 @@ async def test_tool(
         if response and response.get("success"):
             success_message(f"MCP tool '{tool_name}' test completed successfully")
             if response.get("result"):
-                console.print(f"Test result: {response['result']}")
+                print(f"Test result: {response['result']}")
         else:
             error_message(
                 f"Failed to test MCP tool: {response.get('message', 'Unknown error')}"
@@ -647,7 +647,7 @@ def _display_stats(stats_data):
     tools_table.add_row("Used This Month", str(usage_stats.get("month", 0)))
 
     console.print(servers_table)
-    console.print()
+    print()
     console.print(tools_table)
     if usage_stats.get("top_tools"):
         top_tools_table = Table(title="Top Used Tools", box=box.ROUNDED)
@@ -660,7 +660,7 @@ def _display_stats(stats_data):
                 tool.get("server", "Unknown"),
                 str(tool.get("count", 0)),
             )
-        console.print()
+        print()
         console.print(top_tools_table)
 
 
@@ -709,5 +709,5 @@ def _display_server_status(status_data):
     summary_table.add_row("Connected Servers", f"{connected_servers}/{total_servers}")
     summary_table.add_row("Total Tools", str(total_tools))
     
-    console.print()
+    print()
     console.print(summary_table)
