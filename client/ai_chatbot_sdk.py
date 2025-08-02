@@ -1,5 +1,4 @@
-"""
-AI Chatbot Platform SDK - Comprehensive Python Client Library.
+"""AI Chatbot Platform SDK - Comprehensive Python Client Library.
 
 This module provides a complete async Python SDK for the AI Chatbot Platform, enabling
 developers to integrate platform capabilities into their applications with full API
@@ -130,17 +129,26 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class ApiError(Exception):
-    """
-    Exception raised when API requests fail.
+    """Exception raised when API requests fail.
 
     Args:
         status: HTTP status code of the failed request.
         reason: HTTP reason phrase.
         url: The URL that was requested.
         body: Response body content.
+
     """
 
     def __init__(self, status: int, reason: str, url: str, body: Any):
+        """Initialize ApiError with HTTP response details.
+        
+        Args:
+            status: HTTP status code of the failed request.
+            reason: HTTP reason phrase.
+            url: The URL that was requested.
+            body: Response body content.
+
+        """
         super().__init__(f"HTTP {status} {reason}: {body}")
         self.status = status
         self.reason = reason
@@ -154,8 +162,7 @@ T = TypeVar("T")
 
 
 class ToolHandlingMode(str, Enum):
-    """
-    Enum for different tool call result handling modes.
+    """Enum for different tool call result handling modes.
 
     - RETURN_RESULTS: Return tool call results as content without further AI processing
     - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
@@ -537,8 +544,7 @@ def filter_query(query: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 async def handle_response(
     resp: httpx.Response, url: str, cls: Optional[Type[T]] = None
 ) -> Any:
-    """
-    Handle API response and raise ApiError on failure.
+    """Handle API response and raise ApiError on failure.
 
     Args:
         resp: The HTTP response object from httpx.
@@ -550,6 +556,7 @@ async def handle_response(
 
     Raises:
         ApiError: If the response indicates an error.
+
     """
     if not resp.is_success:
         try:
@@ -576,8 +583,7 @@ async def handle_response(
 def build_headers(
     token: Optional[str] = None, content_type: Optional[str] = None
 ) -> Dict[str, str]:
-    """
-    Build HTTP headers for API requests.
+    """Build HTTP headers for API requests.
 
     Args:
         token: Optional authentication token.
@@ -585,6 +591,7 @@ def build_headers(
 
     Returns:
         Dictionary of HTTP headers.
+
     """
     headers = {}
     if content_type:
@@ -595,8 +602,7 @@ def build_headers(
 
 
 def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> str:
-    """
-    Construct a URL with optional query parameters.
+    """Construct a URL with optional query parameters.
 
     Args:
         base: Base URL.
@@ -605,6 +611,7 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
 
     Returns:
         Complete URL string.
+
     """
     url = base.rstrip("/") + path
     q = filter_query(query)
@@ -618,8 +625,7 @@ def make_url(base: str, path: str, query: Optional[Dict[str, Any]] = None) -> st
 async def fetch_all_pages(
     fetch_page: Callable[[int, int], Any], per_page: int = 50
 ) -> List[Any]:
-    """
-    Fetch all pages of paginated results asynchronously.
+    """Fetch all pages of paginated results asynchronously.
 
     Args:
         fetch_page: Async function that takes page and per_page parameters.
@@ -627,6 +633,7 @@ async def fetch_all_pages(
 
     Returns:
         List of all items from all pages.
+
     """
     all_items = []
     page = 1
@@ -674,6 +681,7 @@ async def fetch_all_pages(
 
 class DatabaseHealthResponse(BaseModel):
     """Database health check response model."""
+
     status: str
     message: str
     connectivity: str
@@ -683,6 +691,7 @@ class DatabaseHealthResponse(BaseModel):
 
 class ServicesHealthResponse(BaseModel):
     """External services health check response model."""
+
     openai: Dict[str, Any]
     fastmcp: Dict[str, Any]
     timestamp: datetime
@@ -690,6 +699,7 @@ class ServicesHealthResponse(BaseModel):
 
 class SystemMetricsResponse(BaseModel):
     """System metrics response model."""
+
     system: Dict[str, Any]
     application: Dict[str, Any]
     timestamp: datetime
@@ -698,6 +708,7 @@ class SystemMetricsResponse(BaseModel):
 
 class ReadinessResponse(BaseModel):
     """Readiness check response model."""
+
     status: str
     message: str
     timestamp: datetime
@@ -705,6 +716,7 @@ class ReadinessResponse(BaseModel):
 
 class LivenessResponse(BaseModel):
     """Liveness check response model."""
+
     status: str
     message: str
     timestamp: datetime
@@ -712,23 +724,27 @@ class LivenessResponse(BaseModel):
 
 class PerformanceMetricsResponse(BaseModel):
     """Performance metrics response model."""
+
     data: Dict[str, Any]
 
 
 class UserStatisticsResponse(BaseModel):
     """User statistics response model."""
+
     success: bool
     data: Dict[str, Any]
 
 
 class SearchResponse(BaseModel):
     """Search response model."""
+
     success: bool
     data: Dict[str, Any]
 
 
 class RegistryStatsResponse(BaseModel):
     """Registry statistics response model."""
+
     success: bool
     message: str
     data: Dict[str, Any]
@@ -736,6 +752,7 @@ class RegistryStatsResponse(BaseModel):
 
 class ConversationStatsResponse(BaseModel):
     """Conversation statistics response model."""
+
     success: bool
     data: Dict[str, Any]
 
@@ -747,6 +764,12 @@ class HealthClient:
     """Async client for health check endpoints."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize health client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     async def basic(self) -> BaseResponse:
@@ -786,6 +809,12 @@ class AuthClient:
     """Async client for authentication operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize authentication client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     async def register(self, data: RegisterRequest) -> UserResponse:
@@ -840,18 +869,63 @@ class AuthClient:
 
 
 class UsersClient:
+    """Async client for user management operations.
+    
+    Provides comprehensive user account management including profile updates,
+    password changes, user listing, and administrative operations.
+    """
+
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize users client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     async def me(self) -> UserResponse:
+        """Get current authenticated user's profile.
+        
+        Returns:
+            UserResponse: Current user's profile information.
+            
+        Raises:
+            ApiError: If the request fails or user is not authenticated.
+
+        """
         return await self.sdk._request("/api/v1/users/me", UserResponse)
 
     async def update_me(self, data: UserUpdate) -> UserResponse:
+        """Update current user's profile information.
+        
+        Args:
+            data: UserUpdate model with fields to update.
+            
+        Returns:
+            UserResponse: Updated user profile information.
+            
+        Raises:
+            ApiError: If the request fails or validation errors occur.
+
+        """
         return await self.sdk._request(
             "/api/v1/users/me", UserResponse, method="PUT", json=data.model_dump()
         )
 
     async def change_password(self, data: UserPasswordUpdate) -> BaseResponse:
+        """Change current user's password.
+        
+        Args:
+            data: UserPasswordUpdate with current and new password.
+            
+        Returns:
+            BaseResponse: Success/failure status of password change.
+            
+        Raises:
+            ApiError: If the request fails or current password is incorrect.
+
+        """
         return await self.sdk._request(
             "/api/v1/users/me/change-password",
             BaseResponse,
@@ -866,6 +940,21 @@ class UsersClient:
         active_only: Optional[bool] = None,
         superuser_only: Optional[bool] = None,
     ) -> PaginatedResponse:
+        """List users with optional filtering and pagination.
+        
+        Args:
+            page: Page number for pagination (default: 1).
+            size: Number of users per page (default: 20).
+            active_only: Filter to only active users if True.
+            superuser_only: Filter to only superusers if True.
+            
+        Returns:
+            PaginatedResponse: Paginated list of users.
+            
+        Raises:
+            ApiError: If the request fails or insufficient permissions.
+
+        """
         params = filter_query(
             {
                 "page": page,
@@ -877,9 +966,34 @@ class UsersClient:
         return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
     async def get(self, user_id: UUID) -> UserResponse:
+        """Get user profile by ID.
+        
+        Args:
+            user_id: UUID of the user to retrieve.
+            
+        Returns:
+            UserResponse: User profile information.
+            
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+
+        """
         return await self.sdk._request(f"/api/v1/users/byid/{user_id}", UserResponse)
 
     async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
+        """Update user profile by ID.
+        
+        Args:
+            user_id: UUID of the user to update.
+            data: UserUpdate model with fields to update.
+            
+        Returns:
+            UserResponse: Updated user profile information.
+            
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+
+        """
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}",
             UserResponse,
@@ -888,6 +1002,18 @@ class UsersClient:
         )
 
     async def delete(self, user_id: UUID) -> BaseResponse:
+        """Delete user account by ID.
+        
+        Args:
+            user_id: UUID of the user to delete.
+            
+        Returns:
+            BaseResponse: Success/failure status of deletion.
+            
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+
+        """
         return await self.sdk._request(
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="DELETE"
         )
@@ -901,11 +1027,11 @@ class DocumentsClient:
     """Async client for document management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize documents client.
+        """Initialize documents client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -930,6 +1056,21 @@ class DocumentsClient:
         file_type: Optional[str] = None,
         status: Optional[str] = None,
     ) -> PaginatedResponse:
+        """List documents with optional filtering and pagination.
+        
+        Args:
+            page: Page number for pagination (default: 1).
+            size: Number of documents per page (default: 20).
+            file_type: Filter by file type (e.g., 'pdf', 'txt').
+            status: Filter by processing status (e.g., 'completed', 'processing').
+            
+        Returns:
+            PaginatedResponse: Paginated list of documents.
+            
+        Raises:
+            ApiError: If the request fails.
+
+        """
         params = filter_query(
             {"page": page, "size": size, "file_type": file_type, "status": status}
         )
@@ -938,11 +1079,36 @@ class DocumentsClient:
         )
 
     async def get(self, document_id: UUID) -> DocumentResponse:
+        """Get document metadata by ID.
+        
+        Args:
+            document_id: UUID of the document to retrieve.
+            
+        Returns:
+            DocumentResponse: Document metadata and status.
+            
+        Raises:
+            ApiError: If document not found or access denied.
+
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}", DocumentResponse
         )
 
     async def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
+        """Update document metadata.
+        
+        Args:
+            document_id: UUID of the document to update.
+            data: DocumentUpdate model with fields to update.
+            
+        Returns:
+            DocumentResponse: Updated document metadata.
+            
+        Raises:
+            ApiError: If document not found or validation errors.
+
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}",
             DocumentResponse,
@@ -951,17 +1117,53 @@ class DocumentsClient:
         )
 
     async def delete(self, document_id: UUID) -> BaseResponse:
+        """Delete document and all associated data.
+        
+        Args:
+            document_id: UUID of the document to delete.
+            
+        Returns:
+            BaseResponse: Success/failure status of deletion.
+            
+        Raises:
+            ApiError: If document not found or access denied.
+
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}", BaseResponse, method="DELETE"
         )
 
     async def status(self, document_id: UUID) -> ProcessingStatusResponse:
+        """Get document processing status and progress.
+        
+        Args:
+            document_id: UUID of the document to check.
+            
+        Returns:
+            ProcessingStatusResponse: Current processing status and progress.
+            
+        Raises:
+            ApiError: If document not found.
+
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}/status",
             ProcessingStatusResponse,
         )
 
     async def reprocess(self, document_id: UUID) -> BaseResponse:
+        """Reprocess document for chunk generation and embeddings.
+        
+        Args:
+            document_id: UUID of the document to reprocess.
+            
+        Returns:
+            BaseResponse: Success/failure status of reprocessing request.
+            
+        Raises:
+            ApiError: If document not found or already processing.
+
+        """
         return await self.sdk._request(
             f"/api/v1/documents/byid/{document_id}/reprocess",
             BaseResponse,
@@ -969,6 +1171,18 @@ class DocumentsClient:
         )
 
     async def download(self, document_id: UUID) -> bytes:
+        """Download original document file.
+        
+        Args:
+            document_id: UUID of the document to download.
+            
+        Returns:
+            bytes: Binary content of the original document file.
+            
+        Raises:
+            ApiError: If document not found or download failed.
+
+        """
         url = make_url(
             self.sdk.base_url, f"/api/v1/documents/byid/{document_id}/download"
         )
@@ -984,15 +1198,27 @@ class ConversationsClient:
     """Async client for conversation management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize conversations client.
+        """Initialize conversations client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
     async def create(self, data: ConversationCreate) -> ConversationResponse:
+        """Create a new conversation.
+        
+        Args:
+            data: ConversationCreate model with conversation details.
+            
+        Returns:
+            ConversationResponse: Created conversation metadata.
+            
+        Raises:
+            ApiError: If creation fails or validation errors occur.
+
+        """
         return await self.sdk._request(
             "/api/v1/conversations/",
             ConversationResponse,
@@ -1003,12 +1229,38 @@ class ConversationsClient:
     async def list(
         self, page: int = 1, size: int = 20, active_only: Optional[bool] = None
     ) -> PaginatedResponse:
+        """List conversations with optional filtering and pagination.
+        
+        Args:
+            page: Page number for pagination (default: 1).
+            size: Number of conversations per page (default: 20).
+            active_only: Filter to only active conversations if True.
+            
+        Returns:
+            PaginatedResponse: Paginated list of conversations.
+            
+        Raises:
+            ApiError: If the request fails.
+
+        """
         params = filter_query({"page": page, "size": size, "active_only": active_only})
         return await self.sdk._request(
             "/api/v1/conversations/", ConversationResponse, params=params
         )
 
     async def get(self, conversation_id: UUID) -> ConversationResponse:
+        """Get conversation metadata by ID.
+        
+        Args:
+            conversation_id: UUID of the conversation to retrieve.
+            
+        Returns:
+            ConversationResponse: Conversation metadata.
+            
+        Raises:
+            ApiError: If conversation not found or access denied.
+
+        """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
             ConversationResponse,
@@ -1017,6 +1269,19 @@ class ConversationsClient:
     async def update(
         self, conversation_id: UUID, data: ConversationUpdate
     ) -> ConversationResponse:
+        """Update conversation metadata.
+        
+        Args:
+            conversation_id: UUID of the conversation to update.
+            data: ConversationUpdate model with fields to update.
+            
+        Returns:
+            ConversationResponse: Updated conversation metadata.
+            
+        Raises:
+            ApiError: If conversation not found or validation errors.
+
+        """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
             ConversationResponse,
@@ -1025,6 +1290,18 @@ class ConversationsClient:
         )
 
     async def delete(self, conversation_id: UUID) -> BaseResponse:
+        """Delete conversation and all associated messages.
+        
+        Args:
+            conversation_id: UUID of the conversation to delete.
+            
+        Returns:
+            BaseResponse: Success/failure status of deletion.
+            
+        Raises:
+            ApiError: If conversation not found or access denied.
+
+        """
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}",
             BaseResponse,
@@ -1034,6 +1311,20 @@ class ConversationsClient:
     async def messages(
         self, conversation_id: UUID, page: int = 1, size: int = 50
     ) -> PaginatedResponse:
+        """Get messages from a conversation with pagination.
+        
+        Args:
+            conversation_id: UUID of the conversation.
+            page: Page number for pagination (default: 1).
+            size: Number of messages per page (default: 50).
+            
+        Returns:
+            PaginatedResponse: Paginated list of messages.
+            
+        Raises:
+            ApiError: If conversation not found or access denied.
+
+        """
         params = filter_query({"page": page, "size": size})
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}/messages",
@@ -1118,11 +1409,11 @@ class SearchClient:
     """Client for search operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize search client.
+        """Initialize search client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1133,22 +1424,69 @@ class SearchClient:
         )
 
     async def similar_chunks(self, chunk_id: int, limit: int = 5) -> Dict[str, Any]:
+        """Find similar document chunks to a given chunk.
+        
+        Args:
+            chunk_id: ID of the reference chunk to find similarities for.
+            limit: Maximum number of similar chunks to return (default: 5).
+            
+        Returns:
+            Dict[str, Any]: Similar chunks with similarity scores.
+            
+        Raises:
+            ApiError: If chunk not found or search fails.
+
+        """
         params = {"limit": limit}
         return await self.sdk._request(
             f"/api/v1/search/similar/{chunk_id}", dict, params=params
         )
 
     async def suggestions(self, query: str, limit: int = 5) -> List[Any]:
+        """Get search suggestions based on query.
+        
+        Args:
+            query: Search query to get suggestions for.
+            limit: Maximum number of suggestions to return (default: 5).
+            
+        Returns:
+            List[Any]: List of search suggestions.
+            
+        Raises:
+            ApiError: If the request fails.
+
+        """
         params = {"query": query, "limit": limit}
         return await self.sdk._request(
             "/api/v1/search/suggestions", list, params=params
         )
 
     async def history(self, limit: int = 10) -> List[Any]:
+        """Get user's search history.
+        
+        Args:
+            limit: Maximum number of history entries to return (default: 10).
+            
+        Returns:
+            List[Any]: List of recent search queries.
+            
+        Raises:
+            ApiError: If the request fails.
+
+        """
         params = {"limit": limit}
         return await self.sdk._request("/api/v1/search/history", list, params=params)
 
     async def clear_history(self) -> BaseResponse:
+        """Clear user's search history.
+        
+        Returns:
+            BaseResponse: Success/failure status of history clearing.
+            
+        Raises:
+            ApiError: If the request fails.
+
+        """
         return await self.sdk._request(
             "/api/v1/search/history", BaseResponse, method="DELETE"
         )
@@ -1158,11 +1496,11 @@ class MCPClient:
     """Client for MCP server and tools management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize MCP client.
+        """Initialize MCP client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1305,11 +1643,11 @@ class PromptsClient:
     """Client for prompt registry management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize prompts client.
+        """Initialize prompts client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1375,6 +1713,12 @@ class ProfilesClient:
     """Client for LLM profile registry management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize profiles client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     async def list_profiles(
@@ -1433,6 +1777,12 @@ class AnalyticsClient:
     """Client for analytics and reporting."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize analytics client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     async def get_overview(self) -> Dict[str, Any]:
@@ -1475,11 +1825,11 @@ class DatabaseClient:
     """Client for database management operations."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
-        """
-        Initialize database client.
+        """Initialize database client.
 
         Args:
             sdk: The main SDK instance for making API requests
+
         """
         self.sdk = sdk
 
@@ -1549,6 +1899,12 @@ class TasksClient:
     """Client for background task management."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize tasks client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     async def get_status(self) -> Dict[str, Any]:
@@ -1598,6 +1954,12 @@ class AdminClient:
     """Client for admin operations across different resources."""
 
     def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize admin client.
+        
+        Args:
+            sdk: The main SDK instance for making API requests.
+
+        """
         self.sdk = sdk
 
     # User admin operations
@@ -1717,8 +2079,7 @@ class AdminClient:
 
 
 class AIChatbotSDK:
-    """
-    Main async SDK class for AI Chatbot Platform API interactions.
+    """Main async SDK class for AI Chatbot Platform API interactions.
 
     Provides a comprehensive async client for accessing all API endpoints including
     authentication, document management, conversations, search functionality,
@@ -1755,6 +2116,7 @@ class AIChatbotSDK:
         ...         user_message="Hello!",
         ...         prompt_name="helpful_assistant"
         ...     ))
+
     """
 
     def __init__(

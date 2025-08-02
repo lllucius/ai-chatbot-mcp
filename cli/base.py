@@ -1,5 +1,4 @@
-"""
-Base utilities and infrastructure for the AI Chatbot Platform CLI.
+"""Base utilities and infrastructure for the AI Chatbot Platform CLI.
 
 This module provides the foundational infrastructure for the command-line interface,
 including authentication management, error handling, output formatting, and SDK
@@ -65,6 +64,7 @@ Example:
     success_message("Authentication successful")
     display_table_data(user_data, "User Information")
     ```
+
 """
 
 import json
@@ -83,8 +83,7 @@ console = Console()
 
 
 class APIError(Exception):
-    """
-    Custom exception for API errors in CLI operations.
+    """Custom exception for API errors in CLI operations.
 
     Represents errors that occur during API communication in the CLI,
     providing additional context such as HTTP status codes for better
@@ -99,6 +98,7 @@ class APIError(Exception):
 
     Example:
         raise APIError("Authentication failed", status_code=401)
+
     """
 
     def __init__(self, message: str, status_code=None):
@@ -107,8 +107,7 @@ class APIError(Exception):
 
 
 class CLIManager:
-    """
-    Manages authentication and SDK operations for the CLI interface.
+    """Manages authentication and SDK operations for the CLI interface.
 
     This class provides centralized management of CLI authentication including
     token storage, login/logout operations, and SDK initialization. It handles
@@ -134,9 +133,18 @@ class CLIManager:
     Note:
         This class automatically creates necessary directories and handles
         configuration loading from environment or config files.
+
     """
 
     def __init__(self):
+        """Initialize CLI manager with configuration and token loading.
+        
+        Note:
+            Creates necessary directories, loads configuration from environment,
+            initializes SDK with base URL and timeout, and attempts to load
+            existing authentication token.
+
+        """
         self.token_file = TOKEN_FILE
         self.token_file.parent.mkdir(parents=True, exist_ok=True)
         self._config = load_config()
@@ -146,8 +154,7 @@ class CLIManager:
         self._load_token()
 
     def _load_token(self):
-        """
-        Load authentication token from secure file storage.
+        """Load authentication token from secure file storage.
 
         Attempts to load the JWT token from the user's home directory file
         (~/.ai-chatbot-cli/token). If the file exists and contains valid JSON,
@@ -170,6 +177,7 @@ class CLIManager:
         Note:
             This method is called automatically during CLIManager initialization
             and should not be called directly by external code.
+
         """
         try:
             if self.token_file.exists():
@@ -180,8 +188,7 @@ class CLIManager:
             self._sdk.clear_token()
 
     def save_token(self, token: str):
-        """
-        Save authentication token to secure file storage with proper permissions.
+        """Save authentication token to secure file storage with proper permissions.
 
         Stores the JWT token in a JSON file within the user's home directory
         (~/.ai-chatbot-cli/token) with restrictive file permissions (0o600) to
@@ -212,6 +219,7 @@ class CLIManager:
 
         Example:
             cli_manager.save_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+
         """
         try:
             data = {"access_token": token}
@@ -222,8 +230,7 @@ class CLIManager:
             raise APIError(f"Failed to save authentication token: {str(e)}")
 
     def get_token(self) -> Optional[str]:
-        """
-        Retrieve the current authentication token from memory.
+        """Retrieve the current authentication token from memory.
 
         Returns the JWT token currently stored in the SDK instance. This token
         is used for all authenticated API requests. The token may be None if
@@ -256,6 +263,7 @@ class CLIManager:
                 print("Authenticated")
             else:
                 print("Please login first")
+
         """
         try:
             return self._sdk.get_token()
@@ -263,8 +271,7 @@ class CLIManager:
             raise APIError(f"Failed to retrieve authentication token: {str(e)}")
 
     def has_token(self) -> bool:
-        """
-        Check if an authentication token is currently available.
+        """Check if an authentication token is currently available.
 
         Determines whether the CLI has a valid authentication token for API
         operations. This is a convenience method that checks for token presence
@@ -295,12 +302,12 @@ class CLIManager:
                 await perform_api_call()
             else:
                 error_message("Please login first")
+
         """
         return self.get_token() is not None
 
     def clear_token(self):
-        """
-        Remove authentication token from memory and disk storage.
+        """Remove authentication token from memory and disk storage.
 
         Clears the JWT token from both the SDK instance and the secure file
         storage, effectively logging out the user. This operation is used
@@ -334,6 +341,7 @@ class CLIManager:
             # Logout user and clear all authentication
             cli_manager.clear_token()
             success_message("Logged out successfully")
+
         """
         try:
             self._sdk.clear_token()
@@ -341,8 +349,7 @@ class CLIManager:
             raise APIError(f"Failed to clear authentication token: {str(e)}")
 
     async def login(self, username: str, password: str) -> Dict[str, str]:
-        """
-        Authenticate with the API and return the token data.
+        """Authenticate with the API and return the token data.
 
         Args:
             username: API username
@@ -353,6 +360,7 @@ class CLIManager:
 
         Raises:
             APIError: If authentication fails
+
         """
         try:
             return await self._sdk.auth.login(username, password)
@@ -366,8 +374,7 @@ class CLIManager:
                 raise APIError(f"Login failed: {error_msg}")
 
     async def logout(self):
-        """
-        Log out from the API and clear the stored token.
+        """Log out from the API and clear the stored token.
         """
         if not self.has_token():
             return
@@ -379,14 +386,14 @@ class CLIManager:
             self.clear_token()
 
     async def get_current_user(self) -> Dict[str, str]:
-        """
-        Return information about the current user.
+        """Return information about the current user.
 
         Returns:
             dict: User info (keys: username, email, etc.)
 
         Raises:
             APIError: If token is missing or invalid
+
         """
         if not self.has_token():
             raise APIError("Not authenticated")
@@ -405,8 +412,7 @@ _cli_manager: Optional[CLIManager] = None
 
 
 async def get_cli_manager() -> CLIManager:
-    """
-    Get the singleton CLIManager instance for CLI operations.
+    """Get the singleton CLIManager instance for CLI operations.
 
     Returns the global CLIManager instance, creating it if necessary. This
     singleton pattern ensures consistent authentication state and configuration
@@ -441,6 +447,7 @@ async def get_cli_manager() -> CLIManager:
             # Perform authenticated operations
             user_info = await cli_manager.get_current_user()
         ```
+
     """
     global _cli_manager
     if _cli_manager is None:
@@ -449,8 +456,7 @@ async def get_cli_manager() -> CLIManager:
 
 
 async def get_sdk() -> AIChatbotSDK:
-    """
-    Get the initialized AI Chatbot SDK instance for API operations.
+    """Get the initialized AI Chatbot SDK instance for API operations.
 
     Returns the SDK instance from the CLI manager, which is pre-configured
     with the base URL, timeout settings, and authentication token (if available).
@@ -484,13 +490,13 @@ async def get_sdk() -> AIChatbotSDK:
         conversations = await sdk.conversations.list(limit=10)
         user_profile = await sdk.users.get_profile(user_id)
         ```
+
     """
     return (await get_cli_manager())._sdk
 
 
 def success_message(message: str):
-    """
-    Display a success message with green checkmark and consistent formatting.
+    """Display a success message with green checkmark and consistent formatting.
 
     Outputs a success message to the console using Rich formatting with a green
     checkmark (✓) prefix. This provides consistent visual feedback for successful
@@ -513,13 +519,13 @@ def success_message(message: str):
     Example:
         success_message("User created successfully")
         # Output: ✓ User created successfully (in green)
+
     """
     console.print(f"[green]✓[/green] {message}")
 
 
 def error_message(message: str):
-    """
-    Display an error message with red X and consistent formatting.
+    """Display an error message with red X and consistent formatting.
 
     Outputs an error message to the console using Rich formatting with a red
     X (✗) prefix. This provides consistent visual feedback for failed operations
@@ -542,27 +548,25 @@ def error_message(message: str):
     Example:
         error_message("Authentication failed")
         # Output: ✗ Authentication failed (in red)
+
     """
     console.print(f"[red]✗[/red] {message}")
 
 
 def info_message(message: str):
-    """
-    Display an informational message with a blue info icon.
+    """Display an informational message with a blue info icon.
     """
     console.print(f"[blue]ℹ[/blue] {message}")
 
 
 def warning_message(message: str):
-    """
-    Display a warning message with a yellow warning icon.
+    """Display a warning message with a yellow warning icon.
     """
     console.print(f"[yellow]⚠[/yellow] {message}")
 
 
 def format_json(data: dict) -> str:
-    """
-    Format a dictionary as pretty-printed JSON.
+    """Format a dictionary as pretty-printed JSON.
     """
     import json
 
@@ -570,8 +574,7 @@ def format_json(data: dict) -> str:
 
 
 def display_table_data(data: list, title: str = "Results"):
-    """
-    Display structured data in a formatted table with Rich styling.
+    """Display structured data in a formatted table with Rich styling.
 
     Creates and displays a Rich table with automatic column detection and
     formatting. Handles both dictionary data (with automatic header creation)
@@ -604,6 +607,7 @@ def display_table_data(data: list, title: str = "Results"):
 
         # Display simple values
         display_table_data(["item1", "item2", "item3"], "Items")
+
     """
     if not data:
         info_message("No data to display")
@@ -629,8 +633,7 @@ def display_table_data(data: list, title: str = "Results"):
 
 
 def display_key_value_pairs(data: dict, title: str = "Information"):
-    """
-    Display key-value pairs in a formatted panel.
+    """Display key-value pairs in a formatted panel.
     """
     content = "\n".join([f"[cyan]{key}:[/cyan] {value}" for key, value in data.items()])
     panel = Panel(content, title=title, border_style="blue", padding=(1, 2))
@@ -638,8 +641,7 @@ def display_key_value_pairs(data: dict, title: str = "Information"):
 
 
 def confirm_action(message: str, default: bool = False) -> bool:
-    """
-    Ask for user confirmation.
+    """Ask for user confirmation.
     """
     from rich.prompt import Confirm
 
@@ -647,8 +649,7 @@ def confirm_action(message: str, default: bool = False) -> bool:
 
 
 def paginate_results(data: list, page_size: int = 20) -> list:
-    """
-    Paginate results for display.
+    """Paginate results for display.
     """
     if len(data) <= page_size:
         return data
@@ -660,8 +661,7 @@ def paginate_results(data: list, page_size: int = 20) -> list:
 
 
 def format_timestamp(timestamp: str) -> str:
-    """
-    Format ISO timestamp for display.
+    """Format ISO timestamp for display.
     """
     try:
         from datetime import datetime
@@ -673,8 +673,7 @@ def format_timestamp(timestamp: str) -> str:
 
 
 def format_file_size(size_bytes: int) -> str:
-    """
-    Format file size for display.
+    """Format file size for display.
     """
     if size_bytes == 0:
         return "0 B"
@@ -688,8 +687,7 @@ def format_file_size(size_bytes: int) -> str:
 
 
 def handle_api_response(response: dict, operation: str = "operation"):
-    """
-    Handle API response and display appropriate messages.
+    """Handle API response and display appropriate messages.
     """
     if not response:
         error_message(f"No response received from API for {operation}")
