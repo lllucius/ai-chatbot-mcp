@@ -36,7 +36,7 @@ Security Features:
 - Protection against unauthorized server access
 """
 
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -658,6 +658,93 @@ async def get_mcp_stats(
         "message": "MCP statistics retrieved successfully",
         "data": [s.model_dump() for s in stats],
     }
+
+
+@router.get("/tools/byname/{tool_name}", response_model=MCPToolsResponse)
+@handle_api_errors("Failed to get MCP tool details")
+async def get_tool_details(
+    tool_name: str,
+    current_user: User = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get detailed information about a specific MCP tool by name.
+
+    Retrieves comprehensive details about an MCP tool including its schema,
+    current status, usage statistics, and configuration parameters.
+    """
+    log_api_call("get_mcp_tool_details", user_id=current_user.id)
+
+    mcp_service = MCPService(db)
+    tool = await mcp_service.get_tool_by_name(tool_name)
+    
+    if not tool:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tool '{tool_name}' not found"
+        )
+
+    return MCPToolsResponse(
+        success=True,
+        message=f"Retrieved details for tool '{tool_name}'",
+        data=[tool],
+    )
+
+
+@router.post("/tools/byname/{tool_name}/test", response_model=BaseResponse)
+@handle_api_errors("Failed to test MCP tool")
+async def test_tool(
+    tool_name: str,
+    test_params: Optional[Dict[str, Any]] = None,
+    current_user: User = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Test execution of a specific MCP tool with optional parameters.
+
+    Executes a test run of the specified tool to verify functionality,
+    connectivity, and parameter validation.
+    """
+    log_api_call("test_mcp_tool", user_id=current_user.id)
+
+    mcp_service = MCPService(db)
+    
+    # Test the tool execution
+    try:
+        result = await mcp_service.test_tool_execution(tool_name, test_params or {})
+        return BaseResponse(
+            success=True,
+            message=f"Tool '{tool_name}' test completed successfully",
+        )
+    except Exception as e:
+        return BaseResponse(
+            success=False,
+            message=f"Tool '{tool_name}' test failed: {str(e)}",
+        )
+
+
+@router.get("/servers/status", response_model=MCPStatsResponse)
+@handle_api_errors("Failed to get MCP server status")
+async def get_servers_status(
+    current_user: User = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get comprehensive status information for all MCP servers.
+
+    Returns detailed status information including connectivity, health,
+    and performance metrics for all registered MCP servers.
+    """
+    log_api_call("get_mcp_servers_status", user_id=current_user.id)
+
+    mcp_service = MCPService(db)
+    stats = await mcp_service.get_stats()
+
+    return MCPStatsResponse(
+        success=True,
+        message="Retrieved MCP server status",
+        data=stats,
+    )
 
 
 @router.post("/refresh", response_model=MCPStatsResponse)

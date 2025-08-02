@@ -1599,7 +1599,7 @@ class MCPClient:
         """Get details for a specific tool."""
         params = filter_query({"server": server})
         return await self.sdk._request(
-            f"/api/v1/tools/byname/{tool_name}", dict, params=params
+            f"/api/v1/mcp/tools/byname/{tool_name}", dict, params=params
         )
 
     async def enable_tool(
@@ -1625,6 +1625,22 @@ class MCPClient:
             method="PATCH",
             params=params,
         )
+
+    async def test_tool(
+        self, tool_name: str, test_params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Test execution of an MCP tool."""
+        data = test_params or {}
+        return await self.sdk._request(
+            f"/api/v1/mcp/tools/byname/{tool_name}/test",
+            dict,
+            method="POST",
+            json=data,
+        )
+
+    async def get_servers_status(self) -> Dict[str, Any]:
+        """Get comprehensive status information for all MCP servers."""
+        return await self.sdk._request("/api/v1/mcp/servers/status", dict)
 
     # Statistics and refresh methods
     async def get_stats(self) -> Dict[str, Any]:

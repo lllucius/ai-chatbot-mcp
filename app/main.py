@@ -86,7 +86,6 @@ from .api import (
     prompts_router,
     search_router,
     tasks_router,
-    tools_router,
     users_router,
 )
 from .config import settings
@@ -416,7 +415,6 @@ app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"]
 app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(tasks_router, prefix="/api/v1/tasks", tags=["tasks"])
-app.include_router(tools_router, prefix="/api/v1/tools", tags=["tools"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 
 

@@ -17,7 +17,6 @@ from .profiles import router as profiles_router
 from .prompts import router as prompts_router
 from .search import router as search_router
 from .tasks import router as tasks_router
-from .tools import router as tools_router
 from .users import router as users_router
 
 __all__ = [
@@ -27,7 +26,6 @@ __all__ = [
     "conversations_router",
     "search_router",
     "health_router",
-    "tools_router",
     "mcp_router",
     "prompts_router",
     "profiles_router",
