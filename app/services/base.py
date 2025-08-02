@@ -55,7 +55,6 @@ Service Patterns:
 - Security controls and audit logging for compliance and monitoring
 """
 
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, TypeVar
 from uuid import UUID
 
@@ -68,14 +67,14 @@ from ..core.logging import StructuredLogger
 ModelType = TypeVar("ModelType")
 
 
-class BaseService(ABC):
+class BaseService:
     """
     Base service class with common functionality for enterprise service architecture.
 
-    This abstract base class provides foundational infrastructure used across all
-    service classes in the AI Chatbot Platform. Implements common patterns for
-    database management, structured logging, error handling, and operation tracking
-    to ensure consistent service architecture and eliminate code duplication across
+    This base class provides foundational infrastructure used across all service
+    classes in the AI Chatbot Platform. Implements common patterns for database
+    management, structured logging, error handling, and operation tracking to
+    ensure consistent service architecture and eliminate code duplication across
     the application.
 
     Service Infrastructure:
@@ -438,26 +437,3 @@ class BaseService(ABC):
         await self.db.commit()
         return result.rowcount
 
-    def get_service_info(self) -> dict:
-        """
-        Get information about this service instance.
-
-        Returns:
-            dict: Service information including name and status
-        """
-        return {
-            "service_name": self.__class__.__name__,
-            "logger_name": self._logger_name,
-            "has_db_session": self.db is not None,
-            "service_type": "base_service",
-        }
-
-    @abstractmethod
-    def get_service_name(self) -> str:
-        """
-        Get the name of this service.
-
-        Returns:
-            str: The service name
-        """
-        pass
