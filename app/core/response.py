@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, TypeVar
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from app.schemas.common import (
+from shared.schemas.common import (
     APIResponse,
     ErrorDetail,
     PaginatedResponse,

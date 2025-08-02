@@ -154,12 +154,20 @@ from shared.schemas import (
     MessageResponse,
     ChatRequest,
     ChatResponse,
+    
+    # Document schemas
     DocumentResponse,
     DocumentSearchRequest,
+    
+    # LLM Profile schemas
     LLMProfileResponse,
     LLMProfileCreate,
+    
+    # Prompt schemas
     PromptResponse,
     PromptCreate,
+    
+    # Search schemas
     SearchResponse,
 )
 

@@ -39,7 +39,7 @@ Example Import Organization:
     from ..core.logging import get_service_logger
 
     # Local imports - Schemas
-    from ..schemas.user import UserResponse
+    from shared.schemas.user import UserResponse
 
 """
 

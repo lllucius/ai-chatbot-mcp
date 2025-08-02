@@ -66,7 +66,7 @@ from ..core.exceptions import AuthenticationError, NotFoundError, ValidationErro
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User
-from ..schemas.user import UserUpdate
+from shared.schemas.user import UserUpdate
 from ..utils.security import get_password_hash, verify_password
 from ..utils.timestamp import utcnow
 from .base import BaseService

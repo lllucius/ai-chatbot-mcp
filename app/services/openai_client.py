@@ -16,7 +16,7 @@ from openai import AsyncOpenAI
 
 from ..config import settings
 from ..core.logging import get_api_logger
-from ..schemas.tool_calling import ToolHandlingMode
+from shared.schemas.tool_calling import ToolHandlingMode
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors
 from ..utils.caching import embedding_cache, make_cache_key

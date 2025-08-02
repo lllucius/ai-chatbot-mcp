@@ -32,7 +32,7 @@ from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
-from ..schemas.mcp import (
+from shared.schemas.mcp import (
     MCPDiscoveryResultSchema,
     MCPHealthStatusSchema,
     MCPListFiltersSchema,

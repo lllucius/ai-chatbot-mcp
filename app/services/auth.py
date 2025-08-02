@@ -67,7 +67,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..core.exceptions import AuthenticationError, ValidationError
 from ..models.user import User
-from ..schemas.auth import RegisterRequest, Token
+from shared.schemas.auth import RegisterRequest, Token
 from ..utils.security import get_password_hash, verify_password
 from ..utils.timestamp import utcnow
 from .base import BaseService
