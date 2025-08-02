@@ -80,7 +80,7 @@ Command Categories:
     - Documents: /upload, /search, /documents
     - Analytics: /analytics, /dashboard, /metrics
     - System: /health, /version, /db, /tasks
-    - MCP: /mcp, /tools, /servers
+    - MCP: /mcp (includes server and tool management)
 
 Example Usage:
     ```bash
@@ -917,7 +917,7 @@ class CommandHandler:
         /llmreset               Clear all LLM param overrides
         /llmsave <name>         Save current LLM overrides as new profile
         /user ...               User management (list, show, update, password, etc.)
-        /mcp ...                MCP server management (list, add, enable, disable, remove, test)
+        /mcp ...                MCP server and tool management (list, add, enable, disable, remove, test)
         /search <text>          Search documents and conversation history
         /prompt ...             Prompt registry management
         /profile ...            LLM profile registry management
