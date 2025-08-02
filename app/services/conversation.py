@@ -33,15 +33,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.conversation import Conversation, Message
-from ..schemas.conversation import (
+from shared.schemas.conversation import (
     ChatRequest,
     ConversationCreate,
     ConversationResponse,
     ConversationUpdate,
     MessageResponse,
 )
-from ..schemas.document import DocumentSearchRequest
-from ..schemas.tool_calling import ToolCallResult, ToolCallSummary
+from shared.schemas.document import DocumentSearchRequest
+from shared.schemas.tool_calling import ToolCallResult, ToolCallSummary
 from ..services.embedding import EmbeddingService
 from ..services.llm_profile_service import LLMProfileService
 from ..services.mcp_service import MCPService

@@ -39,7 +39,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..core.exceptions import DocumentError, NotFoundError, ValidationError
 from ..models.document import Document, DocumentChunk, FileStatus
-from ..schemas.document import DocumentUpdate
+from shared.schemas.document import DocumentUpdate
 from ..services.background_processor import get_background_processor
 from ..services.embedding import EmbeddingService
 from ..utils.file_processing import FileProcessor

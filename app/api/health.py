@@ -62,7 +62,7 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
-from ..schemas.common import (
+from shared.schemas.common import (
     BaseResponse,
     DatabaseHealthResponse,
     DetailedHealthCheckResponse,

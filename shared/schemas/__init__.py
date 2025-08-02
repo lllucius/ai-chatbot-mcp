@@ -6,6 +6,8 @@ and the client SDK to ensure consistency and eliminate duplication.
 """
 
 # Import all schemas to make them available from this package
+from .admin import *
+from .analytics import *
 from .auth import *
 from .base import *
 from .common import *
@@ -19,6 +21,29 @@ from .tool_calling import *
 from .user import *
 
 __all__ = [
+    # Admin schemas
+    "TaskStatusResponse",
+    "TaskStatsResponse",
+    "ActiveTasksResponse",
+    "QueueResponse",
+    "TaskMonitorResponse",
+    "WorkersResponse",
+    "ProfileParametersResponse",
+    "ProfileStatsResponse",
+    "ProfileValidationResponse",
+    "PromptCategoriesResponse",
+    "PromptStatsResponse",
+    "AdvancedSearchResponse",
+    "DocumentStatsResponse",
+    
+    # Analytics schemas
+    "AnalyticsOverviewResponse",
+    "AnalyticsUsageResponse",
+    "AnalyticsPerformanceResponse",
+    "AnalyticsTrendsResponse",
+    "AnalyticsUserAnalyticsResponse",
+    "AnalyticsExportResponse",
+    
     # Auth schemas
     "LoginRequest",
     "RegisterRequest", 
@@ -69,14 +94,28 @@ __all__ = [
     "LLMProfileListResponse",
     
     # MCP schemas
-    "MCPServerResponse",
-    "MCPServerCreate",
-    "MCPServerUpdate",
-    "MCPToolResponse",
-    "MCPToolExecutionRequest",
-    "MCPToolExecutionResult",
+    "MCPServerCreateSchema",
+    "MCPServerUpdateSchema", 
+    "MCPServerSchema",
+    "MCPToolCreateSchema",
+    "MCPToolUpdateSchema",
+    "MCPToolSchema",
+    "MCPToolExecutionRequestSchema",
+    "MCPToolExecutionResultSchema",
+    "MCPToolUsageStatsSchema",
     "MCPServerListResponse",
     "MCPToolListResponse",
+    "MCPToolsResponse",
+    "MCPStatsResponse",
+    "MCPDiscoveryRequestSchema",
+    "MCPDiscoveryResultSchema",
+    "MCPHealthStatusSchema",
+    "MCPConnectionStatusSchema",
+    "MCPBatchUsageSchema",
+    "MCPConnectionTestSchema",
+    "MCPListFiltersSchema",
+    "OpenAIToolSchema",
+    "MCPOpenAIToolsResponseSchema",
     
     # Prompt schemas
     "PromptBase",

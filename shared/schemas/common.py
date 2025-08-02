@@ -150,6 +150,73 @@ class BaseResponse(BaseModel):
         default_factory=utcnow, description="When the response was generated"
     )
 
+
+class APIResponse(BaseResponse):
+    """
+    General-purpose API response schema with optional data payload and metadata.
+    
+    Extends BaseResponse to include data payload and metadata fields for
+    flexible API response handling.
+    """
+    
+    data: Optional[Any] = Field(default=None, description="Response data payload")
+    meta: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+    error: Optional[str] = Field(default=None, description="Error description if applicable")
+
+    def model_dump_json(self, **kwargs):
+        """
+        Custom JSON serialization with comprehensive datetime handling for API responses.
+
+        Converts datetime fields to ISO format strings with timezone indicators for
+        consistent API responses and frontend compatibility. Ensures proper timestamp
+        formatting for audit trails and client-side datetime handling.
+
+        Args:
+            **kwargs: Additional arguments passed to model_dump for serialization control
+
+        Returns:
+            str: JSON string with properly formatted datetime fields
+
+        Serialization Features:
+            - Datetime to ISO format conversion with 'Z' suffix for UTC indication
+            - Consistent timestamp formatting for API responses
+            - Frontend-compatible JSON structure for web and mobile applications
+            - Proper timezone handling for global applications
+            - Integration with audit and monitoring systems
+
+        Use Cases:
+            - API response serialization for all endpoints
+            - Frontend integration requiring standard datetime formats
+            - Audit logging with consistent timestamp representation
+            - Monitoring system integration with structured data
+            - Cross-service communication with standardized response format
+
+        Example:
+            response = APIResponse(success=True, message="Success")
+            json_output = response.model_dump_json()
+            # Result: {"success": true, "message": "Success", "timestamp": "2024-01-01T12:00:00Z"}
+        """
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+        import json
+
+        return json.dumps(data)
+
+
+class ErrorDetail(BaseModel):
+    """
+    Detailed error information for validation and field-specific errors.
+    """
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    code: str = Field(..., description="Error code identifier")
+    message: str = Field(..., description="Human-readable error message")
+    field: Optional[str] = Field(default=None, description="Field that caused the error")
+    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
+
     def model_dump_json(self, **kwargs):
         """
         Custom JSON serialization with comprehensive datetime handling for API responses.
@@ -221,6 +288,9 @@ class ValidationErrorResponse(ErrorResponse):
     )
     validation_errors: List[Dict[str, Any]] = Field(
         default_factory=list, description="List of validation errors"
+    )
+    errors: List[ErrorDetail] = Field(
+        default_factory=list, description="Detailed validation errors"
     )
 
 

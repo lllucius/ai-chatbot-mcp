@@ -31,7 +31,7 @@ from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
-from ..schemas.common import (
+from shared.schemas.common import (
     BaseResponse,
     DatabaseAnalysisResponse,
     DatabaseMigrationsResponse,
