@@ -72,14 +72,14 @@ Security and Compliance:
 - Data privacy controls for sensitive information handling
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.utcnow()
+    """Get current UTC datetime with timezone awareness."""
+    return datetime.now(timezone.utc)
 
 # Generic type variable for paginated responses
 T = TypeVar("T")
@@ -223,7 +223,11 @@ class APIResponse(BaseResponse):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
 
         return json.dumps(data)
@@ -277,7 +281,11 @@ class ErrorDetail(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
 
         return json.dumps(data)
@@ -336,7 +344,11 @@ class HealthCheckResponse(BaseResponse):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
 
         return json.dumps(data)
@@ -363,7 +375,11 @@ class DetailedHealthCheckResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
 
         return json.dumps(data)
@@ -446,7 +462,11 @@ class MetricsResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
 
         return json.dumps(data)
@@ -572,7 +592,11 @@ class ServicesHealthResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -593,7 +617,11 @@ class SystemMetricsResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -613,7 +641,11 @@ class ReadinessResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -641,7 +673,11 @@ class LivenessResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -667,7 +703,11 @@ class DatabaseStatusResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -688,7 +728,11 @@ class DatabaseTablesResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -711,7 +755,11 @@ class DatabaseMigrationsResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -734,7 +782,11 @@ class DatabaseAnalysisResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
@@ -758,7 +810,11 @@ class DatabaseQueryResponse(BaseModel):
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
-                data["timestamp"] = data["timestamp"].isoformat() + "Z"
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
         import json
         return json.dumps(data)
 
