@@ -56,6 +56,7 @@ from shared.schemas.llm_profile import (
     LLMProfileCreate,
     LLMProfileListResponse,
     LLMProfileResponse,
+    LLMProfileUpdate,
 )
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -265,19 +266,7 @@ async def get_profile_details(
         "title": profile.title,
         "description": profile.description,
         "model_name": settings.openai_chat_model,
-        "parameters": {
-            "temperature": profile.temperature,
-            "top_p": profile.top_p,
-            "top_k": profile.top_k,
-            "repeat_penalty": profile.repeat_penalty,
-            "max_tokens": profile.max_tokens,
-            "max_new_tokens": profile.max_new_tokens,
-            "context_length": profile.context_length,
-            "presence_penalty": profile.presence_penalty,
-            "frequency_penalty": profile.frequency_penalty,
-            "stop": profile.stop,
-            "other_params": profile.other_params,
-        },
+        "parameters": profile.to_openai_params(),
         "is_default": profile.is_default,
         "is_active": profile.is_active,
         "usage_count": profile.usage_count,
@@ -285,14 +274,14 @@ async def get_profile_details(
         "created_at": profile.created_at,
         "updated_at": profile.updated_at,
     }
-    return LLMProfileResponse(**response_data)
+    return LLMProfileResponse.model_validate(response_data)
 
 
 @router.put("/byname/{profile_name}", response_model=LLMProfileResponse)
 @handle_api_errors("Failed to update profile")
 async def update_profile(
     profile_name: str,
-    profile_data: Dict[str, Any],
+    profile_data: LLMProfileUpdate,
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> LLMProfileResponse:
@@ -301,22 +290,9 @@ async def update_profile(
     """
     log_api_call("update_llm_profile", user_id=current_user.id, profile_name=profile_name)
     
-    updated_profile = await profile_service.update_profile(profile_name, profile_data)
+    updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
     
-    response_data = {
-        "name": updated_profile.name,
-        "title": updated_profile.title,
-        "description": updated_profile.description,
-        "model_name": updated_profile.model_name,
-        "parameters": updated_profile.parameters,
-        "is_default": updated_profile.is_default,
-        "is_active": updated_profile.is_active,
-        "usage_count": updated_profile.usage_count,
-        "last_used_at": updated_profile.last_used_at,
-        "created_at": updated_profile.created_at,
-        "updated_at": updated_profile.updated_at,
-    }
-    return LLMProfileResponse(**response_data)
+    return LLMProfileResponse.model_validate(updated_profile)
 
 
 @router.delete("/byname/{profile_name}", response_model=APIResponse)
@@ -395,12 +371,12 @@ async def set_default_profile(
         )
 
 
-@router.get("/default/parameters", response_model=APIResponse[ProfileParametersData])
+@router.get("/default/parameters", response_model=APIResponse)
 @handle_api_errors("Failed to get default profile parameters")
 async def get_default_profile_parameters(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> Dict[str, Any]:
+) -> APIResponse:
     """
     Get parameters from the default LLM profile in OpenAI-compatible format.
 
@@ -449,14 +425,14 @@ async def get_default_profile_parameters(
         parameters=params,
         profile_name="default",
     )
-    return APIResponse[ProfileParametersData](
+    return APIResponse(
         success=True,
         message="Default profile parameters retrieved successfully",
-        data=response_payload,
+        data=response_payload.model_dump(),
     )
 
 
-@router.get("/stats", response_model=APIResponse[Dict[str, Any]])
+@router.get("/stats", response_model=APIResponse)
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),
@@ -501,14 +477,14 @@ async def get_profile_stats(
     """
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
-    return APIResponse[Dict[str, Any]](
+    return APIResponse(
         success=True,
         message="Profile statistics retrieved successfully",
         data=stats,
     )
 
 
-@router.post("/validate", response_model=APIResponse[ProfileValidationData])
+@router.post("/validate", response_model=APIResponse)
 @handle_api_errors("Failed to validate parameters")
 async def validate_parameters(
     parameters: Dict[str, Any],
@@ -565,8 +541,8 @@ async def validate_parameters(
         errors=errors,
         parameters=parameters,
     )
-    return APIResponse[ProfileValidationData](
+    return APIResponse(
         success=len(errors) == 0,
         message="Parameter validation completed" + (" successfully" if len(errors) == 0 else " with errors"),
-        data=response_payload,
+        data=response_payload.model_dump(),
     )
