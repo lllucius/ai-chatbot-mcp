@@ -209,21 +209,22 @@ async def list_documents(
     )
     responses = []
     for document in documents:
-        response = {
-            "id": document.id,
-            "title": document.title,
-            "filename": document.filename,
-            "file_type": document.file_type,
-            "file_size": document.file_size,
-            "mime_type": document.mime_type,
-            "processing_status": document.status,
-            "owner_id": document.owner_id,
-            "metainfo": document.metainfo,
-            "chunk_count": document.chunk_count,
-            "created_at": document.created_at,
-            "updated_at": document.updated_at,
-        }
-        responses.append(DocumentResponse.model_validate(response))
+        # Create DocumentResponse directly with explicit field assignment
+        document_response = DocumentResponse(
+            id=document.id,
+            title=document.title,
+            filename=document.filename,
+            file_type=document.file_type,
+            file_size=document.file_size,
+            mime_type=document.mime_type,
+            processing_status=document.status,
+            owner_id=document.owner_id,
+            metainfo=document.metainfo,
+            chunk_count=document.chunk_count,
+            created_at=document.created_at,
+            updated_at=document.updated_at,
+        )
+        responses.append(document_response)
 
     # Convert to dict for unified response
     response_data = [resp.model_dump() for resp in responses]
@@ -264,21 +265,23 @@ async def get_document(
     """
     log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.get_document(document_id, current_user.id)
-    response = {
-        "id": document.id,
-        "title": document.title,
-        "filename": document.filename,
-        "file_type": document.file_type,
-        "file_size": document.file_size,
-        "mime_type": document.mime_type,
-        "processing_status": document.status,
-        "owner_id": document.owner_id,
-        "metainfo": document.metainfo,
-        "chunk_count": document.chunk_count,
-        "created_at": document.created_at,
-        "updated_at": document.updated_at,
-    }
-    document_response = DocumentResponse.model_validate(response)
+    
+    # Create DocumentResponse directly with explicit field assignment
+    document_response = DocumentResponse(
+        id=document.id,
+        title=document.title,
+        filename=document.filename,
+        file_type=document.file_type,
+        file_size=document.file_size,
+        mime_type=document.mime_type,
+        processing_status=document.status,
+        owner_id=document.owner_id,
+        metainfo=document.metainfo,
+        chunk_count=document.chunk_count,
+        created_at=document.created_at,
+        updated_at=document.updated_at,
+    )
+    
     return success_response(
         data=document_response.model_dump(),
         message="Document retrieved successfully"

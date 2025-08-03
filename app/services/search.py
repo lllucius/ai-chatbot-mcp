@@ -248,21 +248,22 @@ class SearchService(BaseService):
         results = []
         for chunk, distance in rows:
             similarity_score = norm(distance)
-            response = {
-                "id": chunk.id,
-                "content": chunk.content,
-                "chunk_index": chunk.chunk_index,
-                "start_char": chunk.start_offset,
-                "end_char": chunk.end_offset,
-                "token_count": chunk.token_count,
-                "document_id": chunk.document_id,
-                "document_title": chunk.document.title,
-                "similarity_score": similarity_score,
-                "metainfo": chunk.document.metainfo,
-                "created_at": chunk.created_at,
-            }
-
-            chunk_response = DocumentChunkResponse.model_validate(response)
+            
+            # Create DocumentChunkResponse directly with explicit field assignment
+            chunk_response = DocumentChunkResponse(
+                id=chunk.id,
+                content=chunk.content,
+                chunk_index=chunk.chunk_index,
+                start_char=chunk.start_offset,
+                end_char=chunk.end_offset,
+                token_count=chunk.token_count,
+                document_id=chunk.document_id,
+                document_title=chunk.document.title,
+                similarity_score=similarity_score,
+                metainfo=chunk.document.metainfo,
+                created_at=chunk.created_at,
+            )
+            
             results.append(chunk_response)
         return results
 
@@ -317,20 +318,20 @@ class SearchService(BaseService):
         for chunk, rank in rows:
             score = norm(float(rank))
             if score >= request.threshold:
-                response = {
-                    "id": chunk.id,
-                    "content": chunk.content,
-                    "chunk_index": chunk.chunk_index,
-                    "start_char": chunk.start_offset,
-                    "end_char": chunk.end_offset,
-                    "token_count": chunk.token_count,
-                    "document_id": chunk.document_id,
-                    "document_title": chunk.document.title,
-                    "similarity_score": score,
-                    "metainfo": chunk.document.metainfo,
-                    "created_at": chunk.created_at,
-                }
-                chunk_response = DocumentChunkResponse.model_validate(response)
+                # Create DocumentChunkResponse directly with explicit field assignment
+                chunk_response = DocumentChunkResponse(
+                    id=chunk.id,
+                    content=chunk.content,
+                    chunk_index=chunk.chunk_index,
+                    start_char=chunk.start_offset,
+                    end_char=chunk.end_offset,
+                    token_count=chunk.token_count,
+                    document_id=chunk.document_id,
+                    document_title=chunk.document.title,
+                    similarity_score=score,
+                    metainfo=chunk.document.metainfo,
+                    created_at=chunk.created_at,
+                )
                 results.append(chunk_response)
         results.sort(key=lambda x: x.similarity_score or 0, reverse=True)
 

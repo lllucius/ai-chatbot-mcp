@@ -108,9 +108,20 @@ class MCPService:
         )
         server = result.scalar_one_or_none()
         if server:
-            server_dict = server.__dict__.copy()
-            server_dict["tools_count"] = len(server.tools)
-            return MCPServerSchema.model_validate(server_dict)
+            # Create MCPServerSchema directly with explicit field assignment
+            return MCPServerSchema(
+                name=server.name,
+                url=server.url,
+                description=server.description,
+                transport=server.transport,
+                timeout=server.timeout,
+                config=server.config,
+                is_enabled=server.is_enabled,
+                is_connected=server.is_connected,
+                last_connected_at=server.last_connected_at,
+                connection_errors=server.connection_errors,
+                tools_count=len(server.tools),
+            )
         return None
 
     async def list_servers(
@@ -133,9 +144,21 @@ class MCPService:
         servers = result.scalars().all()
         server_schemas = []
         for server in servers:
-            server_dict = server.__dict__.copy()
-            server_dict["tools_count"] = len(server.tools)
-            server_schemas.append(MCPServerSchema.model_validate(server_dict))
+            # Create MCPServerSchema directly with explicit field assignment
+            server_schema = MCPServerSchema(
+                name=server.name,
+                url=server.url,
+                description=server.description,
+                transport=server.transport,
+                timeout=server.timeout,
+                config=server.config,
+                is_enabled=server.is_enabled,
+                is_connected=server.is_connected,
+                last_connected_at=server.last_connected_at,
+                connection_errors=server.connection_errors,
+                tools_count=len(server.tools),
+            )
+            server_schemas.append(server_schema)
         return server_schemas
 
     async def update_server(
