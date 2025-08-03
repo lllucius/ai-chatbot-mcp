@@ -43,6 +43,14 @@ from shared.schemas.admin import (
     ProfileValidationResponse,
 )
 from shared.schemas.common import APIResponse, BaseResponse
+from shared.schemas.task_responses import (
+    DefaultProfileResponse,
+    ProfileParametersData,
+    ProfileStatisticsData,
+    ProfileStatisticsResponse,
+    ProfileValidationData,
+    ProfileValidationResponse,
+)
 from ..core.response import success_response, error_response
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
@@ -387,7 +395,7 @@ async def set_default_profile(
         )
 
 
-@router.get("/default/parameters", response_model=ProfileParametersResponse)
+@router.get("/default/parameters", response_model=APIResponse[ProfileParametersData])
 @handle_api_errors("Failed to get default profile parameters")
 async def get_default_profile_parameters(
     current_user: User = Depends(get_current_user),
@@ -437,21 +445,23 @@ async def get_default_profile_parameters(
     """
     log_api_call("get_default_profile_parameters", user_id=current_user.id)
     params = await profile_service.get_profile_for_openai()
-    return {
-        "success": True,
-        "data": {
-            "parameters": params,
-            "profile_name": "default",
-        },
-    }
+    response_payload = ProfileParametersData(
+        parameters=params,
+        profile_name="default",
+    )
+    return APIResponse[ProfileParametersData](
+        success=True,
+        message="Default profile parameters retrieved successfully",
+        data=response_payload,
+    )
 
 
-@router.get("/stats", response_model=ProfileStatsResponse)
+@router.get("/stats", response_model=APIResponse[Dict[str, Any]])
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> Dict[str, Any]:
+):
     """
     Get comprehensive LLM profile usage statistics and analytics.
 
@@ -491,19 +501,20 @@ async def get_profile_stats(
     """
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
-    return {
-        "success": True,
-        "data": stats,
-    }
+    return APIResponse[Dict[str, Any]](
+        success=True,
+        message="Profile statistics retrieved successfully",
+        data=stats,
+    )
 
 
-@router.post("/validate", response_model=ProfileValidationResponse)
+@router.post("/validate", response_model=APIResponse[ProfileValidationData])
 @handle_api_errors("Failed to validate parameters")
 async def validate_parameters(
     parameters: Dict[str, Any],
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> Dict[str, Any]:
+):
     """
     Validate LLM parameters before profile creation or update.
 
@@ -549,11 +560,13 @@ async def validate_parameters(
     """
     log_api_call("validate_parameters", user_id=current_user.id)
     errors = await profile_service.validate_parameters(**parameters)
-    return {
-        "success": len(errors) == 0,
-        "data": {
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "parameters": parameters,
-        },
-    }
+    response_payload = ProfileValidationData(
+        valid=len(errors) == 0,
+        errors=errors,
+        parameters=parameters,
+    )
+    return APIResponse[ProfileValidationData](
+        success=len(errors) == 0,
+        message="Parameter validation completed" + (" successfully" if len(errors) == 0 else " with errors"),
+        data=response_payload,
+    )
