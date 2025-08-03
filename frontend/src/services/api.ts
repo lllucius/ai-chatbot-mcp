@@ -212,6 +212,37 @@ class ApiClient {
 const apiClient = new ApiClient();
 
 // =============================================================================
+// API Response Utilities
+// =============================================================================
+
+/**
+ * Utility function to safely extract data from API responses with enhanced error reporting
+ * @param response - Axios response object
+ * @param operation - Description of the operation for error reporting
+ * @returns The data payload from response.data.data
+ */
+function extractApiResponseData<T>(response: AxiosResponse<ApiResponse<T>>, operation: string): T {
+  if (!response.data) {
+    console.error(`❌ ${operation} - API Response missing data:`, response);
+    throw new Error(`${operation} failed: API response is missing data field`);
+  }
+  
+  if (!response.data.data) {
+    console.error(`❌ ${operation} - API Response structure:`, {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : 'no data',
+      dataType: typeof response.data
+    });
+    throw new Error(`${operation} failed: Expected data.data field but received: ${JSON.stringify(response.data)}`);
+  }
+  
+  return response.data.data;
+}
+
+// =============================================================================
 // Authentication and User Management API
 // =============================================================================
 
@@ -226,12 +257,7 @@ export const authApi = {
    */
   async register(userData: UserRegistration): Promise<User> {
     const response = await apiClient.getClient().post<ApiResponse<User>>('/auth/register', userData);
-    
-    if (!response.data.data) {
-      throw new Error('User data not found in registration response');
-    }
-    
-    return response.data.data;
+    return extractApiResponseData(response, 'User registration');
   },
 
   /**
@@ -271,12 +297,7 @@ export const authApi = {
    */
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.getClient().get<ApiResponse<User>>('/auth/me');
-    
-    if (!response.data.data) {
-      throw new Error('User data not found in response');
-    }
-    
-    return response.data.data;
+    return extractApiResponseData(response, 'Get current user');
   },
 
   /**
@@ -286,12 +307,7 @@ export const authApi = {
    */
   async updateProfile(updates: Partial<Pick<User, 'full_name' | 'email'>>): Promise<User> {
     const response = await apiClient.getClient().patch<ApiResponse<User>>('/auth/me', updates);
-    
-    if (!response.data.data) {
-      throw new Error('Updated user data not found in response');
-    }
-    
-    return response.data.data;
+    return extractApiResponseData(response, 'Update user profile');
   },
 
   /**
