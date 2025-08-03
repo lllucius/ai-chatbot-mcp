@@ -52,7 +52,7 @@ from ..dependencies import get_current_superuser, get_current_user, get_document
 from ..models.document import Document, FileStatus
 from ..models.user import User
 from shared.schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
-from shared.schemas.common import BaseResponse, PaginatedResponse
+from shared.schemas.common import APIResponse, BaseResponse, PaginatedResponse
 from shared.schemas.document import (
     BackgroundTaskResponse,
     DocumentResponse,
@@ -62,6 +62,7 @@ from shared.schemas.document import (
     ProcessingStatusResponse,
     QueueStatusResponse,
 )
+from ..core.response import success_response, error_response, paginated_response
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -151,7 +152,7 @@ async def upload_document(
     )
 
 
-@router.get("/", response_model=PaginatedResponse[DocumentResponse])
+@router.get("/", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve documents")
 async def list_documents(
     page: int = Query(1, ge=1),
@@ -176,7 +177,7 @@ async def list_documents(
         document_service: Document service instance
 
     Returns:
-        PaginatedResponse[DocumentResponse]: Paginated list of user documents
+        APIResponse: Paginated list of user documents using unified envelope
     """
     log_api_call(
         "list_documents",
@@ -211,8 +212,11 @@ async def list_documents(
         }
         responses.append(DocumentResponse.model_validate(response))
 
-    return PaginatedResponse.create(
-        items=responses,
+    # Convert to dict for unified response
+    response_data = [resp.model_dump() for resp in responses]
+    
+    return paginated_response(
+        items=response_data,
         total=total,
         page=page,
         size=size,
@@ -220,7 +224,7 @@ async def list_documents(
     )
 
 
-@router.get("/byid/{document_id}", response_model=DocumentResponse)
+@router.get("/byid/{document_id}", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve document")
 async def get_document(
     document_id: UUID,
@@ -240,7 +244,7 @@ async def get_document(
         document_service: Document service instance
 
     Returns:
-        DocumentResponse: Complete document information
+        APIResponse: Complete document information using unified envelope
 
     Raises:
         HTTP 404: If document not found or not owned by user
@@ -261,7 +265,11 @@ async def get_document(
         "created_at": document.created_at,
         "updated_at": document.updated_at,
     }
-    return DocumentResponse.model_validate(response)
+    document_response = DocumentResponse.model_validate(response)
+    return success_response(
+        data=document_response.model_dump(),
+        message="Document retrieved successfully"
+    )
 
 
 @router.put("/byid/{document_id}", response_model=DocumentResponse)
@@ -297,7 +305,7 @@ async def update_document(
     return DocumentResponse.model_validate(document)
 
 
-@router.delete("/byid/{document_id}", response_model=BaseResponse)
+@router.delete("/byid/{document_id}", response_model=APIResponse)
 @handle_api_errors("Document deletion failed")
 async def delete_document(
     document_id: UUID,
@@ -316,7 +324,7 @@ async def delete_document(
         document_service: Document service instance
 
     Returns:
-        BaseResponse: Confirmation of successful deletion
+        APIResponse: Confirmation of successful deletion using unified envelope
 
     Raises:
         HTTP 404: If document not found or not owned by user
@@ -325,10 +333,12 @@ async def delete_document(
     success = await document_service.delete_document(document_id, current_user.id)
 
     if success:
-        return BaseResponse(success=True, message="document deleted successfully")
+        return success_response(message="Document deleted successfully")
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="document not found"
+        return error_response(
+            error_code="DOCUMENT_NOT_FOUND",
+            message="Document not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
@@ -370,7 +380,7 @@ async def get_processing_status(
     return ProcessingStatusResponse(success=True, message=message, **status_info)
 
 
-@router.post("/byid/{document_id}/reprocess", response_model=BaseResponse)
+@router.post("/byid/{document_id}/reprocess", response_model=APIResponse)
 @handle_api_errors("Reprocessing failed for document", log_errors=True)
 async def reprocess_document(
     document_id: UUID,
@@ -390,7 +400,7 @@ async def reprocess_document(
         document_service: Document service instance
 
     Returns:
-        BaseResponse: Confirmation that reprocessing has started
+        APIResponse: Confirmation that reprocessing has started using unified envelope
 
     Raises:
         HTTP 400: If document cannot be reprocessed at this time
@@ -400,11 +410,12 @@ async def reprocess_document(
     success = await document_service.reprocess_document(document_id, current_user.id)
 
     if success:
-        return BaseResponse(success=True, message="Document reprocessing started")
+        return success_response(message="Document reprocessing started")
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot reprocess document at this time",
+        return error_response(
+            error_code="REPROCESS_FAILED",
+            message="Cannot reprocess document at this time",
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
 

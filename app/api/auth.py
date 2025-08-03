@@ -65,6 +65,7 @@ from shared.schemas.auth import (
 )
 from shared.schemas.common import BaseResponse, APIResponse
 from shared.schemas.user import UserResponse
+from ..core.response import success_response, error_response
 from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -143,7 +144,7 @@ async def register(
     )
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=APIResponse)
 @handle_api_errors("User authentication failed")
 async def login(
     request: LoginRequest, auth_service: AuthService = Depends(get_auth_service)
@@ -160,7 +161,11 @@ async def login(
         auth_service: Injected authentication service instance for credential validation
 
     Returns:
-        Token: JWT access token with expiration information and metadata
+        APIResponse: JWT access token with expiration information using unified envelope:
+            - success: Authentication success indicator
+            - message: Authentication status message
+            - timestamp: Authentication timestamp
+            - data: Token data (access_token, token_type, expires_in)
 
     Raises:
         HTTP 401: If credentials are invalid, user account is inactive, or authentication fails
@@ -215,7 +220,12 @@ async def login(
     token_data = await auth_service.authenticate_user(
         request.username, request.password
     )
-    return token_data
+    # Convert Token object to dict for unified response
+    token_dict = token_data.model_dump() if hasattr(token_data, 'model_dump') else token_data
+    return success_response(
+        data=token_dict,
+        message="User authenticated successfully"
+    )
 
 
 @router.get("/me", response_model=APIResponse)
@@ -292,7 +302,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     )
 
 
-@router.post("/logout", response_model=BaseResponse)
+@router.post("/logout", response_model=APIResponse)
 @handle_api_errors("Logout failed")
 async def logout():
     """
@@ -304,7 +314,7 @@ async def logout():
     of their tokens after calling this endpoint.
 
     Returns:
-        BaseResponse: Success message confirming logout completion and instructions
+        APIResponse: Success message confirming logout completion using unified envelope
 
     Logout Process:
         - Security event logging for audit trail and monitoring
@@ -350,10 +360,10 @@ async def logout():
         }
     """
     log_api_call("logout")
-    return BaseResponse(success=True, message="Logged out successfully")
+    return success_response(message="Logged out successfully")
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh", response_model=APIResponse)
 @handle_api_errors("Token refresh failed")
 async def refresh_token(
     current_user: User = Depends(get_current_user),
@@ -371,7 +381,11 @@ async def refresh_token(
         auth_service: Injected authentication service instance for token operations
 
     Returns:
-        Token: New JWT access token with fresh expiration time and updated claims
+        APIResponse: New JWT access token using unified envelope:
+            - success: Token refresh success indicator
+            - message: Token refresh status message
+            - timestamp: Token refresh timestamp
+            - data: New token data (access_token, token_type, expires_in)
 
     Raises:
         HTTP 401: If current token is invalid, expired, or user account is inactive
@@ -425,10 +439,15 @@ async def refresh_token(
     log_api_call("refresh_token", user_id=str(current_user.id))
 
     token_data = auth_service.create_access_token({"sub": current_user.username})
-    return token_data
+    # Convert Token object to dict for unified response
+    token_dict = token_data.model_dump() if hasattr(token_data, 'model_dump') else token_data
+    return success_response(
+        data=token_dict,
+        message="Token refreshed successfully"
+    )
 
 
-@router.post("/password-reset", response_model=BaseResponse)
+@router.post("/password-reset", response_model=APIResponse)
 @handle_api_errors("Password reset request failed")
 async def request_password_reset(
     request: PasswordResetRequest, auth_service: AuthService = Depends(get_auth_service)
@@ -493,13 +512,12 @@ async def request_password_reset(
 
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than self-service email
-    return BaseResponse(
-        success=True,
-        message="Password reset request noted. Contact system administrator for password changes.",
+    return success_response(
+        message="Password reset request noted. Contact system administrator for password changes."
     )
 
 
-@router.post("/password-reset/confirm", response_model=BaseResponse)
+@router.post("/password-reset/confirm", response_model=APIResponse)
 @handle_api_errors("Password reset confirmation failed")
 async def confirm_password_reset(
     request: PasswordResetConfirm, auth_service: AuthService = Depends(get_auth_service)
@@ -572,7 +590,6 @@ async def confirm_password_reset(
 
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than token-based reset
-    return BaseResponse(
-        success=True,
-        message="Password reset must be performed by system administrator through user management interface.",
+    return success_response(
+        message="Password reset must be performed by system administrator through user management interface."
     )
