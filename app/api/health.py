@@ -52,7 +52,7 @@ Container Orchestration:
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -72,6 +72,7 @@ from shared.schemas.health_responses import (
     CacheHealthData,
     CacheStats,
     DatabaseHealthData,
+    DetailedHealthCheckData,
 )
 
 # Define additional health data models not in the schema files
@@ -100,6 +101,7 @@ class FastMCPHealthData(BaseModel):
     initialized: Optional[bool] = Field(default=None, description="Whether service is properly initialized")
     server_status: Optional[Dict[str, Any]] = Field(default=None, description="Individual server status information")
     tools_count: Optional[int] = Field(default=None, description="Number of available tools")
+
 from ..core.response import success_response
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -216,10 +218,10 @@ async def detailed_health_check(
             "status": "healthy",
             "debug_mode": settings.debug,
         },
-        "database": db_health.model_dump(),
-        "cache": cache_health.model_dump(),
-        "openai": openai_health.model_dump(),
-        "fastmcp": fastmcp_health.model_dump(),
+        "database": db_health,
+        "cache": cache_health,
+        "openai": openai_health,
+        "fastmcp": fastmcp_health,
         "overall_status": "healthy",
     }
 
@@ -316,8 +318,8 @@ async def services_health_check(
     fastmcp_health = await _check_fastmcp_health(mcp_service)
     
     services_data = {
-        "openai": openai_health.model_dump(),
-        "fastmcp": fastmcp_health.model_dump(),
+        "openai": openai_health,
+        "fastmcp": fastmcp_health,
     }
     
     # Determine overall message

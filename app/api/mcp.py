@@ -661,7 +661,7 @@ async def get_mcp_stats(
     return APIResponse(
         success=True,
         message="MCP statistics retrieved successfully",
-        data=[s.model_dump() for s in stats],
+        data=stats,
     )
 
 
