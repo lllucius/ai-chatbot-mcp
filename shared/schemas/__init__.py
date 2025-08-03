@@ -18,6 +18,11 @@ from .mcp import *
 from .prompt import *
 from .search import *
 from .task_responses import *
+from .document_responses import *
+from .conversation_responses import *
+from .health_responses import *
+from .prompt_responses import *
+from .search_responses import *
 from .tool_calling import *
 from .user import *
 
@@ -152,6 +157,50 @@ __all__ = [
     "ProfileValidationData",
     "ProfileValidationResponse",
     "DefaultProfileResponse",
+    
+    # Document response schemas
+    "DocumentUserInfo",
+    "DocumentSearchResult",
+    "DocumentSearchCriteria",
+    "AdvancedSearchData",
+    "DocumentStorageStats",
+    "DocumentFileTypeStats",
+    "DocumentTopUser",
+    "DocumentStatisticsData",
+    
+    # Conversation response schemas
+    "ConversationMetadata",
+    "ExportedMessage",
+    "ExportInfo",
+    "ConversationExportDataJSON",
+    "ConversationExportDataText",
+    "ConversationExportDataCSV",
+    "ConversationExportData",
+    
+    # Health response schemas
+    "CacheStats",
+    "CacheHealthData",
+    "DatabaseTableInfo",
+    "DatabaseHealthData",
+    "ServiceStatus",
+    "ServicesHealthData",
+    "SystemResourceMetrics",
+    "SystemMetricsData",
+    "DetailedHealthCheckData",
+    "PerformanceMetricsData",
+    "LivenessProbeData",
+    "ReadinessProbeData",
+    
+    # Prompt response schemas
+    "PromptCategoryInfo",
+    "PromptStatisticsData",
+    "PromptCategoriesData",
+    
+    # Search response schemas
+    "SearchSuggestion",
+    "SearchSuggestionData",
+    "SearchHistoryEntry",
+    "SearchHistoryData",
     
     # Tool calling schemas
     "ToolHandlingMode",

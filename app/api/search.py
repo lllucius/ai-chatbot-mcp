@@ -41,13 +41,18 @@ import time
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.schemas.common import APIResponse, BaseResponse
+from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
+from shared.schemas.search import SearchHistoryResponse, SearchSuggestionResponse
+from shared.schemas.search_responses import (
+    SearchHistoryData,
+    SearchSuggestionData,
+)
+
+from ..core.response import error_response, success_response
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from shared.schemas.common import APIResponse, BaseResponse
-from ..core.response import success_response, error_response
-from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
-from shared.schemas.search import SearchHistoryResponse, SearchSuggestionResponse
 from ..services.search import SearchService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -224,7 +229,7 @@ async def find_similar_chunks(
     )
 
 
-@router.get("/suggestions", response_model=SearchSuggestionResponse)
+@router.get("/suggestions", response_model=APIResponse[SearchSuggestionData])
 @handle_api_errors("Failed to generate suggestions")
 async def get_search_suggestions(
     query: str = Query(..., min_length=1),
@@ -292,15 +297,19 @@ async def get_search_suggestions(
         f"{query} best practices",
     ]
 
-    return {
-        "success": True,
-        "message": "Search suggestions generated",
-        "query": query,
-        "suggestions": suggestions[:limit],
-    }
+    response_payload = SearchSuggestionData(
+        query=query,
+        suggestions=suggestions[:limit],
+    )
+
+    return APIResponse[SearchSuggestionData](
+        success=True,
+        message="Search suggestions generated successfully",
+        data=response_payload,
+    )
 
 
-@router.get("/history", response_model=SearchHistoryResponse)
+@router.get("/history", response_model=APIResponse[SearchHistoryData])
 @handle_api_errors("Failed to retrieve search history")
 async def get_search_history(
     limit: int = Query(10, ge=1, le=50), current_user: User = Depends(get_current_user)
@@ -371,12 +380,16 @@ async def get_search_history(
         },
     ]
 
-    return {
-        "success": True,
-        "message": "Search history retrieved",
-        "history": mock_history[:limit],
-        "total": len(mock_history),
-    }
+    response_payload = SearchHistoryData(
+        history=mock_history[:limit],
+        total=len(mock_history),
+    )
+
+    return APIResponse[SearchHistoryData](
+        success=True,
+        message="Search history retrieved successfully",
+        data=response_payload,
+    )
 
 
 @router.delete("/history", response_model=APIResponse)

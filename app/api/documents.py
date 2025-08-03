@@ -46,11 +46,6 @@ from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user, get_document_service
-from ..models.document import Document, FileStatus
-from ..models.user import User
 from shared.schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
 from shared.schemas.common import APIResponse, BaseResponse, PaginatedResponse
 from shared.schemas.document import (
@@ -62,7 +57,25 @@ from shared.schemas.document import (
     ProcessingStatusResponse,
     QueueStatusResponse,
 )
-from ..core.response import success_response, error_response, paginated_response
+from shared.schemas.document_responses import (
+    AdvancedSearchData,
+    DocumentFileTypeStats,
+    DocumentProcessingStats,
+    DocumentRecentActivity,
+    DocumentSearchCriteria,
+    DocumentSearchResult,
+    DocumentStatisticsData,
+    DocumentStorageStats,
+    DocumentTopUser,
+    DocumentUserInfo,
+)
+
+from ..config import settings
+from ..core.response import error_response, paginated_response, success_response
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user, get_document_service
+from ..models.document import Document, FileStatus
+from ..models.user import User
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -677,7 +690,7 @@ async def cleanup_documents(
         )
 
 
-@router.get("/documents/stats", response_model=DocumentStatsResponse)
+@router.get("/documents/stats", response_model=APIResponse[DocumentStatisticsData])
 @handle_api_errors("Failed to get document statistics")
 async def get_document_statistics(
     current_user: User = Depends(get_current_user),
@@ -727,11 +740,11 @@ async def get_document_statistics(
         file_type_stats = []
         for row in file_types.fetchall():
             file_type_stats.append(
-                {
-                    "extension": row.extension,
-                    "count": row.count,
-                    "total_size_bytes": row.total_size or 0,
-                }
+                DocumentFileTypeStats(
+                    extension=row.extension or "unknown",
+                    count=row.count,
+                    total_size=row.total_size or 0,
+                )
             )
 
         # Processing performance
@@ -790,11 +803,11 @@ async def get_document_statistics(
         top_users = []
         for row in top_uploaders.fetchall():
             top_users.append(
-                {
-                    "username": row.username,
-                    "document_count": row.document_count,
-                    "total_size_bytes": row.total_size or 0,
-                }
+                DocumentTopUser(
+                    username=row.username,
+                    document_count=row.document_count,
+                    total_size_bytes=row.total_size or 0,
+                )
             )
 
         # Calculate success rate
@@ -805,32 +818,42 @@ async def get_document_statistics(
             status_counts.get("completed", 0) / max(total_processed, 1)
         ) * 100
 
-        return {
-            "success": True,
-            "data": {
-                "counts_by_status": status_counts,
-                "total_documents": sum(status_counts.values()),
-                "storage": {
-                    "total_size_bytes": total_size,
-                    "total_size_mb": round(total_size / 1024 / 1024, 2),
-                    "avg_file_size_bytes": round(
-                        total_size / max(sum(status_counts.values()), 1), 2
-                    ),
-                },
-                "file_types": file_type_stats,
-                "processing": {
-                    "success_rate": round(success_rate, 2),
-                    "avg_processing_time_seconds": round(avg_processing_time, 2),
-                    "total_processed": total_processed,
-                },
-                "recent_activity": {
-                    "uploads_last_7_days": recent_uploads,
-                    "processed_last_7_days": recent_processed,
-                },
-                "top_uploaders": top_users,
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        }
+        # Create structured data models
+        storage_stats = DocumentStorageStats(
+            total_size_bytes=total_size,
+            total_size_mb=round(total_size / 1024 / 1024, 2),
+            avg_file_size_bytes=round(
+                total_size / max(sum(status_counts.values()), 1), 2
+            ),
+        )
+
+        processing_stats = DocumentProcessingStats(
+            success_rate=round(success_rate, 2),
+            avg_processing_time_seconds=round(avg_processing_time, 2),
+            total_processed=total_processed,
+        )
+
+        recent_activity = DocumentRecentActivity(
+            uploads_last_7_days=recent_uploads,
+            processed_last_7_days=recent_processed,
+        )
+
+        response_payload = DocumentStatisticsData(
+            counts_by_status=status_counts,
+            total_documents=sum(status_counts.values()),
+            storage=storage_stats,
+            file_types=file_type_stats,
+            processing=processing_stats,
+            recent_activity=recent_activity,
+            top_uploaders=top_users,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+
+        return APIResponse[DocumentStatisticsData](
+            success=True,
+            message="Document statistics retrieved successfully",
+            data=response_payload,
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -934,7 +957,7 @@ async def bulk_reprocess_documents(
         )
 
 
-@router.get("/documents/search/advanced", response_model=AdvancedSearchResponse)
+@router.get("/documents/search/advanced", response_model=APIResponse[AdvancedSearchData])
 @handle_api_errors("Failed to perform advanced document search")
 async def advanced_document_search(
     query: str = Query(..., description="Search query"),
@@ -1064,44 +1087,51 @@ async def advanced_document_search(
             user_result = await db.execute(select(User).where(User.id == doc.user_id))
             user = user_result.scalar_one_or_none()
 
-            results.append(
-                {
-                    "id": str(doc.id),
-                    "title": doc.title,
-                    "file_name": doc.file_name,
-                    "file_size": doc.file_size,
-                    "status": doc.status.value,
-                    "created_at": doc.created_at.isoformat(),
-                    "updated_at": (
-                        doc.updated_at.isoformat() if doc.updated_at else None
-                    ),
-                    "user": {
-                        "username": user.username if user else "Unknown",
-                        "email": user.email if user else "Unknown",
-                    },
-                    "error_message": doc.error_message,
-                }
+            user_info = DocumentUserInfo(
+                username=user.username if user else "Unknown",
+                email=user.email if user else "Unknown",
             )
 
-        return {
-            "success": True,
-            "data": {
-                "results": results,
-                "total_found": len(results),
-                "search_criteria": {
-                    "query": query,
-                    "file_types": file_types,
-                    "status_filter": status_filter,
-                    "user_filter": user_filter,
-                    "date_from": date_from,
-                    "date_to": date_to,
-                    "min_size": min_size,
-                    "max_size": max_size,
-                    "limit": limit,
-                },
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        }
+            results.append(
+                DocumentSearchResult(
+                    id=str(doc.id),
+                    title=doc.title,
+                    file_name=doc.file_name,
+                    file_size=doc.file_size,
+                    status=doc.status.value,
+                    created_at=doc.created_at.isoformat(),
+                    updated_at=(
+                        doc.updated_at.isoformat() if doc.updated_at else None
+                    ),
+                    user=user_info,
+                    error_message=doc.error_message,
+                )
+            )
+
+        search_criteria = DocumentSearchCriteria(
+            query=query,
+            file_types=file_types,
+            status_filter=status_filter,
+            user_filter=user_filter,
+            date_from=date_from,
+            date_to=date_to,
+            min_size=min_size,
+            max_size=max_size,
+            limit=limit,
+        )
+
+        response_payload = AdvancedSearchData(
+            results=results,
+            total_found=len(results),
+            search_criteria=search_criteria,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+
+        return APIResponse[AdvancedSearchData](
+            success=True,
+            message="Advanced document search completed successfully",
+            data=response_payload,
+        )
 
     except HTTPException:
         raise

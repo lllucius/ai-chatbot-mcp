@@ -40,13 +40,18 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
 from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
 from shared.schemas.common import APIResponse, BaseResponse
 from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse
-from ..core.response import success_response, error_response, paginated_response
+from shared.schemas.prompt_responses import (
+    PromptCategoriesData,
+    PromptStatisticsData,
+)
+
+from ..core.response import error_response, paginated_response, success_response
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -315,7 +320,7 @@ async def delete_prompt(
     )
 
 
-@router.get("/categories/", response_model=PromptCategoriesResponse)
+@router.get("/categories/", response_model=APIResponse[PromptCategoriesData])
 @handle_api_errors("Failed to get categories")
 async def get_categories(
     current_user: User = Depends(get_current_user),
@@ -369,13 +374,16 @@ async def get_categories(
     categories = await prompt_service.get_categories()
     tags = await prompt_service.get_all_tags()
 
-    return {
-        "success": True,
-        "data": {
-            "categories": categories,
-            "tags": tags,
-        },
-    }
+    response_payload = PromptCategoriesData(
+        categories=categories,
+        tags=tags,
+    )
+
+    return APIResponse[PromptCategoriesData](
+        success=True,
+        message="Prompt categories and tags retrieved successfully",
+        data=response_payload,
+    )
 
 
 @router.post("/byname/{prompt_name}/set-default", response_model=APIResponse)
@@ -437,7 +445,7 @@ async def set_default_prompt(
         )
 
 
-@router.get("/stats", response_model=PromptStatsResponse)
+@router.get("/stats", response_model=APIResponse[PromptStatisticsData])
 @handle_api_errors("Failed to get prompt statistics")
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),
@@ -491,7 +499,12 @@ async def get_prompt_stats(
 
     stats = await prompt_service.get_prompt_stats()
 
-    return {
-        "success": True,
-        "data": stats,
-    }
+    response_payload = PromptStatisticsData(
+        data=stats,
+    )
+
+    return APIResponse[PromptStatisticsData](
+        success=True,
+        message="Prompt statistics retrieved successfully",
+        data=response_payload,
+    )
