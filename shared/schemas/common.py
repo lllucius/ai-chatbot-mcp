@@ -73,13 +73,15 @@ Security and Compliance:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
+
 
 def utcnow() -> datetime:
     """Get current UTC datetime with timezone awareness."""
     return datetime.now(timezone.utc)
+
 
 # Generic type variable for paginated responses
 T = TypeVar("T")
@@ -162,7 +164,7 @@ class ErrorDetails(BaseModel):
     details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
 
 
-class APIResponse(BaseResponse):
+class APIResponse(BaseResponse, Generic[T]):
     """
     Unified API response schema conforming to the standard envelope specification.
     
@@ -183,7 +185,7 @@ class APIResponse(BaseResponse):
     }
     """
     
-    data: Optional[Any] = Field(default=None, description="Response data payload - single object, array, or null")
+    data: Optional[T] = Field(default=None, description="Response data payload - single object, array, or null")
     meta: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata (pagination, stats, etc)")
     error: Optional[ErrorDetails] = Field(default=None, description="Optional error details with code and details")
 
