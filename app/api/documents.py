@@ -547,7 +547,7 @@ async def get_queue_status(
     )
 
 
-@router.post("/documents/cleanup", response_model=BaseResponse)
+@router.post("/documents/cleanup", response_model=APIResponse)
 @handle_api_errors("Failed to cleanup documents")
 async def cleanup_documents(
     status_filter: Optional[str] = Query(
@@ -599,9 +599,10 @@ async def cleanup_documents(
             }
 
             if status_filter not in status_map:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid status filter. Use one of: {list(status_map.keys())}",
+                return error_response(
+                    error_code="INVALID_STATUS_FILTER",
+                    message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
+                    status_code=status.HTTP_400_BAD_REQUEST
                 )
 
             query = query.where(Document.status == status_map[status_filter])
@@ -624,19 +625,19 @@ async def cleanup_documents(
                     }
                 )
 
-            return {
-                "success": True,
-                "message": f"Dry run: {len(documents)} documents would be deleted",
-                "total_count": len(documents),
-                "preview": preview,
-                "total_size_bytes": sum(doc.file_size or 0 for doc in documents),
-                "criteria": {
-                    "status_filter": status_filter,
-                    "older_than_days": older_than_days,
-                    "cutoff_date": cutoff_date.isoformat(),
+            return success_response(
+                data={
+                    "total_count": len(documents),
+                    "preview": preview,
+                    "total_size_bytes": sum(doc.file_size or 0 for doc in documents),
+                    "criteria": {
+                        "status_filter": status_filter,
+                        "older_than_days": older_than_days,
+                        "cutoff_date": cutoff_date.isoformat(),
+                    },
                 },
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+                message=f"Dry run: {len(documents)} documents would be deleted"
+            )
         else:
             # Actually delete documents
             deleted_count = 0
@@ -652,26 +653,27 @@ async def cleanup_documents(
                 except Exception as e:
                     errors.append(f"Failed to delete document {doc.id}: {str(e)}")
 
-            return {
-                "success": True,
-                "message": f"Cleanup completed: {deleted_count} documents deleted",
-                "deleted_count": deleted_count,
-                "deleted_size_bytes": deleted_size,
-                "errors": errors[:5],  # Limit error reporting
-                "criteria": {
-                    "status_filter": status_filter,
-                    "older_than_days": older_than_days,
-                    "cutoff_date": cutoff_date.isoformat(),
+            return success_response(
+                data={
+                    "deleted_count": deleted_count,
+                    "deleted_size_bytes": deleted_size,
+                    "errors": errors[:5],  # Limit error reporting
+                    "criteria": {
+                        "status_filter": status_filter,
+                        "older_than_days": older_than_days,
+                        "cutoff_date": cutoff_date.isoformat(),
+                    },
                 },
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+                message=f"Cleanup completed: {deleted_count} documents deleted"
+            )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document cleanup failed: {str(e)}",
+        return error_response(
+            error_code="DOCUMENT_CLEANUP_FAILED",
+            message=f"Document cleanup failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
@@ -836,7 +838,7 @@ async def get_document_statistics(
         )
 
 
-@router.post("/documents/bulk-reprocess", response_model=BaseResponse)
+@router.post("/documents/bulk-reprocess", response_model=APIResponse)
 @handle_api_errors("Failed to bulk reprocess documents")
 async def bulk_reprocess_documents(
     status_filter: str = Query(
@@ -873,9 +875,10 @@ async def bulk_reprocess_documents(
         status_map = {"failed": FileStatus.FAILED, "completed": FileStatus.COMPLETED}
 
         if status_filter not in status_map:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status filter. Use one of: {list(status_map.keys())}",
+            return error_response(
+                error_code="INVALID_STATUS_FILTER",
+                message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         # Get documents to reprocess
@@ -889,12 +892,14 @@ async def bulk_reprocess_documents(
         documents = result.scalars().all()
 
         if not documents:
-            return {
-                "success": True,
-                "message": f"No documents found with status '{status_filter}' to reprocess",
-                "reprocessed_count": 0,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+            return success_response(
+                data={
+                    "reprocessed_count": 0,
+                    "total_found": 0,
+                    "criteria": {"status_filter": status_filter, "limit": limit}
+                },
+                message=f"No documents found with status '{status_filter}' to reprocess"
+            )
 
         # Reprocess documents
         reprocessed_count = 0
@@ -909,22 +914,23 @@ async def bulk_reprocess_documents(
                     f"Failed to reprocess document {doc.id} ({doc.title}): {str(e)}"
                 )
 
-        return {
-            "success": True,
-            "message": f"Bulk reprocessing initiated for {reprocessed_count} documents",
-            "reprocessed_count": reprocessed_count,
-            "total_found": len(documents),
-            "errors": errors[:5],  # Limit error reporting
-            "criteria": {"status_filter": status_filter, "limit": limit},
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={
+                "reprocessed_count": reprocessed_count,
+                "total_found": len(documents),
+                "errors": errors[:5],  # Limit error reporting
+                "criteria": {"status_filter": status_filter, "limit": limit},
+            },
+            message=f"Bulk reprocessing initiated for {reprocessed_count} documents"
+        )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Bulk reprocessing failed: {str(e)}",
+        return error_response(
+            error_code="BULK_REPROCESS_FAILED",
+            message=f"Bulk reprocessing failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 

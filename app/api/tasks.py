@@ -61,7 +61,8 @@ from shared.schemas.admin import (
     TaskStatusResponse,
     WorkersResponse,
 )
-from shared.schemas.common import BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse
+from ..core.response import success_response, error_response
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["tasks"])
@@ -565,7 +566,7 @@ async def get_active_tasks(
         )
 
 
-@router.post("/schedule", response_model=BaseResponse)
+@router.post("/schedule", response_model=APIResponse)
 @handle_api_errors("Failed to schedule task")
 async def schedule_task(
     task_name: str = Query(..., description="Name of the task to schedule"),
@@ -644,9 +645,10 @@ async def schedule_task(
             task_args = json.loads(args)
             task_kwargs = json.loads(kwargs)
         except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid JSON in arguments: {str(e)}",
+            return error_response(
+                error_code="INVALID_JSON_ARGUMENTS",
+                message=f"Invalid JSON in arguments: {str(e)}",
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         celery_app = get_celery_app()
@@ -659,22 +661,23 @@ async def schedule_task(
 
         result = celery_app.send_task(task_name, **schedule_kwargs)
 
-        return {
-            "success": True,
-            "message": f"Task '{task_name}' scheduled successfully",
-            "task_id": result.id,
-            "queue": queue,
-            "countdown": countdown,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={
+                "task_id": result.id,
+                "queue": queue,
+                "countdown": countdown,
+            },
+            message=f"Task '{task_name}' scheduled successfully"
+        )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to schedule task: {str(e)}",
+        return error_response(
+            error_code="TASK_SCHEDULE_FAILED",
+            message=f"Failed to schedule task: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/retry-failed", response_model=BaseResponse)
+@router.post("/retry-failed", response_model=APIResponse)
 @handle_api_errors("Failed to retry failed tasks")
 async def retry_failed_tasks(
     task_name: Optional[str] = Query(
@@ -789,23 +792,24 @@ async def retry_failed_tasks(
 
         await db.commit()
 
-        return {
-            "success": True,
-            "message": f"Retry initiated for {retried_count} failed tasks",
-            "retried_count": retried_count,
-            "total_failed": len(failed_documents),
-            "errors": errors[:5],  # Limit error reporting
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={
+                "retried_count": retried_count,
+                "total_failed": len(failed_documents),
+                "errors": errors[:5],  # Limit error reporting
+            },
+            message=f"Retry initiated for {retried_count} failed tasks"
+        )
     except Exception as e:
         await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retry tasks: {str(e)}",
+        return error_response(
+            error_code="RETRY_TASKS_FAILED",
+            message=f"Failed to retry tasks: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/purge", response_model=BaseResponse)
+@router.post("/purge", response_model=APIResponse)
 @handle_api_errors("Failed to purge queue")
 async def purge_queue(
     queue_name: str = Query("default", description="Queue name to purge"),
@@ -873,17 +877,18 @@ async def purge_queue(
         # Purge the queue
         purged_count = celery_app.control.purge()
 
-        return {
-            "success": True,
-            "message": f"Queue '{queue_name}' purged successfully",
-            "purged_tasks": purged_count,
-            "queue": queue_name,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={
+                "purged_tasks": purged_count,
+                "queue": queue_name,
+            },
+            message=f"Queue '{queue_name}' purged successfully"
+        )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to purge queue: {str(e)}",
+        return error_response(
+            error_code="QUEUE_PURGE_FAILED",
+            message=f"Failed to purge queue: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 

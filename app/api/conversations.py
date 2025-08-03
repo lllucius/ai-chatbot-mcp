@@ -69,12 +69,14 @@ from ..dependencies import get_current_superuser, get_current_user
 from ..models.conversation import Conversation, Message
 from ..models.user import User
 from shared.schemas.common import (
+    APIResponse,
     BaseResponse,
     ConversationStatsResponse,
     PaginatedResponse,
     RegistryStatsResponse,
     SearchResponse,
 )
+from ..core.response import success_response, error_response
 from shared.schemas.conversation import (
     ChatRequest,
     ChatResponse,
@@ -430,7 +432,7 @@ async def update_conversation(
     return ConversationResponse.model_validate(conversation)
 
 
-@router.delete("/byid/{conversation_id}", response_model=BaseResponse)
+@router.delete("/byid/{conversation_id}", response_model=APIResponse)
 @handle_api_errors("Failed to delete conversation")
 async def delete_conversation(
     conversation_id: UUID,
@@ -505,10 +507,12 @@ async def delete_conversation(
     )
 
     if success:
-        return BaseResponse(success=True, message="Conversation deleted successfully")
+        return success_response(message="Conversation deleted successfully")
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
+        return error_response(
+            error_code="CONVERSATION_NOT_FOUND",
+            message="Conversation not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
@@ -1001,7 +1005,7 @@ async def export_conversation(
         )
 
 
-@router.post("/conversations/import", response_model=BaseResponse)
+@router.post("/conversations/import", response_model=APIResponse)
 @handle_api_errors("Failed to import conversation")
 async def import_conversation(
     file: UploadFile = File(...),
@@ -1103,28 +1107,29 @@ async def import_conversation(
 
         await conversation_service.db.commit()
 
-        return {
-            "success": True,
-            "message": f"Conversation imported successfully with {imported_count} messages",
-            "conversation_id": str(new_conversation.id),
-            "conversation_title": conv_title,
-            "imported_messages": imported_count,
-            "total_messages": len(messages_data),
-            "errors": errors[:5],  # Limit error reporting
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={
+                "conversation_id": str(new_conversation.id),
+                "conversation_title": conv_title,
+                "imported_messages": imported_count,
+                "total_messages": len(messages_data),
+                "errors": errors[:5],  # Limit error reporting
+            },
+            message=f"Conversation imported successfully with {imported_count} messages"
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         await conversation_service.db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Import failed: {str(e)}",
+        return error_response(
+            error_code="CONVERSATION_IMPORT_FAILED",
+            message=f"Import failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/conversations/archive", response_model=BaseResponse)
+@router.post("/conversations/archive", response_model=APIResponse)
 @handle_api_errors("Failed to archive conversations")
 async def archive_conversations(
     older_than_days: int = Query(
@@ -1195,18 +1200,18 @@ async def archive_conversations(
                     }
                 )
 
-            return {
-                "success": True,
-                "message": f"Dry run: {len(conversations)} conversations would be archived",
-                "total_count": len(conversations),
-                "preview": preview,
-                "criteria": {
-                    "older_than_days": older_than_days,
-                    "inactive_only": inactive_only,
-                    "cutoff_date": cutoff_date.isoformat(),
+            return success_response(
+                data={
+                    "total_count": len(conversations),
+                    "preview": preview,
+                    "criteria": {
+                        "older_than_days": older_than_days,
+                        "inactive_only": inactive_only,
+                        "cutoff_date": cutoff_date.isoformat(),
+                    },
                 },
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+                message=f"Dry run: {len(conversations)} conversations would be archived"
+            )
         else:
             # Actually archive conversations
             archived_count = 0
@@ -1217,23 +1222,24 @@ async def archive_conversations(
 
             await db.commit()
 
-            return {
-                "success": True,
-                "message": f"Archived {archived_count} conversations successfully",
-                "archived_count": archived_count,
-                "criteria": {
-                    "older_than_days": older_than_days,
-                    "inactive_only": inactive_only,
-                    "cutoff_date": cutoff_date.isoformat(),
+            return success_response(
+                data={
+                    "archived_count": archived_count,
+                    "criteria": {
+                        "older_than_days": older_than_days,
+                        "inactive_only": inactive_only,
+                        "cutoff_date": cutoff_date.isoformat(),
+                    },
                 },
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+                message=f"Archived {archived_count} conversations successfully"
+            )
 
     except Exception as e:
         await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Archive operation failed: {str(e)}",
+        return error_response(
+            error_code="ARCHIVE_OPERATION_FAILED",
+            message=f"Archive operation failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 

@@ -44,7 +44,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
-from shared.schemas.common import BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse
+from ..core.response import success_response, error_response
 from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
 from shared.schemas.search import SearchHistoryResponse, SearchSuggestionResponse
 from ..services.search import SearchService
@@ -378,7 +379,7 @@ async def get_search_history(
     }
 
 
-@router.delete("/history", response_model=BaseResponse)
+@router.delete("/history", response_model=APIResponse)
 @handle_api_errors("Failed to clear search history")
 async def clear_search_history(current_user: User = Depends(get_current_user)):
     """
@@ -427,4 +428,4 @@ async def clear_search_history(current_user: User = Depends(get_current_user)):
     # For admin dashboard, this would clear system-wide search analytics
     # In a full implementation, this would delete from search_history table
 
-    return BaseResponse(success=True, message="Search history cleared successfully")
+    return success_response(message="Search history cleared successfully")

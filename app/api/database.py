@@ -32,6 +32,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
 from shared.schemas.common import (
+    APIResponse,
     BaseResponse,
     DatabaseAnalysisResponse,
     DatabaseMigrationsResponse,
@@ -39,12 +40,13 @@ from shared.schemas.common import (
     DatabaseStatusResponse,
     DatabaseTablesResponse,
 )
+from ..core.response import success_response, error_response
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["database"])
 
 
-@router.post("/init", response_model=BaseResponse)
+@router.post("/init", response_model=APIResponse)
 @handle_api_errors("Failed to initialize database")
 async def initialize_database(
     current_user: User = Depends(get_current_superuser),
@@ -99,15 +101,14 @@ async def initialize_database(
             # Create all tables
             await conn.run_sync(base.BaseModelDB.metadata.create_all)
 
-        return {
-            "success": True,
-            "message": "Database initialized successfully",
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            message="Database initialized successfully"
+        )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database initialization failed: {str(e)}",
+        return error_response(
+            error_code="DATABASE_INIT_FAILED",
+            message=f"Database initialization failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
@@ -431,7 +432,7 @@ async def get_migration_status(
         )
 
 
-@router.post("/upgrade", response_model=BaseResponse)
+@router.post("/upgrade", response_model=APIResponse)
 @handle_api_errors("Failed to upgrade database")
 async def upgrade_database(
     revision: str = Query("head", description="Target revision (default: head)"),
@@ -495,25 +496,25 @@ async def upgrade_database(
         )
 
         if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Migration failed: {result.stderr}",
+            return error_response(
+                error_code="MIGRATION_FAILED",
+                message=f"Migration failed: {result.stderr}",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        return {
-            "success": True,
-            "message": f"Database upgraded to revision: {revision}",
-            "output": result.stdout,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={"output": result.stdout},
+            message=f"Database upgraded to revision: {revision}"
+        )
     except subprocess.SubprocessError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Migration execution failed: {str(e)}",
+        return error_response(
+            error_code="MIGRATION_EXECUTION_FAILED",
+            message=f"Migration execution failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/downgrade", response_model=BaseResponse)
+@router.post("/downgrade", response_model=APIResponse)
 @handle_api_errors("Failed to downgrade database")
 async def downgrade_database(
     revision: str = Query(..., description="Target revision to downgrade to"),
@@ -578,25 +579,25 @@ async def downgrade_database(
         )
 
         if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Downgrade failed: {result.stderr}",
+            return error_response(
+                error_code="DOWNGRADE_FAILED",
+                message=f"Downgrade failed: {result.stderr}",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        return {
-            "success": True,
-            "message": f"Database downgraded to revision: {revision}",
-            "output": result.stdout,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={"output": result.stdout},
+            message=f"Database downgraded to revision: {revision}"
+        )
     except subprocess.SubprocessError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Downgrade execution failed: {str(e)}",
+        return error_response(
+            error_code="DOWNGRADE_EXECUTION_FAILED",
+            message=f"Downgrade execution failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/backup", response_model=BaseResponse)
+@router.post("/backup", response_model=APIResponse)
 @handle_api_errors("Failed to create database backup")
 async def create_database_backup(
     output_file: Optional[str] = Query(
@@ -708,22 +709,23 @@ async def create_database_backup(
         # Get file size
         file_size = os.path.getsize(output_file) if os.path.exists(output_file) else 0
 
-        return {
-            "success": True,
-            "message": "Database backup created successfully",
-            "output_file": output_file,
-            "file_size": f"{file_size / 1024 / 1024:.2f} MB",
-            "schema_only": schema_only,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            data={
+                "output_file": output_file,
+                "file_size": f"{file_size / 1024 / 1024:.2f} MB",
+                "schema_only": schema_only,
+            },
+            message="Database backup created successfully"
+        )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Backup creation failed: {str(e)}",
+        return error_response(
+            error_code="BACKUP_CREATION_FAILED",
+            message=f"Backup creation failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/restore", response_model=BaseResponse)
+@router.post("/restore", response_model=APIResponse)
 @handle_api_errors("Failed to restore database")
 async def restore_database(
     backup_file: str = Query(..., description="Backup file path to restore from"),
@@ -827,19 +829,18 @@ async def restore_database(
                 detail=f"Restore failed: {result.stderr}",
             )
 
-        return {
-            "success": True,
-            "message": f"Database restored successfully from {backup_file}",
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            message=f"Database restored successfully from {backup_file}"
+        )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Restore operation failed: {str(e)}",
+        return error_response(
+            error_code="RESTORE_OPERATION_FAILED",
+            message=f"Restore operation failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-@router.post("/vacuum", response_model=BaseResponse)
+@router.post("/vacuum", response_model=APIResponse)
 @handle_api_errors("Failed to vacuum database")
 async def vacuum_database(
     analyze: bool = Query(True, description="Run ANALYZE after VACUUM"),
@@ -912,16 +913,15 @@ async def vacuum_database(
 
         await db.commit()
 
-        return {
-            "success": True,
-            "message": message,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return success_response(
+            message=message
+        )
     except Exception as e:
         await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"VACUUM operation failed: {str(e)}",
+        return error_response(
+            error_code="VACUUM_OPERATION_FAILED",
+            message=f"VACUUM operation failed: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 

@@ -44,7 +44,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
-from shared.schemas.common import BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse
+from ..core.response import success_response, error_response
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
@@ -321,7 +322,7 @@ async def update_server(
     }
 
 
-@router.delete("/servers/byname/{server_name}", response_model=BaseResponse)
+@router.delete("/servers/byname/{server_name}", response_model=APIResponse)
 @handle_api_errors("Failed to delete MCP server")
 async def delete_server(
     server_name: str,
@@ -380,13 +381,14 @@ async def delete_server(
     deleted = await mcp_service.delete_server(server_name)
 
     if deleted:
-        return BaseResponse(
-            success=True, message=f"MCP server '{server_name}' deleted successfully"
+        return success_response(
+            message=f"MCP server '{server_name}' deleted successfully"
         )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP server '{server_name}' not found",
+        return error_response(
+            error_code="MCP_SERVER_NOT_FOUND",
+            message=f"MCP server '{server_name}' not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
@@ -462,7 +464,7 @@ async def list_tools(
     )
 
 
-@router.patch("/tools/byname/{tool_name}/enable", response_model=BaseResponse)
+@router.patch("/tools/byname/{tool_name}/enable", response_model=APIResponse)
 @handle_api_errors("Failed to enable MCP tool")
 async def enable_tool(
     tool_name: str,
@@ -520,17 +522,18 @@ async def enable_tool(
     success = await mcp_service.enable_tool(tool_name)
 
     if success:
-        return BaseResponse(
-            success=True, message=f"MCP tool '{tool_name}' enabled successfully"
+        return success_response(
+            message=f"MCP tool '{tool_name}' enabled successfully"
         )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP tool '{tool_name}' not found",
+        return error_response(
+            error_code="MCP_TOOL_NOT_FOUND",
+            message=f"MCP tool '{tool_name}' not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
-@router.patch("/tools/byname/{tool_name}/disable", response_model=BaseResponse)
+@router.patch("/tools/byname/{tool_name}/disable", response_model=APIResponse)
 @handle_api_errors("Failed to disable MCP tool")
 async def disable_tool(
     tool_name: str,
@@ -588,13 +591,14 @@ async def disable_tool(
     success = await mcp_service.disable_tool(tool_name)
 
     if success:
-        return BaseResponse(
-            success=True, message=f"MCP tool '{tool_name}' disabled successfully"
+        return success_response(
+            message=f"MCP tool '{tool_name}' disabled successfully"
         )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP tool '{tool_name}' not found",
+        return error_response(
+            error_code="MCP_TOOL_NOT_FOUND",
+            message=f"MCP tool '{tool_name}' not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
@@ -691,7 +695,7 @@ async def get_tool_details(
     )
 
 
-@router.post("/tools/byname/{tool_name}/test", response_model=BaseResponse)
+@router.post("/tools/byname/{tool_name}/test", response_model=APIResponse)
 @handle_api_errors("Failed to test MCP tool")
 async def test_tool(
     tool_name: str,
@@ -712,14 +716,14 @@ async def test_tool(
     # Test the tool execution
     try:
         result = await mcp_service.test_tool_execution(tool_name, test_params or {})
-        return BaseResponse(
-            success=True,
-            message=f"Tool '{tool_name}' test completed successfully",
+        return success_response(
+            message=f"Tool '{tool_name}' test completed successfully"
         )
     except Exception as e:
-        return BaseResponse(
-            success=False,
+        return error_response(
+            error_code="MCP_TOOL_TEST_FAILED",
             message=f"Tool '{tool_name}' test failed: {str(e)}",
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
 
