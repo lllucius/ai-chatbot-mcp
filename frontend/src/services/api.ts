@@ -217,11 +217,35 @@ const apiClient = new ApiClient();
 
 /**
  * Utility function to safely extract data from API responses with enhanced error reporting
+ * Handles both wrapped (ApiResponse<T>) and direct response patterns
  * @param response - Axios response object
  * @param operation - Description of the operation for error reporting
- * @returns The data payload from response.data.data
+ * @returns The data payload from response.data.data or response.data if direct
  */
-function extractApiResponseData<T>(response: AxiosResponse<ApiResponse<T>>, operation: string): T {
+function extractApiResponseData<T>(response: AxiosResponse<ApiResponse<T> | T>, operation: string): T {
+  if (!response.data) {
+    console.error(`❌ ${operation} - API Response missing data:`, response);
+    throw new Error(`${operation} failed: API response is missing data field`);
+  }
+  
+  // Handle wrapped response pattern: { success: true, data: T }
+  if (typeof response.data === 'object' && 'data' in response.data && response.data.data !== undefined) {
+    return (response.data as ApiResponse<T>).data as T;
+  }
+  
+  // Handle direct response pattern: T (for backwards compatibility)
+  // This includes PaginatedResponse and other direct response types
+  return response.data as T;
+}
+
+/**
+ * Legacy utility function for strict wrapped response handling
+ * Use extractApiResponseData for new implementations
+ * @param response - Axios response object
+ * @param operation - Description of the operation for error reporting
+ * @returns The data payload from response.data.data (strict)
+ */
+function extractWrappedApiResponseData<T>(response: AxiosResponse<ApiResponse<T>>, operation: string): T {
   if (!response.data) {
     console.error(`❌ ${operation} - API Response missing data:`, response);
     throw new Error(`${operation} failed: API response is missing data field`);
@@ -257,7 +281,7 @@ export const authApi = {
    */
   async register(userData: UserRegistration): Promise<User> {
     const response = await apiClient.getClient().post<ApiResponse<User>>('/auth/register', userData);
-    return extractApiResponseData(response, 'User registration');
+    return extractWrappedApiResponseData(response, 'User registration');
   },
 
   /**
@@ -297,7 +321,7 @@ export const authApi = {
    */
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.getClient().get<ApiResponse<User>>('/auth/me');
-    return extractApiResponseData(response, 'Get current user');
+    return extractWrappedApiResponseData(response, 'Get current user');
   },
 
   /**
@@ -307,7 +331,7 @@ export const authApi = {
    */
   async updateProfile(updates: Partial<Pick<User, 'full_name' | 'email'>>): Promise<User> {
     const response = await apiClient.getClient().patch<ApiResponse<User>>('/auth/me', updates);
-    return extractApiResponseData(response, 'Update user profile');
+    return extractWrappedApiResponseData(response, 'Update user profile');
   },
 
   /**
@@ -339,11 +363,11 @@ export const conversationApi = {
    * @returns Promise with paginated conversations
    */
   async getConversations(page = 1, limit = 20): Promise<PaginatedResponse<Conversation>> {
-    const response = await apiClient.getClient().get<ApiResponse<PaginatedResponse<Conversation>>>(
+    const response = await apiClient.getClient().get<PaginatedResponse<Conversation>>(
       '/conversations/',
       { params: { page, limit } }
     );
-    return response.data.data!;
+    return extractApiResponseData(response, 'Get conversations');
   },
 
   /**
