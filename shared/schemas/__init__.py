@@ -7,6 +7,7 @@ and the client SDK to ensure consistency and eliminate duplication.
 
 # Import all schemas to make them available from this package
 from .admin import *
+from .admin_responses import *
 from .analytics import *
 from .auth import *
 from .base import *
@@ -42,6 +43,17 @@ __all__ = [
     "AdvancedSearchResponse",
     "DocumentStatsResponse",
     
+    # Admin response schemas
+    "DatabaseStatusResponse",
+    "DatabaseTablesResponse", 
+    "DatabaseMigrationsResponse",
+    "DatabaseAnalysisResponse",
+    "DatabaseQueryResponse",
+    "UserStatisticsResponse",
+    "SearchResponse",
+    "RegistryStatsResponse",
+    "ConversationStatsResponse",
+    
     # Analytics schemas
     "AnalyticsOverviewResponse",
     "AnalyticsUsageResponse",
@@ -63,11 +75,6 @@ __all__ = [
     # Common schemas
     "BaseResponse",
     "PaginationParams",
-    "ConversationStatsResponse",
-    "RegistryStatsResponse",
-    "DatabaseHealthResponse",
-    "ServicesHealthResponse",
-    "SystemMetricsResponse",
     
     # Conversation schemas
     "ConversationBase",
@@ -132,7 +139,6 @@ __all__ = [
     
     # Search schemas
     "SearchParams",
-    "SearchResponse",
     
     # Task response schemas 
     "TaskSystemStatusData",
@@ -190,6 +196,12 @@ __all__ = [
     "PerformanceMetricsData",
     "LivenessProbeData",
     "ReadinessProbeData",
+    "DatabaseHealthResponse",
+    "ServicesHealthResponse",
+    "SystemMetricsResponse", 
+    "ReadinessResponse",
+    "PerformanceMetricsResponse",
+    "LivenessResponse",
     
     # Prompt response schemas
     "PromptCategoryInfo",

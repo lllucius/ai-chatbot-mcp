@@ -64,7 +64,9 @@ from shared.schemas.common import (
     APIResponse,
     BaseResponse, 
     PaginatedResponse, 
-    UserStatisticsResponse
+)
+from shared.schemas.admin_responses import (
+    UserStatisticsResponse,
 )
 from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 from ..core.response import success_response, error_response, paginated_response

@@ -5,11 +5,12 @@ This module provides response models for all health-related endpoints that curre
 return raw dictionaries, ensuring type safety and proper API documentation.
 """
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from .base import BaseModelSchema
+from .base import BaseModelSchema, serialize_datetime_to_iso
 
 
 class CacheStats(BaseModel):
@@ -134,4 +135,120 @@ class ReadinessProbeData(BaseModel):
     message: str = Field(..., description="Readiness message")
     timestamp: str = Field(..., description="Probe timestamp")
     ready_components: List[str] = Field(default_factory=list, description="Ready components")
+
+
+# --- Additional Health Response Models moved from common.py ---
+
+
+class DatabaseHealthResponse(BaseModel):
+    """Database health check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    status: str = Field(..., description="Database health status")
+    message: str = Field(..., description="Health check message")
+    connectivity: str = Field(..., description="Database connectivity status")
+    schema_status: Optional[str] = Field(default=None, description="Schema validation status")
+    tables_found: Optional[int] = Field(default=None, description="Number of tables found")
+
+
+class ServicesHealthResponse(BaseModel):
+    """External services health check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    openai: Dict[str, Any] = Field(..., description="OpenAI service health status")
+    fastmcp: Dict[str, Any] = Field(..., description="FastMCP service health status")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="Health check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                data["timestamp"] = serialize_datetime_to_iso(data["timestamp"])
+        import json
+        return json.dumps(data)
+
+
+class SystemMetricsResponse(BaseModel):
+    """System metrics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    system: Dict[str, Any] = Field(..., description="System metrics")
+    application: Dict[str, Any] = Field(..., description="Application metrics")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="Metrics collection timestamp"
+    )
+    error: Optional[str] = Field(default=None, description="Error message if metrics unavailable")
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
+        import json
+        return json.dumps(data)
+
+
+class ReadinessResponse(BaseModel):
+    """Readiness check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    status: str = Field(..., description="Readiness status")
+    message: str = Field(..., description="Readiness message")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="Check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
+        import json
+        return json.dumps(data)
+
+
+class PerformanceMetricsResponse(BaseModel):
+    """Performance metrics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    data: Dict[str, Any] = Field(..., description="Performance metrics data")
+
+
+class LivenessResponse(BaseModel):
+    """Liveness check response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    status: str = Field(..., description="Liveness status")
+    message: str = Field(..., description="Liveness message")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="Check timestamp"
+    )
+
+    def model_dump_json(self, **kwargs):
+        data = self.model_dump(**kwargs)
+        if "timestamp" in data and data["timestamp"] is not None:
+            if isinstance(data["timestamp"], datetime):
+                # Use proper ISO format - if it's UTC, replace +00:00 with Z for consistency
+                iso_string = data["timestamp"].isoformat()
+                if iso_string.endswith("+00:00"):
+                    iso_string = iso_string[:-6] + "Z"
+                data["timestamp"] = iso_string
+        import json
+        return json.dumps(data)
     not_ready_components: List[str] = Field(default_factory=list, description="Not ready components")

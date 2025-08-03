@@ -34,6 +34,8 @@ from ..models.user import User
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
+)
+from shared.schemas.admin_responses import (
     DatabaseAnalysisResponse,
     DatabaseMigrationsResponse,
     DatabaseQueryResponse,

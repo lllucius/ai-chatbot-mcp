@@ -67,8 +67,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
-    ConversationStatsResponse,
     PaginatedResponse,
+)
+from shared.schemas.admin_responses import (
+    ConversationStatsResponse,
     RegistryStatsResponse,
     SearchResponse,
 )

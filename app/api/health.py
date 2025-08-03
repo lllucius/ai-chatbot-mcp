@@ -65,8 +65,10 @@ from ..middleware.performance import get_performance_stats
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
-    DatabaseHealthResponse,
     DetailedHealthCheckResponse,
+)
+from shared.schemas.health_responses import (
+    DatabaseHealthResponse,
     LivenessResponse,
     PerformanceMetricsResponse,
     ReadinessResponse,
