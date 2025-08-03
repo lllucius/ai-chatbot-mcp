@@ -60,8 +60,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from shared.schemas.common import BaseResponse, PaginatedResponse, UserStatisticsResponse
+from shared.schemas.common import (
+    APIResponse,
+    BaseResponse, 
+    PaginatedResponse, 
+    UserStatisticsResponse
+)
 from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
+from ..core.response import success_response, error_response, paginated_response
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -87,7 +93,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve user profile")
 async def get_my_profile(
     current_user=Depends(get_current_user),
@@ -105,30 +111,41 @@ async def get_my_profile(
         user_service: Injected user service instance
 
     Returns:
-        UserResponse: Complete user profile including:
-            - Basic profile (username, email, full_name, status)
-            - Account metadata (created_at, updated_at, last_login)
-            - Activity statistics (document_count, conversation_count, total_messages)
+        APIResponse: Complete user profile using unified envelope:
+            - success: Profile retrieval success indicator
+            - message: Profile retrieval status message
+            - timestamp: Profile retrieval timestamp
+            - data: User profile data with statistics
 
     Example Response:
         {
-            "id": "uuid-here",
-            "username": "johndoe",
-            "email": "john@example.com",
-            "full_name": "John Doe",
-            "is_active": true,
-            "document_count": 15,
-            "conversation_count": 8,
-            "total_messages": 142
+            "success": true,
+            "message": "User profile retrieved successfully",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "data": {
+                "id": "uuid-here",
+                "username": "johndoe",
+                "email": "john@example.com",
+                "full_name": "John Doe",
+                "is_active": true,
+                "document_count": 15,
+                "conversation_count": 8,
+                "total_messages": 142
+            }
         }
     """
     log_api_call("get_my_profile", user_id=str(current_user.id))
 
     profile = await user_service.get_user_profile(current_user.id)
-    return profile
+    # Convert to dict if it's a Pydantic model
+    profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
+    return success_response(
+        data=profile_data,
+        message="User profile retrieved successfully"
+    )
 
 
-@router.put("/me", response_model=UserResponse)
+@router.put("/me", response_model=APIResponse)
 @handle_api_errors("Profile update failed")
 async def update_my_profile(
     request: UserUpdate,
@@ -188,10 +205,15 @@ async def update_my_profile(
     log_api_call("update_my_profile", user_id=str(current_user.id))
 
     updated_user = await user_service.update_user(current_user.id, request)
-    return UserResponse.model_validate(updated_user)
+    # Convert to dict if it's a Pydantic model
+    user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
+    return success_response(
+        data=user_data,
+        message="User profile updated successfully"
+    )
 
 
-@router.post("/me/change-password", response_model=BaseResponse)
+@router.post("/me/change-password", response_model=APIResponse)
 @handle_api_errors("Password change failed")
 async def change_password(
     request: UserPasswordUpdate,
@@ -212,7 +234,7 @@ async def change_password(
         user_service: Injected user service instance for password operations
 
     Returns:
-        BaseResponse: Password change confirmation with operation status
+        APIResponse: Password change confirmation using unified envelope
 
     Raises:
         HTTP 400: If password validation fails or passwords don't meet requirements
@@ -261,18 +283,21 @@ async def change_password(
     )
 
     if success:
-        return BaseResponse(success=True, message="Password changed successfully")
+        return success_response(
+            message="Password changed successfully"
+        )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect",
+        return error_response(
+            error_code="INVALID_PASSWORD",
+            message="Current password is incorrect",
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
 
 # Admin endpoints (require superuser privileges)
 
 
-@router.get("/", response_model=PaginatedResponse[UserResponse])
+@router.get("/", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve users")
 async def list_users(
     page: int = Query(1, ge=1),
@@ -342,9 +367,10 @@ async def list_users(
     )
 
     user_responses = [UserResponse.model_validate(user) for user in users]
+    user_data = [user_resp.model_dump() for user_resp in user_responses]
 
-    return PaginatedResponse.create(
-        items=user_responses,
+    return paginated_response(
+        items=user_data,
         total=total,
         page=page,
         size=size,
@@ -352,7 +378,7 @@ async def list_users(
     )
 
 
-@router.get("/byid/{user_id}", response_model=UserResponse)
+@router.get("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve user")
 async def get_user(
     user_id: UUID,
@@ -370,10 +396,14 @@ async def get_user(
     )
 
     profile = await user_service.get_user_profile(user_id)
-    return profile
+    profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
+    return success_response(
+        data=profile_data,
+        message="User profile retrieved successfully"
+    )
 
 
-@router.put("/byid/{user_id}", response_model=UserResponse)
+@router.put("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("User update failed")
 async def update_user(
     user_id: UUID,
@@ -392,10 +422,14 @@ async def update_user(
     )
 
     updated_user = await user_service.update_user(user_id, request)
-    return UserResponse.model_validate(updated_user)
+    user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
+    return success_response(
+        data=user_data,
+        message="User updated successfully"
+    )
 
 
-@router.delete("/byid/{user_id}", response_model=BaseResponse)
+@router.delete("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("User deletion failed")
 async def delete_user(
     user_id: UUID,
@@ -414,18 +448,23 @@ async def delete_user(
 
     # Prevent self-deletion
     if user_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete your own account",
+        return error_response(
+            error_code="SELF_DELETION_FORBIDDEN",
+            message="Cannot delete your own account",
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
     success = await user_service.delete_user(user_id)
 
     if success:
-        return BaseResponse(success=True, message="User deleted successfully")
+        return success_response(
+            message="User deleted successfully"
+        )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        return error_response(
+            error_code="USER_NOT_FOUND",
+            message="User not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
