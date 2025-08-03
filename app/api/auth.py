@@ -63,7 +63,7 @@ from shared.schemas.auth import (
     RegisterRequest,
     Token,
 )
-from shared.schemas.common import BaseResponse
+from shared.schemas.common import BaseResponse, APIResponse
 from shared.schemas.user import UserResponse
 from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
@@ -71,7 +71,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["authentication"])
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=APIResponse)
 @handle_api_errors("User registration failed")
 async def register(
     request: RegisterRequest, auth_service: AuthService = Depends(get_auth_service)
@@ -135,7 +135,12 @@ async def register(
     log_api_call("register", username=request.username, email=request.email)
 
     user = await auth_service.register_user(request)
-    return UserResponse.model_validate(user)
+    user_response = UserResponse.model_validate(user)
+    return APIResponse(
+        success=True,
+        message="User registered successfully",
+        data=user_response.model_dump()
+    )
 
 
 @router.post("/login", response_model=Token)
@@ -213,7 +218,7 @@ async def login(
     return token_data
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=APIResponse)
 @handle_api_errors("Failed to get current user information")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
@@ -227,15 +232,16 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         current_user: Automatically injected current user from validated JWT token
 
     Returns:
-        UserResponse: Complete current user profile information including:
-            - id: Unique user identifier
-            - username: User's unique username
-            - email: User's email address
-            - full_name: User's display name
-            - is_active: Account activation status
-            - is_superuser: Administrative privileges indicator
-            - created_at: Account creation timestamp
-            - updated_at: Last profile update timestamp
+        APIResponse: Response containing user profile information in data field:
+            - data: UserResponse with complete user profile including:
+                - id: Unique user identifier
+                - username: User's unique username
+                - email: User's email address
+                - full_name: User's display name
+                - is_active: Account activation status
+                - is_superuser: Administrative privileges indicator
+                - created_at: Account creation timestamp
+                - updated_at: Last profile update timestamp
 
     Security Features:
         - Requires valid JWT token in Authorization header for access
@@ -263,18 +269,27 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         Authorization: Bearer <jwt_token>
 
         Response: {
-            "id": "123e4567-e89b-12d3-a456-426614174000",
-            "username": "johndoe",
-            "email": "john@example.com",
-            "full_name": "John Doe",
-            "is_active": true,
-            "is_superuser": false,
-            "created_at": "2024-01-01T00:00:00Z",
-            "updated_at": "2024-01-01T00:00:00Z"
+            "success": true,
+            "message": "User information retrieved successfully",
+            "timestamp": "2024-01-01T12:00:00Z",
+            "data": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "username": "johndoe",
+                "email": "john@example.com",
+                "full_name": "John Doe",
+                "is_active": true,
+                "is_superuser": false,
+                "created_at": "2024-01-01T00:00:00Z"
+            }
         }
     """
     log_api_call("get_current_user_info", user_id=str(current_user.id))
-    return UserResponse.model_validate(current_user)
+    user_response = UserResponse.model_validate(current_user)
+    return APIResponse(
+        success=True,
+        message="User information retrieved successfully",
+        data=user_response.model_dump()
+    )
 
 
 @router.post("/logout", response_model=BaseResponse)
