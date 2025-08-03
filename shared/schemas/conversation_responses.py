@@ -69,6 +69,6 @@ class ConversationExportDataCSV(BaseModel):
 class ConversationExportData(BaseModel):
     """Generic export data that can be any format."""
     
-    # This will be determined by the format parameter
-    data: Any = Field(..., description="Export data in the requested format")
+    # Union type for different export data formats
+    data: Any = Field(..., description="Export data in the requested format")  # Will be JSON, text content, or CSV content
     export_info: ExportInfo = Field(..., description="Export operation information")

@@ -46,11 +46,6 @@ from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user, get_document_service
-from ..models.document import Document, FileStatus
-from ..models.user import User
 from shared.schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
 from shared.schemas.common import APIResponse, BaseResponse, PaginatedResponse
 from shared.schemas.document import (
@@ -63,18 +58,24 @@ from shared.schemas.document import (
     QueueStatusResponse,
 )
 from shared.schemas.document_responses import (
-    DocumentStatisticsData,
-    DocumentStorageStats,
+    AdvancedSearchData,
     DocumentFileTypeStats,
     DocumentProcessingStats,
     DocumentRecentActivity,
-    DocumentTopUser,
-    AdvancedSearchData,
-    DocumentSearchResult,
     DocumentSearchCriteria,
+    DocumentSearchResult,
+    DocumentStatisticsData,
+    DocumentStorageStats,
+    DocumentTopUser,
     DocumentUserInfo,
 )
-from ..core.response import success_response, error_response, paginated_response
+
+from ..config import settings
+from ..core.response import error_response, paginated_response, success_response
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user, get_document_service
+from ..models.document import Document, FileStatus
+from ..models.user import User
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call

@@ -64,10 +64,6 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import AsyncSessionLocal, get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.conversation import Conversation, Message
-from ..models.user import User
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
@@ -76,7 +72,6 @@ from shared.schemas.common import (
     RegistryStatsResponse,
     SearchResponse,
 )
-from ..core.response import success_response, error_response
 from shared.schemas.conversation import (
     ChatRequest,
     ChatResponse,
@@ -93,6 +88,19 @@ from shared.schemas.conversation import (
     StreamStartResponse,
     StreamToolCallResponse,
 )
+from shared.schemas.conversation_responses import (
+    ConversationExportData,
+    ConversationExportDataJSON,
+    ConversationMetadata,
+    ExportedMessage,
+    ExportInfo,
+)
+
+from ..core.response import error_response, success_response
+from ..database import AsyncSessionLocal, get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.conversation import Conversation, Message
+from ..models.user import User
 from ..services.conversation import ConversationService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -823,7 +831,7 @@ async def get_registry_stats(
 
 @router.get(
     "/conversations/byid/{conversation_id}/export",
-    response_model=ConversationExportResponse,
+    response_model=APIResponse[ConversationExportData],
 )
 @handle_api_errors("Failed to export conversation")
 async def export_conversation(
@@ -879,48 +887,59 @@ async def export_conversation(
 
         # Export data based on format
         if format == "json":
-            export_data = {
-                "conversation": (
-                    {
-                        "id": str(conversation.id),
-                        "title": conversation.title,
-                        "created_at": conversation.created_at.isoformat(),
-                        "updated_at": (
-                            conversation.updated_at.isoformat()
-                            if conversation.updated_at
-                            else None
-                        ),
-                        "is_active": conversation.is_active,
-                        "message_count": len(messages),
-                    }
-                    if include_metadata
-                    else {}
-                ),
-                "messages": [],
-            }
+            # Create conversation metadata if requested
+            conversation_metadata = None
+            if include_metadata:
+                conversation_metadata = ConversationMetadata(
+                    id=str(conversation.id),
+                    title=conversation.title,
+                    created_at=conversation.created_at.isoformat(),
+                    updated_at=(
+                        conversation.updated_at.isoformat()
+                        if conversation.updated_at
+                        else None
+                    ),
+                    is_active=conversation.is_active,
+                    message_count=len(messages),
+                )
 
+            # Create exported messages
+            exported_messages = []
             for msg in messages:
-                message_data = {
-                    "id": str(msg.id),
-                    "role": msg.role,
-                    "content": msg.content,
-                    "created_at": msg.created_at.isoformat(),
-                    "tool_calls": msg.tool_calls,
-                    "tool_call_id": msg.tool_call_id,
-                    "name": msg.name,
-                }
-                export_data["messages"].append(message_data)
+                exported_message = ExportedMessage(
+                    id=str(msg.id),
+                    role=msg.role,
+                    content=msg.content,
+                    created_at=msg.created_at.isoformat(),
+                    tool_calls=msg.tool_calls,
+                    tool_call_id=msg.tool_call_id,
+                    name=msg.name,
+                )
+                exported_messages.append(exported_message)
 
-            return {
-                "success": True,
-                "data": export_data,
-                "export_info": {
-                    "format": format,
-                    "exported_at": datetime.utcnow().isoformat(),
-                    "message_count": len(messages),
-                    "includes_metadata": include_metadata,
-                },
+            # Create the export data structure
+            export_data = {
+                "conversation": conversation_metadata.model_dump() if conversation_metadata else {},
+                "messages": [msg.model_dump() for msg in exported_messages],
             }
+
+            export_info = ExportInfo(
+                format=format,
+                exported_at=datetime.utcnow().isoformat(),
+                message_count=len(messages),
+                includes_metadata=include_metadata,
+            )
+
+            response_payload = ConversationExportData(
+                data=export_data,
+                export_info=export_info,
+            )
+
+            return APIResponse[ConversationExportData](
+                success=True,
+                message="Conversation exported successfully in JSON format",
+                data=response_payload,
+            )
 
         elif format == "txt":
             # Plain text format
@@ -942,16 +961,19 @@ async def export_conversation(
 
             text_content = "\n".join(lines)
 
-            return {
-                "success": True,
-                "data": {"content": text_content, "format": "text"},
-                "export_info": {
-                    "format": format,
-                    "exported_at": datetime.utcnow().isoformat(),
-                    "message_count": len(messages),
-                    "includes_metadata": include_metadata,
-                },
-            }
+            return APIResponse[ConversationExportData](
+                success=True,
+                message="Conversation exported successfully in text format",
+                data=ConversationExportData(
+                    data={"content": text_content, "format": "text"},
+                    export_info=ExportInfo(
+                        format=format,
+                        exported_at=datetime.utcnow().isoformat(),
+                        message_count=len(messages),
+                        includes_metadata=include_metadata,
+                    ),
+                ),
+            )
 
         elif format == "csv":
             # CSV format
@@ -979,16 +1001,19 @@ async def export_conversation(
 
             csv_content = "\n".join(csv_lines)
 
-            return {
-                "success": True,
-                "data": {"content": csv_content, "format": "csv"},
-                "export_info": {
-                    "format": format,
-                    "exported_at": datetime.utcnow().isoformat(),
-                    "message_count": len(messages),
-                    "includes_metadata": include_metadata,
-                },
-            }
+            return APIResponse[ConversationExportData](
+                success=True,
+                message="Conversation exported successfully in CSV format",
+                data=ConversationExportData(
+                    data={"content": csv_content, "format": "csv"},
+                    export_info=ExportInfo(
+                        format=format,
+                        exported_at=datetime.utcnow().isoformat(),
+                        message_count=len(messages),
+                        includes_metadata=include_metadata,
+                    ),
+                ),
+            )
 
         else:
             raise HTTPException(

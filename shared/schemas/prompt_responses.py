@@ -32,8 +32,15 @@ class PromptStatisticsData(BaseModel):
 
 
 class PromptCategoriesData(BaseModel):
-    """Prompt categories data."""
+    """Prompt categories and tags data."""
     
-    categories: List[PromptCategoryInfo] = Field(default_factory=list, description="Available categories")
-    total_categories: int = Field(..., description="Total number of categories")
-    timestamp: str = Field(..., description="Data timestamp")
+    categories: List[str] = Field(default_factory=list, description="Available prompt categories")
+    tags: List[str] = Field(default_factory=list, description="Available prompt tags")
+
+
+class PromptStatisticsData(BaseModel):
+    """Prompt statistics data model - flexible structure for service data."""
+    
+    # This will be whatever the prompt service returns
+    # Using Any to accommodate the service's data structure
+    data: Any = Field(..., description="Prompt statistics data from service")
