@@ -68,6 +68,8 @@ from shared.schemas.common import (
     APIResponse,
     BaseResponse,
     PaginatedResponse,
+    SuccessResponse,
+    ErrorResponse,
 )
 from shared.schemas.admin_responses import (
     ConversationStatsResponse,
@@ -100,7 +102,7 @@ from shared.schemas.conversation_responses import (
     ExportInfo,
 )
 
-from ..core.response import error_response, success_response
+
 from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.conversation import Conversation, Message
@@ -519,9 +521,9 @@ async def delete_conversation(
     )
 
     if success:
-        return success_response(message="Conversation deleted successfully")
+        return SuccessResponse.create(message="Conversation deleted successfully")
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="CONVERSATION_NOT_FOUND",
             message="Conversation not found",
             status_code=status.HTTP_404_NOT_FOUND
@@ -1171,7 +1173,7 @@ async def import_conversation(
 
         await conversation_service.db.commit()
 
-        return success_response(
+        return SuccessResponse.create(
             data={
                 "conversation_id": str(new_conversation.id),
                 "conversation_title": conv_title,
@@ -1186,7 +1188,7 @@ async def import_conversation(
         raise
     except Exception as e:
         await conversation_service.db.rollback()
-        return error_response(
+        return ErrorResponse.create(
             error_code="CONVERSATION_IMPORT_FAILED",
             message=f"Import failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1264,7 +1266,7 @@ async def archive_conversations(
                     }
                 )
 
-            return success_response(
+            return SuccessResponse.create(
                 data={
                     "total_count": len(conversations),
                     "preview": preview,
@@ -1286,7 +1288,7 @@ async def archive_conversations(
 
             await db.commit()
 
-            return success_response(
+            return SuccessResponse.create(
                 data={
                     "archived_count": archived_count,
                     "criteria": {
@@ -1300,7 +1302,7 @@ async def archive_conversations(
 
     except Exception as e:
         await db.rollback()
-        return error_response(
+        return ErrorResponse.create(
             error_code="ARCHIVE_OPERATION_FAILED",
             message=f"Archive operation failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR

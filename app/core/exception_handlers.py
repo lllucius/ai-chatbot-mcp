@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.exceptions import AppException
-from app.core.response import error_response, validation_error_response
+from shared.schemas.common import ErrorResponse, ValidationErrorResponse
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +40,11 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
 
     status_code = status_code_map.get(type(exc), status.HTTP_400_BAD_REQUEST)
 
-    return error_response(
-        error=exc.error_code or "APPLICATION_ERROR",
+    return ErrorResponse.create(
+        error_code=exc.error_code or "APPLICATION_ERROR",
         message=exc.message,
         status_code=status_code,
-        details=exc.details,
+        error_details=exc.details,
     )
 
 
@@ -53,7 +53,7 @@ async def validation_exception_handler(
 ) -> JSONResponse:
     """Handle Pydantic validation errors."""
     logger.error(f"Validation error: {exc}")
-    return validation_error_response(exc.errors())
+    return ValidationErrorResponse.create(exc.errors())
 
 
 async def sqlalchemy_exception_handler(
@@ -62,8 +62,8 @@ async def sqlalchemy_exception_handler(
     """Handle SQLAlchemy database errors."""
     logger.error(f"Database error: {exc}")
 
-    return error_response(
-        error="DATABASE_ERROR",
+    return ErrorResponse.create(
+        error_code="DATABASE_ERROR",
         message="Database operation failed",
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
@@ -73,8 +73,8 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
     """Handle unexpected exceptions."""
     logger.error(f"Unexpected error: {exc}", exc_info=True)
 
-    return error_response(
-        error="INTERNAL_ERROR",
+    return ErrorResponse.create(
+        error_code="INTERNAL_ERROR",
         message="An unexpected error occurred",
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )

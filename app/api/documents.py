@@ -47,16 +47,14 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
-from shared.schemas.common import APIResponse, BaseResponse, PaginatedResponse
-from shared.schemas.document import (
-    BackgroundTaskResponse,
-    DocumentResponse,
-    DocumentUpdate,
-    DocumentUploadResponse,
-    ProcessingConfigResponse,
-    ProcessingStatusResponse,
-    QueueStatusResponse,
+from shared.schemas.common import (
+    APIResponse,
+    SuccessResponse,
+    ErrorResponse,
+    PaginatedResponse,
+    ValidationErrorResponse,
 )
+from shared.schemas.document import DocumentUploadResponse, DocumentResponse
 from shared.schemas.document_responses import (
     AdvancedSearchData,
     DocumentFileTypeStats,
@@ -71,7 +69,6 @@ from shared.schemas.document_responses import (
 )
 
 from ..config import settings
-from ..core.response import error_response, paginated_response, success_response
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user, get_document_service
 from ..models.document import Document, FileStatus
@@ -229,7 +226,7 @@ async def list_documents(
     # Convert to dict for unified response
     response_data = [resp.model_dump() for resp in responses]
     
-    return paginated_response(
+    return PaginatedResponse.create_response(
         items=response_data,
         total=total,
         page=page,
@@ -282,7 +279,7 @@ async def get_document(
         updated_at=document.updated_at,
     )
     
-    return success_response(
+    return SuccessResponse.create(
         data=document_response.model_dump(),
         message="Document retrieved successfully"
     )
@@ -349,9 +346,9 @@ async def delete_document(
     success = await document_service.delete_document(document_id, current_user.id)
 
     if success:
-        return success_response(message="Document deleted successfully")
+        return SuccessResponse.create(message="Document deleted successfully")
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="DOCUMENT_NOT_FOUND",
             message="Document not found",
             status_code=status.HTTP_404_NOT_FOUND
@@ -426,9 +423,9 @@ async def reprocess_document(
     success = await document_service.reprocess_document(document_id, current_user.id)
 
     if success:
-        return success_response(message="Document reprocessing started")
+        return SuccessResponse.create(message="Document reprocessing started")
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="REPROCESS_FAILED",
             message="Cannot reprocess document at this time",
             status_code=status.HTTP_400_BAD_REQUEST
@@ -615,7 +612,7 @@ async def cleanup_documents(
             }
 
             if status_filter not in status_map:
-                return error_response(
+                return ErrorResponse.create(
                     error_code="INVALID_STATUS_FILTER",
                     message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
                     status_code=status.HTTP_400_BAD_REQUEST
@@ -641,7 +638,7 @@ async def cleanup_documents(
                     }
                 )
 
-            return success_response(
+            return SuccessResponse.create(
                 data={
                     "total_count": len(documents),
                     "preview": preview,
@@ -669,7 +666,7 @@ async def cleanup_documents(
                 except Exception as e:
                     errors.append(f"Failed to delete document {doc.id}: {str(e)}")
 
-            return success_response(
+            return SuccessResponse.create(
                 data={
                     "deleted_count": deleted_count,
                     "deleted_size_bytes": deleted_size,
@@ -686,7 +683,7 @@ async def cleanup_documents(
     except HTTPException:
         raise
     except Exception as e:
-        return error_response(
+        return ErrorResponse.create(
             error_code="DOCUMENT_CLEANUP_FAILED",
             message=f"Document cleanup failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -901,7 +898,7 @@ async def bulk_reprocess_documents(
         status_map = {"failed": FileStatus.FAILED, "completed": FileStatus.COMPLETED}
 
         if status_filter not in status_map:
-            return error_response(
+            return ErrorResponse.create(
                 error_code="INVALID_STATUS_FILTER",
                 message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
                 status_code=status.HTTP_400_BAD_REQUEST
@@ -918,7 +915,7 @@ async def bulk_reprocess_documents(
         documents = result.scalars().all()
 
         if not documents:
-            return success_response(
+            return SuccessResponse.create(
                 data={
                     "reprocessed_count": 0,
                     "total_found": 0,
@@ -940,7 +937,7 @@ async def bulk_reprocess_documents(
                     f"Failed to reprocess document {doc.id} ({doc.title}): {str(e)}"
                 )
 
-        return success_response(
+        return SuccessResponse.create(
             data={
                 "reprocessed_count": reprocessed_count,
                 "total_found": len(documents),
@@ -953,7 +950,7 @@ async def bulk_reprocess_documents(
     except HTTPException:
         raise
     except Exception as e:
-        return error_response(
+        return ErrorResponse.create(
             error_code="BULK_REPROCESS_FAILED",
             message=f"Bulk reprocessing failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR

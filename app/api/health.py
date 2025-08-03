@@ -67,6 +67,8 @@ from shared.schemas.common import (
     APIResponse,
     BaseResponse,
     DetailedHealthCheckResponse,
+    SuccessResponse,
+    ErrorResponse,
 )
 from shared.schemas.health_responses import (
     CacheHealthData,
@@ -102,7 +104,7 @@ class FastMCPHealthData(BaseModel):
     server_status: Optional[Dict[str, Any]] = Field(default=None, description="Individual server status information")
     tools_count: Optional[int] = Field(default=None, description="Number of available tools")
 
-from ..core.response import success_response
+
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
@@ -165,7 +167,7 @@ async def basic_health_check():
         }
     """
     log_api_call("basic_health_check")
-    return success_response(
+    return SuccessResponse.create(
         data={
             "status": "healthy",
             "version": settings.app_version,
@@ -241,7 +243,7 @@ async def detailed_health_check(
     else:
         message = "All system components are healthy"
 
-    return success_response(
+    return SuccessResponse.create(
         data=health_data,
         message=message
     )
@@ -280,7 +282,7 @@ async def database_health_check(db: AsyncSession = Depends(get_db)):
     else:
         message = "Database is healthy"
     
-    return success_response(
+    return SuccessResponse.create(
         data=health_data.model_dump(),
         message=message
     )
@@ -331,7 +333,7 @@ async def services_health_check(
     else:
         message = "All external services are healthy"
     
-    return success_response(
+    return SuccessResponse.create(
         data=services_data,
         message=message
     )
@@ -655,13 +657,12 @@ async def get_system_metrics():
             },
         }
         
-        return success_response(
+        return SuccessResponse.create(
             data=metrics_data,
             message="System metrics collected successfully"
         )
     except ImportError:
-        from ..core.response import error_response
-        return error_response(
+        return ErrorResponse.create(
             error_code="METRICS_UNAVAILABLE",
             message="System metrics unavailable",
             error_details={"reason": "psutil library not available"},
@@ -708,31 +709,28 @@ async def readiness_check(
         fastmcp_health = await _check_fastmcp_health(mcp_service)
 
         if db_health.status == "unhealthy":
-            from ..core.response import error_response
-            return error_response(
+            return ErrorResponse.create(
                 error_code="DATABASE_NOT_READY",
                 message="Database not ready",
                 data={"component": "database", "details": db_health.model_dump()},
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         if cache_health.status == "unhealthy":
-            from ..core.response import error_response
-            return error_response(
+            return ErrorResponse.create(
                 error_code="CACHE_NOT_READY",
                 message="Cache system not ready",
                 data={"component": "cache", "details": cache_health.model_dump()},
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         if fastmcp_health.status == "unhealthy":
-            from ..core.response import error_response
-            return error_response(
+            return ErrorResponse.create(
                 error_code="FASTMCP_NOT_READY",
                 message="FastMCP not ready",
                 data={"component": "fastmcp", "details": fastmcp_health.model_dump()},
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         
-        return success_response(
+        return SuccessResponse.create(
             data={
                 "status": "ready",
                 "components": {
@@ -747,8 +745,7 @@ async def readiness_check(
         raise
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
-        from ..core.response import error_response
-        return error_response(
+        return ErrorResponse.create(
             error_code="READINESS_CHECK_FAILED",
             message=f"Application not ready: {str(e)}",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE
@@ -778,7 +775,7 @@ async def get_performance_metrics():
     """
     log_api_call("get_performance_metrics")
     performance_data = get_performance_stats()
-    return success_response(
+    return SuccessResponse.create(
         data=performance_data,
         message="Performance metrics retrieved successfully"
     )
@@ -802,7 +799,7 @@ async def liveness_check():
         process is completely unresponsive. It does not check dependencies.
     """
     log_api_call("liveness_check")
-    return success_response(
+    return SuccessResponse.create(
         data={"status": "alive"},
         message="Application is alive"
     )
