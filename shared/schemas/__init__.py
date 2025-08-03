@@ -17,6 +17,7 @@ from .llm_profile import *
 from .mcp import *
 from .prompt import *
 from .search import *
+from .task_responses import *
 from .tool_calling import *
 from .user import *
 
@@ -127,6 +128,30 @@ __all__ = [
     # Search schemas
     "SearchParams",
     "SearchResponse",
+    
+    # Task response schemas 
+    "TaskSystemStatusData",
+    "TaskSystemStatusResponse",
+    "WorkerInfo",
+    "WorkerStatusData",
+    "WorkerStatusResponse",
+    "QueueInfo",
+    "QueueStatusData", 
+    "QueueStatusResponse",
+    "ActiveTaskInfo",
+    "ActiveTasksData",
+    "ActiveTasksResponse",
+    "TaskStatisticsData",
+    "TaskStatisticsResponse",
+    "TaskMonitoringData",
+    "TaskMonitoringResponse",
+    "ProfileParametersData",
+    "ProfileParametersResponse",
+    "ProfileStatisticsData",
+    "ProfileStatisticsResponse",
+    "ProfileValidationData",
+    "ProfileValidationResponse",
+    "DefaultProfileResponse",
     
     # Tool calling schemas
     "ToolHandlingMode",
