@@ -41,7 +41,7 @@ import time
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import APIResponse, BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
 from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
 from shared.schemas.search import SearchHistoryResponse, SearchSuggestionResponse
 from shared.schemas.search_responses import (
@@ -49,7 +49,6 @@ from shared.schemas.search_responses import (
     SearchSuggestionData,
 )
 
-from ..core.response import error_response, success_response
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
@@ -441,4 +440,4 @@ async def clear_search_history(current_user: User = Depends(get_current_user)):
     # For admin dashboard, this would clear system-wide search analytics
     # In a full implementation, this would delete from search_history table
 
-    return success_response(message="Search history cleared successfully")
+    return SuccessResponse.create(message="Search history cleared successfully")
