@@ -36,7 +36,7 @@ Security Features:
 - Protection against unauthorized server access
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,6 +49,7 @@ from ..core.response import success_response, error_response
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
+    MCPServerSchema,
     MCPServerListResponse,
     MCPServerUpdateSchema,
     MCPStatsResponse,
@@ -60,7 +61,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["mcp"])
 
 
-@router.get("/servers", response_model=MCPServerListResponse)
+@router.get("/servers", response_model=APIResponse[List[MCPServerSchema]])
 @handle_api_errors("Failed to list MCP servers")
 async def list_servers(
     enabled_only: bool = Query(False, description="Show only enabled servers"),
@@ -105,14 +106,14 @@ async def list_servers(
 
     servers = await mcp_service.list_servers(filters)
 
-    return {
-        "success": True,
-        "message": f"Retrieved {len(servers)} MCP servers",
-        "data": servers,
-    }
+    return APIResponse[List[MCPServerSchema]](
+        success=True,
+        message=f"Retrieved {len(servers)} MCP servers",
+        data=servers,
+    )
 
 
-@router.post("/servers", response_model=MCPServerListResponse)
+@router.post("/servers", response_model=APIResponse[MCPServerSchema])
 @handle_api_errors("Failed to create MCP server")
 async def create_server(
     server_data: MCPServerCreateSchema,
@@ -174,14 +175,14 @@ async def create_server(
 
     server = await mcp_service.create_server(server_data)
 
-    return {
-        "success": True,
-        "message": f"MCP server '{server_data.name}' created successfully",
-        "data": server,
-    }
+    return APIResponse[MCPServerSchema](
+        success=True,
+        message=f"MCP server '{server_data.name}' created successfully",
+        data=server,
+    )
 
 
-@router.get("/servers/byname/{server_name}", response_model=MCPServerListResponse)
+@router.get("/servers/byname/{server_name}", response_model=APIResponse[MCPServerSchema])
 @handle_api_errors("Failed to get MCP server")
 async def get_server(
     server_name: str,
@@ -242,14 +243,14 @@ async def get_server(
             detail=f"MCP server '{server_name}' not found",
         )
 
-    return {
-        "success": True,
-        "message": f"Retrieved MCP server '{server_name}'",
-        "data": server,
-    }
+    return APIResponse[MCPServerSchema](
+        success=True,
+        message=f"Retrieved MCP server '{server_name}'",
+        data=server,
+    )
 
 
-@router.patch("/servers/byname/{server_name}", response_model=MCPServerListResponse)
+@router.patch("/servers/byname/{server_name}", response_model=APIResponse[MCPServerSchema])
 @handle_api_errors("Failed to update MCP server")
 async def update_server(
     server_name: str,
@@ -315,11 +316,11 @@ async def update_server(
 
     server = await mcp_service.update_server(server_name, server_update)
 
-    return {
-        "success": True,
-        "message": f"MCP server '{server_name}' updated successfully",
-        "data": server,
-    }
+    return APIResponse[MCPServerSchema](
+        success=True,
+        message=f"MCP server '{server_name}' updated successfully",
+        data=server,
+    )
 
 
 @router.delete("/servers/byname/{server_name}", response_model=APIResponse)
@@ -602,7 +603,7 @@ async def disable_tool(
         )
 
 
-@router.get("/stats", response_model=MCPStatsResponse)
+@router.get("/stats", response_model=APIResponse[List[Dict[str, Any]]])
 @handle_api_errors("Failed to get MCP statistics")
 async def get_mcp_stats(
     current_user: User = Depends(get_current_superuser),
@@ -657,11 +658,11 @@ async def get_mcp_stats(
 
     stats = await mcp_service.get_tool_stats()
 
-    return {
-        "success": True,
-        "message": "MCP statistics retrieved successfully",
-        "data": [s.model_dump() for s in stats],
-    }
+    return APIResponse[List[Dict[str, Any]]](
+        success=True,
+        message="MCP statistics retrieved successfully",
+        data=[s.model_dump() for s in stats],
+    )
 
 
 @router.get("/tools/byname/{tool_name}", response_model=MCPToolsResponse)
@@ -751,7 +752,7 @@ async def get_servers_status(
     )
 
 
-@router.post("/refresh", response_model=MCPStatsResponse)
+@router.post("/refresh", response_model=APIResponse)
 @handle_api_errors("Failed to refresh MCP")
 async def refresh_mcp(
     current_user: User = Depends(get_current_superuser),
@@ -807,8 +808,7 @@ async def refresh_mcp(
 
     await mcp_service.refresh_from_registry()
 
-    return {
-        "success": True,
-        "message": "MCP refresh completed successfully",
-        "data": {},
-    }
+    return APIResponse(
+        success=True,
+        message="MCP refresh completed successfully",
+    )
