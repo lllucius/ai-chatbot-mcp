@@ -395,7 +395,7 @@ async def set_default_profile(
         )
 
 
-@router.get("/default/parameters", response_model=APIResponse[ProfileParametersData])
+@router.get("/default/parameters", response_model=APIResponse)
 @handle_api_errors("Failed to get default profile parameters")
 async def get_default_profile_parameters(
     current_user: User = Depends(get_current_user),
@@ -449,14 +449,14 @@ async def get_default_profile_parameters(
         parameters=params,
         profile_name="default",
     )
-    return APIResponse[ProfileParametersData](
+    return APIResponse(
         success=True,
         message="Default profile parameters retrieved successfully",
         data=response_payload,
     )
 
 
-@router.get("/stats", response_model=APIResponse[Dict[str, Any]])
+@router.get("/stats", response_model=APIResponse)
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),
@@ -501,14 +501,14 @@ async def get_profile_stats(
     """
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
-    return APIResponse[Dict[str, Any]](
+    return APIResponse(
         success=True,
         message="Profile statistics retrieved successfully",
         data=stats,
     )
 
 
-@router.post("/validate", response_model=APIResponse[ProfileValidationData])
+@router.post("/validate", response_model=APIResponse)
 @handle_api_errors("Failed to validate parameters")
 async def validate_parameters(
     parameters: Dict[str, Any],
@@ -565,7 +565,7 @@ async def validate_parameters(
         errors=errors,
         parameters=parameters,
     )
-    return APIResponse[ProfileValidationData](
+    return APIResponse(
         success=len(errors) == 0,
         message="Parameter validation completed" + (" successfully" if len(errors) == 0 else " with errors"),
         data=response_payload,

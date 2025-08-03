@@ -320,7 +320,7 @@ async def delete_prompt(
     )
 
 
-@router.get("/categories/", response_model=APIResponse[PromptCategoriesData])
+@router.get("/categories/", response_model=APIResponse)
 @handle_api_errors("Failed to get categories")
 async def get_categories(
     current_user: User = Depends(get_current_user),
@@ -379,7 +379,7 @@ async def get_categories(
         tags=tags,
     )
 
-    return APIResponse[PromptCategoriesData](
+    return APIResponse(
         success=True,
         message="Prompt categories and tags retrieved successfully",
         data=response_payload,
@@ -445,7 +445,7 @@ async def set_default_prompt(
         )
 
 
-@router.get("/stats", response_model=APIResponse[PromptStatisticsData])
+@router.get("/stats", response_model=APIResponse)
 @handle_api_errors("Failed to get prompt statistics")
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),
@@ -503,7 +503,7 @@ async def get_prompt_stats(
         data=stats,
     )
 
-    return APIResponse[PromptStatisticsData](
+    return APIResponse(
         success=True,
         message="Prompt statistics retrieved successfully",
         data=response_payload,

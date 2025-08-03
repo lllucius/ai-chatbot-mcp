@@ -603,7 +603,7 @@ async def disable_tool(
         )
 
 
-@router.get("/stats", response_model=APIResponse[List[Dict[str, Any]]])
+@router.get("/stats", response_model=APIResponse)
 @handle_api_errors("Failed to get MCP statistics")
 async def get_mcp_stats(
     current_user: User = Depends(get_current_superuser),
@@ -658,10 +658,10 @@ async def get_mcp_stats(
 
     stats = await mcp_service.get_tool_stats()
 
-    return APIResponse[List[Dict[str, Any]]](
+    return APIResponse(
         success=True,
         message="MCP statistics retrieved successfully",
-        data=[s.model_dump() for s in stats],
+        data=stats,
     )
 
 
