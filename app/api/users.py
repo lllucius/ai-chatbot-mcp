@@ -468,7 +468,7 @@ async def delete_user(
         )
 
 
-@router.post("/users/byid/{user_id}/promote", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/promote", response_model=APIResponse)
 @handle_api_errors("Failed to promote user")
 async def promote_user_to_superuser(
     user_id: UUID,
@@ -505,10 +505,8 @@ async def promote_user_to_superuser(
         user.is_superuser = True
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} promoted to superuser successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} promoted to superuser successfully"
         )
     except HTTPException:
         raise
@@ -520,7 +518,7 @@ async def promote_user_to_superuser(
         )
 
 
-@router.post("/users/byid/{user_id}/demote", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/demote", response_model=APIResponse)
 @handle_api_errors("Failed to demote user")
 async def demote_user_from_superuser(
     user_id: UUID,
@@ -563,10 +561,8 @@ async def demote_user_from_superuser(
         user.is_superuser = False
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} demoted from superuser successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} demoted from superuser successfully"
         )
     except HTTPException:
         raise
@@ -578,7 +574,7 @@ async def demote_user_from_superuser(
         )
 
 
-@router.post("/users/byid/{user_id}/activate", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/activate", response_model=APIResponse))
 @handle_api_errors("Failed to activate user")
 async def activate_user_account(
     user_id: UUID,
@@ -614,10 +610,8 @@ async def activate_user_account(
         user.is_active = True
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} activated successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} activated successfully"
         )
     except HTTPException:
         raise
@@ -629,7 +623,7 @@ async def activate_user_account(
         )
 
 
-@router.post("/users/byid/{user_id}/deactivate", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/activate", response_model=APIResponse))
 @handle_api_errors("Failed to deactivate user")
 async def deactivate_user_account(
     user_id: UUID,
@@ -672,10 +666,8 @@ async def deactivate_user_account(
         user.is_active = False
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} deactivated successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} deactivated successfully"
         )
     except HTTPException:
         raise
@@ -687,7 +679,7 @@ async def deactivate_user_account(
         )
 
 
-@router.post("/users/byid/{user_id}/reset-password", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/reset-password", response_model=APIResponse))
 @handle_api_errors("Failed to reset password")
 async def admin_reset_user_password(
     user_id: UUID,
@@ -728,10 +720,8 @@ async def admin_reset_user_password(
         # Update password
         await user_service.update_user_password(user_id, new_password)
 
-        return BaseResponse(
-            success=True,
-            message=f"Password reset successfully for user {user.username}",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"Password reset successfully for user {user.username}"
         )
     except HTTPException:
         raise
@@ -742,7 +732,7 @@ async def admin_reset_user_password(
         )
 
 
-@router.get("/users/stats", response_model=UserStatisticsResponse)
+@router.get("/users/stats", response_model=APIResponse))
 @handle_api_errors("Failed to get user statistics")
 async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),
@@ -870,26 +860,27 @@ async def get_user_statistics(
             for row in top_users_docs.fetchall()
         ]
 
-        return UserStatisticsResponse(
-            success=True,
-            data={
-                "total_users": total_users or 0,
-                "active_users": active_users or 0,
-                "inactive_users": (total_users or 0) - (active_users or 0),
-                "superusers": superusers or 0,
-                "recent_registrations_30d": recent_users or 0,
-                "engagement": {
-                    "users_with_documents": users_with_documents or 0,
-                    "users_with_conversations": users_with_conversations or 0,
-                    "avg_documents_per_user": round(avg_docs_per_user, 2),
-                    "avg_conversations_per_user": round(avg_convs_per_user, 2),
-                },
-                "top_users_by_documents": top_users_list,
-                "activity_rate": round(
-                    (active_users or 0) / max(total_users or 1, 1) * 100, 2
-                ),
-                "timestamp": datetime.utcnow().isoformat(),
+        stats_data = {
+            "total_users": total_users or 0,
+            "active_users": active_users or 0,
+            "inactive_users": (total_users or 0) - (active_users or 0),
+            "superusers": superusers or 0,
+            "recent_registrations_30d": recent_users or 0,
+            "engagement": {
+                "users_with_documents": users_with_documents or 0,
+                "users_with_conversations": users_with_conversations or 0,
+                "avg_documents_per_user": round(avg_docs_per_user, 2),
+                "avg_conversations_per_user": round(avg_convs_per_user, 2),
             },
+            "top_users_by_documents": top_users_list,
+            "activity_rate": round(
+                (active_users or 0) / max(total_users or 1, 1) * 100, 2
+            ),
+        }
+
+        return success_response(
+            data=stats_data,
+            message="User statistics retrieved successfully"
         )
     except Exception as e:
         raise HTTPException(
