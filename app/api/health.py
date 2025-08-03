@@ -63,6 +63,7 @@ from ..database import get_db
 from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
 from shared.schemas.common import (
+    APIResponse,
     BaseResponse,
     DatabaseHealthResponse,
     DetailedHealthCheckResponse,
@@ -72,6 +73,7 @@ from shared.schemas.common import (
     ServicesHealthResponse,
     SystemMetricsResponse,
 )
+from ..core.response import success_response
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
@@ -82,9 +84,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=BaseResponse)
+@router.get("/", response_model=APIResponse)
 @handle_api_errors("Basic health check failed")
-async def basic_health_check() -> Dict[str, Any]:
+async def basic_health_check():
     """
     Basic health check endpoint for load balancers and simple monitoring.
 
@@ -94,12 +96,11 @@ async def basic_health_check() -> Dict[str, Any]:
     high-frequency health polling scenarios.
 
     Returns:
-        Dict[str, Any]: Basic application status including:
-            - success: Health check success indicator
-            - message: Application status message
-            - status: Current health status (healthy/unhealthy)
-            - version: Application version information
+        APIResponse: Basic application status using unified envelope:
+            - success: Always true for successful health check
+            - message: Human-readable status message
             - timestamp: Health check execution time
+            - data: Health status details (status, version)
 
     Health Check Scope:
         - Application process status and responsiveness
@@ -127,27 +128,29 @@ async def basic_health_check() -> Dict[str, Any]:
         {
             "success": true,
             "message": "AI Chatbot Platform is running",
-            "status": "healthy",
-            "version": "1.0.0",
-            "timestamp": "2024-01-01T00:00:00Z"
+            "timestamp": "2024-01-01T00:00:00Z",
+            "data": {
+                "status": "healthy",
+                "version": "1.0.0"
+            }
         }
     """
     log_api_call("basic_health_check")
-    return {
-        "success": True,
-        "message": "AI Chatbot Platform is running",
-        "status": "healthy",
-        "version": settings.app_version,
-        "timestamp": utcnow(),
-    }
+    return success_response(
+        data={
+            "status": "healthy",
+            "version": settings.app_version,
+        },
+        message="AI Chatbot Platform is running"
+    )
 
 
-@router.get("/detailed", response_model=DetailedHealthCheckResponse)
+@router.get("/detailed", response_model=APIResponse)
 @handle_api_errors("Health check failed")
 async def detailed_health_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
-) -> Dict[str, Any]:
+):
     """
     Comprehensive health check with all system components.
 
@@ -161,13 +164,12 @@ async def detailed_health_check(
         mcp_service: MCP service instance for FastMCP health verification
 
     Returns:
-        dict: Comprehensive system health status containing:
-            - application: App info, version, and status
-            - database: Database connectivity and schema status
-            - cache: Cache system health and statistics
-            - openai: OpenAI service availability and configuration
-            - fastmcp: FastMCP service status and server connections
-            - overall_status: Aggregated health status (healthy/warning/degraded)
+        APIResponse: Comprehensive system health status using unified envelope:
+            - success: Health check success indicator
+            - message: Overall health status message
+            - timestamp: Health check execution time
+            - data: Detailed component health information
+            - meta: Additional health metadata if available
 
     Note:
         This endpoint checks all dependencies and may take longer than
@@ -175,7 +177,7 @@ async def detailed_health_check(
     """
     log_api_call("detailed_health_check")
 
-    health_status = {
+    health_data = {
         "application": {
             "name": settings.app_name,
             "version": settings.app_version,
@@ -186,28 +188,34 @@ async def detailed_health_check(
         "cache": await _check_cache_health(),
         "openai": await _check_openai_health(),
         "fastmcp": await _check_fastmcp_health(mcp_service),
-        "timestamp": utcnow(),
         "overall_status": "healthy",
     }
 
     component_statuses = [
-        health_status["database"]["status"],
-        health_status["cache"]["status"],
-        health_status["openai"]["status"],
-        health_status["fastmcp"]["status"],
+        health_data["database"]["status"],
+        health_data["cache"]["status"],
+        health_data["openai"]["status"],
+        health_data["fastmcp"]["status"],
     ]
 
     if "unhealthy" in component_statuses:
-        health_status["overall_status"] = "degraded"
+        health_data["overall_status"] = "degraded"
+        message = "System health is degraded"
     elif "warning" in component_statuses:
-        health_status["overall_status"] = "warning"
+        health_data["overall_status"] = "warning"
+        message = "System health has warnings"
+    else:
+        message = "All system components are healthy"
 
-    return health_status
+    return success_response(
+        data=health_data,
+        message=message
+    )
 
 
-@router.get("/database", response_model=DatabaseHealthResponse)
+@router.get("/database", response_model=APIResponse)
 @handle_api_errors("Database health check failed")
-async def database_health_check(db: AsyncSession = Depends(get_db)) -> DatabaseHealthResponse:
+async def database_health_check(db: AsyncSession = Depends(get_db)):
     """
     Database connectivity and schema health check.
 
@@ -219,32 +227,36 @@ async def database_health_check(db: AsyncSession = Depends(get_db)) -> DatabaseH
         db: Database session for connectivity and schema validation
 
     Returns:
-        DatabaseHealthResponse: Database health status containing:
-            - status: Health status (healthy/warning/unhealthy)
-            - message: Descriptive health message
-            - connectivity: Connection status
-            - schema_status: Database schema validation status
-            - tables_found: Number of required tables found
+        APIResponse: Database health status using unified envelope:
+            - success: Health check success indicator
+            - message: Database health status message
+            - timestamp: Health check execution time
+            - data: Database health details (status, connectivity, schema_status, etc.)
 
     Raises:
         HTTP 503: If database is completely unreachable
     """
     log_api_call("database_health_check")
     health_data = await _check_database_health(db)
-    return DatabaseHealthResponse(
-        status=health_data["status"],
-        message=health_data["message"],
-        connectivity=health_data["connectivity"],
-        schema_status=health_data.get("schema_status"),
-        tables_found=health_data.get("tables_found"),
+    
+    if health_data["status"] == "unhealthy":
+        message = f"Database is unhealthy: {health_data['message']}"
+    elif health_data["status"] == "warning":
+        message = f"Database has warnings: {health_data['message']}"
+    else:
+        message = "Database is healthy"
+    
+    return success_response(
+        data=health_data,
+        message=message
     )
 
 
-@router.get("/services", response_model=ServicesHealthResponse)
+@router.get("/services", response_model=APIResponse)
 @handle_api_errors("Services health check failed")
 async def services_health_check(
     mcp_service: MCPService = Depends(get_mcp_service),
-) -> ServicesHealthResponse:
+):
     """
     External services health check.
 
@@ -256,20 +268,35 @@ async def services_health_check(
         mcp_service: MCP service instance for FastMCP health verification
 
     Returns:
-        ServicesHealthResponse: External services status containing:
-            - openai: OpenAI API availability and configuration status
-            - fastmcp: FastMCP service and server connection status
-            - timestamp: Check execution timestamp
+        APIResponse: External services status using unified envelope:
+            - success: Health check success indicator
+            - message: Services health status message
+            - timestamp: Health check execution time
+            - data: Service health details (openai, fastmcp)
 
     Note:
         External service failures may not prevent application startup
         but could affect functionality availability.
     """
     log_api_call("services_health_check")
-    return ServicesHealthResponse(
-        openai=await _check_openai_health(),
-        fastmcp=await _check_fastmcp_health(mcp_service),
-        timestamp=utcnow(),
+    
+    services_data = {
+        "openai": await _check_openai_health(),
+        "fastmcp": await _check_fastmcp_health(mcp_service),
+    }
+    
+    # Determine overall message
+    statuses = [services_data["openai"]["status"], services_data["fastmcp"]["status"]]
+    if "unhealthy" in statuses:
+        message = "Some external services are unhealthy"
+    elif "warning" in statuses:
+        message = "Some external services have warnings"
+    else:
+        message = "All external services are healthy"
+    
+    return success_response(
+        data=services_data,
+        message=message
     )
 
 
@@ -528,9 +555,9 @@ async def _check_fastmcp_health(mcp_service: MCPService) -> Dict[str, Any]:
         }
 
 
-@router.get("/metrics", response_model=SystemMetricsResponse)
+@router.get("/metrics", response_model=APIResponse)
 @handle_api_errors("Failed to get system metrics")
-async def get_system_metrics() -> SystemMetricsResponse:
+async def get_system_metrics():
     """
     Get system performance metrics and resource utilization.
 
@@ -539,11 +566,12 @@ async def get_system_metrics() -> SystemMetricsResponse:
     This information is useful for monitoring and capacity planning.
 
     Returns:
-        SystemMetricsResponse: System metrics containing:
-            - system: CPU, memory, and disk usage statistics
-            - application: Uptime, version, and configuration info
+        APIResponse: System metrics using unified envelope:
+            - success: Metrics collection success indicator
+            - message: Metrics collection status message
             - timestamp: Metrics collection timestamp
-            - error: Error message if psutil is unavailable
+            - data: System metrics (system and application information)
+            - error: Error details if psutil is unavailable
 
     Note:
         Requires psutil library for system metrics collection.
@@ -552,14 +580,14 @@ async def get_system_metrics() -> SystemMetricsResponse:
     log_api_call("get_system_metrics")
     try:
         import time
-
         import psutil
 
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
-        return SystemMetricsResponse(
-            system={
+        
+        metrics_data = {
+            "system": {
                 "cpu_usage_percent": cpu_percent,
                 "memory": {
                     "total_gb": round(memory.total / (1024**3), 2),
@@ -572,31 +600,38 @@ async def get_system_metrics() -> SystemMetricsResponse:
                     "percent_used": round((disk.used / disk.total) * 100, 2),
                 },
             },
-            application={
+            "application": {
                 "uptime_seconds": time.time() - psutil.Process().create_time(),
                 "version": settings.app_version,
                 "debug_mode": settings.debug,
             },
-            timestamp=utcnow(),
+        }
+        
+        return success_response(
+            data=metrics_data,
+            message="System metrics collected successfully"
         )
     except ImportError:
-        return SystemMetricsResponse(
-            system={},
-            application={
-                "version": settings.app_version,
-                "debug_mode": settings.debug,
-            },
-            timestamp=utcnow(),
-            error="psutil not available for system metrics",
+        from ..core.response import error_response
+        return error_response(
+            error_code="METRICS_UNAVAILABLE",
+            message="System metrics unavailable",
+            error_details={"reason": "psutil library not available"},
+            data={
+                "application": {
+                    "version": settings.app_version,
+                    "debug_mode": settings.debug,
+                }
+            }
         )
 
 
-@router.get("/readiness", response_model=ReadinessResponse)
+@router.get("/readiness", response_model=APIResponse)
 @handle_api_errors("Readiness check failed")
 async def readiness_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
-) -> ReadinessResponse:
+):
     """
     Kubernetes-style readiness probe.
 
@@ -609,7 +644,7 @@ async def readiness_check(
         mcp_service: MCP service instance
 
     Returns:
-        ReadinessResponse: Application readiness status
+        APIResponse: Application readiness status using unified envelope
 
     Raises:
         HTTP 503: If any critical service is not ready
@@ -625,38 +660,56 @@ async def readiness_check(
         fastmcp_health = await _check_fastmcp_health(mcp_service)
 
         if db_health["status"] == "unhealthy":
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Database not ready",
+            from ..core.response import error_response
+            return error_response(
+                error_code="DATABASE_NOT_READY",
+                message="Database not ready",
+                data={"component": "database", "details": db_health},
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         if cache_health["status"] == "unhealthy":
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Cache system not ready",
+            from ..core.response import error_response
+            return error_response(
+                error_code="CACHE_NOT_READY",
+                message="Cache system not ready",
+                data={"component": "cache", "details": cache_health},
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         if fastmcp_health["status"] == "unhealthy":
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="FastMCP not ready",
+            from ..core.response import error_response
+            return error_response(
+                error_code="FASTMCP_NOT_READY",
+                message="FastMCP not ready",
+                data={"component": "fastmcp", "details": fastmcp_health},
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
-        return ReadinessResponse(
-            status="ready",
-            message="Application is ready to serve traffic",
-            timestamp=utcnow(),
+        
+        return success_response(
+            data={
+                "status": "ready",
+                "components": {
+                    "database": db_health,
+                    "cache": cache_health,
+                    "fastmcp": fastmcp_health
+                }
+            },
+            message="Application is ready to serve traffic"
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Application not ready: {str(e)}",
+        from ..core.response import error_response
+        return error_response(
+            error_code="READINESS_CHECK_FAILED",
+            message=f"Application not ready: {str(e)}",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
 
-@router.get("/performance", response_model=PerformanceMetricsResponse)
+@router.get("/performance", response_model=APIResponse)
 @handle_api_errors("Failed to get performance metrics")
-async def get_performance_metrics() -> PerformanceMetricsResponse:
+async def get_performance_metrics():
     """
     Get application performance metrics and statistics.
 
@@ -665,11 +718,11 @@ async def get_performance_metrics() -> PerformanceMetricsResponse:
     statistics, and performance indicators.
 
     Returns:
-        PerformanceMetricsResponse: Application performance data including:
-            - Request processing metrics
-            - Throughput statistics
-            - Performance indicators
-            - Resource utilization metrics
+        APIResponse: Application performance data using unified envelope:
+            - success: Performance metrics collection success indicator
+            - message: Performance metrics status message
+            - timestamp: Metrics collection timestamp
+            - data: Performance metrics and statistics
 
     Note:
         Performance data is collected by the performance middleware
@@ -677,12 +730,15 @@ async def get_performance_metrics() -> PerformanceMetricsResponse:
     """
     log_api_call("get_performance_metrics")
     performance_data = get_performance_stats()
-    return PerformanceMetricsResponse(data=performance_data)
+    return success_response(
+        data=performance_data,
+        message="Performance metrics retrieved successfully"
+    )
 
 
-@router.get("/liveness", response_model=LivenessResponse)
+@router.get("/liveness", response_model=APIResponse)
 @handle_api_errors("Liveness check failed")
-async def liveness_check() -> LivenessResponse:
+async def liveness_check():
     """
     Kubernetes-style liveness probe.
 
@@ -691,15 +747,14 @@ async def liveness_check() -> LivenessResponse:
     should be restarted.
 
     Returns:
-        LivenessResponse: Application liveness confirmation
+        APIResponse: Application liveness confirmation using unified envelope
 
     Note:
         This endpoint should always return 200 unless the application
         process is completely unresponsive. It does not check dependencies.
     """
     log_api_call("liveness_check")
-    return LivenessResponse(
-        status="alive",
-        message="Application is alive",
-        timestamp=utcnow()
+    return success_response(
+        data={"status": "alive"},
+        message="Application is alive"
     )
