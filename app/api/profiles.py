@@ -42,7 +42,8 @@ from shared.schemas.admin import (
     ProfileStatsResponse,
     ProfileValidationResponse,
 )
-from shared.schemas.common import BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse
+from ..core.response import success_response, error_response
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
     LLMProfileListResponse,
@@ -310,7 +311,7 @@ async def update_profile(
     return LLMProfileResponse(**response_data)
 
 
-@router.delete("/byname/{profile_name}", response_model=BaseResponse)
+@router.delete("/byname/{profile_name}", response_model=APIResponse)
 @handle_api_errors("Failed to delete profile")
 async def delete_profile(
     profile_name: str,
@@ -324,13 +325,12 @@ async def delete_profile(
     
     await profile_service.delete_profile(profile_name)
     
-    return BaseResponse(
-        success=True,
+    return success_response(
         message=f"Profile '{profile_name}' deleted successfully"
     )
 
 
-@router.post("/byname/{profile_name}/set-default", response_model=BaseResponse)
+@router.post("/byname/{profile_name}/set-default", response_model=APIResponse)
 @handle_api_errors("Failed to set default profile")
 async def set_default_profile(
     profile_name: str,
@@ -376,13 +376,14 @@ async def set_default_profile(
     )
     success = await profile_service.set_default_profile(profile_name)
     if success:
-        return BaseResponse(
-            success=True, message=f"Profile '{profile_name}' set as default"
+        return success_response(
+            message=f"Profile '{profile_name}' set as default"
         )
     else:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Profile '{profile_name}' not found",
+        return error_response(
+            error_code="PROFILE_NOT_FOUND",
+            message=f"Profile '{profile_name}' not found",
+            status_code=404
         )
 
 
