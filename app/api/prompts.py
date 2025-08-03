@@ -42,7 +42,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
 from shared.schemas.common import APIResponse, BaseResponse
-from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse
+from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
 from shared.schemas.prompt_responses import (
     PromptCategoriesData,
     PromptStatisticsData,
@@ -274,7 +274,7 @@ async def create_prompt(
 @handle_api_errors("Failed to update prompt")
 async def update_prompt(
     prompt_name: str,
-    data: Dict[str, Any],
+    data: PromptUpdate,
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
 ) -> PromptResponse:
@@ -283,22 +283,9 @@ async def update_prompt(
     """
     log_api_call("update_prompt", user_id=current_user.id, prompt_name=prompt_name)
     
-    prompt = await prompt_service.update_prompt(prompt_name, data)
+    prompt = await prompt_service.update_prompt(prompt_name, data.model_dump(exclude_unset=True))
     
-    return PromptResponse(
-        name=prompt.name,
-        title=prompt.title,
-        description=prompt.description,
-        category=prompt.category,
-        content=prompt.content,
-        variables=prompt.variables,
-        tags=prompt.tags,
-        is_active=prompt.is_active,
-        usage_count=prompt.usage_count,
-        last_used_at=prompt.last_used_at,
-        created_at=prompt.created_at,
-        updated_at=prompt.updated_at,
-    )
+    return PromptResponse.model_validate(prompt)
 
 
 @router.delete("/byname/{prompt_name}", response_model=APIResponse)
@@ -325,7 +312,7 @@ async def delete_prompt(
 async def get_categories(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-) -> Dict[str, Any]:
+) -> APIResponse:
     """
     Get all available prompt categories and tags for organization.
 
@@ -382,7 +369,7 @@ async def get_categories(
     return APIResponse(
         success=True,
         message="Prompt categories and tags retrieved successfully",
-        data=response_payload,
+        data=response_payload.model_dump(),
     )
 
 
@@ -450,7 +437,7 @@ async def set_default_prompt(
 async def get_prompt_stats(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-) -> Dict[str, Any]:
+) -> APIResponse:
     """
     Get comprehensive prompt usage statistics and analytics.
 
@@ -506,5 +493,5 @@ async def get_prompt_stats(
     return APIResponse(
         success=True,
         message="Prompt statistics retrieved successfully",
-        data=response_payload,
+        data=response_payload.model_dump(),
     )
