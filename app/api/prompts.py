@@ -44,8 +44,9 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
-from shared.schemas.common import BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse
 from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse
+from ..core.response import success_response, error_response, paginated_response
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -295,13 +296,13 @@ async def update_prompt(
     )
 
 
-@router.delete("/byname/{prompt_name}", response_model=BaseResponse)
+@router.delete("/byname/{prompt_name}", response_model=APIResponse)
 @handle_api_errors("Failed to delete prompt")
 async def delete_prompt(
     prompt_name: str,
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
-) -> BaseResponse:
+):
     """
     Delete a prompt template from the registry.
     """
@@ -309,8 +310,7 @@ async def delete_prompt(
     
     await prompt_service.delete_prompt(prompt_name)
     
-    return BaseResponse(
-        success=True,
+    return success_response(
         message=f"Prompt '{prompt_name}' deleted successfully"
     )
 
@@ -378,7 +378,7 @@ async def get_categories(
     }
 
 
-@router.post("/byname/{prompt_name}/set-default", response_model=BaseResponse)
+@router.post("/byname/{prompt_name}/set-default", response_model=APIResponse)
 @handle_api_errors("Failed to set default prompt")
 async def set_default_prompt(
     prompt_name: str,
@@ -399,7 +399,7 @@ async def set_default_prompt(
         prompt_service: Injected prompt service instance
 
     Returns:
-        BaseResponse: Success confirmation with operation details
+        APIResponse: Success confirmation with operation details using unified envelope
 
     Raises:
         HTTP 403: If user is not a superuser
@@ -426,13 +426,14 @@ async def set_default_prompt(
     success = await prompt_service.set_default_prompt(prompt_name)
 
     if success:
-        return BaseResponse(
-            success=True, message=f"Prompt '{prompt_name}' set as default"
+        return success_response(
+            message=f"Prompt '{prompt_name}' set as default"
         )
     else:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Prompt '{prompt_name}' not found",
+        return error_response(
+            error_code="PROMPT_NOT_FOUND",
+            message=f"Prompt '{prompt_name}' not found",
+            status_code=404
         )
 
 
