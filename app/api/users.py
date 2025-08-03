@@ -60,8 +60,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from shared.schemas.common import BaseResponse, PaginatedResponse, UserStatisticsResponse
+from shared.schemas.common import (
+    APIResponse,
+    BaseResponse, 
+    PaginatedResponse, 
+    UserStatisticsResponse
+)
 from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
+from ..core.response import success_response, error_response, paginated_response
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -87,7 +93,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve user profile")
 async def get_my_profile(
     current_user=Depends(get_current_user),
@@ -105,30 +111,41 @@ async def get_my_profile(
         user_service: Injected user service instance
 
     Returns:
-        UserResponse: Complete user profile including:
-            - Basic profile (username, email, full_name, status)
-            - Account metadata (created_at, updated_at, last_login)
-            - Activity statistics (document_count, conversation_count, total_messages)
+        APIResponse: Complete user profile using unified envelope:
+            - success: Profile retrieval success indicator
+            - message: Profile retrieval status message
+            - timestamp: Profile retrieval timestamp
+            - data: User profile data with statistics
 
     Example Response:
         {
-            "id": "uuid-here",
-            "username": "johndoe",
-            "email": "john@example.com",
-            "full_name": "John Doe",
-            "is_active": true,
-            "document_count": 15,
-            "conversation_count": 8,
-            "total_messages": 142
+            "success": true,
+            "message": "User profile retrieved successfully",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "data": {
+                "id": "uuid-here",
+                "username": "johndoe",
+                "email": "john@example.com",
+                "full_name": "John Doe",
+                "is_active": true,
+                "document_count": 15,
+                "conversation_count": 8,
+                "total_messages": 142
+            }
         }
     """
     log_api_call("get_my_profile", user_id=str(current_user.id))
 
     profile = await user_service.get_user_profile(current_user.id)
-    return profile
+    # Convert to dict if it's a Pydantic model
+    profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
+    return success_response(
+        data=profile_data,
+        message="User profile retrieved successfully"
+    )
 
 
-@router.put("/me", response_model=UserResponse)
+@router.put("/me", response_model=APIResponse)
 @handle_api_errors("Profile update failed")
 async def update_my_profile(
     request: UserUpdate,
@@ -188,10 +205,15 @@ async def update_my_profile(
     log_api_call("update_my_profile", user_id=str(current_user.id))
 
     updated_user = await user_service.update_user(current_user.id, request)
-    return UserResponse.model_validate(updated_user)
+    # Convert to dict if it's a Pydantic model
+    user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
+    return success_response(
+        data=user_data,
+        message="User profile updated successfully"
+    )
 
 
-@router.post("/me/change-password", response_model=BaseResponse)
+@router.post("/me/change-password", response_model=APIResponse)
 @handle_api_errors("Password change failed")
 async def change_password(
     request: UserPasswordUpdate,
@@ -212,7 +234,7 @@ async def change_password(
         user_service: Injected user service instance for password operations
 
     Returns:
-        BaseResponse: Password change confirmation with operation status
+        APIResponse: Password change confirmation using unified envelope
 
     Raises:
         HTTP 400: If password validation fails or passwords don't meet requirements
@@ -261,18 +283,21 @@ async def change_password(
     )
 
     if success:
-        return BaseResponse(success=True, message="Password changed successfully")
+        return success_response(
+            message="Password changed successfully"
+        )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect",
+        return error_response(
+            error_code="INVALID_PASSWORD",
+            message="Current password is incorrect",
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
 
 # Admin endpoints (require superuser privileges)
 
 
-@router.get("/", response_model=PaginatedResponse[UserResponse])
+@router.get("/", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve users")
 async def list_users(
     page: int = Query(1, ge=1),
@@ -342,9 +367,10 @@ async def list_users(
     )
 
     user_responses = [UserResponse.model_validate(user) for user in users]
+    user_data = [user_resp.model_dump() for user_resp in user_responses]
 
-    return PaginatedResponse.create(
-        items=user_responses,
+    return paginated_response(
+        items=user_data,
         total=total,
         page=page,
         size=size,
@@ -352,7 +378,7 @@ async def list_users(
     )
 
 
-@router.get("/byid/{user_id}", response_model=UserResponse)
+@router.get("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("Failed to retrieve user")
 async def get_user(
     user_id: UUID,
@@ -370,10 +396,14 @@ async def get_user(
     )
 
     profile = await user_service.get_user_profile(user_id)
-    return profile
+    profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
+    return success_response(
+        data=profile_data,
+        message="User profile retrieved successfully"
+    )
 
 
-@router.put("/byid/{user_id}", response_model=UserResponse)
+@router.put("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("User update failed")
 async def update_user(
     user_id: UUID,
@@ -392,10 +422,14 @@ async def update_user(
     )
 
     updated_user = await user_service.update_user(user_id, request)
-    return UserResponse.model_validate(updated_user)
+    user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
+    return success_response(
+        data=user_data,
+        message="User updated successfully"
+    )
 
 
-@router.delete("/byid/{user_id}", response_model=BaseResponse)
+@router.delete("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("User deletion failed")
 async def delete_user(
     user_id: UUID,
@@ -414,22 +448,27 @@ async def delete_user(
 
     # Prevent self-deletion
     if user_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete your own account",
+        return error_response(
+            error_code="SELF_DELETION_FORBIDDEN",
+            message="Cannot delete your own account",
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
     success = await user_service.delete_user(user_id)
 
     if success:
-        return BaseResponse(success=True, message="User deleted successfully")
+        return success_response(
+            message="User deleted successfully"
+        )
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        return error_response(
+            error_code="USER_NOT_FOUND",
+            message="User not found",
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
-@router.post("/users/byid/{user_id}/promote", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/promote", response_model=APIResponse)
 @handle_api_errors("Failed to promote user")
 async def promote_user_to_superuser(
     user_id: UUID,
@@ -466,10 +505,8 @@ async def promote_user_to_superuser(
         user.is_superuser = True
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} promoted to superuser successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} promoted to superuser successfully"
         )
     except HTTPException:
         raise
@@ -481,7 +518,7 @@ async def promote_user_to_superuser(
         )
 
 
-@router.post("/users/byid/{user_id}/demote", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/demote", response_model=APIResponse)
 @handle_api_errors("Failed to demote user")
 async def demote_user_from_superuser(
     user_id: UUID,
@@ -524,10 +561,8 @@ async def demote_user_from_superuser(
         user.is_superuser = False
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} demoted from superuser successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} demoted from superuser successfully"
         )
     except HTTPException:
         raise
@@ -539,7 +574,7 @@ async def demote_user_from_superuser(
         )
 
 
-@router.post("/users/byid/{user_id}/activate", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/activate", response_model=APIResponse))
 @handle_api_errors("Failed to activate user")
 async def activate_user_account(
     user_id: UUID,
@@ -575,10 +610,8 @@ async def activate_user_account(
         user.is_active = True
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} activated successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} activated successfully"
         )
     except HTTPException:
         raise
@@ -590,7 +623,7 @@ async def activate_user_account(
         )
 
 
-@router.post("/users/byid/{user_id}/deactivate", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/activate", response_model=APIResponse))
 @handle_api_errors("Failed to deactivate user")
 async def deactivate_user_account(
     user_id: UUID,
@@ -633,10 +666,8 @@ async def deactivate_user_account(
         user.is_active = False
         await user_service.db.commit()
 
-        return BaseResponse(
-            success=True,
-            message=f"User {user.username} deactivated successfully",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"User {user.username} deactivated successfully"
         )
     except HTTPException:
         raise
@@ -648,7 +679,7 @@ async def deactivate_user_account(
         )
 
 
-@router.post("/users/byid/{user_id}/reset-password", response_model=BaseResponse)
+@router.post("/users/byid/{user_id}/reset-password", response_model=APIResponse))
 @handle_api_errors("Failed to reset password")
 async def admin_reset_user_password(
     user_id: UUID,
@@ -689,10 +720,8 @@ async def admin_reset_user_password(
         # Update password
         await user_service.update_user_password(user_id, new_password)
 
-        return BaseResponse(
-            success=True,
-            message=f"Password reset successfully for user {user.username}",
-            timestamp=user_service._get_current_timestamp(),
+        return success_response(
+            message=f"Password reset successfully for user {user.username}"
         )
     except HTTPException:
         raise
@@ -703,7 +732,7 @@ async def admin_reset_user_password(
         )
 
 
-@router.get("/users/stats", response_model=UserStatisticsResponse)
+@router.get("/users/stats", response_model=APIResponse))
 @handle_api_errors("Failed to get user statistics")
 async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),
@@ -831,26 +860,27 @@ async def get_user_statistics(
             for row in top_users_docs.fetchall()
         ]
 
-        return UserStatisticsResponse(
-            success=True,
-            data={
-                "total_users": total_users or 0,
-                "active_users": active_users or 0,
-                "inactive_users": (total_users or 0) - (active_users or 0),
-                "superusers": superusers or 0,
-                "recent_registrations_30d": recent_users or 0,
-                "engagement": {
-                    "users_with_documents": users_with_documents or 0,
-                    "users_with_conversations": users_with_conversations or 0,
-                    "avg_documents_per_user": round(avg_docs_per_user, 2),
-                    "avg_conversations_per_user": round(avg_convs_per_user, 2),
-                },
-                "top_users_by_documents": top_users_list,
-                "activity_rate": round(
-                    (active_users or 0) / max(total_users or 1, 1) * 100, 2
-                ),
-                "timestamp": datetime.utcnow().isoformat(),
+        stats_data = {
+            "total_users": total_users or 0,
+            "active_users": active_users or 0,
+            "inactive_users": (total_users or 0) - (active_users or 0),
+            "superusers": superusers or 0,
+            "recent_registrations_30d": recent_users or 0,
+            "engagement": {
+                "users_with_documents": users_with_documents or 0,
+                "users_with_conversations": users_with_conversations or 0,
+                "avg_documents_per_user": round(avg_docs_per_user, 2),
+                "avg_conversations_per_user": round(avg_convs_per_user, 2),
             },
+            "top_users_by_documents": top_users_list,
+            "activity_rate": round(
+                (active_users or 0) / max(total_users or 1, 1) * 100, 2
+            ),
+        }
+
+        return success_response(
+            data=stats_data,
+            message="User statistics retrieved successfully"
         )
     except Exception as e:
         raise HTTPException(

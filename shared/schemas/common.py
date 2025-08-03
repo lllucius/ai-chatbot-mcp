@@ -151,17 +151,41 @@ class BaseResponse(BaseModel):
     )
 
 
+class ErrorDetails(BaseModel):
+    """
+    Error details schema for the unified response envelope.
+    """
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    code: str = Field(..., description="Machine-readable error code")
+    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
+
+
 class APIResponse(BaseResponse):
     """
-    General-purpose API response schema with optional data payload and metadata.
+    Unified API response schema conforming to the standard envelope specification.
     
-    Extends BaseResponse to include data payload and metadata fields for
-    flexible API response handling.
+    All API endpoints must return responses using this exact structure with no exceptions.
+    This ensures consistent response format across the entire application.
+    
+    Response Structure:
+    {
+      "success": true or false,
+      "message": "Human-readable message",
+      "timestamp": "ISO-8601 string",
+      "data": any,     // single object, array, or null
+      "meta": { ... }, // optional metadata (pagination, stats, etc)
+      "error": {       // optional error details
+        "code": "ERROR_CODE",
+        "details": { ... }
+      }
+    }
     """
     
-    data: Optional[Any] = Field(default=None, description="Response data payload")
-    meta: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
-    error: Optional[str] = Field(default=None, description="Error description if applicable")
+    data: Optional[Any] = Field(default=None, description="Response data payload - single object, array, or null")
+    meta: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata (pagination, stats, etc)")
+    error: Optional[ErrorDetails] = Field(default=None, description="Optional error details with code and details")
 
     def model_dump_json(self, **kwargs):
         """
