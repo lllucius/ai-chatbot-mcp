@@ -63,13 +63,15 @@ from ..models.user import User
 from shared.schemas.common import (
     APIResponse,
     BaseResponse, 
-    PaginatedResponse, 
+    PaginatedResponse,
+    SuccessResponse,
+    ErrorResponse,
 )
 from shared.schemas.admin_responses import (
     UserStatisticsResponse,
 )
 from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
-from ..core.response import success_response, error_response, paginated_response
+
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -141,7 +143,7 @@ async def get_my_profile(
     profile = await user_service.get_user_profile(current_user.id)
     # Convert to dict if it's a Pydantic model
     profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
-    return success_response(
+    return SuccessResponse.create(
         data=profile_data,
         message="User profile retrieved successfully"
     )
@@ -209,7 +211,7 @@ async def update_my_profile(
     updated_user = await user_service.update_user(current_user.id, request)
     # Convert to dict if it's a Pydantic model
     user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
-    return success_response(
+    return SuccessResponse.create(
         data=user_data,
         message="User profile updated successfully"
     )
@@ -285,11 +287,11 @@ async def change_password(
     )
 
     if success:
-        return success_response(
+        return SuccessResponse.create(
             message="Password changed successfully"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="INVALID_PASSWORD",
             message="Current password is incorrect",
             status_code=status.HTTP_400_BAD_REQUEST
@@ -371,7 +373,7 @@ async def list_users(
     user_responses = [UserResponse.model_validate(user) for user in users]
     user_data = [user_resp.model_dump() for user_resp in user_responses]
 
-    return paginated_response(
+    return PaginatedResponse.create_response(
         items=user_data,
         total=total,
         page=page,
@@ -399,7 +401,7 @@ async def get_user(
 
     profile = await user_service.get_user_profile(user_id)
     profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
-    return success_response(
+    return SuccessResponse.create(
         data=profile_data,
         message="User profile retrieved successfully"
     )
@@ -425,7 +427,7 @@ async def update_user(
 
     updated_user = await user_service.update_user(user_id, request)
     user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
-    return success_response(
+    return SuccessResponse.create(
         data=user_data,
         message="User updated successfully"
     )
@@ -450,7 +452,7 @@ async def delete_user(
 
     # Prevent self-deletion
     if user_id == current_user.id:
-        return error_response(
+        return ErrorResponse.create(
             error_code="SELF_DELETION_FORBIDDEN",
             message="Cannot delete your own account",
             status_code=status.HTTP_400_BAD_REQUEST
@@ -459,11 +461,11 @@ async def delete_user(
     success = await user_service.delete_user(user_id)
 
     if success:
-        return success_response(
+        return SuccessResponse.create(
             message="User deleted successfully"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="USER_NOT_FOUND",
             message="User not found",
             status_code=status.HTTP_404_NOT_FOUND
@@ -507,7 +509,7 @@ async def promote_user_to_superuser(
         user.is_superuser = True
         await user_service.db.commit()
 
-        return success_response(
+        return SuccessResponse.create(
             message=f"User {user.username} promoted to superuser successfully"
         )
     except HTTPException:
@@ -563,7 +565,7 @@ async def demote_user_from_superuser(
         user.is_superuser = False
         await user_service.db.commit()
 
-        return success_response(
+        return SuccessResponse.create(
             message=f"User {user.username} demoted from superuser successfully"
         )
     except HTTPException:
@@ -612,7 +614,7 @@ async def activate_user_account(
         user.is_active = True
         await user_service.db.commit()
 
-        return success_response(
+        return SuccessResponse.create(
             message=f"User {user.username} activated successfully"
         )
     except HTTPException:
@@ -668,7 +670,7 @@ async def deactivate_user_account(
         user.is_active = False
         await user_service.db.commit()
 
-        return success_response(
+        return SuccessResponse.create(
             message=f"User {user.username} deactivated successfully"
         )
     except HTTPException:
@@ -722,7 +724,7 @@ async def admin_reset_user_password(
         # Update password
         await user_service.update_user_password(user_id, new_password)
 
-        return success_response(
+        return SuccessResponse.create(
             message=f"Password reset successfully for user {user.username}"
         )
     except HTTPException:
@@ -880,7 +882,7 @@ async def get_user_statistics(
             ),
         }
 
-        return success_response(
+        return SuccessResponse.create(
             data=stats_data,
             message="User statistics retrieved successfully"
         )

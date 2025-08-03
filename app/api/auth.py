@@ -63,9 +63,9 @@ from shared.schemas.auth import (
     RegisterRequest,
     Token,
 )
-from shared.schemas.common import BaseResponse, APIResponse
+from shared.schemas.common import BaseResponse, APIResponse, SuccessResponse, ErrorResponse
 from shared.schemas.user import UserResponse
-from ..core.response import success_response, error_response
+
 from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -222,7 +222,7 @@ async def login(
     )
     # Convert Token object to dict for unified response
     token_dict = token_data.model_dump() if hasattr(token_data, 'model_dump') else token_data
-    return success_response(
+    return SuccessResponse.create(
         data=token_dict,
         message="User authenticated successfully"
     )
@@ -360,7 +360,7 @@ async def logout():
         }
     """
     log_api_call("logout")
-    return success_response(message="Logged out successfully")
+    return SuccessResponse.create(message="Logged out successfully")
 
 
 @router.post("/refresh", response_model=APIResponse)
@@ -441,7 +441,7 @@ async def refresh_token(
     token_data = auth_service.create_access_token({"sub": current_user.username})
     # Convert Token object to dict for unified response
     token_dict = token_data.model_dump() if hasattr(token_data, 'model_dump') else token_data
-    return success_response(
+    return SuccessResponse.create(
         data=token_dict,
         message="Token refreshed successfully"
     )
@@ -512,7 +512,7 @@ async def request_password_reset(
 
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than self-service email
-    return success_response(
+    return SuccessResponse.create(
         message="Password reset request noted. Contact system administrator for password changes."
     )
 
@@ -590,6 +590,6 @@ async def confirm_password_reset(
 
     # For admin-only dashboard, password resets are handled by administrators
     # through the user management interface rather than token-based reset
-    return success_response(
+    return SuccessResponse.create(
         message="Password reset must be performed by system administrator through user management interface."
     )

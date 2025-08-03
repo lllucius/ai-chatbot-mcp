@@ -61,7 +61,7 @@ from shared.schemas.admin import (
     TaskStatusResponse,
     WorkersResponse,
 )
-from shared.schemas.common import APIResponse, BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
 from shared.schemas.task_responses import (
     TaskSystemStatusData,
     TaskSystemStatusResponse,
@@ -83,7 +83,6 @@ from shared.schemas.task_responses import (
     TaskMonitoringData,
     TaskMonitoringResponse,
 )
-from ..core.response import success_response, error_response
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["tasks"])
@@ -690,7 +689,7 @@ async def schedule_task(
             task_args = json.loads(args)
             task_kwargs = json.loads(kwargs)
         except json.JSONDecodeError as e:
-            return error_response(
+            return ErrorResponse.create(
                 error_code="INVALID_JSON_ARGUMENTS",
                 message=f"Invalid JSON in arguments: {str(e)}",
                 status_code=status.HTTP_400_BAD_REQUEST
@@ -706,7 +705,7 @@ async def schedule_task(
 
         result = celery_app.send_task(task_name, **schedule_kwargs)
 
-        return success_response(
+        return SuccessResponse.create(
             data={
                 "task_id": result.id,
                 "queue": queue,
@@ -715,7 +714,7 @@ async def schedule_task(
             message=f"Task '{task_name}' scheduled successfully"
         )
     except Exception as e:
-        return error_response(
+        return ErrorResponse.create(
             error_code="TASK_SCHEDULE_FAILED",
             message=f"Failed to schedule task: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -837,7 +836,7 @@ async def retry_failed_tasks(
 
         await db.commit()
 
-        return success_response(
+        return SuccessResponse.create(
             data={
                 "retried_count": retried_count,
                 "total_failed": len(failed_documents),
@@ -847,7 +846,7 @@ async def retry_failed_tasks(
         )
     except Exception as e:
         await db.rollback()
-        return error_response(
+        return ErrorResponse.create(
             error_code="RETRY_TASKS_FAILED",
             message=f"Failed to retry tasks: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -922,7 +921,7 @@ async def purge_queue(
         # Purge the queue
         purged_count = celery_app.control.purge()
 
-        return success_response(
+        return SuccessResponse.create(
             data={
                 "purged_tasks": purged_count,
                 "queue": queue_name,
@@ -930,7 +929,7 @@ async def purge_queue(
             message=f"Queue '{queue_name}' purged successfully"
         )
     except Exception as e:
-        return error_response(
+        return ErrorResponse.create(
             error_code="QUEUE_PURGE_FAILED",
             message=f"Failed to purge queue: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR

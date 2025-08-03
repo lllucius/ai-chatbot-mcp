@@ -42,7 +42,7 @@ from shared.schemas.admin import (
     ProfileStatsResponse,
     ProfileValidationResponse,
 )
-from shared.schemas.common import APIResponse, BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
 from shared.schemas.task_responses import (
     DefaultProfileResponse,
     ProfileParametersData,
@@ -51,7 +51,6 @@ from shared.schemas.task_responses import (
     ProfileValidationData,
     ProfileValidationResponse,
 )
-from ..core.response import success_response, error_response
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
     LLMProfileListResponse,
@@ -309,7 +308,7 @@ async def delete_profile(
     
     await profile_service.delete_profile(profile_name)
     
-    return success_response(
+    return SuccessResponse.create(
         message=f"Profile '{profile_name}' deleted successfully"
     )
 
@@ -360,11 +359,11 @@ async def set_default_profile(
     )
     success = await profile_service.set_default_profile(profile_name)
     if success:
-        return success_response(
+        return SuccessResponse.create(
             message=f"Profile '{profile_name}' set as default"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="PROFILE_NOT_FOUND",
             message=f"Profile '{profile_name}' not found",
             status_code=404

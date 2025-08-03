@@ -72,9 +72,12 @@ Security and Compliance:
 - Data privacy controls for sensitive information handling
 """
 
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, Optional
 
+from fastapi import status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -297,9 +300,31 @@ class SuccessResponse(BaseResponse):
     """Standard success response."""
 
     success: bool = Field(default=True, description="Always true for success responses")
-    data: Optional[Dict[str, Any]] = Field(
+    data: Optional[Any] = Field(
         default=None, description="Response data payload"
     )
+    meta: Optional[Dict[str, Any]] = Field(
+        default=None, description="Optional metadata"
+    )
+
+    @classmethod
+    def create(
+        cls,
+        data: Any = None,
+        message: str = "Success",
+        status_code: int = status.HTTP_200_OK,
+        meta: Optional[Dict[str, Any]] = None,
+    ) -> JSONResponse:
+        """Create successful response using unified envelope format."""
+        response = APIResponse(
+            success=True, data=data, message=message, meta=meta, timestamp=utcnow()
+        )
+        # Use the custom JSON serialization from the model to handle datetime
+        content_str = response.model_dump_json(exclude_none=True)
+        content = json.loads(content_str)
+        return JSONResponse(
+            content=content, status_code=status_code
+        )
 
 
 class ErrorResponse(BaseResponse):
@@ -312,6 +337,32 @@ class ErrorResponse(BaseResponse):
     details: Optional[Dict[str, Any]] = Field(
         default=None, description="Additional error details"
     )
+
+    @classmethod
+    def create(
+        cls,
+        error_code: str,
+        message: str = "An error occurred",
+        status_code: int = status.HTTP_400_BAD_REQUEST,
+        data: Any = None,
+        error_details: Optional[Dict[str, Any]] = None,
+        meta: Optional[Dict[str, Any]] = None,
+    ) -> JSONResponse:
+        """Create error response using unified envelope format."""
+        response = APIResponse(
+            success=False,
+            data=data,
+            message=message,
+            error=ErrorDetails(code=error_code, details=error_details),
+            timestamp=utcnow(),
+            meta=meta,
+        )
+        # Use the custom JSON serialization from the model to handle datetime
+        content_str = response.model_dump_json(exclude_none=True)
+        content = json.loads(content_str)
+        return JSONResponse(
+            content=content, status_code=status_code
+        )
 
 
 class ValidationErrorResponse(ErrorResponse):
@@ -326,6 +377,40 @@ class ValidationErrorResponse(ErrorResponse):
     errors: List[ErrorDetail] = Field(
         default_factory=list, description="Detailed validation errors"
     )
+
+    @classmethod  
+    def create(
+        cls,
+        errors: List[Dict[str, Any]], 
+        message: str = "Validation failed"
+    ) -> JSONResponse:
+        """Create validation error response using unified envelope format."""
+        error_details = [
+            ErrorDetail(
+                code=error.get("type", "validation_error"),
+                message=error.get("msg", "Invalid value"),
+                field=".".join(str(loc) for loc in error.get("loc", [])),
+                details=error,
+            )
+            for error in errors
+        ]
+
+        response = APIResponse(
+            success=False,
+            message=message,
+            error=ErrorDetails(
+                code="VALIDATION_ERROR",
+                details={"validation_errors": [err.model_dump() for err in error_details]}
+            ),
+            timestamp=utcnow(),
+        )
+
+        # Use the custom JSON serialization from the model to handle datetime
+        content_str = response.model_dump_json(exclude_none=True)
+        content = json.loads(content_str)
+        return JSONResponse(
+            content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
 
 
 class HealthCheckResponse(BaseResponse):
@@ -530,6 +615,39 @@ class PaginatedResponse(BaseResponse, Generic[T]):
             message=message,
             items=items,
             pagination=PaginationParams(page=page, per_page=size, total=total),
+        )
+
+    @classmethod
+    def create_response(
+        cls,
+        items: List[T],
+        page: int,
+        size: int,
+        total: int,
+        message: str = "Success",
+        status_code: int = status.HTTP_200_OK,
+    ) -> JSONResponse:
+        """Create paginated response using unified envelope format."""
+        # Calculate pagination metadata
+        total_pages = (total + size - 1) // size  # Ceiling division
+        has_next = page < total_pages
+        has_prev = page > 1
+
+        pagination_meta = {
+            "page": page,
+            "per_page": size,
+            "total": total,
+            "total_pages": total_pages,
+            "has_next": has_next,
+            "has_prev": has_prev
+        }
+
+        # Use SuccessResponse.create with pagination metadata
+        return SuccessResponse.create(
+            data=items,
+            message=message,
+            meta={"pagination": pagination_meta},
+            status_code=status_code
         )
 
 

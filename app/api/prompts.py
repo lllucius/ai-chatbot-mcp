@@ -41,14 +41,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
-from shared.schemas.common import APIResponse, BaseResponse
+from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse, PaginatedResponse
 from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
 from shared.schemas.prompt_responses import (
     PromptCategoriesData,
     PromptStatisticsData,
 )
 
-from ..core.response import error_response, paginated_response, success_response
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
@@ -302,7 +301,7 @@ async def delete_prompt(
     
     await prompt_service.delete_prompt(prompt_name)
     
-    return success_response(
+    return SuccessResponse.create(
         message=f"Prompt '{prompt_name}' deleted successfully"
     )
 
@@ -421,11 +420,11 @@ async def set_default_prompt(
     success = await prompt_service.set_default_prompt(prompt_name)
 
     if success:
-        return success_response(
+        return SuccessResponse.create(
             message=f"Prompt '{prompt_name}' set as default"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="PROMPT_NOT_FOUND",
             message=f"Prompt '{prompt_name}' not found",
             status_code=404

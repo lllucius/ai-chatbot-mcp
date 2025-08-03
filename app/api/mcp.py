@@ -44,8 +44,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_mcp_service
 from ..models.user import User
-from shared.schemas.common import APIResponse, BaseResponse
-from ..core.response import success_response, error_response
+from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
@@ -382,11 +381,11 @@ async def delete_server(
     deleted = await mcp_service.delete_server(server_name)
 
     if deleted:
-        return success_response(
+        return SuccessResponse.create(
             message=f"MCP server '{server_name}' deleted successfully"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="MCP_SERVER_NOT_FOUND",
             message=f"MCP server '{server_name}' not found",
             status_code=status.HTTP_404_NOT_FOUND
@@ -523,11 +522,11 @@ async def enable_tool(
     success = await mcp_service.enable_tool(tool_name)
 
     if success:
-        return success_response(
+        return SuccessResponse.create(
             message=f"MCP tool '{tool_name}' enabled successfully"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="MCP_TOOL_NOT_FOUND",
             message=f"MCP tool '{tool_name}' not found",
             status_code=status.HTTP_404_NOT_FOUND
@@ -592,11 +591,11 @@ async def disable_tool(
     success = await mcp_service.disable_tool(tool_name)
 
     if success:
-        return success_response(
+        return SuccessResponse.create(
             message=f"MCP tool '{tool_name}' disabled successfully"
         )
     else:
-        return error_response(
+        return ErrorResponse.create(
             error_code="MCP_TOOL_NOT_FOUND",
             message=f"MCP tool '{tool_name}' not found",
             status_code=status.HTTP_404_NOT_FOUND
@@ -717,11 +716,11 @@ async def test_tool(
     # Test the tool execution
     try:
         result = await mcp_service.test_tool_execution(tool_name, test_params or {})
-        return success_response(
+        return SuccessResponse.create(
             message=f"Tool '{tool_name}' test completed successfully"
         )
     except Exception as e:
-        return error_response(
+        return ErrorResponse.create(
             error_code="MCP_TOOL_TEST_FAILED",
             message=f"Tool '{tool_name}' test failed: {str(e)}",
             status_code=status.HTTP_400_BAD_REQUEST
