@@ -92,7 +92,9 @@ from shared.schemas.conversation import (
 )
 from shared.schemas.conversation_responses import (
     ConversationExportData,
+    ConversationExportDataCSV,
     ConversationExportDataJSON,
+    ConversationExportDataText,
     ConversationMetadata,
     ExportedMessage,
     ExportInfo,
@@ -919,11 +921,30 @@ async def export_conversation(
                 )
                 exported_messages.append(exported_message)
 
-            # Create the export data structure
-            export_data = {
-                "conversation": conversation_metadata.model_dump() if conversation_metadata else {},
-                "messages": [msg.model_dump() for msg in exported_messages],
-            }
+            # Create the export data structure using proper ConversationExportDataJSON
+            if include_metadata and conversation_metadata:
+                export_data_json = ConversationExportDataJSON(
+                    conversation=conversation_metadata,
+                    messages=exported_messages,
+                )
+            else:
+                # Create empty conversation metadata for consistency
+                empty_metadata = ConversationMetadata(
+                    id=str(conversation.id),
+                    title=conversation.title,
+                    created_at=conversation.created_at.isoformat(),
+                    updated_at=(
+                        conversation.updated_at.isoformat()
+                        if conversation.updated_at
+                        else None
+                    ),
+                    is_active=conversation.is_active,
+                    message_count=len(messages),
+                )
+                export_data_json = ConversationExportDataJSON(
+                    conversation=empty_metadata,
+                    messages=exported_messages,
+                )
 
             export_info = ExportInfo(
                 format=format,
@@ -933,7 +954,7 @@ async def export_conversation(
             )
 
             response_payload = ConversationExportData(
-                data=export_data,
+                data=export_data_json,
                 export_info=export_info,
             )
 
@@ -963,17 +984,25 @@ async def export_conversation(
 
             text_content = "\n".join(lines)
 
+            # Create properly structured text export data
+            export_data_text = ConversationExportDataText(
+                content=text_content,
+                format="text",
+            )
+
+            export_info = ExportInfo(
+                format=format,
+                exported_at=datetime.utcnow().isoformat(),
+                message_count=len(messages),
+                includes_metadata=include_metadata,
+            )
+
             return APIResponse[ConversationExportData](
                 success=True,
                 message="Conversation exported successfully in text format",
                 data=ConversationExportData(
-                    data={"content": text_content, "format": "text"},
-                    export_info=ExportInfo(
-                        format=format,
-                        exported_at=datetime.utcnow().isoformat(),
-                        message_count=len(messages),
-                        includes_metadata=include_metadata,
-                    ),
+                    data=export_data_text,
+                    export_info=export_info,
                 ),
             )
 
@@ -1003,17 +1032,25 @@ async def export_conversation(
 
             csv_content = "\n".join(csv_lines)
 
+            # Create properly structured CSV export data
+            export_data_csv = ConversationExportDataCSV(
+                content=csv_content,
+                format="csv",
+            )
+
+            export_info = ExportInfo(
+                format=format,
+                exported_at=datetime.utcnow().isoformat(),
+                message_count=len(messages),
+                includes_metadata=include_metadata,
+            )
+
             return APIResponse[ConversationExportData](
                 success=True,
                 message="Conversation exported successfully in CSV format",
                 data=ConversationExportData(
-                    data={"content": csv_content, "format": "csv"},
-                    export_info=ExportInfo(
-                        format=format,
-                        exported_at=datetime.utcnow().isoformat(),
-                        message_count=len(messages),
-                        includes_metadata=include_metadata,
-                    ),
+                    data=export_data_csv,
+                    export_info=export_info,
                 ),
             )
 
