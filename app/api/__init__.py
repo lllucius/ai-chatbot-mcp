@@ -1,10 +1,4 @@
-"""
-API module for the AI Chatbot Platform.
-
-This module contains all FastAPI router definitions and endpoints
-for the application's REST API, including registry-based APIs and
-administrative management endpoints.
-"""
+"""API module for the AI Chatbot Platform."""
 
 from .analytics import router as analytics_router
 from .auth import router as auth_router

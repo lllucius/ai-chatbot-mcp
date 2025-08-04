@@ -1,22 +1,4 @@
-"""
-Database management API endpoints.
-
-This module provides endpoints for database administration, migration management,
-backup operations, and maintenance tasks.
-
-Key Features:
-- Database initialization and schema management
-- Migration execution and status monitoring
-- Backup and restore operations
-- Database maintenance and optimization
-- Custom query execution for administration
-- Performance analysis and statistics
-
-Security:
-- All operations require superuser access
-- Backup/restore operations are logged and audited
-- Query execution has built-in safety checks
-"""
+"""Database management API endpoints."""
 
 import os
 import subprocess

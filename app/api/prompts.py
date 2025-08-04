@@ -1,39 +1,4 @@
-"""
-Prompt registry API endpoints with comprehensive prompt management.
-
-This module provides endpoints for managing prompts in the prompt registry
-including creation, retrieval, categorization, and usage analytics. It implements
-comprehensive prompt lifecycle management with category organization, tagging
-support, and detailed usage tracking for AI conversation enhancement.
-
-Key Features:
-- Prompt CRUD operations with validation and categorization
-- Category and tag management for prompt organization
-- Usage statistics and analytics tracking
-- Default prompt configuration and management
-- Search and filtering capabilities across prompts
-- Template variable support and validation
-
-Prompt Management:
-- Create and organize prompts by categories and tags
-- Set system default prompts for various conversation contexts
-- Track usage patterns and effectiveness metrics
-- Manage prompt lifecycle with active/inactive states
-- Support for template variables and dynamic content
-
-Organizational Features:
-- Category-based prompt classification
-- Tag-based filtering and search capabilities
-- Hierarchical prompt organization
-- Metadata management and versioning
-- Usage analytics and performance tracking
-
-Security Features:
-- Role-based access control for administrative operations
-- Input validation and content sanitization
-- Audit logging for prompt management activities
-- Protection against unauthorized prompt modifications
-"""
+"""Prompt registry management API endpoints."""
 
 from typing import Any, Dict, Optional
 

@@ -1,32 +1,4 @@
-"""
-LLM Profile registry API endpoints with comprehensive profile management.
-
-This module provides endpoints for managing LLM parameter profiles including
-creation, retrieval, updates, statistics, and parameter validation. It implements
-role-based access control for administrative operations and provides comprehensive
-profile configuration capabilities for Large Language Model integration.
-
-Key Features:
-- LLM profile CRUD operations with validation
-- Parameter management and OpenAI compatibility
-- Default profile configuration and management
-- Usage statistics and analytics tracking
-- Parameter validation and error reporting
-- Profile search and filtering capabilities
-
-Profile Management:
-- Create custom parameter profiles for different use cases
-- Set default profiles for system-wide configuration
-- Validate parameters before profile creation
-- Track usage statistics and performance metrics
-- Manage profile lifecycle (active/inactive states)
-
-Security Features:
-- Role-based access control for administrative operations
-- Input validation and parameter sanitization
-- Audit logging for profile management activities
-- Protection against unauthorized profile modifications
-"""
+"""LLM profile management API endpoints."""
 
 from typing import Any, Dict, Optional
 

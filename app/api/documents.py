@@ -1,32 +1,4 @@
-"""
-Document management API endpoints with comprehensive processing capabilities.
-
-This module provides endpoints for document upload, processing, management,
-and retrieval operations with full lifecycle support including background
-processing, status monitoring, and advanced search capabilities.
-
-Key Features:
-- Document upload with multiple format support
-- Background processing with priority queuing
-- Real-time status monitoring and progress tracking
-- Document reprocessing and error recovery
-- Bulk operations for administrative management
-- Advanced search and filtering capabilities
-- Export functionality in multiple formats
-
-Processing Pipeline:
-- Text extraction from various file formats
-- Intelligent chunking with configurable parameters
-- Embedding generation for semantic search
-- Metadata extraction and indexing
-- Quality validation and error handling
-
-Security Features:
-- User-based document ownership and access control
-- File type validation and sanitization
-- Processing quota management
-- Comprehensive audit logging
-"""
+"""Document management API endpoints."""
 
 from datetime import datetime, timedelta
 from typing import Optional
