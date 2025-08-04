@@ -155,23 +155,6 @@ class DatabaseQueryResponse(BaseModel):
         return json.dumps(data)
 
 
-# --- User Statistics Response Models ---
-
-
-class UserStatisticsResponse(BaseModel):
-    """User statistics response schema."""
-
-    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
-
-    success: bool = Field(..., description="Operation success status")
-    data: Dict[str, Any] = Field(..., description="User statistics data")
-
-    def model_dump_json(self, **kwargs):
-        data = self.model_dump(**kwargs)
-        import json
-        return json.dumps(data)
-
-
 # --- Search and Export Response Models ---
 
 

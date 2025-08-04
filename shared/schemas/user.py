@@ -885,50 +885,5 @@ class UserStatsResponse(BaseSchema):
     active_users: int = Field(..., description="Number of active users")
     inactive_users: int = Field(..., description="Number of inactive users")
     superusers: int = Field(..., description="Number of superusers")
-    users_created_today: int = Field(..., description="Users created today")
-    users_created_this_week: int = Field(..., description="Users created this week")
-    users_created_this_month: int = Field(..., description="Users created this month")
-    last_updated: datetime = Field(
-        default_factory=utcnow, description="When statistics were last calculated"
-    )
 
-    def model_dump_json(self, **kwargs):
-        """
-        Custom JSON serialization with comprehensive datetime handling for user statistics.
 
-        Converts datetime fields to ISO format strings for JSON compatibility and
-        frontend integration. Provides proper timestamp formatting for user statistics
-        and analytics data with consistent datetime representation.
-
-        Args:
-            **kwargs: Additional arguments passed to model_dump for serialization control
-
-        Returns:
-            str: JSON string with properly formatted datetime fields
-
-        Serialization Features:
-            - Datetime to ISO format conversion with timezone indicators
-            - Consistent timestamp formatting for analytics data
-            - Frontend-compatible JSON structure for dashboard integration
-            - Proper datetime handling for statistics freshness tracking
-            - Integration with analytics and reporting systems
-
-        Use Cases:
-            - Analytics dashboard data serialization
-            - Statistical reporting and data presentation
-            - Administrative interface data formatting
-            - Real-time statistics display and updates
-            - Integration with external analytics and monitoring systems
-
-        Example:
-            stats = UserStatsResponse(total_users=100, last_updated=datetime.now())
-            json_output = stats.model_dump_json()
-            # Result: {"total_users": 100, "last_updated": "2024-01-01T12:00:00Z", ...}
-        """
-        data = self.model_dump(**kwargs)
-        if "last_updated" in data and data["last_updated"] is not None:
-            if isinstance(data["last_updated"], datetime):
-                data["last_updated"] = data["last_updated"].isoformat() + "Z"
-        import json
-
-        return json.dumps(data)

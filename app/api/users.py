@@ -1,12 +1,13 @@
 """User management API endpoints."""
 
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.admin_responses import (
-    UserStatisticsResponse,
+    UserStatsResponse,
 )
 from shared.schemas.common import (
     APIResponse,
@@ -14,7 +15,13 @@ from shared.schemas.common import (
     PaginatedResponse,
     SuccessResponse,
 )
-from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
+from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate, UserStatsResponse
+from sqlalchemy import func, select
+
+from ..models.conversation import Conversation
+from ..models.document import Document
+from ..models.user import User as UserModel
+
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
@@ -30,40 +37,40 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.get("/me", response_model=APIResponse)
+@router.get("/me", response_model=APIResponse[UserResponse)
 @handle_api_errors("Failed to retrieve user profile")
 async def get_my_profile(
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse[UserResponse]:
     """Get current user profile with statistics."""
     log_api_call("get_my_profile", user_id=str(current_user.id))
 
-    profile = await user_service.get_user_profile(current_user.id)
-    # Convert to dict if it's a Pydantic model
-    profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
-    return SuccessResponse.create(
-        data=profile_data,
-        message="User profile retrieved successfully"
+    user = await user_service.get_user_profile(current_user.id)
+    payload = UserResponse.model_validate(user)
+    return APIResponse[UserResponse](
+        success=True,
+        message="User profile retrieved successfully",
+        data=payload,
     )
 
 
-@router.put("/me", response_model=APIResponse)
+@router.put("/me", response_model=APIResponse[UserResponse])
 @handle_api_errors("Profile update failed")
 async def update_my_profile(
     request: UserUpdate,
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse[UserResponse]:
     """Update current user profile information."""
     log_api_call("update_my_profile", user_id=str(current_user.id))
 
-    updated_user = await user_service.update_user(current_user.id, request)
-    # Convert to dict if it's a Pydantic model
-    user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
-    return SuccessResponse.create(
-        data=user_data,
-        message="User profile updated successfully"
+    user = await user_service.update_user(current_user.id, request)
+    payload = UserResponse.model_validate(user)
+    return APIResponse[UserResponse](
+        success=True,
+        message="User profile updated successfully",
+        data=payload,
     )
 
 
@@ -73,30 +80,27 @@ async def change_password(
     request: UserPasswordUpdate,
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Change current user password with security verification."""
     log_api_call("change_password", user_id=str(current_user.id))
 
     success = await user_service.change_password(
         current_user.id, request.current_password, request.new_password
     )
-
-    if success:
-        return SuccessResponse.create(
-            message="Password changed successfully"
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_401_FORBIDDEN,
+            detail="Current password is incorrect",
         )
-    else:
-        return ErrorResponse.create(
-            error_code="INVALID_PASSWORD",
-            message="Current password is incorrect",
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
-
+    return APIResponse(
+        success=True,
+        message="Password changed successfully",
+    )
 
 # Admin endpoints (require superuser privileges)
 
 
-@router.get("/", response_model=APIResponse)
+@router.get("/", response_model=APIResponse[PaginatedResponse[UserResponses]])
 @handle_api_errors("Failed to retrieve users")
 async def list_users(
     page: int = Query(1, ge=1),
@@ -105,7 +109,7 @@ async def list_users(
     superuser_only: bool = Query(False),
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse[PaginatedResponse[UserResponses]]:
     """List all users with filtering and pagination."""
     log_api_call(
         "list_users",
@@ -121,55 +125,63 @@ async def list_users(
     )
 
     user_responses = [UserResponse.model_validate(user) for user in users]
-    user_data = [user_resp.model_dump() for user_resp in user_responses]
 
-    return PaginatedResponse.create_response(
-        items=user_data,
-        total=total,
-        page=page,
-        size=size,
+    payload = PaginatedResponse(
+        items=user_responses,
+        pagination=PaginationParams(
+            total=total,
+            page=page,
+            per_page=size,
+        )
+    )
+
+    return APIResponse[PaginatedResponse[UserResponses]](
+        success=True,
         message="Users retrieved successfully",
+        data=payload,
     )
 
 
-@router.get("/byid/{user_id}", response_model=APIResponse)
+@router.get("/byid/{user_id}", response_model=APIResponse[UserResponse])
 @handle_api_errors("Failed to retrieve user")
 async def get_user(
     user_id: UUID,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse[UserResponse]:
     """Get user by ID (admin only)."""
     log_api_call(
         "get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
 
-    profile = await user_service.get_user_profile(user_id)
-    profile_data = profile.model_dump() if hasattr(profile, 'model_dump') else profile
-    return SuccessResponse.create(
-        data=profile_data,
-        message="User profile retrieved successfully"
+    user = await user_service.get_user_profile(user_id)
+    payload = UserResponse.model_validate(user)
+    return APIResponse[UserResponse](
+        success=True,
+        message="User profile retrieved successfully",
+        data=payload,
     )
 
 
-@router.put("/byid/{user_id}", response_model=APIResponse)
+@router.put("/byid/{user_id}", response_model=APIResponse[UserResponse)
 @handle_api_errors("User update failed")
 async def update_user(
     user_id: UUID,
     request: UserUpdate,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse[UserResponse]:
     """Update user by ID (admin only)."""
     log_api_call(
         "update_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
 
-    updated_user = await user_service.update_user(user_id, request)
-    user_data = updated_user.model_dump() if hasattr(updated_user, 'model_dump') else updated_user
-    return SuccessResponse.create(
-        data=user_data,
+    user = await user_service.update_user(user_id, request)
+    payload = UserResponse.model_validate(user)
+    return APIResponse[UserResponse](
+        success=True,
         message="User updated successfully"
+        data=payload,
     )
 
 
@@ -179,7 +191,7 @@ async def delete_user(
     user_id: UUID,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Delete user by ID (admin only)."""
     log_api_call(
         "delete_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
@@ -194,17 +206,16 @@ async def delete_user(
         )
 
     success = await user_service.delete_user(user_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"),
+        )
 
-    if success:
-        return SuccessResponse.create(
-            message="User deleted successfully"
-        )
-    else:
-        return ErrorResponse.create(
-            error_code="USER_NOT_FOUND",
-            message="User not found",
-            status_code=status.HTTP_404_NOT_FOUND
-        )
+    return APIResponse(
+        success=True,
+        message="User deleted successfully",
+    )
 
 
 @router.post("/users/byid/{user_id}/promote", response_model=APIResponse)
@@ -213,7 +224,7 @@ async def promote_user_to_superuser(
     user_id: UUID,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Promote a user to superuser status."""
     log_api_call(
         "promote_user", user_id=str(current_user.id), target_user_id=str(user_id)
@@ -223,7 +234,8 @@ async def promote_user_to_superuser(
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                dddetail="User not found",
             )
 
         if user.is_superuser:
@@ -236,8 +248,9 @@ async def promote_user_to_superuser(
         user.is_superuser = True
         await user_service.db.commit()
 
-        return SuccessResponse.create(
-            message=f"User {user.username} promoted to superuser successfully"
+        return APIResponse(
+            success=True,
+            message=f"User {user.username} promoted to superuser successfully",
         )
     except HTTPException:
         raise
@@ -252,7 +265,7 @@ async def demote_user_from_superuser(
     user_id: UUID,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Demote a superuser to regular user status."""
     log_api_call(
         "demote_user", user_id=str(current_user.id), target_user_id=str(user_id)
@@ -261,14 +274,16 @@ async def demote_user_from_superuser(
     # Prevent self-demotion
     if current_user.id == user_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot demote yourself"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot demote yourself"
         )
 
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
             )
 
         if not user.is_superuser:
@@ -281,8 +296,9 @@ async def demote_user_from_superuser(
         user.is_superuser = False
         await user_service.db.commit()
 
-        return SuccessResponse.create(
-            message=f"User {user.username} demoted from superuser successfully"
+        return APIResponse(
+            success=True,
+            message=f"User {user.username} demoted from superuser successfully",
         )
     except HTTPException:
         raise
@@ -297,7 +313,7 @@ async def activate_user_account(
     user_id: UUID,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Activate a user account."""
     log_api_call(
         "activate_user", user_id=str(current_user.id), target_user_id=str(user_id)
@@ -307,20 +323,23 @@ async def activate_user_account(
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
             )
 
         if user.is_active:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="User is already active"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User is already active"
             )
 
         # Activate user
         user.is_active = True
         await user_service.db.commit()
 
-        return SuccessResponse.create(
-            message=f"User {user.username} activated successfully"
+        return APIResponse(
+            success=True,
+            message=f"User {user.username} activated successfully",
         )
     except HTTPException:
         raise
@@ -335,7 +354,7 @@ async def deactivate_user_account(
     user_id: UUID,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Deactivate a user account."""
     log_api_call(
         "deactivate_user", user_id=str(current_user.id), target_user_id=str(user_id)
@@ -344,14 +363,16 @@ async def deactivate_user_account(
     # Prevent self-deactivation
     if current_user.id == user_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot deactivate yourself"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot deactivate yourself"
         )
 
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
             )
 
         if not user.is_active:
@@ -364,8 +385,9 @@ async def deactivate_user_account(
         user.is_active = False
         await user_service.db.commit()
 
-        return SuccessResponse.create(
-            message=f"User {user.username} deactivated successfully"
+        return APIResponse(
+            success=True,
+            message=f"User {user.username} deactivated successfully",
         )
     except HTTPException:
         raise
@@ -381,7 +403,7 @@ async def admin_reset_user_password(
     new_password: str = Query(..., min_length=8, description="New password"),
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-):
+) -> APIResponse:
     """Reset a user's password (admin operation)."""
     log_api_call(
         "admin_reset_password",
@@ -393,7 +415,8 @@ async def admin_reset_user_password(
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
             )
 
         # Validate password strength
@@ -406,8 +429,9 @@ async def admin_reset_user_password(
         # Update password
         await user_service.update_user_password(user_id, new_password)
 
-        return SuccessResponse.create(
-            message=f"Password reset successfully for user {user.username}"
+        return APIResponse(
+            success=True,
+            message=f"Password reset successfully for user {user.username}",
         )
     except HTTPException:
         raise
@@ -415,105 +439,33 @@ async def admin_reset_user_password(
         raise
 
 
-@router.get("/users/stats", response_model=APIResponse)
+@router.get("/users/stats", response_model=APIResponse[UserStatsResponse])
 @handle_api_errors("Failed to get user statistics")
 async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-) -> UserStatisticsResponse:
+) -> APIResponse[UserStatsResponse]:
     """Get comprehensive user statistics for administrative reporting."""
     log_api_call("get_user_statistics", user_id=str(current_user.id))
 
-    try:
-        from sqlalchemy import func, select
+    # Basic user counts
+    total_users = await db.scalar(select(func.count(UserModel.id)))
+    active_users = await db.scalar(
+        select(func.count(UserModel.id)).where(UserModel.is_active)
+    )
+    superusers = await db.scalar(
+        select(func.count(UserModel.id)).where(UserModel.is_superuser)
+    )
 
-        from ..models.conversation import Conversation
-        from ..models.document import Document
-        from ..models.user import User as UserModel
+    payload = UserStatsResponse(
+        total_users=total_users or 0,
+        active_users=active_users or 0,
+        inactive_users=(total_users or 0) - (active_users or 0),
+        superusers=superusers or 0,
+    }
 
-        # Basic user counts
-        total_users = await db.scalar(select(func.count(UserModel.id)))
-        active_users = await db.scalar(
-            select(func.count(UserModel.id)).where(UserModel.is_active)
-        )
-        superusers = await db.scalar(
-            select(func.count(UserModel.id)).where(UserModel.is_superuser)
-        )
-
-        # Recent registrations (last 30 days)
-        from datetime import datetime, timedelta
-
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        recent_users = await db.scalar(
-            select(func.count(UserModel.id)).where(
-                UserModel.created_at >= thirty_days_ago
-            )
-        )
-
-        # User engagement metrics
-        users_with_documents = await db.scalar(
-            select(func.count(func.distinct(Document.user_id)))
-        )
-
-        users_with_conversations = await db.scalar(
-            select(func.count(func.distinct(Conversation.user_id)))
-        )
-
-        # Average documents per user
-        avg_docs_per_user = (
-            await db.scalar(
-                select(func.avg(func.count(Document.id)))
-                .select_from(Document)
-                .group_by(Document.user_id)
-            )
-            or 0
-        )
-
-        # Average conversations per user
-        avg_convs_per_user = (
-            await db.scalar(
-                select(func.avg(func.count(Conversation.id)))
-                .select_from(Conversation)
-                .group_by(Conversation.user_id)
-            )
-            or 0
-        )
-
-        # Top active users (by document count)
-        top_users_docs = await db.execute(
-            select(UserModel.username, func.count(Document.id).label("document_count"))
-            .join(Document, UserModel.id == Document.user_id, isouter=True)
-            .group_by(UserModel.id, UserModel.username)
-            .order_by(func.count(Document.id).desc())
-            .limit(5)
-        )
-
-        top_users_list = [
-            {"username": row.username, "document_count": row.document_count}
-            for row in top_users_docs.fetchall()
-        ]
-
-        stats_data = {
-            "total_users": total_users or 0,
-            "active_users": active_users or 0,
-            "inactive_users": (total_users or 0) - (active_users or 0),
-            "superusers": superusers or 0,
-            "recent_registrations_30d": recent_users or 0,
-            "engagement": {
-                "users_with_documents": users_with_documents or 0,
-                "users_with_conversations": users_with_conversations or 0,
-                "avg_documents_per_user": round(avg_docs_per_user, 2),
-                "avg_conversations_per_user": round(avg_convs_per_user, 2),
-            },
-            "top_users_by_documents": top_users_list,
-            "activity_rate": round(
-                (active_users or 0) / max(total_users or 1, 1) * 100, 2
-            ),
-        }
-
-        return SuccessResponse.create(
-            data=stats_data,
-            message="User statistics retrieved successfully"
-        )
-    except Exception:
-        raise
+    return APIResponse[UserStatsResponse](
+        success=True,
+        message="User statistics retrieved successfully",
+        data=stats_data,
+    )
