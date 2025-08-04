@@ -24,7 +24,15 @@ from shared.schemas.common import (
     PaginatedResponse,
     SuccessResponse,
 )
-from shared.schemas.document import DocumentResponse, DocumentUploadResponse
+from shared.schemas.document import (
+    BackgroundTaskResponse,
+    DocumentResponse,
+    DocumentUpdate,
+    DocumentUploadResponse,
+    ProcessingConfigResponse,
+    ProcessingStatusResponse,
+    QueueStatusResponse,
+)
 from shared.schemas.document_responses import (
     AdvancedSearchData,
     DocumentFileTypeStats,
@@ -182,24 +190,7 @@ async def update_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Update document metadata.
-
-    Allows updating document title and metadata.
-    Cannot change the actual file content.
-
-    Args:
-        document_id: UUID of the document to update
-        request: Document update data (title, metadata)
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        DocumentResponse: Updated document information
-
-    Raises:
-        HTTP 404: If document not found or not owned by user
-    """
+    """Update document metadata."""
     log_api_call("update_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.update_document(
         document_id, request, current_user.id
@@ -214,23 +205,7 @@ async def delete_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Delete document and all associated data.
-
-    Permanently deletes the document, its chunks, embeddings,
-    and removes the file from storage.
-
-    Args:
-        document_id: UUID of the document to delete
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        APIResponse: Confirmation of successful deletion using unified envelope
-
-    Raises:
-        HTTP 404: If document not found or not owned by user
-    """
+    """Delete document and all associated data."""
     log_api_call("delete_document", user_id=str(current_user.id), document_id=str(document_id))
     success = await document_service.delete_document(document_id, current_user.id)
 
@@ -254,21 +229,7 @@ async def get_processing_status(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> ProcessingStatusResponse:
-    """
-    Get document processing status with optional background task information.
-
-    Returns current processing status, progress, and any error information
-    for the specified document. Can include background task details if task_id is provided.
-
-    Args:
-        document_id: UUID of the document to check
-        task_id: Optional background task ID for detailed status
-        user: Current authenticated user
-        service: Document service instance
-
-    Returns:
-        ProcessingStatusResponse: Document processing status and progress
-    """
+    """Get document processing status with optional background task information."""
     log_api_call("get_processing_status", user_id=str(user.id), document_id=str(document_id), task_id=task_id)
     if task_id:
         # Enhanced processing status with task details
@@ -289,25 +250,7 @@ async def reprocess_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Reprocess document.
-
-    Triggers reprocessing of the document, including text extraction,
-    chunking, and embedding generation. Useful if processing failed
-    or if you want to update with new processing parameters.
-
-    Args:
-        document_id: UUID of the document to reprocess
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        APIResponse: Confirmation that reprocessing has started using unified envelope
-
-    Raises:
-        HTTP 400: If document cannot be reprocessed at this time
-        HTTP 404: If document not found or not owned by user
-    """
+    """Reprocess document."""
     log_api_call("reprocess_document", user_id=str(current_user.id), document_id=str(document_id))
     success = await document_service.reprocess_document(document_id, current_user.id)
 
@@ -328,22 +271,7 @@ async def download_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ) -> FileResponse:
-    """
-    Download original document file.
-
-    Returns the original uploaded file for download.
-
-    Args:
-        document_id: UUID of the document to download
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        FileResponse: Original document file for download
-
-    Raises:
-        HTTP 404: If document not found or not owned by user
-    """
+    """Download original document file."""
     log_api_call("download_document", user_id=str(current_user.id), document_id=str(document_id))
     file_path, filename, mime_type = await document_service.get_download_info(
         document_id, current_user.id
@@ -364,20 +292,7 @@ async def start_document_processing(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> BackgroundTaskResponse:
-    """
-    Start background processing for a document.
-
-    Initiates text extraction, chunking, and embedding generation.
-
-    Args:
-        document_id: UUID of the document to process
-        priority: Processing priority from 1 (highest) to 10 (lowest)
-        user: Current authenticated user
-        service: Document service instance
-
-    Returns:
-        BackgroundTaskResponse: Task information including task ID and status
-    """
+    """Start background processing for a document."""
     log_api_call("start_document_processing", user_id=str(user.id), document_id=str(document_id), priority=priority)
     task_id = await service.start_processing(document_id, priority=priority)
 
@@ -392,14 +307,7 @@ async def start_document_processing(
 @router.get("/processing-config", response_model=ProcessingConfigResponse)
 @handle_api_errors("Failed to retrieve configuration", log_errors=True)
 async def get_processing_config() -> ProcessingConfigResponse:
-    """
-    Get current document processing configuration.
-
-    Returns the current settings for chunk sizes, overlaps, and other processing parameters.
-
-    Returns:
-        ProcessingConfigResponse: Current processing configuration settings
-    """
+    """Get current document processing configuration."""
     log_api_call("get_processing_config")
     return ProcessingConfigResponse(
         message="Processing configuration retrieved",
@@ -428,18 +336,7 @@ async def get_queue_status(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get background processing queue status.
-
-    Provides information about current queue size, active tasks, and processing capacity.
-
-    Args:
-        user: Current authenticated user
-        db: Database session
-
-    Returns:
-        QueueStatusResponse: Current queue status and processing information
-    """
+    """Get background processing queue status."""
     log_api_call("get_queue_status", user_id=str(user.id))
     background_processor = await get_background_processor(db)
     queue_status = await background_processor.get_queue_status()
@@ -465,19 +362,7 @@ async def cleanup_documents(
     document_service: DocumentService = Depends(get_document_service),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Clean up old or failed documents.
-
-    Removes documents based on age and status criteria.
-    Supports dry run mode to preview what would be deleted.
-
-    Args:
-        status_filter: Status to filter by (failed, completed, processing)
-        older_than_days: Remove documents older than X days
-        dry_run: Perform dry run without actually deleting
-
-    Requires superuser access.
-    """
+    """Clean up old or failed documents."""
     log_api_call(
         "cleanup_documents",
         user_id=str(current_user.id),
@@ -581,12 +466,7 @@ async def get_document_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get comprehensive document statistics.
-
-    Returns detailed statistics about documents including counts by status,
-    file types, processing metrics, and storage usage.
-    """
+    """Get comprehensive document statistics."""
     log_api_call("get_document_statistics", user_id=str(current_user.id))
 
     try:
@@ -756,18 +636,7 @@ async def bulk_reprocess_documents(
     document_service: DocumentService = Depends(get_document_service),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Bulk reprocess documents based on status filter.
-
-    Initiates reprocessing for multiple documents matching the criteria.
-    Useful for recovering from processing failures or applying updates.
-
-    Args:
-        status_filter: Status to filter by (failed, completed)
-        limit: Maximum number of documents to reprocess
-
-    Requires superuser access.
-    """
+    """Bulk reprocess documents based on status filter."""
     log_api_call(
         "bulk_reprocess_documents",
         user_id=str(current_user.id),
@@ -858,23 +727,7 @@ async def advanced_document_search(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Perform advanced document search with multiple filters.
-
-    Supports complex filtering by content, metadata, file properties,
-    user ownership, and date ranges.
-
-    Args:
-        query: Search query for content and title
-        file_types: Comma-separated file extensions to filter by
-        status_filter: Status filter
-        user_filter: Username to filter by
-        date_from: Start date for filtering
-        date_to: End date for filtering
-        min_size: Minimum file size in bytes
-        max_size: Maximum file size in bytes
-        limit: Maximum number of results
-    """
+    """Perform advanced document search with multiple filters."""
     log_api_call("advanced_document_search", user_id=str(current_user.id), query=query)
 
     try:
