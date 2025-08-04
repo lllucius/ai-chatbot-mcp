@@ -251,63 +251,23 @@ def create_success_response(
     message: str = "Operation successful",
     metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """
-    Create standardized success response with comprehensive structure and enterprise compliance.
+    """Create standardized success response with structured data organization.
 
-    Generates consistent success response format for all API endpoints with structured
-    data organization, comprehensive metadata support, and standardized messaging.
-    Implements enterprise-grade response patterns with proper status indication,
-    timestamp tracking, and optional payload organization for optimal client
-    integration and comprehensive API contract compliance.
+    Generates consistent success response format for all API endpoints with
+    optional data payload and metadata support.
 
     Args:
-        data (Any, optional): Primary response payload containing requested information.
-            Can be any JSON-serializable data structure including objects, arrays, or primitives.
-            Defaults to None for operations returning only status confirmation.
-        message (str): Human-readable success message for client display and logging.
-            Defaults to "Operation successful" providing clear operation confirmation.
-        metadata (Optional[Dict[str, Any]]): Additional response metadata including:
-            - Pagination information for list endpoints with page counts and navigation
-            - Performance metrics including execution time and resource usage
-            - Cache information with expiration times and validation tokens
-            - Request correlation data for debugging and audit trail tracking
+        data: Primary response payload (optional)
+        message: Human-readable success message
+        metadata: Additional response metadata (optional)
 
     Returns:
-        Dict[str, Any]: Standardized success response structure containing:
-            - success (bool): Always True indicating successful operation completion
-            - message (str): Success message for client display and logging purposes
-            - timestamp (str): ISO 8601 timestamp of response generation for audit trails
-            - data (Any): Primary response payload when provided with structured content
-            - metadata (Dict): Additional response metadata when provided with context information
-
-    Security Notes:
-        - Excludes sensitive information from metadata and response structure
-        - Provides consistent response format preventing information disclosure
-        - Includes timestamp for audit trail generation and security monitoring
-        - Supports correlation tracking for security analysis and incident response
-
-    Performance Notes:
-        - Minimal response overhead with efficient JSON serialization
-        - Configurable metadata inclusion preventing unnecessary payload bloat
-        - Cached timestamp generation for high-frequency response scenarios
-        - Memory efficient with optional field inclusion and optimized structure
-
-    Use Cases:
-        - API endpoint success responses with consistent format and structure
-        - Data retrieval operations with payload organization and metadata context
-        - Operation confirmation responses with status indication and timing
-        - Batch operation results with individual item status and aggregate metadata
-        - Integration responses with external system correlation and tracking
+        Dict containing success indicator, message, timestamp, and optional data/metadata
 
     Example:
-        # Simple success response
-        response = create_success_response(message="User created successfully")
-
-        # Response with data payload
         response = create_success_response(
-            data={"user_id": 123, "username": "john_doe"},
-            message="User retrieved successfully",
-            metadata={"query_time_ms": 15, "cache_hit": True}
+            data={"user_id": 123},
+            message="User created successfully"
         )
     """
     response = {
@@ -326,42 +286,15 @@ def create_success_response(
 
 
 def log_api_call(operation: str, **kwargs):
-    """
-    Log API call with comprehensive context for monitoring, debugging, and audit compliance.
+    """Log API call with context for monitoring, debugging, and audit compliance.
 
-    Provides structured logging for API operations with detailed context information,
-    performance metrics, and security tracking. Implements enterprise-grade audit
-    logging with correlation support, operational monitoring integration, and
-    comprehensive context preservation for debugging and compliance requirements.
+    Provides structured logging for API operations with context information,
+    performance metrics, and security tracking for comprehensive audit trails.
 
     Args:
-        operation (str): Descriptive name of the API operation being performed.
-            Should be consistent across related operations for effective monitoring and analysis.
-        **kwargs: Additional context data for comprehensive logging including:
-            - user_id: User identifier for security audit trails and access tracking
-            - request_id: Correlation identifier for distributed system tracing
-            - execution_time: Operation duration for performance monitoring and optimization
-            - parameters: Sanitized request parameters for debugging and analysis
-            - client_info: Client identification for usage analytics and security monitoring
-
-    Security Notes:
-        - Excludes sensitive data from logging preventing credential exposure
-        - Implements correlation tracking for security analysis and incident response
-        - Provides audit trail capabilities for compliance and regulatory requirements
-        - Supports security monitoring with structured event data and context
-
-    Performance Notes:
-        - Asynchronous logging ensuring minimal API response latency impact
-        - Structured data format optimized for log aggregation and analysis
-        - Configurable log levels preventing performance overhead in production
-        - Memory efficient with automatic cleanup and resource management
-
-    Use Cases:
-        - API endpoint monitoring with operation tracking and performance analysis
-        - Security audit trails with user activity and access pattern tracking
-        - Debugging support with detailed context and correlation information
-        - Compliance logging with regulatory audit trail and retention requirements
-        - Operational monitoring with real-time alerting and performance tracking
+        operation: Descriptive name of the API operation being performed
+        **kwargs: Additional context data including user_id, request_id,
+            execution_time, parameters, and client_info
 
     Example:
         log_api_call(
