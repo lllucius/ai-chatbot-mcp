@@ -149,6 +149,15 @@ class EmbeddingService:
         batch_size: Optional[int] = None,
         embedding_encoding: Optional[str] = None,
     ):
+        """Initialize the embedding service.
+
+        Args:
+            db: Database session for operations.
+            openai_client: OpenAI client for embedding generation.
+            vector_dimension: Dimension of embeddings to generate.
+            batch_size: Size of batches for processing.
+            embedding_encoding: Encoding format for embeddings.
+        """
         self.db: AsyncSession = db
         self.openai_client: OpenAIClient = openai_client or OpenAIClient()
 

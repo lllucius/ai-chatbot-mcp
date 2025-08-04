@@ -64,6 +64,16 @@ class ProcessingTask:
         max_retries: int = 3,
         retry_delay: float = 5.0,
     ):
+        """Initialize a processing task.
+
+        Args:
+            task_id: Unique identifier for the task.
+            document_id: UUID of the document to process.
+            task_type: Type of processing task to perform.
+            priority: Task priority (lower numbers = higher priority).
+            max_retries: Maximum number of retry attempts.
+            retry_delay: Delay in seconds between retries.
+        """
         self.task_id = task_id
         self.document_id = document_id
         self.task_type = task_type
@@ -259,7 +269,7 @@ class BackgroundProcessor(BaseService):
         return True
 
     async def _worker_loop(self):
-        """Main worker loop for processing tasks."""
+        """Process tasks from the queue in a continuous loop."""
         logger.info("Background processor worker started")
 
         while not self._shutdown_event.is_set():

@@ -55,11 +55,24 @@ class LRUCache:
     """A simple LRU cache for query embeddings."""
 
     def __init__(self, capacity=128):
+        """Initialize the LRU cache.
+
+        Args:
+            capacity: Maximum number of items to store in cache.
+        """
         self.cache: Dict[str, Tuple[float, List[float]]] = {}
         self.order: List[str] = []
         self.capacity = capacity
 
     def get(self, key: str) -> Optional[List[float]]:
+        """Get value from cache and update access order.
+
+        Args:
+            key: Cache key to retrieve.
+
+        Returns:
+            Cached value or None if not found.
+        """
         if key in self.cache:
             self.order.remove(key)
             self.order.insert(0, key)
@@ -67,6 +80,12 @@ class LRUCache:
         return None
 
     def set(self, key: str, value: List[float]) -> None:
+        """Set value in cache with LRU eviction policy.
+
+        Args:
+            key: Cache key to store.
+            value: Value to cache.
+        """
         if key in self.cache:
             self.order.remove(key)
         elif len(self.order) >= self.capacity:
@@ -120,6 +139,11 @@ class SearchService(BaseService):
         self.bm25_supported = None  # Initially unknown
 
     async def check_bm25_support(self):
+        """Check if BM25 function is available in the database.
+
+        Returns:
+            True if BM25 is supported, False otherwise.
+        """
         # Only check once
         if self.bm25_supported is not None:
             return self.bm25_supported
@@ -136,7 +160,7 @@ class SearchService(BaseService):
         return self.bm25_supported
 
     async def get_query_embedding(self, query: str) -> Optional[List[float]]:
-        """Returns embedding for query, using cache for performance."""
+        """Get embedding for query, using cache for performance."""
         cached = embedding_cache.get(query)
         if cached is not None:
             # Validate cached embedding type
@@ -167,6 +191,7 @@ class SearchService(BaseService):
     ) -> List[DocumentChunkResponse]:
         """
         Search documents using the specified algorithm.
+
         Args:
             request: Search request parameters
             user_id: User ID for access control
@@ -193,6 +218,7 @@ class SearchService(BaseService):
     ) -> List[DocumentChunkResponse]:
         """
         Vector similarity search using PGVector ivfflat index.
+
         - Uses pre-filtering on user_id and other filters for index efficiency.
         - Returns similarity_score for each result.
         """
@@ -248,7 +274,7 @@ class SearchService(BaseService):
         results = []
         for chunk, distance in rows:
             similarity_score = norm(distance)
-            
+
             # Create DocumentChunkResponse directly with explicit field assignment
             chunk_response = DocumentChunkResponse(
                 id=chunk.id,
@@ -263,7 +289,7 @@ class SearchService(BaseService):
                 metainfo=chunk.document.metainfo,
                 created_at=chunk.created_at,
             )
-            
+
             results.append(chunk_response)
         return results
 
@@ -272,6 +298,7 @@ class SearchService(BaseService):
     ) -> List[DocumentChunkResponse]:
         """
         Full-text search using Postgres GIN index and tsvector column.
+
         - Uses plainto_tsquery and tsvector column (content_tsv) for performance.
         - Uses BM25 ranking (if pg_bm25 is installed), else fallback to ts_rank_cd.
         """
@@ -342,6 +369,7 @@ class SearchService(BaseService):
     ) -> List[DocumentChunkResponse]:
         """
         Hybrid search: combine normalized vector and text scores.
+
         - Each result contains the method(s) that matched and their scores.
         - Score normalization/calibration to [0, 1].
         """
@@ -376,7 +404,8 @@ class SearchService(BaseService):
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
         """
-        Maximum Marginal Relevance (MMR) for diverse, relevant results:
+        Maximum Marginal Relevance (MMR) for diverse, relevant results.
+
         - Use cosine similarity between embeddings for diversity.
         - Returns results with method metadata.
         """
@@ -442,6 +471,7 @@ class SearchService(BaseService):
     def _calculate_text_similarity(self, query: str, content: str) -> float:
         """
         Calculate simple text similarity score (Jaccard).
+
         Used as a fallback for diversity in MMR if embeddings are missing.
         """
         query_terms = set(query.lower().split())
@@ -459,6 +489,7 @@ class SearchService(BaseService):
     ) -> List[DocumentChunkResponse]:
         """
         Find chunks similar to a given chunk using vector ANN search.
+
         Args:
             chunk_id: Reference chunk ID
             user_id: User ID for access control

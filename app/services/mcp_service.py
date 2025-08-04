@@ -60,6 +60,11 @@ class MCPService:
     """
 
     def __init__(self, db_session: AsyncSession):
+        """Initialize the MCP service.
+
+        Args:
+            db_session: Database session for MCP operations.
+        """
         self.db: AsyncSession = db_session
         self.clients: Dict[str, Client] = {}
         self.is_initialized = False
@@ -68,6 +73,15 @@ class MCPService:
     async def create_server(
         self, server_data: MCPServerCreateSchema, auto_discover: bool = True
     ) -> MCPServerSchema:
+        """Create a new MCP server registration.
+
+        Args:
+            server_data: Server configuration data.
+            auto_discover: Whether to automatically discover tools.
+
+        Returns:
+            Created server schema.
+        """
         server = MCPServer(
             name=server_data.name,
             url=server_data.url,
@@ -101,6 +115,14 @@ class MCPService:
         return MCPServerSchema.model_validate(server)
 
     async def get_server(self, name: str) -> Optional[MCPServerSchema]:
+        """Get a server by name.
+
+        Args:
+            name: Name of the server to retrieve.
+
+        Returns:
+            Server schema if found, None otherwise.
+        """
         result = await self.db.execute(
             select(MCPServer)
             .options(selectinload(MCPServer.tools))
@@ -127,6 +149,14 @@ class MCPService:
     async def list_servers(
         self, filters: Optional[MCPListFiltersSchema] = None
     ) -> List[MCPServerSchema]:
+        """List all servers with optional filtering.
+
+        Args:
+            filters: Optional filters to apply.
+
+        Returns:
+            List of server schemas.
+        """
         query = select(MCPServer).options(selectinload(MCPServer.tools))
         if filters:
             filter_conditions = []
@@ -164,6 +194,7 @@ class MCPService:
     async def update_server(
         self, name: str, updates: MCPServerUpdateSchema
     ) -> Optional[MCPServerSchema]:
+        """Update an existing server configuration."""
         server = await self.db.execute(select(MCPServer).where(MCPServer.name == name))
         server = server.scalar_one_or_none()
         if not server:
@@ -178,6 +209,7 @@ class MCPService:
         return MCPServerSchema.model_validate(server)
 
     async def delete_server(self, name: str) -> bool:
+        """Delete a server and its associated tools."""
         server = await self.db.execute(select(MCPServer).where(MCPServer.name == name))
         server = server.scalar_one_or_none()
         if not server:
@@ -190,6 +222,15 @@ class MCPService:
     async def enable_server(
         self, name: str, auto_discover: bool = True
     ) -> Optional[MCPServerSchema]:
+        """Enable a server and optionally discover its tools.
+
+        Args:
+            name: Name of the server to enable.
+            auto_discover: Whether to automatically discover tools.
+
+        Returns:
+            Updated server schema if successful.
+        """
         server = await self.get_server(name)
         if not server:
             return None
@@ -210,12 +251,21 @@ class MCPService:
         return updated_server
 
     async def disable_server(self, name: str) -> Optional[MCPServerSchema]:
+        """Disable a server.
+
+        Args:
+            name: Name of the server to disable.
+
+        Returns:
+            Updated server schema if successful.
+        """
         updates = MCPServerUpdateSchema(is_enabled=False)
         return await self.update_server(name, updates)
 
     async def update_connection_status(
         self, name: str, is_connected: bool, increment_errors: bool = False
     ) -> Optional[MCPServerSchema]:
+        """Update the connection status of a server."""
         updates_dict = {
             "is_connected": is_connected,
         }
@@ -232,6 +282,14 @@ class MCPService:
     async def register_tool(
         self, tool_data: MCPToolCreateSchema
     ) -> Optional[MCPToolSchema]:
+        """Register a new tool for a server.
+
+        Args:
+            tool_data: Tool configuration data.
+
+        Returns:
+            Created tool schema if successful.
+        """
         server_result = await self.db.execute(
             select(MCPServer).where(MCPServer.name == tool_data.server_name)
         )
@@ -267,6 +325,7 @@ class MCPService:
         return MCPToolSchema.model_validate(tool)
 
     async def get_tool(self, tool_name: str) -> Optional[MCPToolSchema]:
+        """Get a tool by server name and tool name."""
         result = await self.db.execute(
             select(MCPTool)
             .options(selectinload(MCPTool.server))
@@ -280,6 +339,7 @@ class MCPService:
     async def list_tools(
         self, filters: Optional[MCPListFiltersSchema] = None
     ) -> List[MCPToolSchema]:
+        """List all tools with optional filtering."""
         query = select(MCPTool).options(selectinload(MCPTool.server))
         if filters:
             filter_conditions = []
@@ -301,6 +361,7 @@ class MCPService:
     async def update_tool(
         self, tool_name: str, updates: MCPToolUpdateSchema
     ) -> Optional[MCPToolSchema]:
+        """Update an existing tool configuration."""
         tool = await self.db.execute(
             select(MCPTool)
             .options(selectinload(MCPTool.server))
@@ -319,6 +380,14 @@ class MCPService:
         return MCPToolSchema.model_validate(tool)
 
     async def enable_tool(self, tool_name: str) -> bool:
+        """Enable a tool.
+
+        Args:
+            tool_name: Name of the tool to enable.
+
+        Returns:
+            True if tool was enabled successfully.
+        """
         result = await self.db.execute(
             update(MCPTool).where(MCPTool.name == tool_name).values(is_enabled=True)
         )
@@ -329,6 +398,14 @@ class MCPService:
         return False
 
     async def disable_tool(self, tool_name: str) -> bool:
+        """Disable a tool.
+
+        Args:
+            tool_name: Name of the tool to disable.
+
+        Returns:
+            True if tool was disabled successfully.
+        """
         result = await self.db.execute(
             update(MCPTool).where(MCPTool.name == tool_name).values(is_enabled=False)
         )
@@ -341,6 +418,16 @@ class MCPService:
     async def record_tool_usage(
         self, tool_name: str, success: bool, duration_ms: Optional[int] = None
     ) -> bool:
+        """Record usage statistics for a tool.
+
+        Args:
+            tool_name: Name of the tool.
+            success: Whether the tool execution was successful.
+            duration_ms: Duration of execution in milliseconds.
+
+        Returns:
+            True if usage was recorded successfully.
+        """
         tool = await self.db.execute(select(MCPTool).where(MCPTool.name == tool_name))
         tool = tool.scalar_one_or_none()
         if not tool:
@@ -350,6 +437,14 @@ class MCPService:
         return True
 
     async def batch_record_tool_usage(self, usage_records: List[Dict[str, Any]]) -> int:
+        """Record usage statistics for multiple tools in batch.
+
+        Args:
+            usage_records: List of usage record dictionaries.
+
+        Returns:
+            Number of records successfully processed.
+        """
         processed_count = 0
         for record in usage_records:
             try:
@@ -369,6 +464,15 @@ class MCPService:
     async def get_tool_stats(
         self, server_name: Optional[str] = None, limit: int = 10
     ) -> List[MCPToolUsageStatsSchema]:
+        """Get usage statistics for tools.
+
+        Args:
+            server_name: Optional server name to filter by.
+            limit: Maximum number of results to return.
+
+        Returns:
+            List of tool usage statistics.
+        """
         query = select(MCPTool).options(selectinload(MCPTool.server))
         if server_name:
             query = query.join(MCPServer).where(MCPServer.name == server_name)
@@ -396,6 +500,14 @@ class MCPService:
     async def discover_tools_from_server(
         self, server_name: str
     ) -> MCPDiscoveryResultSchema:
+        """Discover and register tools from a specific server.
+
+        Args:
+            server_name: Name of the server to discover tools from.
+
+        Returns:
+            Discovery result with counts of new and updated tools.
+        """
         server_result = await self.db.execute(
             select(MCPServer).where(MCPServer.name == server_name)
         )
@@ -472,6 +584,11 @@ class MCPService:
             )
 
     async def discover_tools_all_servers(self) -> List[MCPDiscoveryResultSchema]:
+        """Discover tools from all enabled servers.
+
+        Returns:
+            List of discovery results for all servers.
+        """
         filters = MCPListFiltersSchema(enabled_only=True)
         servers = await self.list_servers(filters)
         if not servers:
@@ -496,9 +613,7 @@ class MCPService:
         return None
 
     async def initialize(self):
-        """
-        Initialize the MCP service registry/client connections.
-        """
+        """Initialize the MCP service registry/client connections."""
         if not settings.mcp_enabled:
             logger.warning("MCP is disabled - cannot initialize MCP clients")
             self.is_initialized = False
@@ -587,6 +702,7 @@ class MCPService:
     ) -> MCPToolExecutionResultSchema:
         """
         Execute a single tool call (with MCP registry), using FastMCP client proxy.
+
         Does NOT apply retry or caching logic. For managed execution use 'execute_tool_call'.
         """
         #        if not self.is_initialized:
@@ -711,9 +827,7 @@ class MCPService:
         self,
         filters: Optional[MCPListFiltersSchema] = None,
     ) -> List[MCPToolSchema]:
-        """
-        Return a list of available tools (from DB/registry), optionally filtered.
-        """
+        """Return a list of available tools (from DB/registry), optionally filtered."""
         #        if not self.is_initialized:
         #            logger.warning("MCP client not initialized - returning empty tools list")
         #            return []
@@ -729,9 +843,7 @@ class MCPService:
         self,
         filters: Optional[MCPListFiltersSchema] = None,
     ) -> List[Dict[str, Any]]:
-        """
-        Format available MCP tools as OpenAI-compatible function tool schemas.
-        """
+        """Format available MCP tools as OpenAI-compatible function tool schemas."""
         mcp_tools = await self.get_available_tools(filters)
         openai_tools = []
         for tool in mcp_tools:
@@ -890,9 +1002,7 @@ class MCPService:
             return results
 
     async def health_check(self) -> MCPHealthStatusSchema:
-        """
-        Perform a health check of the MCP system: registry and client connections.
-        """
+        """Perform a health check of the MCP system: registry and client connections."""
         all_servers = await self.list_servers()
         all_tools = await self.list_tools()
         health_status = MCPHealthStatusSchema(
@@ -958,9 +1068,7 @@ class MCPService:
         return health_status
 
     async def disconnect_all(self):
-        """
-        Disconnect from all MCP servers and clear client state.
-        """
+        """Disconnect from all MCP servers and clear client state."""
         disconnected_servers = []
         for server_name, client in self.clients.items():
             try:
@@ -974,9 +1082,7 @@ class MCPService:
         logger.info(f"Disconnected from {len(disconnected_servers)} MCP servers")
 
     async def refresh_from_registry(self):
-        """
-        Force a refresh of the MCP registry and clear all client connections.
-        """
+        """Force a refresh of the MCP registry and clear all client connections."""
         logger.info("Force refreshing MCP client from registry (connections cleared)")
         await self.disconnect_all()
         await self.initialize()
