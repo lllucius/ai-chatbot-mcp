@@ -28,50 +28,7 @@ async def get_system_overview(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsOverviewResponse:
-    """
-    Get comprehensive system overview and key performance indicators.
-
-    Provides high-level statistics about the platform including user activity,
-    document processing metrics, conversation analytics, and system health
-    indicators. This endpoint serves as a dashboard summary for monitoring
-    platform usage and performance.
-
-    Args:
-        current_user: Current authenticated user requesting system overview
-        db: Database session for metrics queries and data aggregation
-
-    Returns:
-        AnalyticsOverviewResponse: System overview containing:
-            - user_metrics: Total users, active users, and growth statistics
-            - document_metrics: Upload counts, processing status, and storage stats
-            - conversation_metrics: Total conversations, messages, and engagement
-            - system_health: Performance indicators and resource utilization
-            - timestamp: Overview generation timestamp
-
-    Overview Metrics:
-        - User registration and activity trends over time
-        - Document processing throughput and success rates
-        - Conversation engagement and usage patterns
-        - System performance and health indicators
-        - Key performance indicators (KPIs) summary
-
-    Health Assessment:
-        - User activity rate as percentage of total users
-        - Document processing success rate and efficiency
-        - System availability and reliability metrics
-        - Overall system health score calculation
-        - Performance trend indicators
-
-    Use Cases:
-        - Executive dashboard and high-level monitoring
-        - System health assessment and capacity planning
-        - Performance trending and optimization decisions
-        - Stakeholder reporting and business metrics
-        - Operational monitoring and alerting
-
-    Example:
-        GET /api/v1/analytics/overview
-    """
+    """Get comprehensive system overview and key performance indicators."""
     log_api_call("get_system_overview", user_id=str(current_user.id))
 
     from sqlalchemy import func, select
@@ -135,61 +92,7 @@ async def get_usage_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsUsageResponse:
-    """
-    Get comprehensive usage statistics with configurable time periods and detail levels.
-
-    Analyzes platform usage metrics over a configurable time period with optional
-    detailed daily breakdown. Provides insights into user activity, content creation,
-    engagement patterns, and growth trends for comprehensive analytics and reporting.
-
-    Args:
-        period: Time period for analysis (1d, 7d, 30d, 90d)
-        detailed: If True, includes daily breakdown statistics for trend analysis
-        current_user: Current authenticated user requesting usage statistics
-        db: Database session for metrics queries and data aggregation
-
-    Returns:
-        AnalyticsUsageResponse: Comprehensive usage statistics including:
-            - period: Time period analyzed for reference
-            - start_date: Analysis period start timestamp
-            - end_date: Analysis period end timestamp
-            - metrics: Aggregated usage metrics and key indicators
-            - daily_breakdown: Daily statistics (when detailed=True)
-            - trends: Usage trend analysis and patterns
-
-    Usage Metrics:
-        - new_users: User registrations during the period
-        - new_documents: Document uploads and submissions
-        - new_conversations: Conversation creation and initiation
-        - total_messages: Message volume and communication activity
-        - avg_messages_per_day: Daily message average for activity assessment
-
-    Detailed Breakdown:
-        - Daily message volume for trend identification
-        - Activity patterns and usage spikes
-        - Growth trajectory and momentum analysis
-        - Seasonal patterns and cyclical behavior
-        - Engagement consistency and user retention indicators
-
-    Time Period Options:
-        - 1d: Single day analysis for immediate insights
-        - 7d: Weekly analysis for short-term trends
-        - 30d: Monthly analysis for business reporting
-        - 90d: Quarterly analysis for strategic planning
-
-    Use Cases:
-        - Business intelligence and performance reporting
-        - User engagement analysis and optimization
-        - Content strategy and platform development
-        - Marketing effectiveness and growth tracking
-        - Operational planning and resource allocation
-
-    Raises:
-        HTTP 400: If invalid period parameter is provided
-
-    Example:
-        GET /api/v1/analytics/usage?period=7d&detailed=true
-    """
+    """Get comprehensive usage statistics with configurable time periods and detail levels."""
     log_api_call("get_usage_statistics", user_id=str(current_user.id), period=period)
 
     # Parse period
@@ -266,61 +169,7 @@ async def get_performance_metrics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsPerformanceResponse:
-    """
-    Get comprehensive system performance metrics with bottleneck analysis and optimization insights.
-
-    Analyzes system performance including processing times, resource utilization,
-    throughput metrics, and identifies potential bottlenecks. Provides actionable
-    insights for system optimization, capacity planning, and performance tuning.
-
-    Args:
-        current_user: Current authenticated user requesting performance metrics
-        db: Database session for performance queries and system analysis
-
-    Returns:
-        AnalyticsPerformanceResponse: Comprehensive performance metrics including:
-            - document_processing: Processing speed, success rates, and efficiency
-            - database_performance: Database operation statistics and table metrics
-            - system_metrics: Overall system health and operational status
-            - throughput: Operations per unit time and capacity utilization
-            - bottlenecks: Identified performance constraints and recommendations
-
-    Document Processing Performance:
-        - total_documents: Complete document processing volume
-        - completed: Successfully processed documents count
-        - failed: Failed processing operations for error analysis
-        - processing: Currently active processing operations
-        - success_rate: Processing success percentage for reliability assessment
-        - failure_rate: Processing failure percentage for quality monitoring
-
-    Database Performance Metrics:
-        - Table operation statistics and activity patterns
-        - Live and dead tuple counts for maintenance planning
-        - Most active tables by operation volume
-        - Database health and optimization opportunities
-        - Query performance and resource utilization
-
-    System Health Indicators:
-        - Overall operational status and availability
-        - Resource utilization and capacity metrics
-        - Performance trend indicators and benchmarks
-        - Reliability and stability assessments
-        - Optimization recommendations and best practices
-
-    Use Cases:
-        - System performance monitoring and alerting
-        - Capacity planning and resource allocation
-        - Performance optimization and tuning decisions
-        - Infrastructure scaling and upgrade planning
-        - Operational efficiency and cost optimization
-
-    Note:
-        Performance data is collected from system operations, database statistics,
-        and middleware monitoring components for comprehensive analysis.
-
-    Example:
-        GET /api/v1/analytics/performance
-    """
+    """Get comprehensive system performance metrics with bottleneck analysis and optimization insights."""
     log_api_call("get_performance_metrics", user_id=str(current_user.id))
 
     from sqlalchemy import func, select, text
@@ -401,64 +250,7 @@ async def get_user_analytics(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsUserAnalyticsResponse:
-    """
-    Get comprehensive user activity analytics with engagement metrics and behavioral insights.
-
-    Analyzes user activity patterns and engagement levels across different metrics
-    and time periods. Provides detailed insights into user behavior, platform adoption
-    patterns, and engagement trends. Requires superuser access for privacy protection.
-
-    Args:
-        metric: Activity metric to analyze (messages, documents, conversations)
-        top: Number of top users to return in rankings (1-100, default: 10)
-        period: Time period for analysis (7d, 30d, 90d, default: 30d)
-        current_user: Current authenticated superuser requesting user analytics
-        db: Database session for analytics queries and user data analysis
-
-    Returns:
-        AnalyticsUserAnalyticsResponse: Comprehensive user analytics including:
-            - top_users: Rankings of most active users by selected metric
-            - engagement_patterns: User engagement trends and behavioral patterns
-            - activity_distribution: Distribution of user activity levels
-            - period_summary: Summary statistics for the analyzed period
-            - metric: Analyzed metric for reference
-            - total_returned: Number of users included in results
-
-    Analytics Metrics:
-        - messages: User activity ranked by message volume and communication
-        - documents: User activity ranked by document uploads and submissions
-        - conversations: User activity ranked by conversation creation and engagement
-        - Engagement patterns and consistency over time
-        - User adoption and retention indicators
-
-    User Privacy and Security:
-        - Requires superuser privileges for access control
-        - User information limited to username and email
-        - Activity counts without content exposure
-        - Aggregated data for pattern analysis
-        - Compliance with privacy regulations and policies
-
-    Engagement Insights:
-        - Most active users identification for community management
-        - Activity distribution for user segmentation
-        - Engagement consistency and platform loyalty
-        - Feature usage patterns and preferences
-        - Growth and retention trend analysis
-
-    Use Cases:
-        - Community management and user engagement strategies
-        - Feature adoption analysis and product development
-        - User experience optimization and platform improvement
-        - Customer success and retention programs
-        - Business intelligence and strategic planning
-
-    Raises:
-        HTTP 400: If invalid metric or period parameter is provided
-        HTTP 403: If user is not a superuser
-
-    Example:
-        GET /api/v1/analytics/users?metric=messages&top=10&period=30d
-    """
+    """Get comprehensive user activity analytics with engagement metrics and behavioral insights."""
     log_api_call("get_user_analytics", user_id=str(current_user.id), metric=metric)
 
     # Parse period
@@ -550,58 +342,7 @@ async def get_usage_trends(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsTrendsResponse:
-    """
-    Get comprehensive usage trends and growth patterns with predictive insights.
-
-    Analyzes platform usage patterns over a specified time period to identify growth
-    trends, seasonal patterns, usage fluctuations, and behavioral cycles. Provides
-    actionable insights for capacity planning, user engagement optimization, and
-    strategic business decisions.
-
-    Args:
-        days: Number of days to analyze (1-90, default: 14)
-        current_user: Current authenticated user requesting trend analysis
-        db: Database session for trend analysis queries and historical data
-
-    Returns:
-        AnalyticsTrendsResponse: Comprehensive trend analysis including:
-            - daily_metrics: Day-by-day usage statistics and activity patterns
-            - trend_analysis: Growth rates, momentum, and pattern identification
-            - growth_indicators: Key growth metrics, projections, and forecasts
-            - seasonal_patterns: Identified usage cycles and recurring behavior
-            - summary: Aggregated statistics and growth rate calculations
-
-    Daily Metrics:
-        - new_users: Daily user registration trends and growth velocity
-        - new_documents: Document creation patterns and content activity
-        - messages: Communication volume and engagement intensity
-        - Activity peaks and valleys for operational planning
-        - Consistency patterns and user retention indicators
-
-    Trend Analysis:
-        - Weekly growth rate calculations and momentum assessment
-        - Month-over-month and period-over-period comparisons
-        - Trend direction identification (growth, decline, stable)
-        - Acceleration and deceleration pattern recognition
-        - Seasonal variation and cyclical behavior analysis
-
-    Growth Indicators:
-        - User acquisition velocity and conversion patterns
-        - Content creation momentum and engagement quality
-        - Platform adoption rates and feature utilization
-        - Retention consistency and user lifecycle patterns
-        - Market penetration and expansion opportunities
-
-    Use Cases:
-        - Strategic business planning and growth forecasting
-        - Capacity planning and infrastructure scaling decisions
-        - Marketing effectiveness and campaign optimization
-        - Product development and feature prioritization
-        - Operational planning and resource allocation
-
-    Example:
-        GET /api/v1/analytics/trends?days=30
-    """
+    """Get comprehensive usage trends and growth patterns with predictive insights."""
     log_api_call("get_usage_trends", user_id=str(current_user.id), days=days)
 
     start_date = datetime.utcnow() - timedelta(days=days)
@@ -690,83 +431,7 @@ async def export_analytics_report(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsExportResponse:
-    """
-    Export comprehensive analytics report for executive analysis and external integration.
-
-    Generates a complete analytics report combining all major metrics, performance
-    indicators, usage trends, user analytics, and detailed breakdowns. Provides
-    a comprehensive view for executive reporting, business intelligence, and
-    strategic analysis with flexible export options.
-
-    Args:
-        include_details: If True, includes detailed user analytics breakdowns
-        format: Export format specification (currently only 'json' supported)
-        current_user: Current authenticated superuser requesting report export
-        db: Database session for comprehensive report generation
-
-    Returns:
-        AnalyticsExportResponse: Complete analytics export including:
-            - report_metadata: Export generation information and parameters
-            - system_overview: Executive summary of key system metrics
-            - usage_statistics: Detailed usage analytics and trends
-            - performance_metrics: System performance and optimization insights
-            - usage_trends: Growth patterns and predictive analytics
-            - detailed_user_analytics: User engagement breakdowns (when requested)
-
-    Report Contents:
-        - Executive summary with key performance indicators
-        - System health metrics and operational status
-        - User activity analytics and engagement patterns
-        - Document processing performance and efficiency metrics
-        - Growth trends and predictive insights
-        - Performance bottlenecks and optimization recommendations
-
-    Export Metadata:
-        - generated_at: Report generation timestamp for version control
-        - generated_by: Username of requesting administrator
-        - period: Analysis period coverage for reference
-        - format: Export format specification
-        - includes_details: Detail level flag for scope understanding
-
-    Detailed User Analytics (when enabled):
-        - Top users by message volume for community insights
-        - Top users by document uploads for content analysis
-        - Top users by conversation creation for engagement assessment
-        - User segmentation and activity distribution patterns
-        - Engagement consistency and platform loyalty metrics
-
-    Export Features:
-        - Comprehensive data aggregation from multiple analytics endpoints
-        - Consistent formatting and structure for external integration
-        - Metadata inclusion for report context and versioning
-        - Flexible detail levels for different reporting requirements
-        - Administrative audit trail for compliance and tracking
-
-    Use Cases:
-        - Executive dashboards and board reporting
-        - Business intelligence system integration
-        - Strategic planning and decision support
-        - Compliance reporting and audit documentation
-        - External analytics platform integration
-
-    Raises:
-        HTTP 400: If unsupported export format is requested
-        HTTP 403: If user is not a superuser
-
-    Security Notes:
-        - Requires superuser privileges for comprehensive access
-        - User data is aggregated and anonymized appropriately
-        - Administrative logging for audit and compliance
-        - Secure data handling throughout export process
-
-    Performance Notes:
-        - This operation may take longer for large datasets
-        - Consider scheduling during low-usage periods
-        - Report size scales with platform activity and detail level
-
-    Example:
-        POST /api/v1/analytics/export-report?include_details=true&format=json
-    """
+    """Export comprehensive analytics report for executive analysis and external integration."""
     log_api_call("export_analytics_report", user_id=str(current_user.id))
 
     if format != "json":

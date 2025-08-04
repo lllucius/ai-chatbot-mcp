@@ -33,22 +33,7 @@ router = APIRouter(tags=["profiles"])
 
 
 async def get_profile_service(db: AsyncSession = Depends(get_db)) -> LLMProfileService:
-    """
-    Get LLM profile service instance with database session.
-
-    Creates and returns an LLMProfileService instance configured with the provided
-    database session for profile management operations including CRUD operations,
-    parameter validation, and statistics tracking.
-
-    Args:
-        db: Database session dependency for service initialization
-
-    Returns:
-        LLMProfileService: Configured service instance for LLM profile operations
-
-    Note:
-        This is a dependency function used by FastAPI's dependency injection system.
-    """
+    """Get LLM profile service instance with database session."""
     return LLMProfileService(db)
 
 
@@ -59,46 +44,7 @@ async def create_profile(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> LLMProfileResponse:
-    """
-    Create a new LLM parameter profile with validation.
-
-    Creates a new LLM parameter profile with the specified configuration including
-    temperature, top_p, max_tokens, and other model-specific parameters. The profile
-    can be used to customize LLM behavior for different conversation contexts and
-    use cases.
-
-    Args:
-        request: Profile creation data including name, parameters, and metadata
-        current_user: Current authenticated user creating the profile
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        LLMProfileResponse: Created profile with all parameters and metadata
-
-    Raises:
-        HTTP 400: If profile name already exists or parameters are invalid
-        HTTP 422: If request data validation fails
-        HTTP 500: If profile creation process fails
-
-    Profile Parameters:
-        - temperature: Controls randomness in model responses (0.0-2.0)
-        - top_p: Nucleus sampling parameter for token selection
-        - max_tokens: Maximum number of tokens in model response
-        - presence_penalty: Penalty for token presence in context
-        - frequency_penalty: Penalty for token frequency in response
-        - Custom parameters for advanced model configuration
-
-    Example:
-        POST /api/v1/profiles/
-        {
-            "name": "creative-writing",
-            "title": "Creative Writing Profile",
-            "description": "High creativity for creative writing tasks",
-            "temperature": 1.2,
-            "top_p": 0.9,
-            "max_tokens": 2000
-        }
-    """
+    """Create a new LLM parameter profile with validation."""
     log_api_call("create_profile", user_id=current_user.id)
     profile = await profile_service.create_profile(request)
     return LLMProfileResponse.model_validate(profile)
@@ -114,43 +60,7 @@ async def list_profiles(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> LLMProfileListResponse:
-    """
-    List all LLM parameter profiles with filtering and pagination.
-
-    Returns a paginated list of LLM parameter profiles with optional filtering
-    by active status and search terms. Includes comprehensive profile information
-    including parameters, usage statistics, and metadata for each profile.
-
-    Args:
-        active_only: If True, returns only active profiles (default: True)
-        search: Optional search term to filter profiles by name/description
-        page: Page number for pagination (starts at 1)
-        size: Number of profiles per page (1-100, default: 20)
-        current_user: Current authenticated user requesting the list
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        LLMProfileListResponse: Paginated profile list including:
-            - profiles: List of profile objects with full metadata
-            - total: Total number of profiles matching filters
-            - page: Current page number
-            - size: Items per page
-            - pages: Total number of pages
-
-    Filtering:
-        - Active status filtering for operational profiles only
-        - Text search across profile names and descriptions
-        - Pagination for large profile collections
-
-    Profile Information:
-        - Complete parameter configuration
-        - Usage statistics and performance metrics
-        - Metadata including creation and modification dates
-        - Default status and activation state
-
-    Example:
-        GET /api/v1/profiles/?active_only=true&search=creative&page=1&size=10
-    """
+    """List all LLM parameter profiles with filtering and pagination."""
     log_api_call("list_profiles", user_id=current_user.id)
 
     profiles, total = await profile_service.list_profiles(
@@ -186,39 +96,7 @@ async def get_profile_details(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> LLMProfileResponse:
-    """
-    Get detailed information about a specific LLM profile by name.
-
-    Returns complete profile configuration including all parameters, metadata,
-    usage statistics, and current status. Provides comprehensive information
-    needed for profile management and LLM integration.
-
-    Args:
-        profile_name: Name of the profile to retrieve
-        current_user: Current authenticated user requesting profile details
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        LLMProfileResponse: Complete profile information including:
-            - name: Profile identifier and display name
-            - parameters: Full LLM parameter configuration
-            - metadata: Creation, modification, and usage information
-            - status: Active state and default designation
-            - statistics: Usage count and last access time
-
-    Raises:
-        HTTP 404: If profile with specified name is not found
-        HTTP 500: If profile retrieval process fails
-
-    Profile Details:
-        - Complete parameter set with OpenAI-compatible format
-        - Usage tracking and performance statistics
-        - Administrative metadata and status information
-        - Parameter validation and constraint information
-
-    Example:
-        GET /api/v1/profiles/byname/creative-writing
-    """
+    """Get detailed information about a specific LLM profile by name."""
     log_api_call(
         "get_profile_details", user_id=current_user.id, profile_name=profile_name
     )
@@ -289,40 +167,7 @@ async def set_default_profile(
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> BaseResponse:
-    """
-    Set a profile as the default LLM parameter profile for the system.
-
-    Designates the specified profile as the system default, which will be used
-    for all LLM operations unless explicitly overridden. Only one profile can
-    be set as default at a time, and this operation requires superuser privileges.
-
-    Args:
-        profile_name: Name of the profile to set as default
-        current_user: Current authenticated superuser performing the operation
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        BaseResponse: Success confirmation with operation details
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 404: If profile with specified name is not found
-        HTTP 500: If default setting operation fails
-
-    Security Notes:
-        - Requires superuser privileges for system-wide configuration
-        - Previous default profile is automatically unset
-        - Operation is logged for administrative audit trail
-        - System immediately uses new default for subsequent operations
-
-    Impact:
-        - All new conversations use the new default profile
-        - Existing conversations retain their original profile settings
-        - API clients receive new default parameters automatically
-
-    Example:
-        POST /api/v1/profiles/byname/balanced/set-default
-    """
+    """Set a profile as the default LLM parameter profile for the system."""
     log_api_call(
         "set_default_profile", user_id=current_user.id, profile_name=profile_name
     )
@@ -345,48 +190,7 @@ async def get_default_profile_parameters(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> APIResponse:
-    """
-    Get parameters from the default LLM profile in OpenAI-compatible format.
-
-    Returns the current default profile's parameters formatted for direct use
-    with OpenAI API calls. This endpoint provides the system's current LLM
-    configuration for client applications and integration purposes.
-
-    Args:
-        current_user: Current authenticated user requesting default parameters
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        ProfileParametersResponse: Default profile parameters including:
-            - parameters: OpenAI-compatible parameter dictionary
-            - profile_name: Name of the current default profile
-            - metadata: Additional configuration information
-
-    Parameter Format:
-        - OpenAI API-compatible parameter names and values
-        - Properly formatted for direct API integration
-        - Includes all relevant LLM configuration options
-        - Ready for use in chat completion requests
-
-    Use Cases:
-        - Client application configuration
-        - API integration setup
-        - Default behavior verification
-        - System configuration validation
-
-    Example:
-        GET /api/v1/profiles/default/parameters
-        Response: {
-            "parameters": {
-                "temperature": 0.7,
-                "top_p": 1.0,
-                "max_tokens": 1000,
-                "presence_penalty": 0.0,
-                "frequency_penalty": 0.0
-            },
-            "profile_name": "default"
-        }
-    """
+    """Get parameters from the default LLM profile in OpenAI-compatible format."""
     log_api_call("get_default_profile_parameters", user_id=current_user.id)
     params = await profile_service.get_profile_for_openai()
     response_payload = ProfileParametersData(
@@ -406,43 +210,7 @@ async def get_profile_stats(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ):
-    """
-    Get comprehensive LLM profile usage statistics and analytics.
-
-    Returns detailed analytics about LLM profile usage including popularity
-    metrics, performance statistics, and usage patterns across the system.
-    Provides insights for profile optimization and system management.
-
-    Args:
-        current_user: Current authenticated user requesting statistics
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        ProfileStatsResponse: Comprehensive profile statistics including:
-            - total_profiles: Number of profiles in the system
-            - active_profiles: Number of currently active profiles
-            - usage_metrics: Profile usage frequency and patterns
-            - performance_data: Response time and success rate statistics
-            - popular_profiles: Most frequently used profiles
-            - recent_activity: Recent profile usage trends
-
-    Analytics Data:
-        - Profile popularity rankings
-        - Usage frequency distributions
-        - Performance benchmarks
-        - Trend analysis over time
-        - Error rates and success metrics
-
-    Use Cases:
-        - System performance monitoring
-        - Profile optimization decisions
-        - Usage pattern analysis
-        - Capacity planning and scaling
-        - Administrative reporting
-
-    Example:
-        GET /api/v1/profiles/stats
-    """
+    """Get comprehensive LLM profile usage statistics and analytics."""
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
     return APIResponse(
@@ -459,49 +227,7 @@ async def validate_parameters(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ):
-    """
-    Validate LLM parameters before profile creation or update.
-
-    Validates the provided LLM parameters against system constraints and
-    compatibility requirements. Returns detailed validation results including
-    any errors, warnings, or recommendations for parameter optimization.
-
-    Args:
-        parameters: Dictionary of LLM parameters to validate
-        current_user: Current authenticated user requesting validation
-        profile_service: Injected LLM profile service instance
-
-    Returns:
-        ProfileValidationResponse: Validation results including:
-            - valid: Boolean indicating overall validation status
-            - errors: List of validation errors found
-            - warnings: List of potential issues or recommendations
-            - parameters: Echo of validated parameters with corrections
-            - suggestions: Recommended parameter adjustments
-
-    Validation Checks:
-        - Parameter type and format validation
-        - Value range and constraint verification
-        - OpenAI API compatibility checking
-        - Performance impact assessment
-        - Best practice recommendations
-
-    Parameter Constraints:
-        - temperature: 0.0 to 2.0 (controls response randomness)
-        - top_p: 0.0 to 1.0 (nucleus sampling threshold)
-        - max_tokens: 1 to model limit (response length control)
-        - penalties: -2.0 to 2.0 (presence/frequency penalties)
-        - Custom parameter format validation
-
-    Example:
-        POST /api/v1/profiles/validate
-        {
-            "temperature": 0.8,
-            "top_p": 0.9,
-            "max_tokens": 1500,
-            "presence_penalty": 0.1
-        }
-    """
+    """Validate LLM parameters before profile creation or update."""
     log_api_call("validate_parameters", user_id=current_user.id)
     errors = await profile_service.validate_parameters(**parameters)
     response_payload = ProfileValidationData(

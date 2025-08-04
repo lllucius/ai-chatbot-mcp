@@ -181,51 +181,7 @@ async def enable_tool(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Enable a specific MCP tool for system-wide availability.
-
-    Activates the specified MCP tool making it available for use in conversations
-    and other system operations. Performs validation to ensure tool compatibility
-    and updates tool registry with new availability status.
-
-    Args:
-        tool_name: Name of the MCP tool to enable
-        current_user: Current authenticated superuser performing the operation
-        db: Database session for tool status updates
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        BaseResponse: Confirmation of successful tool enablement
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 404: If tool with specified name is not found
-        HTTP 409: If tool is already enabled or has conflicts
-        HTTP 500: If tool enablement process fails
-
-    Enablement Process:
-        - Tool availability verification
-        - Dependency and compatibility checking
-        - Registry status update and synchronization
-        - Client notification of tool availability
-        - Usage tracking initialization
-
-    Impact:
-        - Tool becomes available for conversation use
-        - Client applications can discover and use the tool
-        - Tool appears in available tools listings
-        - Usage statistics tracking begins
-        - Integration with LLM function calling enabled
-
-    Validation:
-        - Tool server connection status verification
-        - Tool schema and parameter validation
-        - Conflict detection with existing tools
-        - Permission and access control checking
-
-    Example:
-        PATCH /api/v1/mcp/tools/byname/read_file/enable
-    """
+    """Enable a specific MCP tool for system-wide availability."""
     log_api_call("enable_mcp_tool", user_id=current_user.id, tool_name=tool_name)
 
     success = await mcp_service.enable_tool(tool_name)
@@ -250,51 +206,7 @@ async def disable_tool(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Disable a specific MCP tool to remove it from system availability.
-
-    Deactivates the specified MCP tool removing it from conversation use and
-    other system operations. Performs graceful shutdown and updates tool registry
-    to reflect unavailability status while preserving configuration.
-
-    Args:
-        tool_name: Name of the MCP tool to disable
-        current_user: Current authenticated superuser performing the operation
-        db: Database session for tool status updates
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        BaseResponse: Confirmation of successful tool disablement
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 404: If tool with specified name is not found
-        HTTP 409: If tool is already disabled or has active usage
-        HTTP 500: If tool disablement process fails
-
-    Disablement Process:
-        - Active usage validation and graceful termination
-        - Registry status update and synchronization
-        - Client notification of tool unavailability
-        - Usage statistics finalization
-        - Configuration preservation for future re-enablement
-
-    Impact:
-        - Tool becomes unavailable for conversation use
-        - Client applications lose access to the tool
-        - Tool removed from available tools listings
-        - Active tool calls may be interrupted
-        - LLM function calling integration disabled
-
-    Safety Considerations:
-        - Active tool usage detection and handling
-        - Graceful degradation for dependent operations
-        - Configuration preservation for easy re-enablement
-        - Audit logging for administrative oversight
-
-    Example:
-        PATCH /api/v1/mcp/tools/byname/read_file/disable
-    """
+    """Disable a specific MCP tool to remove it from system availability."""
     log_api_call("disable_mcp_tool", user_id=current_user.id, tool_name=tool_name)
 
     success = await mcp_service.disable_tool(tool_name)
@@ -318,50 +230,7 @@ async def get_mcp_stats(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Get comprehensive MCP usage statistics and performance analytics.
-
-    Returns detailed analytics about MCP server and tool usage including
-    performance metrics, error rates, usage patterns, and system health
-    indicators. Provides insights for optimization and capacity planning.
-
-    Args:
-        current_user: Current authenticated superuser requesting statistics
-        db: Database session for analytics data retrieval
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        MCPStatsResponse: Comprehensive MCP statistics including:
-            - server_stats: Performance metrics for each server
-            - tool_usage: Usage frequency and success rates per tool
-            - performance_metrics: Response times and error rates
-            - capacity_data: Resource utilization and scaling metrics
-            - trend_analysis: Usage patterns over time
-
-    Analytics Data:
-        - Server connection health and uptime statistics
-        - Tool usage frequency and success/failure rates
-        - Performance metrics including response times
-        - Error analysis and failure pattern identification
-        - Capacity utilization and scaling recommendations
-
-    Performance Metrics:
-        - Average response times per tool and server
-        - Success rates and error frequency analysis
-        - Concurrent usage patterns and peak load data
-        - Resource consumption and efficiency metrics
-        - Network and connection performance indicators
-
-    Use Cases:
-        - System performance monitoring and optimization
-        - Capacity planning and scaling decisions
-        - Tool effectiveness and usage analysis
-        - Error pattern identification and resolution
-        - Administrative reporting and insights
-
-    Example:
-        GET /api/v1/mcp/stats
-    """
+    """Get comprehensive MCP usage statistics and performance analytics."""
     log_api_call("get_mcp_stats", user_id=current_user.id)
 
     stats = await mcp_service.get_tool_stats()
@@ -463,51 +332,7 @@ async def refresh_mcp(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Refresh MCP server connections and perform comprehensive tool discovery.
-
-    Initiates a system-wide refresh of all MCP server connections, performs
-    tool discovery operations, and updates the tool registry with the latest
-    available tools and their configurations. Useful for maintaining system
-    synchronization and recovering from connection issues.
-
-    Args:
-        current_user: Current authenticated superuser performing the refresh
-        db: Database session for registry updates
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        MCPStatsResponse: Refresh operation results including:
-            - refreshed_servers: List of servers that were refreshed
-            - discovered_tools: New tools found during discovery
-            - updated_tools: Existing tools with updated configurations
-            - failed_operations: Servers or tools with refresh failures
-            - operation_summary: Overall refresh operation statistics
-
-    Refresh Operations:
-        - Connection health checking and reconnection
-        - Tool discovery across all enabled servers
-        - Registry synchronization and consistency checking
-        - Configuration update and validation
-        - Performance baseline re-establishment
-
-    Discovery Process:
-        - Server capability enumeration
-        - Tool schema retrieval and validation
-        - Parameter and configuration synchronization
-        - Availability status verification
-        - Performance metric initialization
-
-    Use Cases:
-        - Recovery from connection failures or network issues
-        - Synchronization after server configuration changes
-        - Periodic maintenance and system health checking
-        - Integration of newly deployed MCP servers
-        - Tool availability verification and updates
-
-    Example:
-        POST /api/v1/mcp/refresh
-    """
+    """Refresh MCP server connections and perform comprehensive tool discovery."""
     log_api_call("refresh_mcp", user_id=current_user.id)
 
     await mcp_service.refresh_from_registry()
