@@ -1,76 +1,8 @@
-"""
-Enterprise-grade performance monitoring and comprehensive metrics collection system.
+"""Performance monitoring and metrics collection system.
 
-This module provides sophisticated performance monitoring capabilities including real-time
-request timing, system resource monitoring, health assessment, and comprehensive analytics
-with advanced statistical analysis, anomaly detection, and integration with external
-monitoring systems. Implements production-ready performance tracking with minimal overhead,
-comprehensive observability features, and automated alerting capabilities for proactive
-system management and optimization.
-
-Key Features:
-- High-precision request timing with microsecond accuracy and statistical analysis
-- Comprehensive system resource monitoring including CPU, memory, and disk utilization
-- Real-time performance metrics collection with historical trending and baseline establishment
-- Automated health assessment with configurable thresholds and intelligent alerting
-- Performance anomaly detection with machine learning-based pattern recognition
-- Integration with external monitoring systems including Prometheus, Grafana, and DataDog
-
-Performance Monitoring:
-- Request-level timing and resource usage tracking with detailed breakdown analysis
-- Endpoint-specific performance profiling with throughput and latency optimization
-- Database query performance monitoring with slow query identification and optimization
-- Memory usage tracking with leak detection and garbage collection optimization
-- CPU utilization monitoring with process-level breakdown and optimization recommendations
-- Network performance tracking with bandwidth utilization and connection monitoring
-
-System Health Assessment:
-- Automated health scoring with configurable metrics and intelligent threshold management
-- Real-time system status monitoring with proactive alerting and incident response
-- Resource utilization trending with capacity planning and scaling recommendations
-- Performance regression detection with historical baseline comparison and analysis
-- Service dependency monitoring with cascade failure detection and prevention
-- Application performance index (Apdex) calculation for user experience measurement
-
-Metrics Collection:
-- High-frequency metrics sampling with configurable intervals and retention policies
-- Statistical aggregation including percentiles, moving averages, and trend analysis
-- Custom metrics support with tags, dimensions, and hierarchical organization
-- Metrics export to time-series databases with compression and efficient storage
-- Real-time streaming metrics for dashboard visualization and immediate alerting
-- Historical data analysis with long-term trending and capacity planning insights
-
-Alerting and Monitoring:
-- Configurable alert thresholds with intelligent noise reduction and correlation analysis
-- Multi-channel alerting including email, Slack, PagerDuty, and webhook integrations
-- Escalation policies with on-call rotation and incident management workflow
-- Alert correlation and grouping to reduce noise and improve response efficiency
-- Automated remediation capabilities with self-healing system responses
-- Comprehensive incident tracking with post-mortem analysis and improvement recommendations
-
-Integration Capabilities:
-- Prometheus metrics export with standard metric types and labeling conventions
-- Grafana dashboard integration with pre-built performance visualization templates
-- Elasticsearch integration for log correlation and comprehensive system analysis
-- AWS CloudWatch integration with native metric publishing and alarm management
-- Custom webhook integration for third-party monitoring and alerting systems
-- Container orchestration monitoring with Kubernetes and Docker integration
-
-Use Cases:
-- Production application performance monitoring with comprehensive SLA tracking
-- Capacity planning and scaling decisions based on historical usage patterns and trends
-- Performance optimization and bottleneck identification with detailed analysis
-- SLA monitoring and reporting for customer agreements and internal standards
-- Cost optimization through resource utilization analysis and right-sizing recommendations
-- Incident response and troubleshooting with detailed performance context and analysis
-
-Performance Optimization:
-- Zero-copy metrics collection where possible for minimal performance impact
-- Asynchronous processing with non-blocking metrics aggregation and export
-- Memory-efficient data structures with automatic cleanup and garbage collection
-- Configurable sampling rates for high-throughput environments and cost optimization
-- Intelligent metric retention policies with automated archival and compression
-- Hot path optimization with minimal instrumentation overhead and latency impact
+Provides performance monitoring capabilities including real-time request timing,
+system resource monitoring, health assessment, and comprehensive analytics
+with statistical analysis and integration with external monitoring systems.
 """
 
 import asyncio
@@ -87,30 +19,19 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class RequestMetric:
-    """
-    Comprehensive data structure for individual request performance metrics.
+    """Data structure for individual request performance metrics.
 
-    Captures detailed performance information for each HTTP request including timing,
-    resource usage, and metadata for comprehensive performance analysis, trending,
-    and optimization. Provides structured data format for integration with monitoring
-    systems and statistical analysis tools with efficient serialization and storage.
+    Captures performance information for each HTTP request including timing,
+    resource usage, and metadata for analysis and monitoring.
 
     Attributes:
-        path (str): Request URL path for endpoint-specific performance analysis
-        method (str): HTTP method (GET, POST, PUT, DELETE) for operation categorization
-        status_code (int): HTTP response status code for success/failure tracking
-        duration (float): Request processing time in seconds with microsecond precision
-        timestamp (float): Unix timestamp when request was processed for chronological analysis
-        memory_usage (Optional[float]): Memory consumption during request processing in MB
-        cpu_usage (Optional[float]): CPU utilization percentage during request processing
-
-    Use Cases:
-        - Individual request performance tracking and analysis
-        - Endpoint-specific performance profiling and optimization
-        - Resource usage correlation with request patterns
-        - Performance regression detection and trending
-        - SLA compliance monitoring and reporting
-        - Capacity planning and scaling decision support
+        path: Request URL path for endpoint-specific analysis
+        method: HTTP method (GET, POST, PUT, DELETE)
+        status_code: HTTP response status code
+        duration: Request processing time in seconds
+        timestamp: Unix timestamp when request was processed
+        memory_usage: Memory consumption during request processing in MB (optional)
+        cpu_usage: CPU utilization percentage during request processing (optional)
     """
 
     path: str
@@ -124,31 +45,20 @@ class RequestMetric:
 
 @dataclass
 class SystemMetrics:
-    """
-    Comprehensive system resource utilization metrics for infrastructure monitoring.
+    """System resource utilization metrics for infrastructure monitoring.
 
-    Captures detailed system-level performance data including CPU, memory, and disk
-    utilization for comprehensive infrastructure monitoring, capacity planning, and
-    health assessment. Provides standardized metrics format for integration with
-    monitoring systems and automated alerting with historical trending capabilities.
+    Captures system-level performance data including CPU, memory, and disk
+    utilization for monitoring, capacity planning, and health assessment.
 
     Attributes:
-        cpu_percent (float): Current CPU utilization percentage across all cores
-        memory_percent (float): Current memory utilization percentage of total available
-        memory_used_gb (float): Current memory usage in gigabytes with high precision
-        memory_available_gb (float): Available memory in gigabytes for allocation
-        disk_percent (float): Current disk utilization percentage of total capacity
-        disk_used_gb (float): Current disk usage in gigabytes for storage monitoring
-        disk_free_gb (float): Available disk space in gigabytes for capacity planning
-        timestamp (float): Unix timestamp when metrics were captured for trend analysis
-
-    Use Cases:
-        - System resource monitoring and capacity planning
-        - Infrastructure health assessment and alerting
-        - Performance correlation with application metrics
-        - Automated scaling decisions and optimization
-        - Cost optimization through resource right-sizing
-        - Compliance monitoring and reporting for SLA adherence
+        cpu_percent: Current CPU utilization percentage across all cores
+        memory_percent: Current memory utilization percentage of total available
+        memory_used_gb: Current memory usage in gigabytes
+        memory_available_gb: Available memory in gigabytes
+        disk_percent: Current disk utilization percentage of total capacity
+        disk_used_gb: Current disk usage in gigabytes
+        disk_free_gb: Available disk space in gigabytes
+        timestamp: Unix timestamp when metrics were captured
     """
 
     cpu_percent: float
@@ -162,54 +72,11 @@ class SystemMetrics:
 
 
 class PerformanceMonitor:
-    """
-    Enterprise-grade performance monitoring system with comprehensive metrics collection and analysis.
+    """Performance monitoring system with metrics collection and analysis.
 
-    Provides advanced performance monitoring capabilities including real-time metrics collection,
-    statistical analysis, health assessment, and integration with external monitoring systems.
-    Implements production-ready performance tracking with minimal overhead, automated alerting,
-    and comprehensive observability features for proactive system management and optimization
-    with support for high-traffic environments and distributed system architectures.
-
-    Key Features:
-    - Real-time request and system metrics collection with configurable sampling rates
-    - Historical data retention with efficient storage and automatic cleanup policies
-    - Statistical analysis including percentiles, moving averages, and trend detection
-    - Automated health assessment with intelligent threshold management and alerting
-    - Performance anomaly detection with baseline establishment and deviation analysis
-    - Integration with external monitoring systems and time-series databases
-
-    Performance Features:
-    - High-frequency metrics collection with minimal performance overhead and latency impact
-    - Memory-efficient data structures with automatic garbage collection and optimization
-    - Asynchronous processing ensuring non-blocking metrics aggregation and export
-    - Configurable retention policies balancing storage efficiency with analysis requirements
-    - Hot path optimization with zero-copy operations where possible
-    - Intelligent sampling and aggregation for high-throughput environments
-
-    Monitoring Capabilities:
-    - Request-level performance tracking with endpoint-specific analysis and optimization
-    - System resource monitoring including CPU, memory, disk, and network utilization
-    - Error tracking and classification with detailed failure analysis and correlation
-    - Slow request identification with automatic bottleneck detection and recommendations
-    - Performance trend analysis with historical baseline comparison and regression detection
-    - Custom metrics support with tags, dimensions, and hierarchical organization
-
-    Health Assessment:
-    - Automated health scoring with configurable metrics and intelligent algorithms
-    - Multi-dimensional health indicators including performance, resource, and error metrics
-    - Threshold-based alerting with noise reduction and correlation analysis
-    - Health trend analysis with predictive capabilities and early warning systems
-    - Service dependency monitoring with cascade failure detection and prevention
-    - Comprehensive health reporting for SLA compliance and operational excellence
-
-    Use Cases:
-    - Production application monitoring with comprehensive performance tracking and analysis
-    - Capacity planning and scaling decisions based on historical data and trend analysis
-    - Performance optimization and bottleneck identification with detailed diagnostics
-    - SLA monitoring and compliance reporting for customer agreements and standards
-    - Incident response and troubleshooting with detailed performance context
-    - Cost optimization through resource utilization analysis and right-sizing
+    Provides performance monitoring capabilities including real-time metrics collection,
+    statistical analysis, health assessment, and integration with external monitoring
+    systems for production environments with minimal overhead.
     """
 
     def __init__(self, history_size: int = 100):

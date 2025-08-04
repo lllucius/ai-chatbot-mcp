@@ -1,33 +1,9 @@
+"""Timestamp utilities for date/time handling and timezone management.
+
+Provides datetime operations with timezone awareness, format standardization,
+and utility functions for enterprise applications with UTC normalization
+and comprehensive time management across timezones.
 """
-Enterprise-grade timestamp utilities for comprehensive date/time handling and timezone management.
-
-This module provides sophisticated datetime operations with timezone awareness, format
-standardization, and comprehensive utility functions for enterprise applications.
-Implements industry-standard timestamp handling with UTC normalization, flexible
-formatting, performance optimization, and integration with global deployment
-scenarios requiring precise time management and cross-timezone compatibility.
-
-Key Features:
-- UTC-centric datetime handling with comprehensive timezone awareness and conversion
-- ISO 8601 format standardization with microsecond precision and compatibility
-- Timezone conversion utilities with automatic DST handling and region support
-- Performance-optimized timestamp operations with caching and batch processing
-- Enterprise integration with database timestamp formats and API standards
-- Comprehensive validation and error handling with security-conscious practices
-
-Timezone Management:
-- UTC normalization ensuring consistent timestamp storage and comparison
-- Automatic timezone detection and conversion with DST handling and regional support
-- Multi-timezone support for global deployments with user-specific time preferences
-- Database integration with timezone-aware fields and query optimization
-- API standardization with consistent timestamp formats across all endpoints
-- Compliance with international standards including ISO 8601 and RFC 3339
-
-Format Standardization:
-- ISO 8601 format compliance with configurable precision and timezone indicators
-- Microsecond precision support for high-accuracy timing and performance measurement
-- Human-readable format conversion with localization and cultural preferences
-- Database-compatible format generation with optimal storage and indexing
 - API response formatting with consistent structure and client compatibility
 - Integration with external systems requiring specific timestamp formats
 
