@@ -38,33 +38,7 @@ async def list_servers(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    List all registered MCP servers with optional filtering.
-
-    Returns a list of MCP servers configured in the system with their
-    connection status, configuration details, and metadata. Supports
-    filtering by enabled/connected status and includes detailed information
-    when requested.
-
-    Args:
-        enabled_only: If True, returns only enabled servers
-        connected_only: If True, returns only currently connected servers
-        detailed: If True, includes additional server metadata
-        current_user: Current authenticated superuser
-        db: Database session
-        mcp_service: MCP service instance
-
-    Returns:
-        MCPServerListResponse: List of servers with metadata
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If server listing fails
-
-    Note:
-        This endpoint requires superuser privileges as it exposes
-        system configuration details.
-    """
+    """List all registered MCP servers with optional filtering."""
     log_api_call("list_mcp_servers", user_id=current_user.id)
 
     filters = MCPListFiltersSchema(
@@ -88,54 +62,7 @@ async def create_server(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Create a new MCP server with comprehensive configuration.
-
-    Registers a new MCP (Model Context Protocol) server in the system with
-    the specified configuration including connection details, transport settings,
-    and metadata. Performs validation and initial connection testing to ensure
-    server viability.
-
-    Args:
-        server_data: Server configuration data including name, URL, transport, and settings
-        current_user: Current authenticated superuser creating the server
-        db: Database session for server registration
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        MCPServerListResponse: Created server configuration with status information
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 400: If server name already exists or configuration is invalid
-        HTTP 422: If server data validation fails
-        HTTP 500: If server creation process fails
-
-    Server Configuration:
-        - name: Unique identifier for the server
-        - url: Connection URL or command for server access
-        - transport: Connection transport type (stdio, sse, websocket)
-        - timeout: Connection timeout and retry settings
-        - description: Server description and metadata
-        - environment: Environment variables for server execution
-
-    Validation Checks:
-        - Server name uniqueness verification
-        - URL format and accessibility validation
-        - Transport compatibility checking
-        - Configuration parameter validation
-        - Initial connection test (optional)
-
-    Example:
-        POST /api/v1/mcp/servers
-        {
-            "name": "file-system",
-            "url": "mcp-server-filesystem",
-            "transport": "stdio",
-            "description": "File system operations server",
-            "timeout": 30
-        }
-    """
+    """Create a new MCP server with comprehensive configuration."""
     log_api_call(
         "create_mcp_server", user_id=current_user.id, server_name=server_data.name
     )
@@ -157,49 +84,7 @@ async def get_server(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Get detailed information about a specific MCP server by name.
-
-    Returns comprehensive server configuration, connection status, tool inventory,
-    and performance metrics for the specified MCP server. Provides complete
-    server information needed for management and troubleshooting operations.
-
-    Args:
-        server_name: Name of the MCP server to retrieve details for
-        current_user: Current authenticated superuser requesting server details
-        db: Database session for server data retrieval
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        MCPServerListResponse: Complete server information including:
-            - configuration: Server settings and connection parameters
-            - status: Current connection and health status
-            - tools: List of available tools and their states
-            - statistics: Usage metrics and performance data
-            - metadata: Creation and modification timestamps
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 404: If server with specified name is not found
-        HTTP 500: If server retrieval process fails
-
-    Server Details:
-        - Complete configuration parameters
-        - Real-time connection status and health metrics
-        - Tool inventory with availability and status
-        - Usage statistics and performance metrics
-        - Error logs and diagnostic information
-
-    Use Cases:
-        - Server troubleshooting and diagnostics
-        - Configuration verification and validation
-        - Performance monitoring and optimization
-        - Tool availability checking
-        - Administrative reporting and auditing
-
-    Example:
-        GET /api/v1/mcp/servers/byname/file-system
-    """
+    """Get detailed information about a specific MCP server by name."""
     log_api_call("get_mcp_server", user_id=current_user.id, server_name=server_name)
 
     server = await mcp_service.get_server(server_name)
@@ -226,59 +111,7 @@ async def update_server(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Update configuration settings for an existing MCP server.
-
-    Modifies the configuration of an existing MCP server including connection
-    parameters, transport settings, and metadata. Supports partial updates and
-    performs validation to ensure configuration consistency and compatibility.
-
-    Args:
-        server_name: Name of the MCP server to update
-        server_update: Updated configuration data with modified settings
-        current_user: Current authenticated superuser performing the update
-        db: Database session for server configuration updates
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        MCPServerListResponse: Updated server configuration with new settings
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 404: If server with specified name is not found
-        HTTP 400: If updated configuration is invalid
-        HTTP 422: If update data validation fails
-        HTTP 500: If server update process fails
-
-    Updatable Configuration:
-        - url: Server connection URL or command
-        - transport: Connection transport type
-        - timeout: Connection timeout settings
-        - description: Server description and metadata
-        - environment: Environment variables
-        - enabled: Server activation status
-
-    Update Validation:
-        - Configuration parameter validation
-        - Transport compatibility checking
-        - URL accessibility verification (optional)
-        - Dependency and compatibility analysis
-        - Impact assessment on active connections
-
-    Impact Considerations:
-        - Active connections may be terminated
-        - Tool availability might change temporarily
-        - Client applications may need to reconnect
-        - Configuration changes take effect immediately
-
-    Example:
-        PATCH /api/v1/mcp/servers/byname/file-system
-        {
-            "timeout": 60,
-            "description": "Enhanced file system operations server",
-            "enabled": true
-        }
-    """
+    """Update configuration settings for an existing MCP server."""
     log_api_call("update_mcp_server", user_id=current_user.id, server_name=server_name)
 
     server = await mcp_service.update_server(server_name, server_update)
@@ -298,52 +131,7 @@ async def delete_server(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Delete an MCP server and clean up associated resources.
-
-    Permanently removes an MCP server from the system including its configuration,
-    tool registrations, and historical data. Performs cleanup operations to ensure
-    system consistency and handles graceful shutdown of active connections.
-
-    Args:
-        server_name: Name of the MCP server to delete
-        current_user: Current authenticated superuser performing the deletion
-        db: Database session for server removal operations
-        mcp_service: Injected MCP service instance
-
-    Returns:
-        BaseResponse: Confirmation of successful server deletion
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 404: If server with specified name is not found
-        HTTP 409: If server has active connections or dependencies
-        HTTP 500: If server deletion process fails
-
-    Deletion Process:
-        - Graceful shutdown of active connections
-        - Tool deregistration and cleanup
-        - Configuration and metadata removal
-        - Historical data archiving or deletion
-        - Dependency validation and cleanup
-
-    Impact and Cleanup:
-        - All server tools become unavailable immediately
-        - Active connections are terminated gracefully
-        - Client applications lose access to server tools
-        - Usage statistics and logs may be archived
-        - System references are cleaned up
-
-    Safety Considerations:
-        - Irreversible operation requiring confirmation
-        - Active connections are validated before deletion
-        - Dependent services and configurations are checked
-        - Audit logging for administrative oversight
-        - Backup recommendations for critical servers
-
-    Example:
-        DELETE /api/v1/mcp/servers/byname/file-system
-    """
+    """Delete an MCP server and clean up associated resources."""
     log_api_call("delete_mcp_server", user_id=current_user.id, server_name=server_name)
 
     deleted = await mcp_service.delete_server(server_name)
@@ -369,54 +157,7 @@ async def list_tools(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    List all available MCP tools with filtering and detailed information.
-
-    Returns a comprehensive list of MCP tools available across all registered
-    servers with optional filtering by server, enabled status, and detail level.
-    Includes tool schemas, usage statistics, and availability information.
-
-    Args:
-        server: Optional server name filter to show tools from specific server
-        enabled_only: If True, returns only enabled tools (default: False)
-        detailed: If True, includes comprehensive tool metadata (default: False)
-        current_user: Current authenticated superuser requesting tool list
-        db: Database session for tool data retrieval
-
-    Returns:
-        MCPToolsResponse: List of available tools with metadata including:
-            - tools: List of tool objects with schemas and status
-            - server_mapping: Tools organized by server
-            - statistics: Usage and availability metrics
-            - total_count: Number of tools matching filters
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If tool listing operation fails
-
-    Tool Information:
-        - Tool name, description, and parameters
-        - Server association and availability status
-        - Usage statistics and performance metrics
-        - Schema definitions for parameter validation
-        - Enabled/disabled status and configuration
-
-    Filtering Options:
-        - Server-specific tool filtering
-        - Active/inactive status filtering
-        - Detailed metadata inclusion control
-        - Tool type and category filtering (if implemented)
-
-    Use Cases:
-        - Tool discovery and inventory management
-        - Server capability assessment
-        - Tool usage analysis and optimization
-        - Client application integration planning
-        - Administrative monitoring and reporting
-
-    Example:
-        GET /api/v1/mcp/tools?server=file-system&enabled_only=true&detailed=true
-    """
+    """List all available MCP tools with filtering and detailed information."""
     log_api_call("list_mcp_tools", user_id=current_user.id)
 
     mcp_service = MCPService(db)
@@ -683,7 +424,7 @@ async def test_tool(
 
     # Test the tool execution
     try:
-        result = await mcp_service.test_tool_execution(tool_name, test_params or {})
+        await mcp_service.test_tool_execution(tool_name, test_params or {})
         return SuccessResponse.create(
             message=f"Tool '{tool_name}' test completed successfully"
         )
