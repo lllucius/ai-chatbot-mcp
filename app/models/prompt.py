@@ -1,9 +1,7 @@
-"""
-Prompt registry model for managing prompts and tracking their usage.
+"""Prompt registry model for managing prompts and tracking usage.
 
 This module defines the Prompt model for storing and managing prompts
-with usage tracking and versioning capabilities.
-
+with usage tracking and categorization capabilities.
 """
 
 from datetime import datetime
@@ -16,20 +14,23 @@ from .base import BaseModelDB
 
 
 class Prompt(BaseModelDB):
-    """
-    Prompt model for managing prompts and their usage.
+    """Prompt model for managing prompts and their usage.
+
+    Stores prompt templates with categorization, usage tracking, and
+    management capabilities for the AI chatbot platform.
 
     Attributes:
-        name: Unique name/identifier for the prompt
-        title: Display title for the prompt
-        content: The actual prompt content
-        description: Optional description of the prompt's purpose
-        is_default: Whether this is the default prompt
-        is_active: Whether the prompt is active/available
-        usage_count: Number of times the prompt has been used
-        last_used_at: Timestamp of last usage
-        category: Optional category for organizing prompts
-        tags: Comma-separated tags for search and organization
+        name (Mapped[str]): Unique name/identifier for the prompt.
+        title (Mapped[str]): Display title for the prompt.
+        content (Mapped[str]): The actual prompt content.
+        description (Mapped[Optional[str]]): Optional description of the prompt's purpose.
+        is_default (Mapped[bool]): Whether this is the default prompt.
+        is_active (Mapped[bool]): Whether the prompt is active/available.
+        usage_count (Mapped[int]): Number of times the prompt has been used.
+        last_used_at (Mapped[Optional[datetime]]): Timestamp of last usage.
+        category (Mapped[Optional[str]]): Optional category for organizing prompts.
+        tags (Mapped[Optional[str]]): Comma-separated tags for search and organization.
+
     """
 
     __tablename__ = "prompts"

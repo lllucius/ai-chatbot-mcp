@@ -1,9 +1,8 @@
-"""
-LLM Profile model for managing LLM tuning parameter configurations.
+"""LLM Profile model for managing language model configurations.
 
 This module defines the LLMProfile model for storing and managing
-different parameter profiles for language model interactions.
-
+different parameter profiles for language model interactions including
+temperature, token limits, and other LLM-specific settings.
 """
 
 from datetime import datetime
@@ -16,32 +15,32 @@ from .base import BaseModelDB
 
 
 class LLMProfile(BaseModelDB):
-    """
-    LLM Profile model for managing language model parameter configurations.
+    """LLM Profile model for managing language model parameter configurations.
+
+    Stores configuration profiles for language model interactions including
+    temperature, token limits, and other LLM-specific parameters.
 
     Attributes:
-        name: Unique name/identifier for the profile
-        title: Display title for the profile
-        description: Optional description of the profile's purpose
-        is_default: Whether this is the default profile
-        is_active: Whether the profile is active/available
-        usage_count: Number of times the profile has been used
-        last_used_at: Timestamp of last usage
+        name (Mapped[str]): Unique name/identifier for the profile.
+        title (Mapped[str]): Display title for the profile.
+        description (Mapped[Optional[str]]): Optional description of the profile's purpose.
+        model_name (Mapped[str]): OpenAI model name.
+        is_default (Mapped[bool]): Whether this is the default profile.
+        is_active (Mapped[bool]): Whether the profile is active/available.
+        usage_count (Mapped[int]): Number of times the profile has been used.
+        last_used_at (Mapped[Optional[datetime]]): Timestamp of last usage.
+        temperature (Mapped[Optional[float]]): Controls randomness in generation.
+        top_p (Mapped[Optional[float]]): Nucleus sampling parameter.
+        top_k (Mapped[Optional[int]]): Top-k sampling parameter.
+        repeat_penalty (Mapped[Optional[float]]): Repetition penalty.
+        max_tokens (Mapped[Optional[int]]): Maximum tokens to generate.
+        max_new_tokens (Mapped[Optional[int]]): Maximum new tokens to generate.
+        context_length (Mapped[Optional[int]]): Maximum context length.
+        presence_penalty (Mapped[Optional[float]]): Presence penalty.
+        frequency_penalty (Mapped[Optional[float]]): Frequency penalty.
+        stop (Mapped[Optional[List[str]]]): Stop sequences as JSON list.
+        other_params (Mapped[Optional[Dict[str, Any]]]): Additional model-specific parameters.
 
-        # Core LLM Parameters
-        temperature: Controls randomness in generation (0.0-2.0)
-        top_p: Nucleus sampling parameter (0.0-1.0)
-        top_k: Top-k sampling parameter
-        repeat_penalty: Repetition penalty (typically around 1.0)
-        max_tokens: Maximum tokens to generate
-        max_new_tokens: Maximum new tokens to generate (alternative to max_tokens)
-        context_length: Maximum context length
-        presence_penalty: Presence penalty (-2.0 to 2.0)
-        frequency_penalty: Frequency penalty (-2.0 to 2.0)
-        stop: Stop sequences as JSON list
-
-        # Additional parameters
-        other_params: Additional model-specific parameters as JSON
     """
 
     __tablename__ = "llm_profiles"
@@ -136,27 +135,12 @@ class LLMProfile(BaseModelDB):
         self.last_used_at = datetime.utcnow()
 
     def to_openai_params(self) -> dict:
-        """
-        Convert LLM profile to OpenAI API parameters dictionary.
-
-        Transforms the profile settings into a format compatible with OpenAI's
-        chat completion API. Only includes parameters that are not None to allow
-        OpenAI's defaults to take effect for unspecified parameters.
+        """Convert LLM profile to OpenAI API parameters dictionary.
 
         Returns:
-            dict: Dictionary of OpenAI API parameters with the following possible keys:
-                - temperature: Controls randomness (0.0-2.0)
-                - top_p: Controls nucleus sampling (0.0-1.0)
-                - max_tokens: Maximum tokens to generate
-                - presence_penalty: Penalty for token presence (-2.0-2.0)
-                - frequency_penalty: Penalty for token frequency (-2.0-2.0)
-                - stop: List of stop sequences
+            dict: Dictionary of OpenAI API parameters with temperature, top_p,
+                max_tokens, presence_penalty, frequency_penalty, and stop sequences.
 
-        Example:
-            >>> profile = LLMProfile(temperature=0.7, max_tokens=1000)
-            >>> params = profile.to_openai_params()
-            >>> params
-            {"temperature": 0.7, "max_tokens": 1000}
         """
         params: Dict[str, Any] = {}
 
@@ -182,29 +166,12 @@ class LLMProfile(BaseModelDB):
         return params
 
     def to_dict(self) -> dict:
-        """
-        Convert profile to complete dictionary representation.
-
-        Creates a comprehensive dictionary containing all profile parameters,
-        metadata, and usage statistics. Useful for JSON serialization,
-        API responses, and profile export/import operations.
+        """Convert profile to complete dictionary representation.
 
         Returns:
-            dict: Complete profile data including:
-                - Basic info: name, title, description
-                - Status flags: is_default, is_active
-                - LLM parameters: temperature, top_p, max_tokens, etc.
-                - Penalties: presence_penalty, frequency_penalty
-                - Metadata: created_at, updated_at, usage stats
-                - Additional custom parameters from other_params
+            dict: Complete profile data including basic info, status flags,
+                LLM parameters, and usage statistics.
 
-        Example:
-            >>> profile = LLMProfile(name="creative", temperature=0.8)
-            >>> data = profile.to_dict()
-            >>> data["name"]
-            "creative"
-            >>> data["temperature"]
-            0.8
         """
         return {
             "name": self.name,

@@ -1,9 +1,7 @@
-"""
-MCP Tool model for tracking individual tools and their usage statistics.
+"""MCP Tool model for tracking individual tools and usage statistics.
 
 This module defines the MCPTool model for managing tools provided by MCP servers,
 their configuration, and usage analytics.
-
 """
 
 import uuid
@@ -21,22 +19,25 @@ if TYPE_CHECKING:
 
 
 class MCPTool(BaseModelDB):
-    """
-    MCP Tool model for tracking individual tools and usage statistics.
+    """MCP Tool model for tracking individual tools and usage statistics.
+
+    Manages tools provided by MCP servers including their configuration,
+    usage analytics, and performance metrics.
 
     Attributes:
-        name: Full name of the tool (server_toolname)
-        original_name: Original tool name from the server
-        server_id: Foreign key to the MCP server
-        description: Tool description
-        parameters: Tool parameters schema as JSON
-        is_enabled: Whether the tool is enabled
-        usage_count: Total number of times the tool has been called
-        last_used_at: Timestamp of last usage
-        success_count: Number of successful executions
-        error_count: Number of failed executions
-        average_duration_ms: Average execution duration in milliseconds
-        server: Related MCP server
+        name (Mapped[str]): Full name of the tool (server_toolname).
+        original_name (Mapped[str]): Original tool name from the server.
+        server_id (Mapped[uuid.UUID]): Foreign key to the MCP server.
+        description (Mapped[Optional[str]]): Tool description.
+        parameters (Mapped[Optional[dict]]): Tool parameters schema.
+        is_enabled (Mapped[bool]): Whether the tool is enabled.
+        usage_count (Mapped[int]): Total number of times the tool has been called.
+        last_used_at (Mapped[Optional[datetime]]): Timestamp of last usage.
+        success_count (Mapped[int]): Number of successful executions.
+        error_count (Mapped[int]): Number of failed executions.
+        average_duration_ms (Mapped[Optional[int]]): Average execution duration in milliseconds.
+        server (relationship): Related MCP server.
+
     """
 
     __tablename__ = "mcp_tools"
