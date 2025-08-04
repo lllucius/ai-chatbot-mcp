@@ -54,7 +54,7 @@ router = APIRouter(tags=["database"])
 async def initialize_database(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse:
     """
     Initialize the database and create all tables with required extensions.
 
@@ -104,15 +104,12 @@ async def initialize_database(
             # Create all tables
             await conn.run_sync(base.BaseModelDB.metadata.create_all)
 
-        return SuccessResponse.create(
+        return APIResponse(
+            success=True,
             message="Database initialized successfully"
         )
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="DATABASE_INIT_FAILED",
-            message=f"Database initialization failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.get("/status", response_model=DatabaseStatusResponse)
@@ -225,14 +222,7 @@ async def get_database_status(
             timestamp=datetime.utcnow(),
         )
     except Exception as e:
-        return DatabaseStatusResponse(
-            success=False,
-            connection_status="failed",
-            version_info={"error": str(e)},
-            schema_info={},
-            performance_metrics={},
-            timestamp=datetime.utcnow(),
-        )
+        raise
 
 
 @router.get("/tables", response_model=DatabaseTablesResponse)
@@ -322,10 +312,7 @@ async def list_database_tables(
             timestamp=datetime.utcnow(),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list tables: {str(e)}",
-        )
+        raise
 
 
 @router.get("/migrations", response_model=DatabaseMigrationsResponse)
@@ -429,10 +416,7 @@ async def get_migration_status(
             timestamp=datetime.utcnow(),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get migration status: {str(e)}",
-        )
+        raise
 
 
 @router.post("/upgrade", response_model=APIResponse)
@@ -515,6 +499,8 @@ async def upgrade_database(
             message=f"Migration execution failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    except Exception as e:
+        raise
 
 
 @router.post("/downgrade", response_model=APIResponse)
@@ -598,6 +584,8 @@ async def downgrade_database(
             message=f"Downgrade execution failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    except Exception as e:
+        raise
 
 
 @router.post("/backup", response_model=APIResponse)
@@ -721,11 +709,7 @@ async def create_database_backup(
             message="Database backup created successfully"
         )
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="BACKUP_CREATION_FAILED",
-            message=f"Backup creation failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.post("/restore", response_model=APIResponse)
@@ -836,11 +820,7 @@ async def restore_database(
             message=f"Database restored successfully from {backup_file}"
         )
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="RESTORE_OPERATION_FAILED",
-            message=f"Restore operation failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.post("/vacuum", response_model=APIResponse)
@@ -921,11 +901,7 @@ async def vacuum_database(
         )
     except Exception as e:
         await db.rollback()
-        return ErrorResponse.create(
-            error_code="VACUUM_OPERATION_FAILED",
-            message=f"VACUUM operation failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.get("/analyze", response_model=DatabaseAnalysisResponse)
@@ -1114,10 +1090,7 @@ async def analyze_database(
             timestamp=datetime.utcnow(),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database analysis failed: {str(e)}",
-        )
+        raise
 
 
 @router.post("/query", response_model=DatabaseQueryResponse)
@@ -1250,7 +1223,5 @@ async def execute_custom_query(
             timestamp=datetime.utcnow(),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Query execution failed: {str(e)}",
-        )
+        raise e
+
