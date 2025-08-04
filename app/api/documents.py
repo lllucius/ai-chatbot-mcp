@@ -60,55 +60,7 @@ async def upload_document(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentUploadResponse:
-    """
-    Upload a document for processing with configurable options.
-
-    Uploads a document file to the platform and optionally starts automatic
-    processing including text extraction, chunking, and embedding generation.
-    Supports various file formats and priority-based processing.
-
-    Args:
-        file: Document file to upload (various formats supported)
-        title: Human-readable title for the document
-        auto_process: Whether to automatically start processing after upload
-        processing_priority: Processing priority level (1-10, higher = more priority)
-        user: Current authenticated user from JWT token
-        service: Injected document service instance
-
-    Returns:
-        DocumentUploadResponse: Upload result containing:
-            - document: Created document metadata
-            - task_id: Background processing task ID (if auto_process=true)
-            - processing_status: Initial processing status
-            - upload_info: File upload information and statistics
-
-    Supported File Types:
-        - PDF documents (.pdf)
-        - Microsoft Word (.docx, .doc)
-        - Plain text files (.txt)
-        - Markdown files (.md)
-        - HTML files (.html)
-
-    Processing Pipeline:
-        - Text extraction from uploaded file
-        - Intelligent content chunking
-        - Embedding generation for semantic search
-        - Metadata extraction and indexing
-
-    Raises:
-        HTTP 400: If file type is not supported or file is corrupted
-        HTTP 413: If file size exceeds configured limits
-        HTTP 500: If upload or processing initialization fails
-
-    Example:
-        POST /api/v1/documents/upload
-        Content-Type: multipart/form-data
-
-        file: [document.pdf]
-        title: "Project Requirements"
-        auto_process: true
-        processing_priority: 7
-    """
+    """Upload a document for processing."""
     log_api_call(
         "upload_document", user_id=str(user.id), title=title, auto_process=auto_process
     )
@@ -142,23 +94,7 @@ async def list_documents(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    List user's documents with pagination and filtering.
-
-    Returns paginated list of documents owned by the current user
-    with optional filtering by file type and processing status.
-
-    Args:
-        page: Page number for pagination (starting from 1)
-        size: Number of documents per page (1-100)
-        file_type: Optional filter by file type (e.g., 'pdf', 'docx')
-        status_filter: Optional filter by processing status
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        APIResponse: Paginated list of user documents using unified envelope
-    """
+    """List user's documents with pagination and filtering."""
     log_api_call(
         "list_documents",
         user_id=str(current_user.id),
@@ -212,24 +148,7 @@ async def get_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Get document by ID.
-
-    Returns detailed information about a specific document
-    owned by the current user, including processing status,
-    metadata, and chunk information.
-
-    Args:
-        document_id: UUID of the document to retrieve
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        APIResponse: Complete document information using unified envelope
-
-    Raises:
-        HTTP 404: If document not found or not owned by user
-    """
+    """Get document by ID."""
     log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.get_document(document_id, current_user.id)
 
