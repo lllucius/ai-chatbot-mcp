@@ -5,23 +5,11 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
-from shared.schemas.admin import (
-    ProfileParametersResponse,
-    ProfileStatsResponse,
-    ProfileValidationResponse,
-)
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
-from shared.schemas.task_responses import (
-    DefaultProfileResponse,
-    ProfileParametersData,
-    ProfileStatisticsData,
-    ProfileStatisticsResponse,
-    ProfileValidationData,
-    ProfileValidationResponse,
+from shared.schemas.common import (
+    APIResponse,
+    BaseResponse,
+    ErrorResponse,
+    SuccessResponse,
 )
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
@@ -29,6 +17,15 @@ from shared.schemas.llm_profile import (
     LLMProfileResponse,
     LLMProfileUpdate,
 )
+from shared.schemas.task_responses import (
+    ProfileParametersData,
+    ProfileValidationData,
+)
+
+from ..config import settings
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -260,9 +257,9 @@ async def update_profile(
     Update an existing LLM profile with new parameters or metadata.
     """
     log_api_call("update_llm_profile", user_id=current_user.id, profile_name=profile_name)
-    
+
     updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
-    
+
     return LLMProfileResponse.model_validate(updated_profile)
 
 
@@ -277,9 +274,9 @@ async def delete_profile(
     Delete an LLM profile from the system.
     """
     log_api_call("delete_llm_profile", user_id=current_user.id, profile_name=profile_name)
-    
+
     await profile_service.delete_profile(profile_name)
-    
+
     return SuccessResponse.create(
         message=f"Profile '{profile_name}' deleted successfully"
     )

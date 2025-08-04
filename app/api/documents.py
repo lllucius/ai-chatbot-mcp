@@ -18,15 +18,13 @@ from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin import AdvancedSearchResponse, DocumentStatsResponse
 from shared.schemas.common import (
     APIResponse,
-    SuccessResponse,
     ErrorResponse,
     PaginatedResponse,
-    ValidationErrorResponse,
+    SuccessResponse,
 )
-from shared.schemas.document import DocumentUploadResponse, DocumentResponse
+from shared.schemas.document import DocumentResponse, DocumentUploadResponse
 from shared.schemas.document_responses import (
     AdvancedSearchData,
     DocumentFileTypeStats,
@@ -197,7 +195,7 @@ async def list_documents(
 
     # Convert to dict for unified response
     response_data = [resp.model_dump() for resp in responses]
-    
+
     return PaginatedResponse.create_response(
         items=response_data,
         total=total,
@@ -234,7 +232,7 @@ async def get_document(
     """
     log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.get_document(document_id, current_user.id)
-    
+
     # Create DocumentResponse directly with explicit field assignment
     document_response = DocumentResponse(
         id=document.id,
@@ -250,7 +248,7 @@ async def get_document(
         created_at=document.created_at,
         updated_at=document.updated_at,
     )
-    
+
     return SuccessResponse.create(
         data=document_response.model_dump(),
         message="Document retrieved successfully"
@@ -654,7 +652,7 @@ async def cleanup_documents(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -822,7 +820,7 @@ async def get_document_statistics(
             message="Document statistics retrieved successfully",
             data=response_payload,
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -914,7 +912,7 @@ async def bulk_reprocess_documents(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -1096,5 +1094,5 @@ async def advanced_document_search(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise

@@ -2,18 +2,20 @@
 
 from fastapi import APIRouter, Depends
 
-from ..dependencies import get_auth_service, get_current_user
-from ..models.user import User
 from shared.schemas.auth import (
     LoginRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     RegisterRequest,
-    Token,
 )
-from shared.schemas.common import BaseResponse, APIResponse, SuccessResponse, ErrorResponse
+from shared.schemas.common import (
+    APIResponse,
+    SuccessResponse,
+)
 from shared.schemas.user import UserResponse
 
+from ..dependencies import get_auth_service, get_current_user
+from ..models.user import User
 from ..services.auth import AuthService
 from ..utils.api_errors import handle_api_errors, log_api_call
 

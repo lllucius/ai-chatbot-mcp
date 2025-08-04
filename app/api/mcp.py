@@ -5,19 +5,23 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_mcp_service
-from ..models.user import User
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    SuccessResponse,
+)
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
     MCPServerSchema,
-    MCPServerListResponse,
     MCPServerUpdateSchema,
     MCPStatsResponse,
     MCPToolsResponse,
 )
+
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_mcp_service
+from ..models.user import User
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -645,7 +649,7 @@ async def get_tool_details(
 
     mcp_service = MCPService(db)
     tool = await mcp_service.get_tool_by_name(tool_name)
-    
+
     if not tool:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -676,14 +680,14 @@ async def test_tool(
     log_api_call("test_mcp_tool", user_id=current_user.id)
 
     mcp_service = MCPService(db)
-    
+
     # Test the tool execution
     try:
         result = await mcp_service.test_tool_execution(tool_name, test_params or {})
         return SuccessResponse.create(
             message=f"Tool '{tool_name}' test completed successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 

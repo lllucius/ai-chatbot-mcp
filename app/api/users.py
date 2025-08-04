@@ -5,21 +5,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
-from shared.schemas.common import (
-    APIResponse,
-    BaseResponse, 
-    PaginatedResponse,
-    SuccessResponse,
-    ErrorResponse,
-)
 from shared.schemas.admin_responses import (
     UserStatisticsResponse,
 )
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    PaginatedResponse,
+    SuccessResponse,
+)
 from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -140,12 +139,7 @@ async def get_user(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Get user by ID (admin only).
-
-    Returns detailed user information including statistics.
-    Requires superuser privileges.
-    """
+    """Get user by ID (admin only)."""
     log_api_call(
         "get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -166,12 +160,7 @@ async def update_user(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Update user by ID (admin only).
-
-    Allows administrators to update any user's profile.
-    Requires superuser privileges.
-    """
+    """Update user by ID (admin only)."""
     log_api_call(
         "update_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -191,12 +180,7 @@ async def delete_user(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Delete user by ID (admin only).
-
-    Permanently deletes a user and all associated data.
-    Requires superuser privileges.
-    """
+    """Delete user by ID (admin only)."""
     log_api_call(
         "delete_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -230,15 +214,7 @@ async def promote_user_to_superuser(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Promote a user to superuser status.
-
-    Grants superuser privileges to the specified user.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to promote
-    """
+    """Promote a user to superuser status."""
     log_api_call(
         "promote_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -265,7 +241,7 @@ async def promote_user_to_superuser(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -277,15 +253,7 @@ async def demote_user_from_superuser(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Demote a superuser to regular user status.
-
-    Removes superuser privileges from the specified user.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to demote
-    """
+    """Demote a superuser to regular user status."""
     log_api_call(
         "demote_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -318,7 +286,7 @@ async def demote_user_from_superuser(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -330,15 +298,7 @@ async def activate_user_account(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Activate a user account.
-
-    Enables a previously deactivated user account.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to activate
-    """
+    """Activate a user account."""
     log_api_call(
         "activate_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -364,7 +324,7 @@ async def activate_user_account(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -376,15 +336,7 @@ async def deactivate_user_account(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Deactivate a user account.
-
-    Disables a user account without deleting it.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to deactivate
-    """
+    """Deactivate a user account."""
     log_api_call(
         "deactivate_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -417,7 +369,7 @@ async def deactivate_user_account(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -430,16 +382,7 @@ async def admin_reset_user_password(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Reset a user's password (admin operation).
-
-    Allows superusers to reset any user's password.
-    The new password must meet security requirements.
-
-    Args:
-        user_id: ID of the user whose password to reset
-        new_password: New password (minimum 8 characters)
-    """
+    """Reset a user's password (admin operation)."""
     log_api_call(
         "admin_reset_password",
         user_id=str(current_user.id),
@@ -468,7 +411,7 @@ async def admin_reset_user_password(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -478,57 +421,7 @@ async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> UserStatisticsResponse:
-    """
-    Get comprehensive user statistics and analytics for administrative reporting.
-
-    Returns detailed statistics about users including counts, activity metrics,
-    engagement analytics, and distribution data. Provides comprehensive insights
-    for administrative decision-making, system monitoring, and user experience
-    optimization. Requires superuser access for privacy and security protection.
-
-    Args:
-        current_user: Current authenticated superuser from validated JWT token
-        db: Database session for statistics queries and data aggregation
-
-    Returns:
-        UserStatisticsResponse: Comprehensive user statistics including:
-            - total_users: Total number of registered users
-            - active_users: Number of currently active users
-            - inactive_users: Number of deactivated user accounts
-            - superusers: Number of users with administrative privileges
-            - recent_registrations_30d: New user registrations in last 30 days
-            - engagement: User activity and platform engagement metrics
-            - top_users_by_documents: Most active users ranked by content creation
-            - activity_rate: Percentage of active users for health assessment
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If statistics generation fails
-
-    Statistical Categories:
-        - User account distribution and status breakdown
-        - Recent registration trends and growth patterns
-        - User engagement metrics and activity levels
-        - Content creation patterns and user contribution analysis
-        - Platform adoption and user retention indicators
-
-    Engagement Metrics:
-        - Users with document uploads and content creation
-        - Users with active conversations and interactions
-        - Average content creation per user for engagement assessment
-        - Activity distribution and user segmentation data
-        - Platform utilization and feature adoption rates
-
-    Use Cases:
-        - Administrative dashboards and executive reporting
-        - User experience optimization and platform improvement
-        - Capacity planning and system scaling decisions
-        - User engagement analysis and retention strategies
-        - Business intelligence and growth tracking
-
-    Example:
-        GET /api/v1/users/stats
-    """
+    """Get comprehensive user statistics for administrative reporting."""
     log_api_call("get_user_statistics", user_id=str(current_user.id))
 
     try:
@@ -622,5 +515,5 @@ async def get_user_statistics(
             data=stats_data,
             message="User statistics retrieved successfully"
         )
-    except Exception as e:
+    except Exception:
         raise

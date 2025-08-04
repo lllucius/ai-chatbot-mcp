@@ -11,23 +11,21 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import (
-    APIResponse,
-    BaseResponse,
-    PaginatedResponse,
-    SuccessResponse,
-    ErrorResponse,
-)
 from shared.schemas.admin_responses import (
     ConversationStatsResponse,
     RegistryStatsResponse,
     SearchResponse,
 )
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    PaginatedResponse,
+    SuccessResponse,
+)
 from shared.schemas.conversation import (
     ChatRequest,
     ChatResponse,
     ConversationCreate,
-    ConversationExportResponse,
     ConversationResponse,
     ConversationStats,
     ConversationUpdate,
@@ -48,7 +46,6 @@ from shared.schemas.conversation_responses import (
     ExportedMessage,
     ExportInfo,
 )
-
 
 from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
@@ -1011,7 +1008,7 @@ async def export_conversation(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -1130,7 +1127,7 @@ async def import_conversation(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await conversation_service.db.rollback()
         raise
 
@@ -1240,7 +1237,7 @@ async def archive_conversations(
                 message=f"Archived {archived_count} conversations successfully"
             )
 
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise
 
@@ -1463,7 +1460,7 @@ async def search_conversations_and_messages(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -1614,5 +1611,5 @@ async def get_conversation_statistics(
                 "timestamp": datetime.utcnow().isoformat(),
             },
         )
-    except Exception as e:
+    except Exception:
         raise

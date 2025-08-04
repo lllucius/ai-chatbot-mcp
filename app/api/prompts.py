@@ -1,13 +1,22 @@
 """Prompt registry management API endpoints."""
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse, PaginatedResponse
-from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
+from shared.schemas.common import (
+    APIResponse,
+    BaseResponse,
+    ErrorResponse,
+    SuccessResponse,
+)
+from shared.schemas.prompt import (
+    PromptCreate,
+    PromptListResponse,
+    PromptResponse,
+    PromptUpdate,
+)
 from shared.schemas.prompt_responses import (
     PromptCategoriesData,
     PromptStatisticsData,
@@ -215,9 +224,9 @@ async def create_prompt(
     Create a new prompt template in the registry.
     """
     log_api_call("create_prompt", user_id=current_user.id)
-    
+
     prompt = await prompt_service.create_prompt(request)
-    
+
     return PromptResponse(
         name=prompt.name,
         title=prompt.title,
@@ -246,9 +255,9 @@ async def update_prompt(
     Update an existing prompt template.
     """
     log_api_call("update_prompt", user_id=current_user.id, prompt_name=prompt_name)
-    
+
     prompt = await prompt_service.update_prompt(prompt_name, data.model_dump(exclude_unset=True))
-    
+
     return PromptResponse.model_validate(prompt)
 
 
@@ -263,9 +272,9 @@ async def delete_prompt(
     Delete a prompt template from the registry.
     """
     log_api_call("delete_prompt", user_id=current_user.id, prompt_name=prompt_name)
-    
+
     await prompt_service.delete_prompt(prompt_name)
-    
+
     return SuccessResponse.create(
         message=f"Prompt '{prompt_name}' deleted successfully"
     )

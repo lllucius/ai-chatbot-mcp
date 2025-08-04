@@ -1,55 +1,4 @@
-"""
-Health monitoring and system status API endpoints with comprehensive observability.
-
-This module provides comprehensive health monitoring endpoints for the application
-including database connectivity validation, external services monitoring, system
-performance metrics, resource utilization tracking, and Kubernetes-style probes
-for container orchestration and automated monitoring systems.
-
-Key Features:
-- Basic and detailed health checks with configurable depth and scope
-- Database connectivity validation and performance monitoring
-- External service status monitoring (OpenAI, FastMCP, third-party APIs)
-- System performance metrics and resource utilization tracking
-- Cache system health monitoring and performance statistics
-- Kubernetes-compatible liveness and readiness probes for orchestration
-
-Health Check Categories:
-- Basic health: Quick status check without external dependencies
-- Detailed health: Comprehensive system and dependency validation
-- Database health: Database connectivity, performance, and schema validation
-- Services health: External service availability and response time monitoring
-- System metrics: Resource utilization, performance, and capacity monitoring
-
-Monitoring Capabilities:
-- Real-time system resource monitoring (CPU, memory, disk, network)
-- Database performance metrics and connection pool status
-- External API availability checks and response time monitoring
-- Cache hit rates, performance statistics, and optimization insights
-- Background service health validation and status reporting
-- Detailed error reporting and diagnostic information collection
-
-Integration Support:
-- Load balancer health check endpoints for traffic routing
-- Kubernetes liveness and readiness probes for container orchestration
-- Monitoring system integration (Prometheus, Grafana, custom solutions)
-- Alerting and notification support for automated incident response
-- Health dashboard and visualization support
-
-Performance Monitoring:
-- Request processing times and throughput metrics
-- Database query performance and optimization insights
-- Cache effectiveness and memory utilization tracking
-- External service response times and availability statistics
-- Resource usage trends and capacity planning data
-
-Container Orchestration:
-- Liveness probes for container restart decisions
-- Readiness probes for traffic routing and load balancing
-- Startup probes for application initialization monitoring
-- Health check configuration for automated scaling decisions
-- Integration with container health monitoring systems
-"""
+"""Health monitoring and system status API endpoints."""
 
 import logging
 from typing import Any, Dict, Optional
@@ -59,28 +8,28 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_mcp_service
-from ..middleware.performance import get_performance_stats
 from shared.schemas.common import (
     APIResponse,
-    BaseResponse,
-    DetailedHealthCheckResponse,
-    SuccessResponse,
     ErrorResponse,
+    SuccessResponse,
 )
 from shared.schemas.health_responses import (
     CacheHealthData,
     CacheStats,
     DatabaseHealthData,
-    DetailedHealthCheckData,
 )
+
+from ..config import settings
+from ..database import get_db
+from ..dependencies import get_mcp_service
+from ..middleware.performance import get_performance_stats
+
+
 
 # Define additional health data models not in the schema files
 class OpenAIHealthData(BaseModel):
     """OpenAI service health data."""
-    
+
     status: str = Field(..., description="OpenAI service status")
     message: str = Field(..., description="Health status message")
     configured: bool = Field(default=False, description="Whether API key is configured")
@@ -91,7 +40,7 @@ class OpenAIHealthData(BaseModel):
 
 class FastMCPHealthData(BaseModel):
     """FastMCP service health data."""
-    
+
     status: str = Field(..., description="FastMCP service status")
     message: str = Field(..., description="Health status message")
     enabled: bool = Field(..., description="Whether MCP is enabled in configuration")
@@ -108,7 +57,6 @@ class FastMCPHealthData(BaseModel):
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
-from ..utils.timestamp import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -118,54 +66,7 @@ router = APIRouter()
 @router.get("/", response_model=APIResponse)
 @handle_api_errors("Basic health check failed")
 async def basic_health_check():
-    """
-    Basic health check endpoint for load balancers and simple monitoring.
-
-    Provides a lightweight health status check for the application core without
-    validating external dependencies or performing resource-intensive operations.
-    Optimized for load balancer health checks, basic monitoring systems, and
-    high-frequency health polling scenarios.
-
-    Returns:
-        APIResponse: Basic application status using unified envelope:
-            - success: Always true for successful health check
-            - message: Human-readable status message
-            - timestamp: Health check execution time
-            - data: Health status details (status, version)
-
-    Health Check Scope:
-        - Application process status and responsiveness
-        - Basic configuration validation and availability
-        - Core service initialization and readiness
-        - Memory and resource availability check
-        - Quick response time optimization for monitoring
-
-    Use Cases:
-        - Load balancer health check endpoints for traffic routing
-        - Container orchestration basic health validation
-        - High-frequency monitoring system integration
-        - Basic application availability verification
-        - Automated deployment health validation
-
-    Performance:
-        - Optimized for sub-millisecond response times
-        - Minimal resource consumption and overhead
-        - No external dependency validation
-        - Lightweight status reporting and logging
-        - Suitable for high-frequency polling scenarios
-
-    Example:
-        GET /api/v1/health/
-        {
-            "success": true,
-            "message": "AI Chatbot Platform is running",
-            "timestamp": "2024-01-01T00:00:00Z",
-            "data": {
-                "status": "healthy",
-                "version": "1.0.0"
-            }
-        }
-    """
+    """Basic health check endpoint for load balancers and monitoring."""
     log_api_call("basic_health_check")
     return SuccessResponse.create(
         data={
@@ -212,7 +113,7 @@ async def detailed_health_check(
     cache_health = await _check_cache_health()
     openai_health = await _check_openai_health()
     fastmcp_health = await _check_fastmcp_health(mcp_service)
-    
+
     health_data = {
         "application": {
             "name": settings.app_name,
@@ -274,14 +175,14 @@ async def database_health_check(db: AsyncSession = Depends(get_db)):
     """
     log_api_call("database_health_check")
     health_data = await _check_database_health(db)
-    
+
     if health_data.status == "unhealthy":
         message = f"Database is unhealthy: {health_data.message}"
     elif health_data.status == "warning":
         message = f"Database has warnings: {health_data.message}"
     else:
         message = "Database is healthy"
-    
+
     return SuccessResponse.create(
         data=health_data.model_dump(),
         message=message
@@ -315,15 +216,15 @@ async def services_health_check(
         but could affect functionality availability.
     """
     log_api_call("services_health_check")
-    
+
     openai_health = await _check_openai_health()
     fastmcp_health = await _check_fastmcp_health(mcp_service)
-    
+
     services_data = {
         "openai": openai_health,
         "fastmcp": fastmcp_health,
     }
-    
+
     # Determine overall message
     statuses = [openai_health.status, fastmcp_health.status]
     if "unhealthy" in statuses:
@@ -332,7 +233,7 @@ async def services_health_check(
         message = "Some external services have warnings"
     else:
         message = "All external services are healthy"
-    
+
     return SuccessResponse.create(
         data=services_data,
         message=message
@@ -365,7 +266,7 @@ async def _check_cache_health() -> CacheHealthData:
             "api_response_cache": api_response_cache.get_stats(),
             "search_result_cache": search_result_cache.get_stats(),
         }
-        
+
         # Convert raw stats to CacheStats objects
         cache_stats = {}
         for cache_name, stats in raw_cache_stats.items():
@@ -375,7 +276,7 @@ async def _check_cache_health() -> CacheHealthData:
                 hit_rate=stats["hit_rate"],
                 total_requests=stats["hits"] + stats["misses"]
             )
-        
+
         test_key = "health_check_test"
         test_value = "test_data"
         await embedding_cache.set(test_key, test_value, ttl=60)
@@ -581,7 +482,7 @@ async def _check_fastmcp_health(mcp_service: MCPService) -> FastMCPHealthData:
         else:
             status = "healthy"
             message = f"All enabled MCP servers are connected ({connected_servers}/{enabled_servers})"
-            
+
         return FastMCPHealthData(
             status=status,
             message=message,
@@ -630,12 +531,13 @@ async def get_system_metrics():
     log_api_call("get_system_metrics")
     try:
         import time
+
         import psutil
 
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
-        
+
         metrics_data = {
             "system": {
                 "cpu_usage_percent": cpu_percent,
@@ -656,7 +558,7 @@ async def get_system_metrics():
                 "debug_mode": settings.debug,
             },
         }
-        
+
         return SuccessResponse.create(
             data=metrics_data,
             message="System metrics collected successfully"
@@ -729,7 +631,7 @@ async def readiness_check(
                 data={"component": "fastmcp", "details": fastmcp_health.model_dump()},
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
-        
+
         return SuccessResponse.create(
             data={
                 "status": "ready",
