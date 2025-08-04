@@ -1,5 +1,4 @@
-"""
-Pydantic response schemas for document management API endpoints.
+"""Pydantic response schemas for document management API endpoints.
 
 This module provides response models for all document-related endpoints that currently
 return raw dictionaries, ensuring type safety and proper API documentation.

@@ -1,5 +1,4 @@
-"""
-Conversation and message-related Pydantic schemas.
+"""Conversation and message-related Pydantic schemas.
 
 This module provides schemas for chat conversations, messages,
 and related operations.

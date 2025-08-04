@@ -1,5 +1,4 @@
-"""
-Pydantic schemas for MCP (Model Context Protocol) APIs.
+"""Pydantic schemas for MCP (Model Context Protocol) APIs.
 
 This module provides comprehensive Pydantic models for all MCP-related
 API operations, ensuring type safety and consistent validation.

@@ -1,5 +1,4 @@
-"""
-Pydantic response schemas for prompt registry API endpoints.
+"""Pydantic response schemas for prompt registry API endpoints.
 
 This module provides response models for all prompt-related endpoints that currently
 return raw dictionaries, ensuring type safety and proper API documentation.
