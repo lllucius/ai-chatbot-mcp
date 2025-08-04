@@ -1065,10 +1065,7 @@ async def export_conversation(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Export failed: {str(e)}",
-        )
+        raise
 
 
 @router.post("/conversations/import", response_model=APIResponse)
@@ -1188,11 +1185,7 @@ async def import_conversation(
         raise
     except Exception as e:
         await conversation_service.db.rollback()
-        return ErrorResponse.create(
-            error_code="CONVERSATION_IMPORT_FAILED",
-            message=f"Import failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.post("/conversations/archive", response_model=APIResponse)
@@ -1302,11 +1295,7 @@ async def archive_conversations(
 
     except Exception as e:
         await db.rollback()
-        return ErrorResponse.create(
-            error_code="ARCHIVE_OPERATION_FAILED",
-            message=f"Archive operation failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.get("/conversations/search", response_model=SearchResponse)
@@ -1528,10 +1517,7 @@ async def search_conversations_and_messages(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Search failed: {str(e)}",
-        )
+        raise
 
 
 @router.get("/conversations/stats", response_model=ConversationStatsResponse)
@@ -1682,7 +1668,4 @@ async def get_conversation_statistics(
             },
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get conversation statistics: {str(e)}",
-        )
+        raise

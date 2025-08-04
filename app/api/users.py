@@ -516,10 +516,7 @@ async def promote_user_to_superuser(
         raise
     except Exception as e:
         await user_service.db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to promote user: {str(e)}",
-        )
+        raise
 
 
 @router.post("/users/byid/{user_id}/demote", response_model=APIResponse)
@@ -572,10 +569,7 @@ async def demote_user_from_superuser(
         raise
     except Exception as e:
         await user_service.db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to demote user: {str(e)}",
-        )
+        raise
 
 
 @router.post("/users/byid/{user_id}/activate", response_model=APIResponse)
@@ -621,10 +615,7 @@ async def activate_user_account(
         raise
     except Exception as e:
         await user_service.db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to activate user: {str(e)}",
-        )
+        raise
 
 
 @router.post("/users/byid/{user_id}/deactivate", response_model=APIResponse)
@@ -677,10 +668,7 @@ async def deactivate_user_account(
         raise
     except Exception as e:
         await user_service.db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to deactivate user: {str(e)}",
-        )
+        raise
 
 
 @router.post("/users/byid/{user_id}/reset-password", response_model=APIResponse)
@@ -730,10 +718,7 @@ async def admin_reset_user_password(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reset password: {str(e)}",
-        )
+        raise
 
 
 @router.get("/users/stats", response_model=APIResponse)
@@ -887,7 +872,4 @@ async def get_user_statistics(
             message="User statistics retrieved successfully"
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user statistics: {str(e)}",
-        )
+        raise

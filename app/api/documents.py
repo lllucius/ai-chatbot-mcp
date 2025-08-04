@@ -683,11 +683,7 @@ async def cleanup_documents(
     except HTTPException:
         raise
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="DOCUMENT_CLEANUP_FAILED",
-            message=f"Document cleanup failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.get("/documents/stats", response_model=APIResponse[DocumentStatisticsData])
@@ -855,10 +851,7 @@ async def get_document_statistics(
             data=response_payload,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get document statistics: {str(e)}",
-        )
+        raise
 
 
 @router.post("/documents/bulk-reprocess", response_model=APIResponse)
@@ -950,11 +943,7 @@ async def bulk_reprocess_documents(
     except HTTPException:
         raise
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="BULK_REPROCESS_FAILED",
-            message=f"Bulk reprocessing failed: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.get("/documents/search/advanced", response_model=APIResponse[AdvancedSearchData])
@@ -1136,7 +1125,4 @@ async def advanced_document_search(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Advanced search failed: {str(e)}",
-        )
+        raise

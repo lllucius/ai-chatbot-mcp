@@ -745,11 +745,7 @@ async def readiness_check(
         raise
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
-        return ErrorResponse.create(
-            error_code="READINESS_CHECK_FAILED",
-            message=f"Application not ready: {str(e)}",
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
-        )
+        raise
 
 
 @router.get("/performance", response_model=APIResponse)
