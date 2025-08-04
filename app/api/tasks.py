@@ -354,65 +354,7 @@ async def schedule_task(
     queue: str = Query("default", description="Queue to send the task to"),
     current_user: User = Depends(get_current_superuser),
 ):
-    """
-    Schedule background tasks for execution with comprehensive parameter control.
-
-    Provides administrative interface for scheduling background tasks with custom
-    arguments, execution timing, and queue assignment. Enables flexible task
-    management and system automation capabilities.
-
-    Args:
-        task_name: Fully qualified name of the task function to execute
-        args: JSON-encoded array of positional arguments for the task
-        kwargs: JSON-encoded object of keyword arguments for the task
-        countdown: Optional delay in seconds before task execution begins
-        queue: Target queue name for task routing (default: 'default')
-        current_user: Current authenticated superuser scheduling the task
-
-    Returns:
-        BaseResponse: Task scheduling results including:
-            - success: Task scheduling operation status
-            - message: Scheduling confirmation with task details
-            - task_id: Unique identifier for the scheduled task
-            - queue: Target queue for task execution
-            - countdown: Applied execution delay (if any)
-            - timestamp: Task scheduling timestamp
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 400: If task arguments are invalid JSON or task name is invalid
-        HTTP 500: If task scheduling operation fails
-
-    Task Configuration:
-        - task_name: Must match registered Celery task function
-        - args: Positional arguments passed directly to task function
-        - kwargs: Keyword arguments for task configuration and parameters
-        - countdown: Delayed execution for scheduling and coordination
-        - queue: Queue routing for load balancing and prioritization
-
-    Scheduling Features:
-        - Immediate or delayed task execution
-        - Custom argument passing and configuration
-        - Queue-based task routing and prioritization
-        - Task identification and tracking capabilities
-        - Comprehensive error handling and validation
-
-    Administrative Use Cases:
-        - Manual task execution and testing
-        - System maintenance and cleanup operations
-        - Bulk processing and batch job scheduling
-        - Emergency task execution and recovery
-        - Development and debugging support
-
-    Security Notes:
-        - Requires superuser privileges for system security
-        - Task execution runs with application privileges
-        - Argument validation prevents injection attacks
-        - Administrative audit logging for all operations
-
-    Example:
-        POST /api/v1/tasks/schedule?task_name=process_document&args=[123]&countdown=60
-    """
+    """Schedule background tasks for execution with comprehensive parameter control."""
     log_api_call("schedule_task", user_id=str(current_user.id), task_name=task_name)
 
     try:
@@ -461,64 +403,7 @@ async def retry_failed_tasks(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Retry failed document processing tasks with intelligent error recovery.
-
-    Identifies and retries failed background tasks, particularly focusing on
-    document processing failures. Implements intelligent retry logic with
-    error analysis and recovery strategies for improved system reliability.
-
-    Args:
-        task_name: Optional specific task name filter for targeted retries
-        max_retries: Maximum number of failed tasks to retry (1-100, default: 10)
-        current_user: Current authenticated superuser performing retry operations
-        db: Database session for task status updates and tracking
-
-    Returns:
-        BaseResponse: Retry operation results including:
-            - success: Overall retry operation status
-            - message: Summary of retry operation results
-            - retried_count: Number of tasks successfully scheduled for retry
-            - total_failed: Total number of failed tasks identified
-            - errors: Sample of retry errors encountered (limited to 5)
-            - timestamp: Retry operation execution timestamp
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If retry operation fails or database errors occur
-
-    Retry Process:
-        - Identifies failed documents with recoverable error conditions
-        - Resets document status to enable reprocessing
-        - Clears previous error messages and state information
-        - Schedules reprocessing with appropriate priority settings
-        - Tracks retry success and failure rates for monitoring
-
-    Recovery Strategy:
-        - Prioritizes recently failed tasks for faster recovery
-        - Applies high priority to retry operations for faster processing
-        - Maintains audit trail of retry attempts and outcomes
-        - Provides detailed error reporting for troubleshooting
-        - Implements batch processing to handle large failure volumes
-
-    Error Handling:
-        - Graceful handling of retry scheduling failures
-        - Detailed error reporting for troubleshooting
-        - Partial success tracking for mixed outcomes
-        - Database transaction management for consistency
-        - Comprehensive logging for administrative oversight
-
-    Use Cases:
-        - Recovery from temporary system failures or resource constraints
-        - Batch retry of failed processing operations
-        - System maintenance and error recovery procedures
-        - Development and testing error scenario handling
-        - Automated failure recovery and system resilience
-
-    Example:
-        POST /api/v1/tasks/retry-failed?max_retries=20
-        POST /api/v1/tasks/retry-failed?task_name=process_document&max_retries=5
-    """
+    """Retry failed document processing tasks with intelligent error recovery."""
     log_api_call(
         "retry_failed_tasks", user_id=str(current_user.id), task_name=task_name
     )
@@ -583,60 +468,7 @@ async def purge_queue(
     queue_name: str = Query("default", description="Queue name to purge"),
     current_user: User = Depends(get_current_superuser),
 ):
-    """
-    Purge all pending tasks from specified queue with comprehensive safety warnings.
-
-    Removes all pending tasks from the specified queue, providing emergency cleanup
-    capabilities for queue management and system maintenance. This is a destructive
-    operation that permanently removes queued tasks.
-
-    Args:
-        queue_name: Name of the target queue to purge (default: 'default')
-        current_user: Current authenticated superuser performing the purge operation
-
-    Returns:
-        BaseResponse: Purge operation results including:
-            - success: Purge operation completion status
-            - message: Purge confirmation with queue details
-            - purged_tasks: Number of tasks removed from the queue
-            - queue: Name of the purged queue
-            - timestamp: Purge operation execution timestamp
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If queue purge operation fails
-
-    CRITICAL WARNINGS:
-        - This operation permanently removes ALL pending tasks from the queue
-        - Active/running tasks are NOT affected by this operation
-        - Purged tasks cannot be recovered and must be rescheduled manually
-        - Use with extreme caution in production environments
-        - Consider task criticality before executing purge operations
-
-    Purge Impact:
-        - All pending tasks in the queue are permanently deleted
-        - Task arguments, scheduling, and metadata are lost
-        - No automatic recovery or restoration mechanisms
-        - Client applications may need to resubmit lost tasks
-        - System capacity and performance may be immediately affected
-
-    Safety Considerations:
-        - Requires superuser privileges for system protection
-        - Administrative audit logging for all purge operations
-        - Consider creating task backups before purging
-        - Coordinate with development and operations teams
-        - Plan for manual task resubmission if necessary
-
-    Use Cases:
-        - Emergency queue cleanup during system issues
-        - Development environment maintenance and testing
-        - Queue overflow management and capacity control
-        - System maintenance and configuration changes
-        - Error recovery from corrupted queue states
-
-    Example:
-        POST /api/v1/tasks/purge?queue_name=document_processing
-    """
+    """Purge all pending tasks from specified queue with comprehensive safety warnings."""
     log_api_call("purge_queue", user_id=str(current_user.id), queue_name=queue_name)
 
     try:
@@ -665,62 +497,7 @@ async def get_task_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get comprehensive task execution statistics and performance analytics.
-
-    Returns detailed analytics about task execution including success rates,
-    processing times, failure analysis, and performance trends over the specified
-    time period. Provides essential insights for system optimization and monitoring.
-
-    Args:
-        period_hours: Analysis period in hours (1-168 hours / 1 week maximum)
-        current_user: Current authenticated user requesting statistics
-        db: Database session for statistics queries and data retrieval
-
-    Returns:
-        TaskStatsResponse: Comprehensive task statistics including:
-            - period_hours: Analysis time period applied
-            - start_time: Analysis period start timestamp
-            - document_processing: Detailed processing statistics and metrics
-            - recent_errors: Sample of recent error messages and patterns
-            - timestamp: Statistics generation timestamp
-
-    Raises:
-        HTTP 500: If statistics retrieval or calculation fails
-
-    Document Processing Statistics:
-        - total: Total number of documents processed in period
-        - completed: Number of successfully completed documents
-        - failed: Number of documents that failed processing
-        - processing: Number of documents currently being processed
-        - success_rate: Percentage of successful processing operations
-        - failure_rate: Percentage of failed processing operations
-        - avg_processing_time_seconds: Average processing duration
-
-    Performance Metrics:
-        - Processing throughput and capacity utilization
-        - Success and failure rate trends over time
-        - Average processing times and performance benchmarks
-        - Error pattern analysis and failure categorization
-        - System efficiency and optimization opportunities
-
-    Error Analysis:
-        - Recent error message sampling for troubleshooting
-        - Error frequency and pattern identification
-        - Failure root cause analysis and categorization
-        - Recovery and retry success rate tracking
-        - System reliability and stability assessment
-
-    Use Cases:
-        - System performance monitoring and optimization
-        - Capacity planning and resource allocation
-        - Error pattern analysis and troubleshooting
-        - Service level agreement (SLA) monitoring
-        - Administrative reporting and insights
-
-    Example:
-        GET /api/v1/tasks/stats?period_hours=72
-    """
+    """Get comprehensive task execution statistics and performance analytics."""
     log_api_call(
         "get_task_statistics", user_id=str(current_user.id), period_hours=period_hours
     )
@@ -830,64 +607,7 @@ async def get_task_statistics(
 async def get_monitoring_data(
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get real-time monitoring data for comprehensive task system observability.
-
-    Returns current state information optimized for real-time monitoring dashboards,
-    status displays, and automated monitoring systems. Provides consolidated view
-    of system health, performance, and operational metrics.
-
-    Args:
-        current_user: Current authenticated user requesting monitoring data
-
-    Returns:
-        TaskMonitorResponse: Real-time monitoring data including:
-            - system_status: Overall task system health and connectivity
-            - active_tasks: Current task execution summary and worker utilization
-            - workers: Worker availability and capacity information
-            - recent_performance: Recent processing performance and success rates
-            - timestamp: Monitoring data collection timestamp
-            - refresh_interval: Recommended refresh frequency for dashboards
-
-    Raises:
-        HTTP 500: If monitoring data collection fails
-
-    System Status:
-        - broker_status: Message broker connectivity and health
-        - active_workers: Number of workers currently online and responsive
-        - active_tasks: Number of tasks currently being executed
-        - reserved_tasks: Number of tasks queued for execution
-        - system_status: Overall health assessment (healthy/degraded)
-
-    Active Tasks Summary:
-        - count: Total number of currently executing tasks
-        - workers_busy: Number of workers with active task assignments
-
-    Worker Information:
-        - total: Total number of registered workers
-        - online: Number of workers currently responsive and available
-
-    Recent Performance:
-        - Processing statistics from the last hour
-        - Success and failure rates for trend analysis
-        - Performance benchmarks for capacity assessment
-
-    Dashboard Integration:
-        - Optimized data structure for real-time displays
-        - Recommended 30-second refresh interval
-        - Consolidated metrics for single-pane monitoring
-        - Alerting-friendly status indicators
-
-    Use Cases:
-        - Real-time system monitoring dashboards
-        - Automated alerting and notification systems
-        - Performance trending and capacity planning
-        - Operations center displays and status boards
-        - System health checks and availability monitoring
-
-    Example:
-        GET /api/v1/tasks/monitor
-    """
+    """Get real-time monitoring data for comprehensive task system observability."""
     log_api_call("get_monitoring_data", user_id=str(current_user.id))
 
     try:
