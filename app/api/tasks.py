@@ -46,23 +46,7 @@ router = APIRouter(tags=["tasks"])
 
 
 def get_celery_app():
-    """
-    Get Celery application instance for task management operations.
-
-    Retrieves the configured Celery application instance used for background
-    task processing, queue management, and worker coordination. Handles import
-    errors gracefully when Celery is not available or properly configured.
-
-    Returns:
-        Celery: Configured Celery application instance
-
-    Raises:
-        HTTPException: If Celery is not configured, available, or properly initialized
-
-    Note:
-        This function serves as a centralized access point for Celery operations
-        and provides consistent error handling across all task management endpoints.
-    """
+    """Get Celery application instance for task management operations."""
     try:
         from ..core.celery_app import celery_app
 
@@ -79,48 +63,7 @@ def get_celery_app():
 async def get_task_system_status(
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get comprehensive background task system status and health metrics.
-
-    Returns detailed status information about the Celery task system including
-    broker connectivity, worker availability, queue status, and performance
-    metrics. Provides real-time insights into system health and capacity.
-
-    Args:
-        current_user: Current authenticated user requesting system status
-
-    Returns:
-        TaskStatusResponse: Task system status including:
-            - broker_status: Message broker connectivity and health
-            - worker_stats: Active worker count and status information
-            - queue_metrics: Task queue depths and processing rates
-            - performance_data: System throughput and response times
-            - health_indicators: Overall system health assessment
-
-    System Health Metrics:
-        - Broker connectivity and message processing status
-        - Worker availability and load distribution
-        - Queue depths and task processing rates
-        - Error rates and failure pattern analysis
-        - Resource utilization and capacity indicators
-
-    Performance Indicators:
-        - Task processing throughput and latency
-        - Worker efficiency and utilization rates
-        - Queue processing speed and backlog status
-        - Error handling and retry success rates
-        - System bottleneck identification
-
-    Use Cases:
-        - System health monitoring and alerting
-        - Performance optimization and capacity planning
-        - Troubleshooting and diagnostic analysis
-        - Administrative dashboard displays
-        - Automated scaling decision support
-
-    Example:
-        GET /api/v1/tasks/status
-    """
+    """Get comprehensive background task system status and health metrics."""
     log_api_call("get_task_system_status", user_id=str(current_user.id))
 
     try:
@@ -200,60 +143,7 @@ async def get_task_system_status(
 async def get_workers_info(
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get comprehensive information about Celery workers with detailed status and metrics.
-
-    Returns detailed information about all active Celery workers including their
-    current status, configuration parameters, resource utilization, and performance
-    metrics. Provides essential insights for worker management and system scaling.
-
-    Args:
-        current_user: Current authenticated user requesting worker information
-
-    Returns:
-        WorkersResponse: Detailed worker information including:
-            - workers: List of worker objects with complete status information
-            - total_workers: Total number of registered workers
-            - online_workers: Number of currently active and responsive workers
-            - timestamp: Information retrieval timestamp
-
-    Raises:
-        HTTP 500: If worker information retrieval fails
-
-    Worker Information:
-        - name: Unique worker identifier and hostname
-        - status: Current operational status (online/offline)
-        - pool: Worker pool implementation type (prefork, eventlet, gevent)
-        - processes: Number of worker processes available
-        - max_concurrency: Maximum concurrent task capacity
-        - current_load: Current task execution load
-        - broker_transport: Message broker transport mechanism
-        - prefetch_count: Task prefetch multiplier setting
-        - last_heartbeat: Most recent worker heartbeat timestamp
-
-    Status Monitoring:
-        - Real-time worker connectivity verification
-        - Worker health checking through ping responses
-        - Resource utilization and capacity assessment
-        - Configuration parameter validation
-        - Performance metric collection and analysis
-
-    Pool Types:
-        - prefork: Multi-process worker pool (default, CPU-intensive tasks)
-        - eventlet: Event-driven concurrency (I/O-intensive tasks)
-        - gevent: Green thread implementation (high concurrency)
-        - solo: Single-threaded execution (debugging and testing)
-
-    Use Cases:
-        - Worker capacity planning and scaling decisions
-        - Performance monitoring and optimization
-        - Load balancing and task distribution analysis
-        - System health assessment and troubleshooting
-        - Administrative monitoring and reporting
-
-    Example:
-        GET /api/v1/tasks/workers
-    """
+    """Get comprehensive information about Celery workers with detailed status and metrics."""
     log_api_call("get_workers_info", user_id=str(current_user.id))
 
     try:
@@ -315,60 +205,7 @@ async def get_queue_info(
     queue_name: Optional[str] = Query(None, description="Specific queue to check"),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get comprehensive task queue information with detailed metrics and task tracking.
-
-    Returns detailed information about task queues including pending tasks, active
-    task execution, scheduled operations, and queue-specific statistics. Provides
-    essential insights for queue management and task flow optimization.
-
-    Args:
-        queue_name: Optional specific queue name to filter results
-        current_user: Current authenticated user requesting queue information
-
-    Returns:
-        QueueResponse: Comprehensive queue information including:
-            - queues: List of queue objects with detailed task information
-            - total_queues: Total number of active queues
-            - filtered_by: Applied queue name filter (if any)
-            - timestamp: Information retrieval timestamp
-
-    Raises:
-        HTTP 500: If queue information retrieval fails
-
-    Queue Information:
-        - name: Queue identifier and routing key
-        - active: Number of tasks currently being executed
-        - reserved: Number of tasks waiting in queue for execution
-        - scheduled: Number of tasks scheduled for future execution
-        - tasks: Detailed list of individual task information
-
-    Task Details:
-        - id: Unique task identifier
-        - name: Task function name and module
-        - args: Positional arguments for task execution
-        - kwargs: Keyword arguments and configuration
-        - worker: Assigned worker for task execution
-        - status: Current task status (active/reserved/scheduled)
-
-    Queue Management:
-        - Real-time queue depth monitoring
-        - Task distribution across workers
-        - Queue performance and throughput analysis
-        - Backlog identification and management
-        - Task priority and scheduling assessment
-
-    Use Cases:
-        - Queue capacity monitoring and management
-        - Task flow analysis and optimization
-        - Performance bottleneck identification
-        - Load balancing and distribution planning
-        - Administrative monitoring and troubleshooting
-
-    Example:
-        GET /api/v1/tasks/queue
-        GET /api/v1/tasks/queue?queue_name=document_processing
-    """
+    """Get comprehensive task queue information with detailed metrics and task tracking."""
     log_api_call("get_queue_info", user_id=str(current_user.id), queue_name=queue_name)
 
     try:
@@ -466,60 +303,7 @@ async def get_queue_info(
 async def get_active_tasks(
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get comprehensive information about currently executing tasks with detailed metadata.
-
-    Returns detailed information about all tasks currently being executed by Celery
-    workers including task parameters, execution context, timing information, and
-    worker assignment. Provides real-time visibility into system activity.
-
-    Args:
-        current_user: Current authenticated user requesting active task information
-
-    Returns:
-        ActiveTasksResponse: Active task information including:
-            - active_tasks: List of currently executing task objects
-            - total_active: Total number of active tasks across all workers
-            - workers_with_tasks: Number of workers currently executing tasks
-            - timestamp: Information retrieval timestamp
-
-    Raises:
-        HTTP 500: If active task information retrieval fails
-
-    Active Task Information:
-        - id: Unique task identifier for tracking and monitoring
-        - name: Task function name and module path
-        - args: Positional arguments passed to task function
-        - kwargs: Keyword arguments and configuration parameters
-        - worker: Worker node executing the task
-        - time_start: Task execution start timestamp
-        - acknowledged: Task acknowledgment status from worker
-        - delivery_info: Message delivery and routing information
-
-    Execution Context:
-        - Task routing and queue assignment information
-        - Worker pool and process allocation details
-        - Task priority and scheduling metadata
-        - Execution environment and configuration
-        - Performance timing and duration tracking
-
-    Monitoring Capabilities:
-        - Real-time task execution tracking
-        - Worker load distribution analysis
-        - Task performance and duration monitoring
-        - System capacity and utilization assessment
-        - Bottleneck identification and optimization
-
-    Use Cases:
-        - Real-time system monitoring and observability
-        - Task execution debugging and troubleshooting
-        - Performance analysis and optimization
-        - Worker load balancing assessment
-        - System capacity planning and scaling
-
-    Example:
-        GET /api/v1/tasks/active
-    """
+    """Get comprehensive information about currently executing tasks with detailed metadata."""
     log_api_call("get_active_tasks", user_id=str(current_user.id))
 
     try:
