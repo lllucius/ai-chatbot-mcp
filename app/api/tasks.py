@@ -349,10 +349,7 @@ async def get_workers_info(
             data=response_payload,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get worker information: {str(e)}",
-        )
+        raise
 
 
 @router.get("/queue", response_model=APIResponse[QueueStatusData])
@@ -504,10 +501,7 @@ async def get_queue_info(
             data=response_payload,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get queue information: {str(e)}",
-        )
+        raise
 
 
 @router.get("/active", response_model=APIResponse[ActiveTasksData])
@@ -604,10 +598,7 @@ async def get_active_tasks(
             data=response_payload,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get active tasks: {str(e)}",
-        )
+        raise
 
 
 @router.post("/schedule", response_model=APIResponse)
@@ -714,11 +705,7 @@ async def schedule_task(
             message=f"Task '{task_name}' scheduled successfully"
         )
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="TASK_SCHEDULE_FAILED",
-            message=f"Failed to schedule task: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.post("/retry-failed", response_model=APIResponse)
@@ -846,11 +833,7 @@ async def retry_failed_tasks(
         )
     except Exception as e:
         await db.rollback()
-        return ErrorResponse.create(
-            error_code="RETRY_TASKS_FAILED",
-            message=f"Failed to retry tasks: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.post("/purge", response_model=APIResponse)
@@ -929,11 +912,7 @@ async def purge_queue(
             message=f"Queue '{queue_name}' purged successfully"
         )
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="QUEUE_PURGE_FAILED",
-            message=f"Failed to purge queue: {str(e)}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        raise
 
 
 @router.get("/stats", response_model=APIResponse[TaskStatisticsData])
@@ -1102,10 +1081,7 @@ async def get_task_statistics(
             data=response_payload,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get task statistics: {str(e)}",
-        )
+        raise
 
 
 @router.get("/monitor", response_model=APIResponse[TaskMonitoringData])
@@ -1216,7 +1192,4 @@ async def get_monitoring_data(
             data=response_payload,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get monitoring data: {str(e)}",
-        )
+        raise
