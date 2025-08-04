@@ -83,30 +83,7 @@ async def detailed_health_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ):
-    """
-    Comprehensive health check with all system components.
-
-    Performs detailed health verification of all system components including
-    database connectivity, cache systems, external service availability,
-    and overall system status. This endpoint provides a complete view of
-    system health for monitoring and diagnostics.
-
-    Args:
-        db: Database session for connectivity check
-        mcp_service: MCP service instance for FastMCP health verification
-
-    Returns:
-        APIResponse: Comprehensive system health status using unified envelope:
-            - success: Health check success indicator
-            - message: Overall health status message
-            - timestamp: Health check execution time
-            - data: Detailed component health information
-            - meta: Additional health metadata if available
-
-    Note:
-        This endpoint checks all dependencies and may take longer than
-        basic health checks. Use for detailed monitoring and diagnostics.
-    """
+    """Comprehensive health check with all system components."""
     log_api_call("detailed_health_check")
 
     db_health = await _check_database_health(db)
@@ -241,25 +218,7 @@ async def services_health_check(
 
 
 async def _check_cache_health() -> CacheHealthData:
-    """
-    Check cache system health and performance statistics.
-
-    Performs cache system validation by testing cache operations and
-    gathering performance statistics from all cache instances including
-    embedding cache, API response cache, and search result cache.
-
-    Returns:
-        CacheHealthData: Cache health status containing:
-            - status: Health status (healthy/unhealthy)
-            - message: Descriptive status message
-            - stats: Individual cache statistics
-            - overall_hit_rate: Average hit rate across all caches
-            - total_requests: Total cache requests processed
-
-    Note:
-        Tests actual cache operations to ensure functionality rather
-        than just checking service availability.
-    """
+    """Check cache system health and performance statistics."""
     try:
         raw_cache_stats = {
             "embedding_cache": embedding_cache.get_stats(),
@@ -312,28 +271,7 @@ async def _check_cache_health() -> CacheHealthData:
 
 
 async def _check_database_health(db: AsyncSession) -> DatabaseHealthData:
-    """
-    Check database connectivity and schema validation.
-
-    Verifies database health by executing test queries and validating
-    that required application tables exist. This ensures the database
-    is accessible and properly configured for application use.
-
-    Args:
-        db: Database session for health verification
-
-    Returns:
-        DatabaseHealthData: Database health status containing:
-            - status: Health status (healthy/warning/unhealthy)
-            - message: Descriptive status message
-            - connectivity: Database connection status
-            - schema_status: Schema validation status (complete/incomplete)
-            - tables_found: Number of required tables found
-
-    Note:
-        Checks for critical tables: users, documents, conversations.
-        Missing tables result in warning status, not failure.
-    """
+    """Check database connectivity and schema validation."""
     try:
         result = await db.execute(text("SELECT 1 as test"))
         test_value = result.scalar()
@@ -374,26 +312,7 @@ async def _check_database_health(db: AsyncSession) -> DatabaseHealthData:
 
 
 async def _check_openai_health() -> OpenAIHealthData:
-    """
-    Check OpenAI API service availability and configuration.
-
-    Verifies OpenAI service health by checking API configuration,
-    performing connectivity tests, and validating available models.
-    This ensures the AI capabilities are operational.
-
-    Returns:
-        OpenAIHealthData: OpenAI service health status containing:
-            - status: Health status (healthy/warning/unhealthy)
-            - message: Descriptive status message
-            - configured: Whether API key is properly configured
-            - models_available: Whether required models are accessible
-            - chat_model: Available chat model information
-            - embedding_model: Available embedding model information
-
-    Note:
-        Missing or invalid API key results in warning status since
-        the application can operate without OpenAI integration.
-    """
+    """Check OpenAI API service availability and configuration."""
     try:
         from ..services.openai_client import OpenAIClient
 
@@ -425,34 +344,7 @@ async def _check_openai_health() -> OpenAIHealthData:
 
 
 async def _check_fastmcp_health(mcp_service: MCPService) -> FastMCPHealthData:
-    """
-    Check FastMCP service health and server connections.
-
-    Verifies FastMCP service health by checking service availability,
-    server registry status, and individual server connections. This
-    ensures MCP tool functionality is operational.
-
-    Args:
-        mcp_service: MCP service instance for health verification
-
-    Returns:
-        FastMCPHealthData: FastMCP service health status containing:
-            - status: Health status (healthy/warning/unhealthy)
-            - message: Descriptive status message
-            - enabled: Whether MCP is enabled in configuration
-            - available: Whether FastMCP library is available
-            - registry: Registry statistics and information
-            - connected_servers: Number of successfully connected servers
-            - enabled_servers: Number of enabled servers
-            - total_servers: Total number of configured servers
-            - initialized: Whether service is properly initialized
-            - server_status: Individual server status information
-            - tools_count: Number of available tools
-
-    Note:
-        FastMCP is considered optional, so failures result in warning
-        status rather than unhealthy status.
-    """
+    """Check FastMCP service health and server connections."""
     try:
         if not settings.mcp_enabled:
             return FastMCPHealthData(
@@ -509,25 +401,7 @@ async def _check_fastmcp_health(mcp_service: MCPService) -> FastMCPHealthData:
 @router.get("/metrics", response_model=APIResponse)
 @handle_api_errors("Failed to get system metrics")
 async def get_system_metrics():
-    """
-    Get system performance metrics and resource utilization.
-
-    Retrieves comprehensive system metrics including CPU usage, memory
-    consumption, disk utilization, and application performance statistics.
-    This information is useful for monitoring and capacity planning.
-
-    Returns:
-        APIResponse: System metrics using unified envelope:
-            - success: Metrics collection success indicator
-            - message: Metrics collection status message
-            - timestamp: Metrics collection timestamp
-            - data: System metrics (system and application information)
-            - error: Error details if psutil is unavailable
-
-    Note:
-        Requires psutil library for system metrics collection.
-        Falls back gracefully if psutil is not available.
-    """
+    """Get system performance metrics and resource utilization."""
     log_api_call("get_system_metrics")
     try:
         import time
@@ -653,24 +527,7 @@ async def readiness_check(
 @router.get("/performance", response_model=APIResponse)
 @handle_api_errors("Failed to get performance metrics")
 async def get_performance_metrics():
-    """
-    Get application performance metrics and statistics.
-
-    Retrieves performance metrics from the application's internal
-    monitoring system, including request processing times, throughput
-    statistics, and performance indicators.
-
-    Returns:
-        APIResponse: Application performance data using unified envelope:
-            - success: Performance metrics collection success indicator
-            - message: Performance metrics status message
-            - timestamp: Metrics collection timestamp
-            - data: Performance metrics and statistics
-
-    Note:
-        Performance data is collected by the performance middleware
-        and aggregated over the application lifecycle.
-    """
+    """Get application performance metrics and statistics."""
     log_api_call("get_performance_metrics")
     performance_data = get_performance_stats()
     return SuccessResponse.create(
@@ -682,20 +539,7 @@ async def get_performance_metrics():
 @router.get("/liveness", response_model=APIResponse)
 @handle_api_errors("Liveness check failed")
 async def liveness_check():
-    """
-    Kubernetes-style liveness probe.
-
-    Simple endpoint that indicates the application process is alive and
-    responding. Used by orchestrators to determine if the container
-    should be restarted.
-
-    Returns:
-        APIResponse: Application liveness confirmation using unified envelope
-
-    Note:
-        This endpoint should always return 200 unless the application
-        process is completely unresponsive. It does not check dependencies.
-    """
+    """Kubernetes-style liveness probe."""
     log_api_call("liveness_check")
     return SuccessResponse.create(
         data={"status": "alive"},
