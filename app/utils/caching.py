@@ -145,8 +145,7 @@ def make_cache_key(*args, **kwargs) -> str:
 
 
 async def cached_function(cache: SimpleCache, ttl: Optional[int] = None):
-    """
-    Decorator to cache function results.
+    """Cache function results.
 
     Args:
         cache: Cache instance to use

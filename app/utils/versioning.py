@@ -35,6 +35,7 @@ class VersionedAPIRouter:
     """Router with version management capabilities."""
 
     def __init__(self):
+        """Initialize versioned router with default API version info."""
         self.routers: Dict[APIVersion, APIRouter] = {}
         self.version_info: Dict[APIVersion, APIVersionInfo] = {
             APIVersion.V1: APIVersionInfo(
@@ -118,9 +119,11 @@ class APIVersioningMiddleware:
     """Middleware for API versioning."""
 
     def __init__(self, app):
+        """Initialize the versioning middleware with the ASGI app."""
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        """Handle ASGI requests with version processing."""
         if scope["type"] == "http":
             request = Request(scope, receive)
             version = get_api_version_from_request(request)
@@ -135,8 +138,7 @@ class APIVersioningMiddleware:
 
 # Decorator for version-specific endpoints
 def version(min_version: APIVersion, max_version: Optional[APIVersion] = None):
-    """
-    Decorator to specify version requirements for endpoints.
+    """Specify version requirements for endpoints.
 
     Args:
         min_version: Minimum API version required
@@ -144,8 +146,7 @@ def version(min_version: APIVersion, max_version: Optional[APIVersion] = None):
     """
 
     def decorator(func):
-        """
-        Decorator function that adds version metadata to the wrapped function.
+        """Add version metadata to the wrapped function.
 
         Args:
             func: Function to decorate with version requirements

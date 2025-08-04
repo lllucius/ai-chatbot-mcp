@@ -32,8 +32,7 @@ def handle_api_errors(
     log_errors: bool = True,
     include_details: bool = False,
 ):
-    """
-    Decorator to standardize error handling across API endpoints.
+    """Standardize error handling across API endpoints.
 
     This decorator converts application exceptions into appropriate HTTP
     exceptions with consistent formatting and optional detailed logging.
