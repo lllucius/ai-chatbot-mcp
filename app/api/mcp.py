@@ -1,59 +1,27 @@
-"""
-MCP (Model Context Protocol) management API endpoints.
-
-This module provides comprehensive REST API endpoints for managing MCP servers
-and tools, offering complete lifecycle management including server registration,
-tool discovery, connection management, and usage analytics. It serves as the
-backend for API-based CLI MCP commands and administrative operations.
-
-Key Features:
-- MCP server registration and configuration management
-- Tool discovery and lifecycle management
-- Connection status monitoring and health checks
-- Usage statistics and performance analytics
-- Server and tool enable/disable operations
-- Comprehensive filtering and search capabilities
-
-Server Management:
-- Register and configure MCP servers with various transports
-- Monitor connection status and health metrics
-- Manage server lifecycle (enable, disable, update, delete)
-- Connection pooling and retry mechanisms
-- Configuration validation and error handling
-
-Tool Management:
-- Automatic tool discovery from registered servers
-- Tool lifecycle management (enable, disable, configure)
-- Usage tracking and performance monitoring
-- Tool parameter validation and schema management
-- Integration with conversation and chat systems
-
-Security Features:
-- Role-based access control for server management
-- Secure connection handling and authentication
-- Input validation and parameter sanitization
-- Audit logging for administrative operations
-- Protection against unauthorized server access
-"""
+"""MCP server and tool management API endpoints."""
 
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_mcp_service
-from ..models.user import User
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    SuccessResponse,
+)
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
     MCPServerSchema,
-    MCPServerListResponse,
     MCPServerUpdateSchema,
     MCPStatsResponse,
     MCPToolsResponse,
 )
+
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_mcp_service
+from ..models.user import User
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -681,7 +649,7 @@ async def get_tool_details(
 
     mcp_service = MCPService(db)
     tool = await mcp_service.get_tool_by_name(tool_name)
-    
+
     if not tool:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -712,14 +680,14 @@ async def test_tool(
     log_api_call("test_mcp_tool", user_id=current_user.id)
 
     mcp_service = MCPService(db)
-    
+
     # Test the tool execution
     try:
         result = await mcp_service.test_tool_execution(tool_name, test_params or {})
         return SuccessResponse.create(
             message=f"Tool '{tool_name}' test completed successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 

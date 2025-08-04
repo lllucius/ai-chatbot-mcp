@@ -1,48 +1,22 @@
-"""
-Prompt registry API endpoints with comprehensive prompt management.
+"""Prompt registry management API endpoints."""
 
-This module provides endpoints for managing prompts in the prompt registry
-including creation, retrieval, categorization, and usage analytics. It implements
-comprehensive prompt lifecycle management with category organization, tagging
-support, and detailed usage tracking for AI conversation enhancement.
-
-Key Features:
-- Prompt CRUD operations with validation and categorization
-- Category and tag management for prompt organization
-- Usage statistics and analytics tracking
-- Default prompt configuration and management
-- Search and filtering capabilities across prompts
-- Template variable support and validation
-
-Prompt Management:
-- Create and organize prompts by categories and tags
-- Set system default prompts for various conversation contexts
-- Track usage patterns and effectiveness metrics
-- Manage prompt lifecycle with active/inactive states
-- Support for template variables and dynamic content
-
-Organizational Features:
-- Category-based prompt classification
-- Tag-based filtering and search capabilities
-- Hierarchical prompt organization
-- Metadata management and versioning
-- Usage analytics and performance tracking
-
-Security Features:
-- Role-based access control for administrative operations
-- Input validation and content sanitization
-- Audit logging for prompt management activities
-- Protection against unauthorized prompt modifications
-"""
-
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin import PromptCategoriesResponse, PromptStatsResponse
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse, PaginatedResponse
-from shared.schemas.prompt import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
+from shared.schemas.common import (
+    APIResponse,
+    BaseResponse,
+    ErrorResponse,
+    SuccessResponse,
+)
+from shared.schemas.prompt import (
+    PromptCreate,
+    PromptListResponse,
+    PromptResponse,
+    PromptUpdate,
+)
 from shared.schemas.prompt_responses import (
     PromptCategoriesData,
     PromptStatisticsData,
@@ -250,9 +224,9 @@ async def create_prompt(
     Create a new prompt template in the registry.
     """
     log_api_call("create_prompt", user_id=current_user.id)
-    
+
     prompt = await prompt_service.create_prompt(request)
-    
+
     return PromptResponse(
         name=prompt.name,
         title=prompt.title,
@@ -281,9 +255,9 @@ async def update_prompt(
     Update an existing prompt template.
     """
     log_api_call("update_prompt", user_id=current_user.id, prompt_name=prompt_name)
-    
+
     prompt = await prompt_service.update_prompt(prompt_name, data.model_dump(exclude_unset=True))
-    
+
     return PromptResponse.model_validate(prompt)
 
 
@@ -298,9 +272,9 @@ async def delete_prompt(
     Delete a prompt template from the registry.
     """
     log_api_call("delete_prompt", user_id=current_user.id, prompt_name=prompt_name)
-    
+
     await prompt_service.delete_prompt(prompt_name)
-    
+
     return SuccessResponse.create(
         message=f"Prompt '{prompt_name}' deleted successfully"
     )

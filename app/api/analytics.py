@@ -1,58 +1,10 @@
-"""
-Analytics and reporting API endpoints with comprehensive system insights.
-
-This module provides endpoints for system analytics, usage statistics, performance
-metrics, and comprehensive reporting capabilities. It implements detailed data
-analysis, trend tracking, and business intelligence features for platform
-monitoring and optimization.
-
-Key Features:
-- System overview and key performance indicators (KPIs)
-- User activity analytics and engagement metrics
-- Document processing performance and throughput analysis
-- Conversation analytics and usage patterns
-- System performance monitoring and health assessment
-- Trend analysis and historical data insights
-- Export capabilities for external analysis
-
-Analytics Capabilities:
-- Real-time system overview with key metrics
-- User registration and activity trend analysis
-- Document processing success rates and bottleneck identification
-- Conversation engagement patterns and user behavior analysis
-- System health monitoring with performance indicators
-- Historical trend analysis for capacity planning
-- Customizable reporting periods and data aggregation
-
-Performance Monitoring:
-- Processing throughput and latency analysis
-- Resource utilization and capacity metrics
-- Error rate tracking and failure pattern analysis
-- User experience and system reliability indicators
-- Operational efficiency and optimization opportunities
-
-Export and Integration:
-- Data export in multiple formats for external analysis
-- API integration for business intelligence platforms
-- Customizable reporting periods and data filters
-- Administrative reporting for stakeholder communication
-- Compliance and audit trail documentation
-
-Security Features:
-- Role-based access control for sensitive analytics
-- Data anonymization and privacy protection
-- Audit logging for analytics access and usage
-- Secure data handling and transmission protocols
-"""
+"""Analytics and reporting API endpoints."""
 
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
 from shared.schemas.analytics import (
     AnalyticsExportResponse,
     AnalyticsOverviewResponse,
@@ -61,6 +13,10 @@ from shared.schemas.analytics import (
     AnalyticsUsageResponse,
     AnalyticsUserAnalyticsResponse,
 )
+
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["analytics"])

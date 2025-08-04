@@ -1,57 +1,4 @@
-"""
-Conversation and chat API endpoints with comprehensive AI assistant integration.
-
-This module provides endpoints for managing conversations, sending messages, and
-interacting with the AI assistant featuring advanced RAG (Retrieval-Augmented
-Generation) capabilities, streaming responses, and enhanced registry integration
-for prompts, LLM profiles, and MCP tools.
-
-Key Features:
-- Conversation lifecycle management (create, read, update, delete, archive)
-- Real-time and streaming chat interactions with AI assistant
-- Message history tracking and conversation context management
-- RAG-enhanced responses with document retrieval and citation
-- Advanced search across conversations and messages
-- Export and import capabilities for conversation data
-- Comprehensive statistics and analytics for conversation insights
-
-AI Assistant Integration:
-- Streaming and non-streaming chat responses with real-time feedback
-- Integration with LLM profiles for customized conversation behavior
-- MCP (Model Context Protocol) tool integration for enhanced capabilities
-- RAG system integration for document-aware conversations
-- Prompt registry integration for consistent conversation experiences
-- Context-aware conversation management and memory
-
-Conversation Management:
-- Create conversations with custom titles and settings
-- List and filter conversations with pagination and search
-- Update conversation metadata and configuration
-- Archive conversations for long-term storage and organization
-- Delete conversations with proper cleanup and data management
-- Comprehensive conversation statistics and usage analytics
-
-Message Operations:
-- Send messages to AI assistant with streaming and non-streaming options
-- Retrieve message history with pagination and filtering
-- Message search across conversation content and metadata
-- Message export and import for data portability
-- Real-time message streaming with server-sent events
-
-Advanced Features:
-- Conversation search with full-text search capabilities
-- Statistical analysis and conversation insights
-- Bulk operations for conversation management
-- Data export in multiple formats for analysis and backup
-- Integration with external systems through API endpoints
-
-Security and Performance:
-- User-based access control and conversation ownership
-- Rate limiting and abuse protection for chat interactions
-- Efficient pagination and caching for large conversation datasets
-- Comprehensive audit logging for conversation activities
-- Privacy controls and data protection measures
-"""
+"""Conversation and chat API endpoints."""
 
 import json
 import time
@@ -64,23 +11,21 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import (
-    APIResponse,
-    BaseResponse,
-    PaginatedResponse,
-    SuccessResponse,
-    ErrorResponse,
-)
 from shared.schemas.admin_responses import (
     ConversationStatsResponse,
     RegistryStatsResponse,
     SearchResponse,
 )
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    PaginatedResponse,
+    SuccessResponse,
+)
 from shared.schemas.conversation import (
     ChatRequest,
     ChatResponse,
     ConversationCreate,
-    ConversationExportResponse,
     ConversationResponse,
     ConversationStats,
     ConversationUpdate,
@@ -101,7 +46,6 @@ from shared.schemas.conversation_responses import (
     ExportedMessage,
     ExportInfo,
 )
-
 
 from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
@@ -1064,7 +1008,7 @@ async def export_conversation(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -1183,7 +1127,7 @@ async def import_conversation(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await conversation_service.db.rollback()
         raise
 
@@ -1293,7 +1237,7 @@ async def archive_conversations(
                 message=f"Archived {archived_count} conversations successfully"
             )
 
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise
 
@@ -1516,7 +1460,7 @@ async def search_conversations_and_messages(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -1667,5 +1611,5 @@ async def get_conversation_statistics(
                 "timestamp": datetime.utcnow().isoformat(),
             },
         )
-    except Exception as e:
+    except Exception:
         raise

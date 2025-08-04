@@ -1,49 +1,15 @@
-"""
-Search API endpoints for comprehensive document retrieval and similarity search.
-
-This module provides endpoints for searching through documents using various
-advanced algorithms including vector similarity search, traditional text search,
-and hybrid approaches. It implements comprehensive search capabilities with
-performance tracking, suggestion generation, and search history management.
-
-Key Features:
-- Multi-algorithm search support (vector, text, hybrid, MMR)
-- Real-time similarity search with embedding-based retrieval
-- Search suggestion generation and query optimization
-- Search history tracking and analytics
-- Performance monitoring and timing analysis
-- Advanced filtering and result ranking
-
-Search Algorithms:
-- Vector Search: Semantic similarity using document embeddings
-- Text Search: Traditional full-text search with relevance scoring
-- Hybrid Search: Combines vector and text search for optimal results
-- MMR Search: Maximum Marginal Relevance for diverse result sets
-- Similarity Search: Find documents similar to reference content
-
-Performance Features:
-- Search timing and performance metrics
-- Result ranking and relevance scoring
-- Query optimization and caching
-- Pagination and result limiting
-- Error handling and fallback mechanisms
-
-User Experience:
-- Search suggestion generation
-- Query history tracking and management
-- Search analytics and usage patterns
-- Personalized search improvements
-- Administrative search monitoring
-"""
+"""Document search API endpoints."""
 
 import time
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
+from shared.schemas.common import (
+    APIResponse,
+    SuccessResponse,
+)
 from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
-from shared.schemas.search import SearchHistoryResponse, SearchSuggestionResponse
 from shared.schemas.search_responses import (
     SearchHistoryData,
     SearchSuggestionData,

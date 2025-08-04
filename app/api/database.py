@@ -1,22 +1,4 @@
-"""
-Database management API endpoints.
-
-This module provides endpoints for database administration, migration management,
-backup operations, and maintenance tasks.
-
-Key Features:
-- Database initialization and schema management
-- Migration execution and status monitoring
-- Backup and restore operations
-- Database maintenance and optimization
-- Custom query execution for administration
-- Performance analysis and statistics
-
-Security:
-- All operations require superuser access
-- Backup/restore operations are logged and audited
-- Query execution has built-in safety checks
-"""
+"""Database management API endpoints."""
 
 import os
 import subprocess
@@ -27,16 +9,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_current_superuser
-from ..models.user import User
-from shared.schemas.common import (
-    APIResponse,
-    BaseResponse,
-    SuccessResponse,
-    ErrorResponse,
-)
 from shared.schemas.admin_responses import (
     DatabaseAnalysisResponse,
     DatabaseMigrationsResponse,
@@ -44,6 +16,16 @@ from shared.schemas.admin_responses import (
     DatabaseStatusResponse,
     DatabaseTablesResponse,
 )
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    SuccessResponse,
+)
+
+from ..config import settings
+from ..database import get_db
+from ..dependencies import get_current_superuser
+from ..models.user import User
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["database"])
@@ -108,7 +90,7 @@ async def initialize_database(
             success=True,
             message="Database initialized successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -221,7 +203,7 @@ async def get_database_status(
             performance_metrics={},
             timestamp=datetime.utcnow(),
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -311,7 +293,7 @@ async def list_database_tables(
             total_tables=len(tables),
             timestamp=datetime.utcnow(),
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -415,7 +397,7 @@ async def get_migration_status(
             last_migration={"revision": current_revision, "heads": available_heads} if current_revision != "Unknown" else None,
             timestamp=datetime.utcnow(),
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -499,7 +481,7 @@ async def upgrade_database(
             message=f"Migration execution failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -584,7 +566,7 @@ async def downgrade_database(
             message=f"Downgrade execution failed: {str(e)}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -708,7 +690,7 @@ async def create_database_backup(
             },
             message="Database backup created successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -819,7 +801,7 @@ async def restore_database(
         return SuccessResponse.create(
             message=f"Database restored successfully from {backup_file}"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -899,7 +881,7 @@ async def vacuum_database(
         return SuccessResponse.create(
             message=message
         )
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise
 
@@ -1089,7 +1071,7 @@ async def analyze_database(
             recommendations=[],  # Could be populated with actual recommendations
             timestamp=datetime.utcnow(),
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -1222,6 +1204,6 @@ async def execute_custom_query(
             results=data,
             timestamp=datetime.utcnow(),
         )
-    except Exception as e:
+    except Exception:
         raise
 

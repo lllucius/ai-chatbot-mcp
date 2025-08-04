@@ -1,77 +1,24 @@
-"""
-User management API endpoints with comprehensive profile administration and security features.
-
-This module provides endpoints for user profile management, administrative operations,
-and user-related functionality. It implements comprehensive role-based access control,
-input validation, security verification, and detailed audit logging for all user
-management activities and administrative operations.
-
-Key Features:
-- User profile management with comprehensive statistics and analytics
-- Administrative user management for superuser operations and oversight
-- Secure password change with multi-factor verification
-- User listing with advanced pagination, filtering, and search capabilities
-- Comprehensive user statistics, metrics, and activity tracking
-- User account lifecycle management and status control
-
-Profile Management:
-- View and update personal profile information and preferences
-- Access personal activity statistics and engagement metrics
-- Manage account settings and privacy preferences
-- Track personal usage patterns and platform interaction
-- Export personal data for compliance and portability
-
-Administrative Features:
-- User listing and management for administrative oversight
-- User account status control and lifecycle management
-- Advanced user search and filtering capabilities
-- Bulk user operations and administrative actions
-- Comprehensive user analytics and reporting
-- System-wide user statistics and insights
-
-Security Features:
-- Role-based access control with granular permissions (regular users vs superusers)
-- Comprehensive input validation and sanitization for security
-- Secure password verification for sensitive operations and changes
-- Multi-factor authentication support for administrative actions
-- Comprehensive audit logging for administrative actions and changes
-- Protection against unauthorized access and privilege escalation
-
-User Analytics:
-- Individual user activity tracking and statistics
-- Platform usage metrics and engagement analysis
-- User behavior patterns and interaction insights
-- System-wide user analytics for administrative reporting
-- Performance monitoring and user experience optimization
-
-Privacy and Compliance:
-- Privacy-focused data handling and access controls
-- Compliance with data protection regulations
-- User data export and portability features
-- Secure data handling and transmission protocols
-- Audit trails for compliance and regulatory requirements
-"""
+"""User management API endpoints."""
 
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
-from shared.schemas.common import (
-    APIResponse,
-    BaseResponse, 
-    PaginatedResponse,
-    SuccessResponse,
-    ErrorResponse,
-)
 from shared.schemas.admin_responses import (
     UserStatisticsResponse,
 )
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    PaginatedResponse,
+    SuccessResponse,
+)
 from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate
 
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
@@ -79,21 +26,7 @@ router = APIRouter(tags=["users"])
 
 
 async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
-    """
-    Get user service instance with database session.
-
-    Creates and returns a UserService instance configured with the provided
-    database session for user management operations and profile handling.
-
-    Args:
-        db: Database session dependency for service initialization
-
-    Returns:
-        UserService: Configured service instance for user operations
-
-    Note:
-        This is a dependency function used by FastAPI's dependency injection system.
-    """
+    """Get user service instance with database session."""
     return UserService(db)
 
 
@@ -103,41 +36,7 @@ async def get_my_profile(
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Get current user profile with comprehensive statistics.
-
-    Returns detailed profile information for the authenticated user including
-    account details, activity statistics, and engagement metrics. This endpoint
-    provides a complete view of the user's interaction with the platform.
-
-    Args:
-        current_user: Automatically injected current user from JWT token
-        user_service: Injected user service instance
-
-    Returns:
-        APIResponse: Complete user profile using unified envelope:
-            - success: Profile retrieval success indicator
-            - message: Profile retrieval status message
-            - timestamp: Profile retrieval timestamp
-            - data: User profile data with statistics
-
-    Example Response:
-        {
-            "success": true,
-            "message": "User profile retrieved successfully",
-            "timestamp": "2024-01-01T00:00:00Z",
-            "data": {
-                "id": "uuid-here",
-                "username": "johndoe",
-                "email": "john@example.com",
-                "full_name": "John Doe",
-                "is_active": true,
-                "document_count": 15,
-                "conversation_count": 8,
-                "total_messages": 142
-            }
-        }
-    """
+    """Get current user profile with statistics."""
     log_api_call("get_my_profile", user_id=str(current_user.id))
 
     profile = await user_service.get_user_profile(current_user.id)
@@ -156,56 +55,7 @@ async def update_my_profile(
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Update current user profile information with comprehensive validation and security.
-
-    Allows authenticated users to securely update their own profile information
-    including email address and full name. Implements comprehensive self-service
-    profile management with input validation, uniqueness checking, and security
-    controls to ensure data integrity and user privacy.
-
-    Args:
-        request: Profile update data containing new email and/or full_name
-        current_user: Current authenticated user from validated JWT token
-        user_service: Injected user service instance for profile operations
-
-    Returns:
-        UserResponse: Updated user profile with new information and statistics
-
-    Raises:
-        HTTP 400: If profile update data is invalid or violates business rules
-        HTTP 409: If email address is already in use by another user
-        HTTP 422: If request validation fails or required fields are invalid
-        HTTP 500: If profile update operation fails due to system error
-
-    Update Features:
-        - Email address modification with uniqueness validation
-        - Full name updates with proper formatting and validation
-        - Input sanitization and security validation
-        - Automatic profile metadata updates (updated_at timestamp)
-        - Comprehensive audit logging for security monitoring
-
-    Security Features:
-        - Users can only update their own profiles for privacy protection
-        - Email uniqueness enforcement across the platform
-        - Input validation and sanitization to prevent malicious data
-        - Profile change events logged comprehensively for audit purposes
-        - Protection against unauthorized profile modifications
-
-    Validation Rules:
-        - Email format validation with proper domain checking
-        - Full name length and character validation
-        - Uniqueness verification for email addresses
-        - Input sanitization for security and data integrity
-        - Business rule enforcement for profile consistency
-
-    Example:
-        PUT /api/v1/users/me
-        {
-            "email": "newemail@example.com",
-            "full_name": "John Smith"
-        }
-    """
+    """Update current user profile information."""
     log_api_call("update_my_profile", user_id=str(current_user.id))
 
     updated_user = await user_service.update_user(current_user.id, request)
@@ -224,62 +74,7 @@ async def change_password(
     current_user=Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Change current user password with comprehensive security verification and validation.
-
-    Allows users to securely change their password through a multi-step verification
-    process that includes current password validation, new password strength checking,
-    and comprehensive security logging. Implements industry-standard security practices
-    for password management and user account protection.
-
-    Args:
-        request: Password change data containing current and new passwords
-        current_user: Current authenticated user from validated JWT token
-        user_service: Injected user service instance for password operations
-
-    Returns:
-        APIResponse: Password change confirmation using unified envelope
-
-    Raises:
-        HTTP 400: If password validation fails or passwords don't meet requirements
-        HTTP 401: If current password verification fails or is incorrect
-        HTTP 422: If request format is invalid or missing required fields
-        HTTP 500: If password change operation fails due to system error
-
-    Security Verification Process:
-        - Current password verification using secure timing-safe comparison
-        - New password strength validation against security policies
-        - Password complexity requirements enforcement
-        - Secure password hashing using industry-standard algorithms (bcrypt)
-        - Password change events logged comprehensively for security monitoring
-
-    Password Security Features:
-        - Current password verification required for authorization
-        - New password strength validation with configurable requirements
-        - Secure password hashing with salt and proper iteration counts
-        - Protection against password reuse (if configured in security policy)
-        - Password change frequency monitoring and abuse protection
-
-    Validation Requirements:
-        - Minimum password length enforcement (typically 8+ characters)
-        - Character complexity requirements (uppercase, lowercase, numbers, symbols)
-        - Protection against common passwords and dictionary attacks
-        - Password history checking to prevent immediate reuse
-        - Account lockout protection against brute force attempts
-
-    Use Cases:
-        - Regular password updates for security maintenance
-        - Password changes following security incidents
-        - Compliance with organizational password policies
-        - User-initiated security improvements
-
-    Example:
-        POST /api/v1/users/me/change-password
-        {
-            "current_password": "currentPassword123!",
-            "new_password": "newSecurePassword456!"
-        }
-    """
+    """Change current user password with security verification."""
     log_api_call("change_password", user_id=str(current_user.id))
 
     success = await user_service.change_password(
@@ -311,52 +106,7 @@ async def list_users(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    List all users with advanced filtering, pagination, and administrative oversight.
-
-    Returns comprehensive paginated list of users with flexible filtering options
-    including activity status and privilege level filters. Provides administrative
-    visibility into user accounts with detailed information for user management
-    and system oversight. Requires superuser privileges for privacy protection.
-
-    Args:
-        page: Page number for pagination (starts at 1, default: 1)
-        size: Number of users per page (1-100, default: 20)
-        active_only: If True, returns only active users (default: False)
-        superuser_only: If True, returns only superusers (default: False)
-        current_user: Current authenticated superuser from validated JWT token
-        user_service: Injected user service instance for user operations
-
-    Returns:
-        PaginatedResponse[UserResponse]: Comprehensive paginated user list including:
-            - items: List of user profiles with complete information
-            - page: Current page number for navigation
-            - size: Actual page size used for the request
-            - total: Total number of users matching filters
-            - total_pages: Total number of pages available
-            - has_next: Boolean indicator for additional pages
-            - has_previous: Boolean indicator for previous pages
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If user listing operation fails
-
-    Filtering Options:
-        - active_only: Filter by user account status for management
-        - superuser_only: Filter by privilege level for administrative oversight
-        - Search capabilities across usernames and email addresses
-        - Date-based filtering for user account management
-
-    Administrative Features:
-        - Complete user profile information including statistics
-        - Account status and privilege level visibility
-        - User activity metrics and engagement data
-        - Administrative metadata for oversight and management
-        - Bulk operation support for user management tasks
-
-    Example:
-        GET /api/v1/users/?page=1&size=20&active_only=true&superuser_only=false
-    """
+    """List all users with filtering and pagination."""
     log_api_call(
         "list_users",
         user_id=str(current_user.id),
@@ -389,12 +139,7 @@ async def get_user(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Get user by ID (admin only).
-
-    Returns detailed user information including statistics.
-    Requires superuser privileges.
-    """
+    """Get user by ID (admin only)."""
     log_api_call(
         "get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -415,12 +160,7 @@ async def update_user(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Update user by ID (admin only).
-
-    Allows administrators to update any user's profile.
-    Requires superuser privileges.
-    """
+    """Update user by ID (admin only)."""
     log_api_call(
         "update_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -440,12 +180,7 @@ async def delete_user(
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Delete user by ID (admin only).
-
-    Permanently deletes a user and all associated data.
-    Requires superuser privileges.
-    """
+    """Delete user by ID (admin only)."""
     log_api_call(
         "delete_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -479,15 +214,7 @@ async def promote_user_to_superuser(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Promote a user to superuser status.
-
-    Grants superuser privileges to the specified user.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to promote
-    """
+    """Promote a user to superuser status."""
     log_api_call(
         "promote_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -514,7 +241,7 @@ async def promote_user_to_superuser(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -526,15 +253,7 @@ async def demote_user_from_superuser(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Demote a superuser to regular user status.
-
-    Removes superuser privileges from the specified user.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to demote
-    """
+    """Demote a superuser to regular user status."""
     log_api_call(
         "demote_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -567,7 +286,7 @@ async def demote_user_from_superuser(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -579,15 +298,7 @@ async def activate_user_account(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Activate a user account.
-
-    Enables a previously deactivated user account.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to activate
-    """
+    """Activate a user account."""
     log_api_call(
         "activate_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -613,7 +324,7 @@ async def activate_user_account(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -625,15 +336,7 @@ async def deactivate_user_account(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Deactivate a user account.
-
-    Disables a user account without deleting it.
-    Requires current user to be a superuser.
-
-    Args:
-        user_id: ID of the user to deactivate
-    """
+    """Deactivate a user account."""
     log_api_call(
         "deactivate_user", user_id=str(current_user.id), target_user_id=str(user_id)
     )
@@ -666,7 +369,7 @@ async def deactivate_user_account(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         await user_service.db.rollback()
         raise
 
@@ -679,16 +382,7 @@ async def admin_reset_user_password(
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ):
-    """
-    Reset a user's password (admin operation).
-
-    Allows superusers to reset any user's password.
-    The new password must meet security requirements.
-
-    Args:
-        user_id: ID of the user whose password to reset
-        new_password: New password (minimum 8 characters)
-    """
+    """Reset a user's password (admin operation)."""
     log_api_call(
         "admin_reset_password",
         user_id=str(current_user.id),
@@ -717,7 +411,7 @@ async def admin_reset_user_password(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -727,57 +421,7 @@ async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> UserStatisticsResponse:
-    """
-    Get comprehensive user statistics and analytics for administrative reporting.
-
-    Returns detailed statistics about users including counts, activity metrics,
-    engagement analytics, and distribution data. Provides comprehensive insights
-    for administrative decision-making, system monitoring, and user experience
-    optimization. Requires superuser access for privacy and security protection.
-
-    Args:
-        current_user: Current authenticated superuser from validated JWT token
-        db: Database session for statistics queries and data aggregation
-
-    Returns:
-        UserStatisticsResponse: Comprehensive user statistics including:
-            - total_users: Total number of registered users
-            - active_users: Number of currently active users
-            - inactive_users: Number of deactivated user accounts
-            - superusers: Number of users with administrative privileges
-            - recent_registrations_30d: New user registrations in last 30 days
-            - engagement: User activity and platform engagement metrics
-            - top_users_by_documents: Most active users ranked by content creation
-            - activity_rate: Percentage of active users for health assessment
-
-    Raises:
-        HTTP 403: If user is not a superuser
-        HTTP 500: If statistics generation fails
-
-    Statistical Categories:
-        - User account distribution and status breakdown
-        - Recent registration trends and growth patterns
-        - User engagement metrics and activity levels
-        - Content creation patterns and user contribution analysis
-        - Platform adoption and user retention indicators
-
-    Engagement Metrics:
-        - Users with document uploads and content creation
-        - Users with active conversations and interactions
-        - Average content creation per user for engagement assessment
-        - Activity distribution and user segmentation data
-        - Platform utilization and feature adoption rates
-
-    Use Cases:
-        - Administrative dashboards and executive reporting
-        - User experience optimization and platform improvement
-        - Capacity planning and system scaling decisions
-        - User engagement analysis and retention strategies
-        - Business intelligence and growth tracking
-
-    Example:
-        GET /api/v1/users/stats
-    """
+    """Get comprehensive user statistics for administrative reporting."""
     log_api_call("get_user_statistics", user_id=str(current_user.id))
 
     try:
@@ -871,5 +515,5 @@ async def get_user_statistics(
             data=stats_data,
             message="User statistics retrieved successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
