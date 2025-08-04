@@ -60,21 +60,7 @@ router = APIRouter(tags=["conversations"])
 async def get_conversation_service(
     db: AsyncSession = Depends(get_db),
 ) -> ConversationService:
-    """
-    Get conversation service instance with database session.
-
-    Creates and returns a ConversationService instance configured with
-    the provided database session for conversation and message operations.
-
-    Args:
-        db: Database session dependency for service initialization
-
-    Returns:
-        ConversationService: Configured service instance for conversation operations
-
-    Note:
-        This is a dependency function used by FastAPI's dependency injection system.
-    """
+    """Get conversation service instance with database session."""
     return ConversationService(db)
 
 
@@ -279,37 +265,7 @@ async def chat_stream(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ) -> StreamingResponse:
-    """
-    Send a message and get a streaming AI response.
-
-    Processes a chat request and returns the AI response as a Server-Sent Events
-    (SSE) stream, providing real-time feedback as the response is generated.
-    Supports the same advanced features as the standard chat endpoint.
-
-    Args:
-        request: Chat request containing message, conversation ID, and options
-        current_user: Current authenticated user from JWT token
-        conversation_service: Injected conversation service instance
-
-    Returns:
-        StreamingResponse: Server-sent events stream containing:
-            - StreamStartResponse: Initial response start event
-            - StreamContentResponse: Incremental content chunks
-            - StreamToolCallResponse: Tool call execution events
-            - StreamCompleteResponse: Final completion event with metadata
-            - StreamErrorResponse: Error events if processing fails
-
-    Stream Event Types:
-        - start: Response generation initiated
-        - content: Incremental text content chunks
-        - tool_call: Tool execution progress and results
-        - complete: Final response with full metadata
-        - error: Error information if processing fails
-
-    Note:
-        This endpoint returns a streaming response suitable for real-time
-        chat interfaces. Clients should handle SSE parsing appropriately.
-    """
+    """Send a message and get a streaming AI response."""
     log_api_call(
         "chat_stream",
         user_id=str(current_user.id),
@@ -452,17 +408,7 @@ async def export_conversation(
     conversation_service: ConversationService = Depends(get_conversation_service),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Export a conversation to various formats.
-
-    Supports multiple export formats with optional metadata inclusion.
-    Users can only export their own conversations unless they are superusers.
-
-    Args:
-        conversation_id: ID of the conversation to export
-        format: Export format (json, txt, csv)
-        include_metadata: Whether to include conversation metadata
-    """
+    """Export a conversation to various formats."""
     log_api_call(
         "export_conversation",
         user_id=str(current_user.id),
@@ -680,16 +626,7 @@ async def import_conversation(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
-    """
-    Import a conversation from a JSON file.
-
-    Supports importing conversations from JSON export files.
-    Creates a new conversation with imported messages.
-
-    Args:
-        file: JSON file containing conversation data
-        title: Override for conversation title
-    """
+    """Import a conversation from a JSON file."""
     log_api_call("import_conversation", user_id=str(current_user.id))
 
     try:
@@ -807,19 +744,7 @@ async def archive_conversations(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Archive old conversations by marking them as inactive.
-
-    Archives conversations based on age criteria to help manage
-    database size and performance.
-
-    Args:
-        older_than_days: Archive conversations older than X days
-        inactive_only: Archive only already inactive conversations
-        dry_run: Perform dry run without actually archiving
-
-    Requires superuser access.
-    """
+    """Archive old conversations by marking them as inactive."""
     log_api_call(
         "archive_conversations",
         user_id=str(current_user.id),
@@ -915,47 +840,7 @@ async def search_conversations_and_messages(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Search conversations and messages with advanced filtering options.
-
-    Performs comprehensive full-text search across conversation titles and
-    message content with support for date ranges, user filtering, and
-    status-based filtering. Provides powerful search capabilities for
-    finding relevant conversations and discussions.
-
-    Args:
-        query: Search term to look for in titles and content
-        search_messages: Whether to include message content in search
-        user_filter: Filter results by specific username (superuser only)
-        date_from: Start date for filtering results (YYYY-MM-DD format)
-        date_to: End date for filtering results (YYYY-MM-DD format)
-        active_only: Limit search to only active conversations
-        limit: Maximum number of results to return (1-100)
-        current_user: Current authenticated user from JWT token
-        db: Database session for search queries
-
-    Returns:
-        SearchResponse: Search results containing:
-            - results: List of matching conversations with relevance scoring
-            - total_found: Total number of matches
-            - search_criteria: Applied search parameters
-            - timestamp: Search execution timestamp
-
-    Search Features:
-        - Full-text search across titles and message content
-        - Date range filtering for temporal searches
-        - User-specific filtering (for administrators)
-        - Active/inactive conversation filtering
-        - Relevance-based result ordering
-        - Comprehensive result metadata
-
-    Note:
-        Non-superusers can only search their own conversations.
-        Superusers can search across all users when user_filter is specified.
-
-    Example:
-        GET /api/v1/conversations/search?query=project&search_messages=true&limit=10
-    """
+    """Search conversations and messages with advanced filtering options."""
     log_api_call("search_conversations", user_id=str(current_user.id), query=query)
 
     try:
@@ -1130,36 +1015,7 @@ async def get_conversation_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ConversationStatsResponse:
-    """
-    Get comprehensive conversation statistics and analytics.
-
-    Retrieves detailed statistics about conversations including total counts,
-    activity metrics, user engagement patterns, and message distribution.
-    Provides insights for analytics dashboards and usage monitoring.
-
-    Args:
-        current_user: Current authenticated user from JWT token
-        db: Database session for statistics queries
-
-    Returns:
-        ConversationStatsResponse: Comprehensive statistics containing:
-            - conversations: Total, active, and inactive conversation counts
-            - messages: Total messages, averages, and role distribution
-            - recent_activity: Activity metrics for the last 7 days
-            - user_engagement: User participation statistics and top users
-            - timestamp: Statistics generation timestamp
-
-    Statistics Included:
-        - Conversation totals and active/inactive breakdown
-        - Message counts and averages per conversation
-        - Message role distribution (user/assistant/system)
-        - Recent activity trends (7-day window)
-        - User engagement metrics and top contributors
-        - Comprehensive usage patterns
-
-    Example:
-        GET /api/v1/conversations/stats
-    """
+    """Get comprehensive conversation statistics and analytics."""
     log_api_call("get_conversation_statistics", user_id=str(current_user.id))
 
     try:
