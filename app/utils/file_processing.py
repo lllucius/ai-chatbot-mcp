@@ -24,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class FileProcessor:
-    """
-    Unified file processor using unstructured library for extracting text content
-    from various file formats.
+    """Process files to extract text content from various formats.
 
     Supports PDF, DOCX, TXT, MD, RTF, HTML and more through unstructured's
     auto-partitioning with optimized chunking and memory management.
@@ -231,8 +229,7 @@ class FileProcessor:
             raise DocumentError(f"Streaming text extraction failed: {e}")
 
     async def _extract_simple_text(self, file_path: str) -> str:
-        """
-        Simple text extraction fallback for basic text files.
+        """Extract text content from basic text files.
 
         Args:
             file_path: Path to the text file

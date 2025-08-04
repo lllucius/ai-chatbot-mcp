@@ -30,8 +30,7 @@ class RetryConfig:
 
 
 def with_retry(config: Optional[RetryConfig] = None, log_attempts: bool = True):
-    """
-    Decorator to add retry logic to tool operations.
+    """Add retry logic to tool operations.
 
     Args:
         config: Retry configuration, uses defaults if None
@@ -130,8 +129,7 @@ def with_tool_caching(
     cache_failures: bool = False,
     failure_ttl: int = 60,
 ):
-    """
-    Decorator to add caching to tool operations.
+    """Add caching to tool operations.
 
     Args:
         cache_key_builder: Function to build cache key from args/kwargs
@@ -229,8 +227,7 @@ def with_structured_logging(
     log_result: bool = False,
     sensitive_params: Optional[List[str]] = None,
 ):
-    """
-    Decorator to add structured logging to tool operations.
+    """Add structured logging to tool operations.
 
     Args:
         log_entry: Whether to log function entry
@@ -328,8 +325,7 @@ def tool_operation(
     enable_caching: bool = True,
     log_details: bool = True,
 ):
-    """
-    Combined decorator for tool operations with retry, caching, and logging.
+    """Combine retry, caching, and logging for tool operations.
 
     Args:
         retry_config: Retry configuration
