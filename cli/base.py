@@ -105,6 +105,7 @@ class APIError(Exception):
     """
 
     def __init__(self, message: str, status_code=None):
+        """Initialize CLIError with message and optional status code."""
         super().__init__(message)
         self.status_code = status_code
 

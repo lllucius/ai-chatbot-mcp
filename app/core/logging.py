@@ -249,6 +249,7 @@ class PerformanceLogger:
     """
 
     def __init__(self, logger: logging.Logger):
+        """Initialize PerformanceLogger with a logger instance."""
         self.logger = logger
 
     def log_operation(
@@ -295,6 +296,7 @@ class OperationTimer:
     """Context manager for timing operations."""
 
     def __init__(self, perf_logger: PerformanceLogger, operation: str, **context):
+        """Initialize OperationTimer with performance logger and operation details."""
         self.perf_logger = perf_logger
         self.operation = operation
         self.context = context
@@ -357,7 +359,7 @@ class StructuredLogger:
 
     def _log_with_context(self, level: str, message: str, **kwargs):
         """
-        Internal method to log with consistent formatting.
+        Log message with consistent formatting.
 
         Args:
             level: Log level (info, warning, error, debug)
@@ -418,6 +420,7 @@ class LoggingService:
     """
 
     def __init__(self):
+        """Initialize LoggingService with default configuration."""
         self._context_filter = None
         self._initialized = False
 
@@ -622,7 +625,7 @@ logging_service = LoggingService()
 
 # Convenience functions for backward compatibility
 def setup_logging(**kwargs) -> logging.Logger:
-    """Setup logging using the global logging service."""
+    """Set up logging using the global logging service."""
     return logging_service.setup_logging(**kwargs)
 
 

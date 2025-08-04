@@ -655,7 +655,7 @@ class UsersClient:
         )
 
     async def statistics(self) -> UserStatsResponse:
-        """Get comprehensive user statistics (admin only)."""
+        """Get comprehensive user statistics for admin access."""
         return await self.sdk._request("/api/v1/users/users/stats", UserStatsResponse)
 
 
@@ -1779,6 +1779,7 @@ class AIChatbotSDK:
         client: Optional[httpx.AsyncClient] = None,
         timeout: float = 30.0,
     ):
+        """Initialize AIChatbotSDK with configuration parameters."""
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.on_error = on_error

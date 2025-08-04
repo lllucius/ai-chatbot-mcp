@@ -441,7 +441,7 @@ async def root() -> Dict[str, Any]:
 # Health check endpoint (for load balancers)
 @app.get("/ping", include_in_schema=False)
 async def ping() -> Dict[str, str]:
-    """Simple health check endpoint."""
+    """Provide simple health check endpoint."""
     return {"status": "ok", "timestamp": get_current_timestamp()}
 
 

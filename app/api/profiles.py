@@ -131,9 +131,7 @@ async def update_profile(
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> LLMProfileResponse:
-    """
-    Update an existing LLM profile with new parameters or metadata.
-    """
+    """Update an existing LLM profile with new parameters or metadata."""
     log_api_call("update_llm_profile", user_id=current_user.id, profile_name=profile_name)
 
     updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
@@ -148,9 +146,7 @@ async def delete_profile(
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> BaseResponse:
-    """
-    Delete an LLM profile from the system.
-    """
+    """Delete an LLM profile from the system."""
     log_api_call("delete_llm_profile", user_id=current_user.id, profile_name=profile_name)
 
     await profile_service.delete_profile(profile_name)

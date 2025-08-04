@@ -235,9 +235,7 @@ async def logout():
 
 @core_app.async_command("auth-status")
 async def auth_status():
-    """
-    Show current authentication status and user info.
-    """
+    """Show current authentication status and user info."""
     try:
         cli_manager = await get_cli_manager()
         if cli_manager.has_token():
@@ -264,9 +262,7 @@ async def auth_status():
 
 @core_app.async_command()
 async def version():
-    """
-    Show version information.
-    """
+    """Show version information."""
     try:
         # Load config and create SDK directly for version check
         from client.ai_chatbot_sdk import AIChatbotSDK
@@ -293,9 +289,7 @@ async def version():
 
 @core_app.async_command()
 async def health():
-    """
-    Perform comprehensive system health check.
-    """
+    """Perform comprehensive system health check."""
     try:
         from client.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
@@ -363,9 +357,7 @@ async def health():
 
 @core_app.async_command()
 async def status():
-    """
-    Show overall system status summary.
-    """
+    """Show overall system status summary."""
     try:
         from client.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
@@ -415,9 +407,7 @@ async def status():
 
 @core_app.async_command()
 async def quickstart():
-    """
-    Show quick start guide and common commands.
-    """
+    """Show quick start guide and common commands."""
     print("\nAI Chatbot Platform API CLI - Quick Start:")
     print("==========================================")
     print()
@@ -455,9 +445,7 @@ async def quickstart():
 
 @core_app.async_command()
 async def config():
-    """
-    Show current configuration and environment settings.
-    """
+    """Show current configuration and environment settings."""
     try:
         from dotenv import load_dotenv
 
