@@ -148,24 +148,7 @@ async def get_document(
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    """
-    Get document by ID.
-
-    Returns detailed information about a specific document
-    owned by the current user, including processing status,
-    metadata, and chunk information.
-
-    Args:
-        document_id: UUID of the document to retrieve
-        current_user: Current authenticated user
-        document_service: Document service instance
-
-    Returns:
-        APIResponse: Complete document information using unified envelope
-
-    Raises:
-        HTTP 404: If document not found or not owned by user
-    """
+    """Get document by ID."""
     log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.get_document(document_id, current_user.id)
 
