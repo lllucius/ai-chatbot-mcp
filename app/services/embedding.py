@@ -150,7 +150,7 @@ class EmbeddingService:
         embedding_encoding: Optional[str] = None,
     ):
         """Initialize the embedding service.
-        
+
         Args:
             db: Database session for operations.
             openai_client: OpenAI client for embedding generation.

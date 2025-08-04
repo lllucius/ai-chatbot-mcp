@@ -532,6 +532,16 @@ class OpenAIClient:
     async def create_embedding(
         self, text: str, encoding_format: Optional[str] = "json", max_retries: int = 3
     ) -> List[float]:
+        """Create an embedding for the given text.
+
+        Args:
+            text: Text to create embedding for.
+            encoding_format: Format for the embedding encoding.
+            max_retries: Maximum number of retry attempts.
+
+        Returns:
+            List of float values representing the embedding.
+        """
         if not text or not text.strip():
             raise ValueError("Text cannot be empty")
 
@@ -569,6 +579,14 @@ class OpenAIClient:
 
     @handle_api_errors("Batch embedding creation failed")
     async def create_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+        """Create embeddings for multiple texts in batch.
+
+        Args:
+            texts: List of texts to create embeddings for.
+
+        Returns:
+            List of embeddings, one for each input text.
+        """
         if not texts:
             return []
 
@@ -587,6 +605,15 @@ class OpenAIClient:
 
     @handle_api_errors("Content moderation failed")
     async def moderate_content(self, text: str) -> Dict[str, Any]:
+        """Moderate content for policy violations.
+
+        Args:
+            text: Text content to moderate.
+
+        Returns:
+            Dictionary containing moderation results.
+        """
+
         @tool_operation(cache_ttl=600, log_details=True)
         async def _moderate_content():
             response = await self.client.moderations.create(input=text)
@@ -602,6 +629,12 @@ class OpenAIClient:
 
     @handle_api_errors("OpenAI health check failed", log_errors=False)
     async def health_check(self) -> Dict[str, Any]:
+        """Check the health status of the OpenAI service.
+
+        Returns:
+            Dictionary containing health check results.
+        """
+
         @tool_operation(enable_caching=False, log_details=False)
         async def _health_check():
             await self.client.chat.completions.create(

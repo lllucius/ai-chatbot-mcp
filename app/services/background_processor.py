@@ -65,7 +65,7 @@ class ProcessingTask:
         retry_delay: float = 5.0,
     ):
         """Initialize a processing task.
-        
+
         Args:
             task_id: Unique identifier for the task.
             document_id: UUID of the document to process.

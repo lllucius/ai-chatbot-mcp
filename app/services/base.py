@@ -436,4 +436,3 @@ class BaseService:
         result = await self.db.execute(query)
         await self.db.commit()
         return result.rowcount
-
