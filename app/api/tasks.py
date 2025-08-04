@@ -1,8 +1,4 @@
 """Background task management API endpoints."""
-- Task retry configuration and policy management
-- Performance tuning and optimization recommendations
-- Comprehensive logging and audit trail
-"""
 
 import json
 from datetime import datetime, timedelta
