@@ -1,5 +1,4 @@
-"""
-Shared schemas package for API and SDK.
+"""Shared schemas package for API and SDK.
 
 Contains Pydantic schema definitions that are used by both the API server
 and the client SDK to ensure consistency and eliminate duplication.

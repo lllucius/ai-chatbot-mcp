@@ -1,5 +1,4 @@
-"""
-Common Pydantic schemas for comprehensive API requests and responses across the application.
+"""Common Pydantic schemas for comprehensive API requests and responses across the application.
 
 This module provides foundational schemas and standardized response formats using
 modern Pydantic V2 features with advanced validation, serialization, and type safety.
@@ -91,8 +90,7 @@ T = TypeVar("T")
 
 
 class BaseResponse(BaseModel):
-    """
-    Foundation response schema for all API endpoints with comprehensive status and metadata.
+    """Foundation response schema for all API endpoints with comprehensive status and metadata.
 
     Serves as the base class for all API responses providing consistent structure,
     status reporting, and timestamp information across the application. Implements
@@ -139,6 +137,7 @@ class BaseResponse(BaseModel):
             timestamp=datetime.now()
         )
         json_str = response.model_dump_json()  # Proper ISO datetime format
+
     """
 
     model_config = ConfigDict(
@@ -157,9 +156,7 @@ class BaseResponse(BaseModel):
 
 
 class ErrorDetails(BaseModel):
-    """
-    Error details schema for the unified response envelope.
-    """
+    """Error details schema for the unified response envelope."""
     
     model_config = ConfigDict(from_attributes=True)
     
@@ -168,8 +165,7 @@ class ErrorDetails(BaseModel):
 
 
 class APIResponse(BaseResponse, Generic[T]):
-    """
-    Unified API response schema conforming to the standard envelope specification.
+    """Unified API response schema conforming to the standard envelope specification.
     
     All API endpoints must return responses using this exact structure with no exceptions.
     This ensures consistent response format across the entire application.
@@ -193,8 +189,7 @@ class APIResponse(BaseResponse, Generic[T]):
     error: Optional[ErrorDetails] = Field(default=None, description="Optional error details with code and details")
 
     def model_dump_json(self, **kwargs):
-        """
-        Custom JSON serialization with comprehensive datetime handling for API responses.
+        """Serialize model with comprehensive datetime handling for API responses.
 
         Converts datetime fields to ISO format strings with timezone indicators for
         consistent API responses and frontend compatibility. Ensures proper timestamp
@@ -224,6 +219,7 @@ class APIResponse(BaseResponse, Generic[T]):
             response = APIResponse(success=True, message="Success")
             json_output = response.model_dump_json()
             # Result: {"success": true, "message": "Success", "timestamp": "2024-01-01T12:00:00Z"}
+
         """
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
@@ -239,9 +235,7 @@ class APIResponse(BaseResponse, Generic[T]):
 
 
 class ErrorDetail(BaseModel):
-    """
-    Detailed error information for validation and field-specific errors.
-    """
+    """Detailed error information for validation and field-specific errors."""
     
     model_config = ConfigDict(from_attributes=True)
     
@@ -251,8 +245,7 @@ class ErrorDetail(BaseModel):
     details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
 
     def model_dump_json(self, **kwargs):
-        """
-        Custom JSON serialization with comprehensive datetime handling for API responses.
+        """Serialize model with comprehensive datetime handling for API responses.
 
         Converts datetime fields to ISO format strings with timezone indicators for
         consistent API responses and frontend compatibility. Ensures proper timestamp
@@ -282,6 +275,7 @@ class ErrorDetail(BaseModel):
             response = BaseResponse(success=True, message="Success")
             json_output = response.model_dump_json()
             # Result: {"success": true, "message": "Success", "timestamp": "2024-01-01T12:00:00Z"}
+
         """
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
@@ -428,6 +422,7 @@ class HealthCheckResponse(BaseResponse):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -459,6 +454,7 @@ class DetailedHealthCheckResponse(BaseModel):
     overall_status: str = Field(..., description="Overall system health status")
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -508,6 +504,7 @@ class TokenResponse(BaseModel):
     expires_at: datetime = Field(..., description="Token expiration timestamp")
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format datetime handling."""
         data = self.model_dump(**kwargs)
         if "expires_at" in data and data["expires_at"] is not None:
             if isinstance(data["expires_at"], datetime):
@@ -546,6 +543,7 @@ class MetricsResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -610,6 +608,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
     def create(
         cls, items: List[Any], page: int, size: int, total: int, message: str
     ) -> "PaginatedResponse":
+        """Create a paginated response with the provided items and metadata."""
         return cls(
             success=True,
             message=message,
@@ -652,8 +651,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
 
 
 class SearchParams(PaginationParams):
-    """
-    Search parameters schema extending pagination with search-specific options.
+    """Search parameters schema extending pagination with search-specific options.
 
     Combines pagination functionality with search algorithm selection and
     result limiting. Supports multiple search algorithms including vector,
@@ -664,6 +662,7 @@ class SearchParams(PaginationParams):
         algorithm: Search algorithm type (vector/text/hybrid/mmr)
         threshold: Similarity threshold
         filters: Additional search filters
+
     """
 
     query: Optional[str] = Field(

@@ -1,5 +1,4 @@
-"""
-Base Pydantic schemas for API responses with comprehensive validation and serialization.
+"""Base Pydantic schemas for API responses with comprehensive validation and serialization.
 
 This module provides foundational schemas and common response formats using modern
 Pydantic V2 features with advanced configuration, validation, and serialization
@@ -166,7 +165,7 @@ class TimestampMixin(BaseModel):
     updated_at: Optional[datetime] = None
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with datetime handling."""
+        """Serialize model with custom datetime handling."""
         data = self.model_dump(**kwargs)
 
         # Convert datetime fields to ISO format strings
@@ -190,7 +189,7 @@ class UUIDMixin(BaseModel):
     id: Optional[uuid.UUID] = None
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with UUID handling."""
+        """Serialize model with custom UUID handling."""
         data = self.model_dump(**kwargs)
 
         # Convert UUID to string
@@ -212,6 +211,7 @@ class TimestampSchema(BaseSchema, TimestampMixin):
 
     Use this for schemas that need timestamp tracking but not UUID identification.
     """
+
     pass
 
 
@@ -226,6 +226,7 @@ class UUIDSchema(BaseSchema, UUIDMixin):
 
     Use this for schemas that need UUID identification but not timestamp tracking.
     """
+
     pass
 
 

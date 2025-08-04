@@ -1,5 +1,4 @@
-"""
-Pydantic schemas for admin APIs.
+"""Pydantic schemas for admin APIs.
 
 This module provides administrative response schemas for system management,
 monitoring, and administration functionality.
