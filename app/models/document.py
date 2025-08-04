@@ -1,9 +1,7 @@
-"""
-Document and document chunk database models.
+"""Document and document chunk database models.
 
 This module defines SQLAlchemy models for document storage and processing,
-including document metadata and text chunks for vector search.
-
+including document metadata, processing status, and text chunks for vector search.
 """
 
 import uuid
@@ -45,11 +43,29 @@ class FileType(str, Enum):
 
 
 class Document(BaseModelDB):
-    """
-    Document model for storing uploaded files and their metadata.
+    """Document model for storing uploaded files and their metadata.
 
-    This model stores information about uploaded documents including
-    their content, processing status, and associated chunks.
+    Stores information about uploaded documents including their content,
+    processing status, and associated chunks for vector search.
+
+    Attributes:
+        title (Mapped[str]): Document title or filename.
+        filename (Mapped[str]): Original filename.
+        file_path (Mapped[Optional[str]]): Path to stored file.
+        file_size (Mapped[int]): File size in bytes.
+        file_type (Mapped[FileType]): Type of document.
+        mime_type (Mapped[Optional[str]]): MIME type of the document.
+        status (Mapped[FileStatus]): Processing status.
+        metainfo (Mapped[Optional[Dict[str, Any]]]): Additional metadata.
+        content (Mapped[Optional[str]]): Extracted text content.
+        summary (Mapped[Optional[str]]): AI-generated summary.
+        chunk_count (Mapped[int]): Number of text chunks created.
+        processing_time (Mapped[Optional[float]]): Processing time in seconds.
+        error_message (Mapped[Optional[str]]): Error message if processing failed.
+        owner_id (Mapped[uuid.UUID]): ID of user who uploaded the document.
+        owner (relationship): User who uploaded this document.
+        chunks (relationship): Text chunks from this document.
+
     """
 
     __tablename__ = "documents"
@@ -153,21 +169,33 @@ class Document(BaseModelDB):
     )
 
     def __repr__(self) -> str:
-        """
-        Return string representation of Document.
+        """Return string representation of Document.
 
         Returns:
-            str: String representation including ID, title, and status
+            str: String representation including ID, title, and status.
+
         """
         return f"<Document(id={self.id}, title='{self.title}', status='{self.status}')>"
 
 
 class DocumentChunk(BaseModelDB):
-    """
-    Document chunk model for storing text segments with embeddings.
+    """Document chunk model for storing text segments with embeddings.
 
-    This model stores individual text chunks from documents along with
-    their vector embeddings for semantic search capabilities.
+    Stores individual text chunks from documents along with their vector
+    embeddings for semantic search capabilities.
+
+    Attributes:
+        content (Mapped[str]): Text content of the chunk.
+        chunk_index (Mapped[int]): Index of this chunk within the document.
+        start_offset (Mapped[Optional[int]]): Starting character offset in original document.
+        end_offset (Mapped[Optional[int]]): Ending character offset in original document.
+        embedding (Mapped[Optional[List[float]]]): Vector embedding for semantic search.
+        embedding_model (Mapped[Optional[str]]): Model used to generate embedding.
+        token_count (Mapped[Optional[int]]): Number of tokens in this chunk.
+        language (Mapped[Optional[str]]): Detected language of the chunk.
+        document_id (Mapped[uuid.UUID]): ID of the parent document.
+        document (relationship): Parent document for this chunk.
+
     """
 
     __tablename__ = "document_chunks"
@@ -243,10 +271,10 @@ class DocumentChunk(BaseModelDB):
     )
 
     def __repr__(self) -> str:
-        """
-        Return string representation of DocumentChunk.
+        """Return string representation of DocumentChunk.
 
         Returns:
-            str: String representation including ID, document ID, and chunk index
+            str: String representation including ID, document ID, and chunk index.
+
         """
         return f"<DocumentChunk(id={self.id}, document_id={self.document_id}, index={self.chunk_index})>"

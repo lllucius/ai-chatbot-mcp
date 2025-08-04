@@ -1,9 +1,7 @@
-"""
-MCP Server registry model for managing MCP server configurations.
+"""MCP Server registry model for managing server configurations.
 
 This module defines the MCPServer model for tracking configured MCP servers,
-their status, and configuration details.
-
+their connection status, and configuration details.
 """
 
 from datetime import datetime
@@ -19,21 +17,24 @@ if TYPE_CHECKING:
 
 
 class MCPServer(BaseModelDB):
-    """
-    MCP Server registry model for managing server configurations.
+    """MCP Server registry model for managing server configurations.
+
+    Tracks configured MCP servers, their connection status, and configuration
+    details for the Model Context Protocol integration.
 
     Attributes:
-        name: Unique name/identifier for the server
-        url: Connection URL for the server
-        description: Optional description of the server
-        transport: Transport type (http, stdio, etc.)
-        timeout: Connection timeout in seconds
-        config: Additional server configuration as JSON
-        is_enabled: Whether the server is enabled
-        is_connected: Current connection status
-        last_connected_at: Timestamp of last successful connection
-        connection_errors: Count of recent connection errors
-        tools: Related tools provided by this server
+        name (Mapped[str]): Unique name/identifier for the server.
+        url (Mapped[str]): Connection URL for the server.
+        description (Mapped[Optional[str]]): Optional description of the server.
+        transport (Mapped[str]): Transport protocol (http, stdio, etc.).
+        timeout (Mapped[int]): Connection timeout in seconds.
+        config (Mapped[Optional[dict]]): Additional server configuration.
+        is_enabled (Mapped[bool]): Whether the server is enabled.
+        is_connected (Mapped[bool]): Current connection status.
+        last_connected_at (Mapped[Optional[datetime]]): Timestamp of last successful connection.
+        connection_errors (Mapped[int]): Count of recent connection errors.
+        tools (relationship): Related tools provided by this server.
+
     """
 
     __tablename__ = "mcp_servers"
