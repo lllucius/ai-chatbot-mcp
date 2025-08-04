@@ -1,5 +1,4 @@
-"""
-Base Pydantic schemas for API responses with comprehensive validation and serialization.
+"""Base Pydantic schemas for API responses with comprehensive validation and serialization.
 
 This module provides foundational schemas and common response formats using modern
 Pydantic V2 features with advanced configuration, validation, and serialization
@@ -65,14 +64,14 @@ from pydantic import BaseModel, ConfigDict
 
 
 def serialize_datetime_to_iso(dt: datetime) -> str:
-    """
-    Serialize datetime to ISO format with Z suffix for UTC.
+    """Serialize datetime to ISO format with Z suffix for UTC.
     
     Args:
         dt: Datetime object to serialize
         
     Returns:
         ISO format string with Z suffix for UTC
+
     """
     iso_string = dt.isoformat()
     if iso_string.endswith("+00:00"):
@@ -81,8 +80,7 @@ def serialize_datetime_to_iso(dt: datetime) -> str:
 
 
 class BaseSchema(BaseModel):
-    """
-    Foundation Pydantic model with modern V2 configuration and comprehensive validation.
+    """Foundation Pydantic model with modern V2 configuration and comprehensive validation.
 
     Serves as the base class for all API schemas with optimized Pydantic V2 configuration
     for performance, validation, and serialization. Provides essential configuration
@@ -137,6 +135,7 @@ class BaseSchema(BaseModel):
 
         # Automatic validation and type conversion
         user = UserSchema(username="john", email="john@example.com")
+
     """
 
     model_config = ConfigDict(
@@ -154,8 +153,7 @@ class BaseSchema(BaseModel):
 
 
 class TimestampMixin(BaseModel):
-    """
-    Mixin providing timestamp fields and JSON serialization for auditing.
+    """Mixin providing timestamp fields and JSON serialization for auditing.
 
     Provides created_at and updated_at timestamp fields with proper JSON serialization
     for audit trails and entity lifecycle tracking. Can be mixed into any schema
@@ -166,7 +164,7 @@ class TimestampMixin(BaseModel):
     updated_at: Optional[datetime] = None
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with datetime handling."""
+        """Serialize model with custom datetime handling."""
         data = self.model_dump(**kwargs)
 
         # Convert datetime fields to ISO format strings
@@ -179,8 +177,7 @@ class TimestampMixin(BaseModel):
 
 
 class UUIDMixin(BaseModel):
-    """
-    Mixin providing UUID field and JSON serialization for unique identification.
+    """Mixin providing UUID field and JSON serialization for unique identification.
 
     Provides an optional UUID id field with proper JSON serialization for
     unique entity identification. Can be mixed into any schema that needs
@@ -190,7 +187,7 @@ class UUIDMixin(BaseModel):
     id: Optional[uuid.UUID] = None
 
     def model_dump_json(self, **kwargs):
-        """Custom JSON serialization with UUID handling."""
+        """Serialize model with custom UUID handling."""
         data = self.model_dump(**kwargs)
 
         # Convert UUID to string
@@ -202,8 +199,7 @@ class UUIDMixin(BaseModel):
 
 
 class TimestampSchema(BaseSchema, TimestampMixin):
-    """
-    Base schema with comprehensive timestamp field support for auditing and tracking.
+    """Base schema with comprehensive timestamp field support for auditing and tracking.
 
     Extends BaseSchema with automatic timestamp management for created_at and updated_at
     fields, providing essential auditing capabilities for tracking entity lifecycle
@@ -212,12 +208,12 @@ class TimestampSchema(BaseSchema, TimestampMixin):
 
     Use this for schemas that need timestamp tracking but not UUID identification.
     """
+
     pass
 
 
 class UUIDSchema(BaseSchema, UUIDMixin):
-    """
-    Base schema with UUID identifier field and automatic serialization support.
+    """Base schema with UUID identifier field and automatic serialization support.
 
     Extends BaseSchema with UUID identifier field management, providing unique
     identification capabilities for entities with automatic JSON serialization
@@ -226,12 +222,12 @@ class UUIDSchema(BaseSchema, UUIDMixin):
 
     Use this for schemas that need UUID identification but not timestamp tracking.
     """
+
     pass
 
 
 class BaseModelSchema(BaseSchema):
-    """
-    Complete foundational schema combining UUID identification and timestamp auditing.
+    """Complete foundational schema combining UUID identification and timestamp auditing.
 
     Comprehensive base schema that merges UUID-based unique identification with
     timestamp-based auditing capabilities, providing the complete foundation for
@@ -247,8 +243,7 @@ class BaseModelSchema(BaseSchema):
     updated_at: Optional[datetime] = None
 
     def model_dump_json(self, **kwargs):
-        """
-        Comprehensive JSON serialization with advanced UUID and datetime handling.
+        """Comprehensive JSON serialization with advanced UUID and datetime handling.
 
         Combines UUID to string conversion with datetime to ISO format conversion
         in a single serialization operation, providing complete type handling for

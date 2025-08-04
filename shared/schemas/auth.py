@@ -1,5 +1,4 @@
-"""
-Authentication-related Pydantic schemas with comprehensive validation and security.
+"""Authentication-related Pydantic schemas with comprehensive validation and security.
 
 This module provides robust schemas for user authentication, registration, token
 management, and password operations with advanced validation, security controls,
@@ -70,8 +69,7 @@ from .base import BaseSchema
 
 
 class LoginRequest(BaseSchema):
-    """
-    Schema for secure user login request with flexible authentication methods.
+    """Schema for secure user login request with flexible authentication methods.
 
     Validates user login credentials supporting both username and email-based
     authentication with comprehensive input validation and security controls.
@@ -125,6 +123,7 @@ class LoginRequest(BaseSchema):
             username="john@example.com",
             password="SecurePassword123!"
         )
+
     """
 
     username: str = Field(
@@ -140,8 +139,7 @@ class LoginRequest(BaseSchema):
 
 
 class RegisterRequest(BaseSchema):
-    """
-    Schema for comprehensive user registration with advanced validation and security.
+    """Schema for comprehensive user registration with advanced validation and security.
 
     Handles new user account creation with extensive validation, security controls,
     and data integrity enforcement. Implements industry-standard security practices
@@ -210,6 +208,7 @@ class RegisterRequest(BaseSchema):
             password="SecurePassword123!",
             full_name="John Doe"
         )
+
     """
 
     username: str = Field(
@@ -226,8 +225,7 @@ class RegisterRequest(BaseSchema):
     @field_validator("username")
     @classmethod
     def validate_username(cls, v):
-        """
-        Validate username format with comprehensive security and compatibility rules.
+        """Validate username format with comprehensive security and compatibility rules.
 
         Ensures username meets security and compatibility requirements by enforcing
         character restrictions and format validation. Prevents usernames that could
@@ -269,6 +267,7 @@ class RegisterRequest(BaseSchema):
             validate_username("test-user")     # Valid
             validate_username("user@domain")   # Invalid - contains @
             validate_username("user name")     # Invalid - contains space
+
         """
         if not re.match(r"^[a-zA-Z0-9_-]+$", v):
             raise ValueError(
@@ -279,8 +278,7 @@ class RegisterRequest(BaseSchema):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v):
-        """
-        Validate password strength with comprehensive security requirements.
+        """Validate password strength with comprehensive security requirements.
 
         Enforces industry-standard password complexity requirements to ensure
         user account security and protection against common password-based attacks.
@@ -328,6 +326,7 @@ class RegisterRequest(BaseSchema):
             validate_password("password")        # Invalid - missing uppercase/number
             validate_password("PASSWORD")        # Invalid - missing lowercase/number
             validate_password("Pass123")         # Invalid - too short (less than 8)
+
         """
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -352,8 +351,7 @@ class RegisterRequest(BaseSchema):
 
 
 class Token(BaseSchema):
-    """
-    Schema for JWT token response with comprehensive security metadata and expiration handling.
+    """Schema for JWT token response with comprehensive security metadata and expiration handling.
 
     Represents JWT access token response structure with essential security metadata
     including token type specification, expiration information, and proper formatting
@@ -422,6 +420,7 @@ class Token(BaseSchema):
 
         # Client usage:
         # Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
     """
 
     access_token: str = Field(..., description="JWT access token")
@@ -440,8 +439,7 @@ class Token(BaseSchema):
 
 
 class PasswordResetRequest(BaseSchema):
-    """
-    Schema for password reset request initiation with comprehensive email validation.
+    """Schema for password reset request initiation with comprehensive email validation.
 
     Handles password reset workflow initiation by validating user email address
     and triggering secure password reset process. Implements proper email
@@ -500,6 +498,7 @@ class PasswordResetRequest(BaseSchema):
         reset_request = PasswordResetRequest(
             email="user@example.com"
         )
+
     """
 
     email: EmailStr = Field(..., description="Email address for password reset")
@@ -508,8 +507,7 @@ class PasswordResetRequest(BaseSchema):
 
 
 class PasswordResetConfirm(BaseSchema):
-    """
-    Schema for password reset confirmation with comprehensive validation and security.
+    """Schema for password reset confirmation with comprehensive validation and security.
 
     Handles password reset completion workflow with secure token validation and
     new password strength verification. Implements comprehensive security controls
@@ -576,6 +574,7 @@ class PasswordResetConfirm(BaseSchema):
             token="secure_reset_token_here",
             new_password="NewSecurePassword123!"
         )
+
     """
 
     token: str = Field(..., description="Password reset token")
@@ -586,8 +585,7 @@ class PasswordResetConfirm(BaseSchema):
     @field_validator("new_password")
     @classmethod
     def validate_password(cls, v):
-        """
-        Validate new password strength with comprehensive security requirements.
+        """Validate new password strength with comprehensive security requirements.
 
         Enforces the same rigorous password complexity requirements as user
         registration to ensure consistent security standards across all password
@@ -636,6 +634,7 @@ class PasswordResetConfirm(BaseSchema):
             validate_password("newpassword")       # Invalid - missing uppercase/number
             validate_password("NEWPASSWORD")       # Invalid - missing lowercase/number
             validate_password("NewPass")           # Invalid - too short
+
         """
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")

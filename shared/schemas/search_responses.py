@@ -1,5 +1,4 @@
-"""
-Pydantic response schemas for search API endpoints.
+"""Pydantic response schemas for search API endpoints.
 
 This module provides response models for all search-related endpoints that currently
 return raw dictionaries, ensuring type safety and proper API documentation.

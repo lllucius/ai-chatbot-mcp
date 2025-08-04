@@ -1,5 +1,4 @@
-"""
-Search-related Pydantic schemas.
+"""Search-related Pydantic schemas.
 
 This module provides schemas for document and chunk search, similarity,
 suggestions, and search history.

@@ -1,5 +1,4 @@
-"""
-User-related Pydantic schemas for comprehensive API requests and responses.
+"""User-related Pydantic schemas for comprehensive API requests and responses.
 
 This module defines comprehensive schemas for user operations including account creation,
 profile updates, authentication, password management, and detailed API responses using
@@ -82,8 +81,7 @@ def utcnow() -> datetime:
 
 
 class UserBase(BaseSchema):
-    """
-    Foundation user schema with core fields and comprehensive validation for user management.
+    """Foundation user schema with core fields and comprehensive validation for user management.
 
     Serves as the base class for all user-related schemas with essential user fields,
     validation rules, and security controls. Implements comprehensive field validation
@@ -136,6 +134,7 @@ class UserBase(BaseSchema):
             email="john@example.com",
             full_name="John Doe"
         )
+
     """
 
     model_config = ConfigDict(
@@ -161,8 +160,7 @@ class UserBase(BaseSchema):
     @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
-        """
-        Validate username format with comprehensive security and consistency rules.
+        """Validate username format with comprehensive security and consistency rules.
 
         Ensures username meets security, compatibility, and consistency requirements
         by enforcing character restrictions, length validation, and format normalization.
@@ -204,6 +202,7 @@ class UserBase(BaseSchema):
             validate_username("user123")   # Returns: "user123"
             validate_username("ab")        # Raises: ValueError (too short)
             validate_username("")          # Raises: ValueError (empty)
+
         """
         if not v:
             raise ValueError("Username cannot be empty")
@@ -215,8 +214,7 @@ class UserBase(BaseSchema):
 
 
 class UserCreate(UserBase):
-    """
-    Schema for creating new user accounts with comprehensive security validation.
+    """Schema for creating new user accounts with comprehensive security validation.
 
     Extends UserBase with password field and security validation for user account
     creation workflows. Implements industry-standard password complexity requirements
@@ -272,6 +270,7 @@ class UserCreate(UserBase):
             full_name="John Doe",
             password="SecurePassword123!"
         )
+
     """
 
     password: str = Field(
@@ -284,8 +283,7 @@ class UserCreate(UserBase):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
-        """
-        Validate password strength with comprehensive security requirements for account creation.
+        """Validate password strength with comprehensive security requirements for account creation.
 
         Implements industry-standard password complexity requirements to ensure user
         account security and protection against common password-based attacks. Enforces
@@ -333,6 +331,7 @@ class UserCreate(UserBase):
             validate_password("password")        # Invalid - missing uppercase/digit
             validate_password("PASSWORD123")     # Invalid - missing lowercase
             validate_password("Pass12")          # Invalid - too short (less than 8)
+
         """
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -346,8 +345,7 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseSchema):
-    """
-    Schema for selective user profile updates with comprehensive field validation.
+    """Schema for selective user profile updates with comprehensive field validation.
 
     Handles partial user profile updates with optional field modifications, validation,
     and security controls. Implements selective field updates allowing users and
@@ -406,6 +404,7 @@ class UserUpdate(BaseSchema):
             full_name="Updated Name",
             is_active=True
         )
+
     """
 
     model_config = ConfigDict(
@@ -422,8 +421,7 @@ class UserUpdate(BaseSchema):
 
 
 class UserPasswordUpdate(BaseSchema):
-    """
-    Schema for secure password change operations with comprehensive validation and verification.
+    """Schema for secure password change operations with comprehensive validation and verification.
 
     Handles secure password change workflows with current password verification and
     new password strength validation. Implements multi-factor security validation
@@ -477,6 +475,7 @@ class UserPasswordUpdate(BaseSchema):
             current_password="CurrentPassword123!",
             new_password="NewSecurePassword456!"
         )
+
     """
 
     model_config = ConfigDict(validate_assignment=True)
@@ -489,8 +488,7 @@ class UserPasswordUpdate(BaseSchema):
     @field_validator("new_password")
     @classmethod
     def validate_new_password(cls, v: str) -> str:
-        """
-        Validate new password strength with comprehensive security requirements for password changes.
+        """Validate new password strength with comprehensive security requirements for password changes.
 
         Implements the same rigorous password complexity requirements as account creation
         to ensure consistent security standards across all password operations. Enforces
@@ -538,6 +536,7 @@ class UserPasswordUpdate(BaseSchema):
             validate_new_password("newpassword")       # Invalid - missing uppercase/digit
             validate_new_password("NEWPASSWORD123")    # Invalid - missing lowercase
             validate_new_password("NewPass")           # Invalid - too short
+
         """
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -551,8 +550,7 @@ class UserPasswordUpdate(BaseSchema):
 
 
 class UserResponse(UserBase):
-    """
-    Schema for comprehensive user API responses with complete profile information.
+    """Schema for comprehensive user API responses with complete profile information.
 
     Provides complete user profile information for API responses including account
     metadata, status information, and audit timestamps. Implements custom JSON
@@ -612,6 +610,7 @@ class UserResponse(UserBase):
             created_at=datetime.now()
         )
         json_str = user_response.model_dump_json()  # Properly formatted JSON
+
     """
 
     id: uuid.UUID = Field(..., description="Unique user identifier")
@@ -620,8 +619,7 @@ class UserResponse(UserBase):
     created_at: datetime = Field(..., description="When the user account was created")
 
     def model_dump_json(self, **kwargs):
-        """
-        Custom JSON serialization with comprehensive UUID and datetime handling for user responses.
+        """Serialize model with comprehensive UUID and datetime handling for user responses.
 
         Converts UUID and datetime fields to appropriate string representations for JSON
         compatibility and frontend integration. Provides consistent formatting for user
@@ -658,6 +656,7 @@ class UserResponse(UserBase):
             json_output = user.model_dump_json()
             # Result: {"id": "12345678-1234-5678-9012-123456789012",
             #          "created_at": "2024-01-01T12:00:00Z", ...}
+
         """
         data = self.model_dump(**kwargs)
         if "id" in data and data["id"] is not None:
@@ -673,8 +672,7 @@ class UserResponse(UserBase):
 
 
 class UserListResponse(BaseResponse):
-    """
-    Response schema for user list endpoints with comprehensive pagination and metadata.
+    """Response schema for user list endpoints with comprehensive pagination and metadata.
 
     Provides structured response format for user listing operations with pagination
     support, total count information, and comprehensive user data. Implements
@@ -715,6 +713,7 @@ class UserListResponse(BaseResponse):
             success=True,
             message="Users retrieved successfully"
         )
+
     """
 
     users: List[UserResponse] = Field(..., description="List of users")
@@ -722,8 +721,7 @@ class UserListResponse(BaseResponse):
 
 
 class UserDetailResponse(BaseResponse):
-    """
-    Response schema for user detail endpoints with comprehensive profile information.
+    """Response schema for user detail endpoints with comprehensive profile information.
 
     Provides structured response format for individual user profile retrieval with
     complete user information and metadata. Implements consistent response structure
@@ -756,14 +754,14 @@ class UserDetailResponse(BaseResponse):
             success=True,
             message="User profile retrieved successfully"
         )
+
     """
 
     user: UserResponse = Field(..., description="User details")
 
 
 class UserSearchParams(PaginationParams):
-    """
-    Comprehensive search parameters for user queries with advanced filtering capabilities.
+    """Comprehensive search parameters for user queries with advanced filtering capabilities.
 
     Extends PaginationParams with user-specific search and filtering options for
     advanced user discovery, management, and administrative operations. Implements
@@ -807,6 +805,7 @@ class UserSearchParams(PaginationParams):
             page=1,
             size=20
         )
+
     """
 
     username: Optional[str] = Field(
@@ -824,8 +823,7 @@ class UserSearchParams(PaginationParams):
 
 
 class UserStatsResponse(BaseSchema):
-    """
-    Response schema for comprehensive user statistics and analytics reporting.
+    """Response schema for comprehensive user statistics and analytics reporting.
 
     Provides detailed user analytics and system statistics for administrative
     dashboards, monitoring, and reporting purposes. Implements comprehensive
@@ -877,6 +875,7 @@ class UserStatsResponse(BaseSchema):
             users_created_this_week=89,
             users_created_this_month=284
         )
+
     """
 
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)

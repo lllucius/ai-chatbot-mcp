@@ -1,5 +1,4 @@
-"""
-Administrative and database response schemas.
+"""Administrative and database response schemas.
 
 This module contains response schemas for administrative operations, database management,
 and system monitoring that were previously scattered across common.py.
@@ -36,6 +35,7 @@ class DatabaseStatusResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -61,6 +61,7 @@ class DatabaseTablesResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -88,6 +89,7 @@ class DatabaseMigrationsResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -115,6 +117,7 @@ class DatabaseAnalysisResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -143,6 +146,7 @@ class DatabaseQueryResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -167,6 +171,7 @@ class SearchResponse(BaseModel):
     data: Dict[str, Any] = Field(..., description="Search results data")
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
         return json.dumps(data)
@@ -182,6 +187,7 @@ class RegistryStatsResponse(BaseModel):
     data: Dict[str, Any] = Field(..., description="Registry statistics data")
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
         return json.dumps(data)
@@ -196,6 +202,7 @@ class ConversationStatsResponse(BaseModel):
     data: Dict[str, Any] = Field(..., description="Conversation statistics data")
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
         return json.dumps(data)

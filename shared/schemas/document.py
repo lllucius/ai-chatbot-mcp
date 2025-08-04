@@ -1,5 +1,4 @@
-"""
-Document-related Pydantic schemas.
+"""Document-related Pydantic schemas.
 
 This module provides schemas for document management, file uploads,
 processing status, and document search operations.

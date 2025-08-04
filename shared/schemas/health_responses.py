@@ -1,5 +1,4 @@
-"""
-Pydantic response schemas for health monitoring API endpoints.
+"""Pydantic response schemas for health monitoring API endpoints.
 
 This module provides response models for all health-related endpoints that currently
 return raw dictionaries, ensuring type safety and proper API documentation.
@@ -164,6 +163,7 @@ class ServicesHealthResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -185,6 +185,7 @@ class SystemMetricsResponse(BaseModel):
     error: Optional[str] = Field(default=None, description="Error message if metrics unavailable")
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -209,6 +210,7 @@ class ReadinessResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):
@@ -241,6 +243,7 @@ class LivenessResponse(BaseModel):
     )
 
     def model_dump_json(self, **kwargs):
+        """Serialize model with ISO format timestamp handling."""
         data = self.model_dump(**kwargs)
         if "timestamp" in data and data["timestamp"] is not None:
             if isinstance(data["timestamp"], datetime):

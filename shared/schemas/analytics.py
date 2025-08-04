@@ -1,5 +1,4 @@
-"""
-Pydantic schemas for analytics APIs.
+"""Pydantic schemas for analytics APIs.
 
 This module provides analytics response schemas for system metrics,
 usage statistics, and performance monitoring.

@@ -1,5 +1,4 @@
-"""
-LLM Profile registry schemas for API requests and responses.
+"""LLM Profile registry schemas for API requests and responses.
 
 This module provides Pydantic schemas for LLM profile management
 including creation, updates, and response models.
