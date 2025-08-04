@@ -617,7 +617,7 @@ class SpinnerContext:
             await self.task
 
     async def _spin(self) -> None:
-        """Internal method to run the spinner animation.
+        """Run the spinner animation.
 
         Note:
             Runs until stop_event is set. Uses Rich console status for display.
@@ -982,6 +982,7 @@ class CommandHandler:
             self.settings.set(key, value)
 
     async def cmd_llmparam(self, args: List[str]) -> None:
+        """Handle /llmparam command to set or display LLM parameters."""
         if not args:
             self.settings.display_llm_params()
         elif len(args) == 2:
@@ -999,6 +1000,7 @@ class CommandHandler:
             print_warn("Usage: /llmparam <key> <value>")
 
     async def cmd_llmsave(self, args: List[str]) -> None:
+        """Handle /llmsave command to save current LLM parameter overrides as a profile."""
         if not self.settings.llm_overrides:
             print_warn("No overrides to save. Use /llmparam to set some first.")
             return
@@ -1024,6 +1026,7 @@ class CommandHandler:
             self.display_api_error(e)
 
     async def cmd_user(self, args: List[str]) -> None:
+        """Handle /user command for user management operations."""
         if not args:
             print_warn("Usage: /user <list|show|update|password> ...")
             return
@@ -1062,6 +1065,7 @@ class CommandHandler:
             print_warn("Unknown user command.")
 
     async def cmd_mcp(self, args: List[str]) -> None:
+        """Handle /mcp command for MCP server management operations."""
         if not args:
             print_warn("Usage: /mcp <list|add|enable|disable|remove|test> ...")
             return
@@ -1102,6 +1106,7 @@ class CommandHandler:
             print_warn("Unknown MCP command.")
 
     async def cmd_search(self, args: List[str]) -> None:
+        """Handle /search command to search documents and conversation history."""
         if not args:
             print_warn("Usage: /search <text>")
             return
@@ -1124,6 +1129,7 @@ class CommandHandler:
             pass
 
     async def cmd_prompt(self, args: List[str]) -> None:
+        """Handle /prompt command for prompt template management operations."""
         if not args:
             print_warn("Usage: /prompt <list|show|create|delete> ...")
             return
@@ -1160,6 +1166,7 @@ class CommandHandler:
             print_warn("Unknown prompt command.")
 
     async def cmd_profile(self, args: List[str]) -> None:
+        """Handle /profile command for LLM profile management operations."""
         if not args:
             print_warn("Usage: /profile <list|show|delete> ...")
             return
@@ -1189,6 +1196,7 @@ class CommandHandler:
             print_warn("Unknown profile command.")
 
     async def cmd_documents(self, args: List[str]) -> None:
+        """Handle /documents command for document management operations."""
         if not args:
             print_warn("Usage: /documents <list|show|delete> ...")
             return
@@ -1225,6 +1233,7 @@ class CommandHandler:
             print_warn("Unknown documents command.")
 
     async def cmd_analytics(self, args: List[str]) -> None:
+        """Handle /analytics command to view system analytics and usage data."""
         if not args:
             print_warn("Usage: /analytics <overview|usage> ...")
             return
@@ -1239,6 +1248,7 @@ class CommandHandler:
             print_warn("Unknown analytics command.")
 
     async def cmd_db(self, args: List[str]) -> None:
+        """Handle /db command to view database status and table information."""
         if not args:
             print_warn("Usage: /db <status|tables> ...")
             return
@@ -1253,6 +1263,7 @@ class CommandHandler:
             print_warn("Unknown db command.")
 
     async def cmd_export(self, args: List[str]) -> None:
+        """Handle /export command to export conversations and analytics data."""
         if not args:
             print_warn("Usage: /export <conversations|analytics> ...")
             return
@@ -1283,6 +1294,7 @@ class CommandHandler:
             print_warn("Unknown export command.")
 
     async def cmd_about(self) -> None:
+        """Handle /about command to display version and system information."""
         cli_ver = "1.0.0"  # You can make this dynamic later
         try:
             # Try to get server version from health endpoint or similar
@@ -1294,6 +1306,7 @@ class CommandHandler:
         console.print(Panel(msg, title="About", box=box.SIMPLE))
 
     def cmd_history(self) -> None:
+        """Handle /history command to display conversation history."""
         if not self.history:
             print_info("No history in this session yet.")
             return
@@ -1303,6 +1316,7 @@ class CommandHandler:
         console.print(t)
 
     def display_api_error(self, e: ApiError) -> None:
+        """Display formatted API error information to the user."""
         print_error(f"HTTP {e.status} {e.reason} {e.url}")
         if e.body:
             try:
@@ -1362,7 +1376,7 @@ def get_user_input() -> str:
 async def chat_loop(
     sdk: AIChatbotSDK, settings: Settings, handler: Any, history: List[str]
 ) -> None:
-    """Main interactive chat loop for processing user input and AI responses.
+    """Process interactive chat loop for user input and AI responses.
 
     Args:
         sdk: AIChatbotSDK instance for API communication.
@@ -1551,7 +1565,7 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
 
     """
     def _exit_handler():
-        """Internal signal handler for graceful exit.
+        """Handle signal for graceful exit.
 
         Note:
             Prints exit message and terminates with exit code 0.
@@ -1568,7 +1582,7 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
 
 
 async def main() -> None:
-    """Main entry point for the chatbot CLI application.
+    """Run main entry point for the chatbot CLI application.
 
     Note:
         Initializes all components, handles authentication, and starts the chat loop.

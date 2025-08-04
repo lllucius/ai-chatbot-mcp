@@ -127,9 +127,7 @@ async def create_prompt(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
 ) -> PromptResponse:
-    """
-    Create a new prompt template in the registry.
-    """
+    """Create a new prompt template in the registry."""
     log_api_call("create_prompt", user_id=current_user.id)
 
     prompt = await prompt_service.create_prompt(request)
@@ -158,9 +156,7 @@ async def update_prompt(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
 ) -> PromptResponse:
-    """
-    Update an existing prompt template.
-    """
+    """Update an existing prompt template."""
     log_api_call("update_prompt", user_id=current_user.id, prompt_name=prompt_name)
 
     prompt = await prompt_service.update_prompt(prompt_name, data.model_dump(exclude_unset=True))
@@ -175,9 +171,7 @@ async def delete_prompt(
     current_user: User = Depends(get_current_user),
     prompt_service: PromptService = Depends(get_prompt_service),
 ):
-    """
-    Delete a prompt template from the registry.
-    """
+    """Delete a prompt template from the registry."""
     log_api_call("delete_prompt", user_id=current_user.id, prompt_name=prompt_name)
 
     await prompt_service.delete_prompt(prompt_name)

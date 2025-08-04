@@ -211,6 +211,7 @@ class ValidationError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize ValidationError with message and validation details."""
         super().__init__(message, "VALIDATION_ERROR", details)
 
 
@@ -270,6 +271,7 @@ class AuthenticationError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize AuthenticationError with message and authentication details."""
         super().__init__(message, "AUTHENTICATION_ERROR", details)
 
 
@@ -330,6 +332,7 @@ class AuthorizationError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize AuthorizationError with message and authorization details."""
         super().__init__(message, "AUTHORIZATION_ERROR", details)
 
 
@@ -389,6 +392,7 @@ class NotFoundError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize NotFoundError with message and resource details."""
         super().__init__(message, "NOT_FOUND_ERROR", details)
 
 
@@ -450,6 +454,7 @@ class DocumentError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize DocumentError with message and document processing details."""
         super().__init__(message, "DOCUMENT_ERROR", details)
 
 
@@ -510,6 +515,7 @@ class EmbeddingError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize EmbeddingError with message and embedding details."""
         super().__init__(message, "EMBEDDING_ERROR", details)
 
 
@@ -571,6 +577,7 @@ class ExternalServiceError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize ExternalServiceError with message and service details."""
         super().__init__(message, "EXTERNAL_SERVICE_ERROR", details)
 
 
@@ -631,6 +638,7 @@ class ConfigurationError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize ConfigurationError with message and configuration details."""
         super().__init__(message, "CONFIGURATION_ERROR", details)
 
 
@@ -692,6 +700,7 @@ class RateLimitError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize RateLimitError with message and rate limit details."""
         super().__init__(message, "RATE_LIMIT_ERROR", details)
 
 
@@ -753,4 +762,5 @@ class SearchError(ChatbotPlatformException):
     """
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """Initialize SearchError with message and search details."""
         super().__init__(message, "SEARCH_ERROR", details)

@@ -1,6 +1,4 @@
-"""
-Updated exception handlers with proper response formatting.
-"""
+"""Updated exception handlers with proper response formatting."""
 
 import logging
 

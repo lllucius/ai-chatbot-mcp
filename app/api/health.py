@@ -66,7 +66,7 @@ router = APIRouter()
 @router.get("/", response_model=APIResponse)
 @handle_api_errors("Basic health check failed")
 async def basic_health_check():
-    """Basic health check endpoint for load balancers and monitoring."""
+    """Provide basic health check endpoint for load balancers and monitoring."""
     log_api_call("basic_health_check")
     return SuccessResponse.create(
         data={
