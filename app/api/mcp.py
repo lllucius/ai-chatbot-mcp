@@ -720,11 +720,7 @@ async def test_tool(
             message=f"Tool '{tool_name}' test completed successfully"
         )
     except Exception as e:
-        return ErrorResponse.create(
-            error_code="MCP_TOOL_TEST_FAILED",
-            message=f"Tool '{tool_name}' test failed: {str(e)}",
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
+        raise
 
 
 @router.get("/servers/status", response_model=MCPStatsResponse)

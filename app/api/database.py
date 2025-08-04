@@ -1223,5 +1223,5 @@ async def execute_custom_query(
             timestamp=datetime.utcnow(),
         )
     except Exception as e:
-        raise e
+        raise
 
