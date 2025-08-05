@@ -3,13 +3,60 @@
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from shared.schemas.admin_responses import (
+    ConversationStatsResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+)
+from shared.schemas.common import (
+    APIResponse,
+)
+from shared.schemas.conversation import (
+    ChatRequest,
+    ChatResponse,
+    ConversationCreate,
+    ConversationResponse,
+    ConversationStats,
+    ConversationUpdate,
+    MessageResponse,
+    StreamCompleteResponse,
+    StreamContentResponse,
+    StreamEndResponse,
+    StreamErrorResponse,
+    StreamStartResponse,
+    StreamToolCallResponse,
+)
+from shared.schemas.conversation_responses import (
+    ConversationExportData,
+    ConversationExportDataCSV,
+    ConversationExportDataJSON,
+    ConversationExportDataText,
+    ConversationMetadata,
+    ExportedMessage,
+    ExportInfo,
+)
+from shared.schemas.user import UserResponse
+from shared.schemas.search_responses import (
+    SearchSuggestion,
+    SearchSuggestionData,
+    SearchHistoryData,
+)
+from pydantic import BaseModel, Field
+
+from ..database import AsyncSessionLocal, get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.conversation import Conversation, Message
+from ..models.user import User
+from ..services.conversation import ConversationService
+from ..utils.api_errors import handle_api_errors, log_api_call
 
 from shared.schemas.admin_responses import (
     ConversationStatsResponse,
@@ -46,6 +93,18 @@ from shared.schemas.conversation_responses import (
     ExportedMessage,
     ExportInfo,
 )
+from shared.schemas.common import APIResponse
+from shared.schemas.conversation import MessageResponse, ConversationResponse
+from shared.schemas.conversation_responses import (
+    ConversationExportData,
+    ConversationExportDataCSV,
+    ConversationExportDataJSON,
+    ConversationExportDataText,
+    ConversationMetadata,
+    ExportInfo,
+)
+from shared.schemas.conversation import ConversationStats
+from shared.schemas.admin_responses import RegistryStatsResponse
 
 from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
@@ -64,13 +123,13 @@ async def get_conversation_service(
     return ConversationService(db)
 
 
-@router.post("/", response_model=ConversationResponse)
+@router.post("/", response_model=APIResponse[ConversationResponse])
 @handle_api_errors("Failed to create conversation")
 async def create_conversation(
     request: ConversationCreate,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[ConversationResponse]:
     """Create a new conversation."""
     log_api_call(
         "create_conversation", user_id=str(current_user.id), title=request.title
@@ -79,10 +138,15 @@ async def create_conversation(
     conversation = await conversation_service.create_conversation(
         request, current_user.id
     )
-    return ConversationResponse.model_validate(conversation)
+    payload = ConversationResponse.model_validate(conversation)
+    return APIResponse[ConversationResponse](
+        success=True,
+        message="Conversation created successfully",
+        data=payload,
+    )
 
 
-@router.get("/", response_model=PaginatedResponse[ConversationResponse])
+@router.get("/", response_model=APIResponse[List[ConversationResponse]])
 @handle_api_errors("Failed to retrieve conversations")
 async def list_conversations(
     page: int = Query(1, ge=1),
@@ -90,7 +154,7 @@ async def list_conversations(
     active_only: bool = Query(True),
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[List[ConversationResponse]]:
     """List user's conversations with pagination and filtering."""
     log_api_call(
         "list_conversations",
@@ -108,22 +172,30 @@ async def list_conversations(
         ConversationResponse.model_validate(conv) for conv in conversations
     ]
 
-    return PaginatedResponse.create(
-        items=conversation_responses,
-        page=page,
-        size=size,
-        total=total,
+    return APIResponse[List[ConversationResponse]](
+        success=True,
         message="Conversations retrieved successfully",
+        data=conversation_responses,
+        meta={
+            "pagination": {
+                "page": page,
+                "size": size,
+                "total": total,
+                "total_pages": (total + size - 1) // size,  # Ceiling division
+                "has_next": page < ((total + size - 1) // size),
+                "has_prev": page > 1,
+            }
+        },
     )
 
 
-@router.get("/byid/{conversation_id}", response_model=ConversationResponse)
+@router.get("/byid/{conversation_id}", response_model=APIResponse[ConversationResponse])
 @handle_api_errors("Failed to retrieve conversation")
 async def get_conversation(
     conversation_id: UUID,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[ConversationResponse]:
     """Get conversation by ID."""
     log_api_call(
         "get_conversation",
@@ -134,17 +206,22 @@ async def get_conversation(
     conversation = await conversation_service.get_conversation(
         conversation_id, current_user.id
     )
-    return ConversationResponse.model_validate(conversation)
+    payload = ConversationResponse.model_validate(conversation)
+    return APIResponse[ConversationResponse](
+        success=True,
+        message="Conversation retrieved successfully",
+        data=payload,
+    )
 
 
-@router.put("/byid/{conversation_id}", response_model=ConversationResponse)
+@router.put("/byid/{conversation_id}", response_model=APIResponse[ConversationResponse])
 @handle_api_errors("Failed to update conversation")
 async def update_conversation(
     conversation_id: UUID,
     request: ConversationUpdate,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[ConversationResponse]:
     """Update conversation metadata and settings."""
     log_api_call(
         "update_conversation",
@@ -155,7 +232,12 @@ async def update_conversation(
     conversation = await conversation_service.update_conversation(
         conversation_id, request, current_user.id
     )
-    return ConversationResponse.model_validate(conversation)
+    payload = ConversationResponse.model_validate(conversation)
+    return APIResponse[ConversationResponse](
+        success=True,
+        message="Conversation updated successfully",
+        data=payload,
+    )
 
 
 @router.delete("/byid/{conversation_id}", response_model=APIResponse)
@@ -164,7 +246,7 @@ async def delete_conversation(
     conversation_id: UUID,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse:
     """Delete conversation and all associated messages."""
     log_api_call(
         "delete_conversation",
@@ -177,18 +259,21 @@ async def delete_conversation(
     )
 
     if success:
-        return SuccessResponse.create(message="Conversation deleted successfully")
+        return APIResponse(
+            success=True,
+            message="Conversation deleted successfully",
+        )
     else:
-        return ErrorResponse.create(
-            error_code="CONVERSATION_NOT_FOUND",
+        return APIResponse(
+            success=False,
             message="Conversation not found",
-            status_code=status.HTTP_404_NOT_FOUND
+            error=dict(code="CONVERSATION_NOT_FOUND"),
         )
 
 
 @router.get(
     "/byid/{conversation_id}/messages",
-    response_model=PaginatedResponse[MessageResponse],
+    response_model=APIResponse[List[MessageResponse]],
 )
 @handle_api_errors("Failed to retrieve messages")
 async def get_messages(
@@ -197,7 +282,7 @@ async def get_messages(
     size: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[List[MessageResponse]]:
     """Get paginated messages from a conversation."""
     log_api_call(
         "get_messages",
@@ -213,22 +298,30 @@ async def get_messages(
 
     message_responses = [MessageResponse.model_validate(msg) for msg in messages]
 
-    return PaginatedResponse.create(
-        items=message_responses,
-        page=page,
-        size=size,
-        total=total,
+    return APIResponse[List[MessageResponse]](
+        success=True,
         message="Messages retrieved successfully",
+        data=message_responses,
+        meta={
+            "pagination": {
+                "page": page,
+                "size": size,
+                "total": total,
+                "total_pages": (total + size - 1) // size,
+                "has_next": page < ((total + size - 1) // size),
+                "has_prev": page > 1,
+            }
+        },
     )
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=APIResponse[ChatResponse])
 @handle_api_errors("Chat processing failed")
 async def chat(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[ChatResponse]:
     """Send a message and get AI response."""
     log_api_call(
         "chat",
@@ -242,19 +335,31 @@ async def chat(
     # Process chat request with enhanced registry integration
     result = await conversation_service.process_chat(request, current_user.id)
 
-    # Calculate response time
     response_time_ms = (time.time() - start_time) * 1000
 
-    return ChatResponse(
+    # Ensure all fields are well-typed
+    ai_message = MessageResponse.model_validate(result["ai_message"])
+    conversation = ConversationResponse.model_validate(result["conversation"])
+    usage = result.get("usage")
+    rag_context = result.get("rag_context")
+    tool_calls_made = result.get("tool_calls_made")
+    tool_call_summary = result.get("tool_call_summary")
+
+    payload = ChatResponse(
         success=True,
         message="Chat response generated successfully with registry integration",
-        ai_message=result["ai_message"],
-        conversation=result["conversation"],
-        usage=result.get("usage"),
-        rag_context=result.get("rag_context"),
-        tool_calls_made=result.get("tool_calls_made"),
-        tool_call_summary=result.get("tool_call_summary"),
+        ai_message=ai_message,
+        conversation=conversation,
+        usage=usage,
+        rag_context=rag_context,
+        tool_calls_made=tool_calls_made,
+        tool_call_summary=tool_call_summary,
         response_time_ms=response_time_ms,
+    )
+    return APIResponse[ChatResponse](
+        success=True,
+        message="Chat response generated successfully",
+        data=payload,
     )
 
 
@@ -287,23 +392,28 @@ async def chat_stream(
                     request, current_user.id
                 ):
                     if chunk.get("type") == "content":
-                        # Stream content chunks
                         content_event = StreamContentResponse(
                             content=chunk.get("content", "")
                         )
                         yield f"data: {json.dumps(content_event.model_dump())}\n\n"
                     elif chunk.get("type") == "tool_call":
-                        # Stream tool call information
                         tool_event = StreamToolCallResponse(
                             tool=chunk.get("tool"), result=chunk.get("result")
                         )
                         yield f"data: {json.dumps(tool_event.model_dump())}\n\n"
                     elif chunk.get("type") == "complete":
-                        # Send completion event with full response
                         response_data = chunk.get("response", {})
+
+                        # Properly validate ai_message and conversation fields
                         for k, v in response_data.items():
-                            if k in ("ai_message", "conversation"):
-                                response_data[k] = v.model_dump(mode="json")
+                            if k == "ai_message":
+                                response_data[k] = (
+                                    MessageResponse.model_validate(v).model_dump(mode="json")
+                                )
+                            elif k == "conversation":
+                                response_data[k] = (
+                                    ConversationResponse.model_validate(v).model_dump(mode="json")
+                                )
                             elif k == "rag_context":
                                 if v:
                                     ctx = []
@@ -319,25 +429,21 @@ async def chat_stream(
                                 else:
                                     response_data[k] = {}
                             else:
-                                e = f"Unexpected key value: {k}"
-                                error_event = StreamErrorResponse(error=str(e))
+                                error_event = StreamErrorResponse(error=f"Unexpected key value: {k}")
                                 yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                         complete_event = StreamCompleteResponse(response=response_data)
                         yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
                         break
                     elif chunk.get("type") == "error":
-                        # Send error event
                         error_event = StreamErrorResponse(
                             error=chunk.get("error", "Unknown error")
                         )
                         yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                         break
             except Exception as e:
-                # Send error event for any unhandled exceptions
                 error_event = StreamErrorResponse(error=str(e))
                 yield f"data: {json.dumps(error_event.model_dump())}\n\n"
 
-            # Send end event
             end_event = StreamEndResponse()
             yield f"data: {json.dumps(end_event.model_dump())}\n\n"
 
@@ -352,12 +458,12 @@ async def chat_stream(
     )
 
 
-@router.get("/stats", response_model=ConversationStats)
+@router.get("/stats", response_model=APIResponse[ConversationStats])
 @handle_api_errors("Failed to retrieve conversation stats")
 async def get_conversation_stats(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[ConversationStats]:
     """
     Get conversation statistics for the current user with registry insights.
 
@@ -367,15 +473,20 @@ async def get_conversation_stats(
     log_api_call("get_conversation_stats", user_id=str(current_user.id))
 
     stats = await conversation_service.get_user_stats(current_user.id)
-    return ConversationStats.model_validate(stats)
+    payload = ConversationStats.model_validate(stats)
+    return APIResponse[ConversationStats](
+        success=True,
+        message="Conversation stats retrieved successfully",
+        data=payload,
+    )
 
 
-@router.get("/registry-stats", response_model=RegistryStatsResponse)
+@router.get("/registry-stats", response_model=APIResponse[RegistryStatsResponse])
 @handle_api_errors("Failed to retrieve registry statistics")
 async def get_registry_stats(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-) -> RegistryStatsResponse:
+) -> APIResponse[RegistryStatsResponse]:
     """
     Get registry statistics showing prompt, profile, and tool usage.
 
@@ -387,11 +498,15 @@ async def get_registry_stats(
     log_api_call("get_registry_stats", user_id=str(current_user.id))
 
     registry_stats = await conversation_service._get_registry_stats()
-
-    return RegistryStatsResponse(
+    payload = RegistryStatsResponse(
         success=True,
         message="Registry statistics retrieved successfully",
         data=registry_stats,
+    )
+    return APIResponse[RegistryStatsResponse](
+        success=True,
+        message="Registry statistics retrieved successfully",
+        data=payload,
     )
 
 
@@ -407,7 +522,7 @@ async def export_conversation(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[ConversationExportData]:
     """Export a conversation to various formats."""
     log_api_call(
         "export_conversation",
@@ -416,216 +531,191 @@ async def export_conversation(
         format=format,
     )
 
-    try:
-        # Get conversation with permission check
-        conversation = await conversation_service.get_conversation(conversation_id)
-        if not conversation:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
-            )
-
-        # Check permissions
-        if conversation.user_id != current_user.id and not current_user.is_superuser:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied to this conversation",
-            )
-
-        # Get messages
-        messages_query = (
-            select(Message)
-            .where(Message.conversation_id == conversation_id)
-            .order_by(Message.created_at)
+    # Get conversation with permission check
+    conversation = await conversation_service.get_conversation(conversation_id)
+    if not conversation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
         )
 
-        result = await db.execute(messages_query)
-        messages = result.scalars().all()
+    # Check permissions
+    if conversation.user_id != current_user.id and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this conversation",
+        )
 
-        # Export data based on format
-        if format == "json":
-            # Create conversation metadata if requested
-            conversation_metadata = None
-            if include_metadata:
-                conversation_metadata = ConversationMetadata(
-                    id=str(conversation.id),
-                    title=conversation.title,
-                    created_at=conversation.created_at.isoformat(),
-                    updated_at=(
-                        conversation.updated_at.isoformat()
-                        if conversation.updated_at
-                        else None
-                    ),
-                    is_active=conversation.is_active,
-                    message_count=len(messages),
-                )
+    # Get messages
+    messages_query = (
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at)
+    )
 
-            # Create exported messages
-            exported_messages = []
-            for msg in messages:
-                exported_message = ExportedMessage(
-                    id=str(msg.id),
-                    role=msg.role,
-                    content=msg.content,
-                    created_at=msg.created_at.isoformat(),
-                    tool_calls=msg.tool_calls,
-                    tool_call_id=msg.tool_call_id,
-                    name=msg.name,
-                )
-                exported_messages.append(exported_message)
+    result = await db.execute(messages_query)
+    messages = result.scalars().all()
 
-            # Create the export data structure using proper ConversationExportDataJSON
-            if include_metadata and conversation_metadata:
-                export_data_json = ConversationExportDataJSON(
-                    conversation=conversation_metadata,
-                    messages=exported_messages,
-                )
-            else:
-                # Create empty conversation metadata for consistency
-                empty_metadata = ConversationMetadata(
-                    id=str(conversation.id),
-                    title=conversation.title,
-                    created_at=conversation.created_at.isoformat(),
-                    updated_at=(
-                        conversation.updated_at.isoformat()
-                        if conversation.updated_at
-                        else None
-                    ),
-                    is_active=conversation.is_active,
-                    message_count=len(messages),
-                )
-                export_data_json = ConversationExportDataJSON(
-                    conversation=empty_metadata,
-                    messages=exported_messages,
-                )
+    export_info = ExportInfo(
+        format=format,
+        exported_at=datetime.utcnow().isoformat(),
+        message_count=len(messages),
+        includes_metadata=include_metadata,
+    )
 
-            export_info = ExportInfo(
-                format=format,
-                exported_at=datetime.utcnow().isoformat(),
-                message_count=len(messages),
-                includes_metadata=include_metadata,
-            )
-
-            response_payload = ConversationExportData(
-                data=export_data_json,
-                export_info=export_info,
-            )
-
-            return APIResponse[ConversationExportData](
-                success=True,
-                message="Conversation exported successfully in JSON format",
-                data=response_payload,
-            )
-
-        elif format == "txt":
-            # Plain text format
-            lines = []
-
-            if include_metadata:
-                lines.append(f"Conversation: {conversation.title}")
-                lines.append(
-                    f"Created: {conversation.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
-                )
-                lines.append(f"Messages: {len(messages)}")
-                lines.append("-" * 50)
-                lines.append("")
-
-            for msg in messages:
-                timestamp = msg.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                lines.append(f"[{timestamp}] {msg.role.upper()}: {msg.content}")
-                lines.append("")
-
-            text_content = "\n".join(lines)
-
-            # Create properly structured text export data
-            export_data_text = ConversationExportDataText(
-                content=text_content,
-                format="text",
-            )
-
-            export_info = ExportInfo(
-                format=format,
-                exported_at=datetime.utcnow().isoformat(),
-                message_count=len(messages),
-                includes_metadata=include_metadata,
-            )
-
-            return APIResponse[ConversationExportData](
-                success=True,
-                message="Conversation exported successfully in text format",
-                data=ConversationExportData(
-                    data=export_data_text,
-                    export_info=export_info,
+    if format == "json":
+        # Create conversation metadata if requested
+        conversation_metadata = None
+        if include_metadata:
+            conversation_metadata = ConversationMetadata(
+                id=str(conversation.id),
+                title=conversation.title,
+                created_at=conversation.created_at.isoformat(),
+                updated_at=(
+                    conversation.updated_at.isoformat()
+                    if conversation.updated_at
+                    else None
                 ),
-            )
-
-        elif format == "csv":
-            # CSV format
-            csv_lines = []
-
-            if include_metadata:
-                csv_lines.append("# Conversation Export")
-                csv_lines.append(f"# Title: {conversation.title}")
-                csv_lines.append(f"# Created: {conversation.created_at.isoformat()}")
-                csv_lines.append(f"# Messages: {len(messages)}")
-                csv_lines.append("")
-
-            # CSV header
-            csv_lines.append("timestamp,role,content,tool_calls,tool_call_id,name")
-
-            for msg in messages:
-                # Escape CSV content
-                content = msg.content.replace('"', '""') if msg.content else ""
-                tool_calls = json.dumps(msg.tool_calls) if msg.tool_calls else ""
-
-                csv_lines.append(
-                    f'"{msg.created_at.isoformat()}","{msg.role}","{content}",'
-                    f'"{tool_calls}","{msg.tool_call_id or ""}","{msg.name or ""}"'
-                )
-
-            csv_content = "\n".join(csv_lines)
-
-            # Create properly structured CSV export data
-            export_data_csv = ConversationExportDataCSV(
-                content=csv_content,
-                format="csv",
-            )
-
-            export_info = ExportInfo(
-                format=format,
-                exported_at=datetime.utcnow().isoformat(),
+                is_active=conversation.is_active,
                 message_count=len(messages),
-                includes_metadata=include_metadata,
             )
 
-            return APIResponse[ConversationExportData](
-                success=True,
-                message="Conversation exported successfully in CSV format",
-                data=ConversationExportData(
-                    data=export_data_csv,
-                    export_info=export_info,
-                ),
+        exported_messages = [
+            ExportedMessage(
+                id=str(msg.id),
+                role=msg.role,
+                content=msg.content,
+                created_at=msg.created_at.isoformat(),
+                tool_calls=msg.tool_calls,
+                tool_call_id=msg.tool_call_id,
+                name=msg.name,
             )
+            for msg in messages
+        ]
 
+        # Use empty metadata if not included
+        if include_metadata and conversation_metadata:
+            export_data_json = ConversationExportDataJSON(
+                conversation=conversation_metadata,
+                messages=exported_messages,
+            )
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid export format. Use: json, txt, or csv",
+            empty_metadata = ConversationMetadata(
+                id=str(conversation.id),
+                title=conversation.title,
+                created_at=conversation.created_at.isoformat(),
+                updated_at=(
+                    conversation.updated_at.isoformat()
+                    if conversation.updated_at
+                    else None
+                ),
+                is_active=conversation.is_active,
+                message_count=len(messages),
+            )
+            export_data_json = ConversationExportDataJSON(
+                conversation=empty_metadata,
+                messages=exported_messages,
             )
 
-    except HTTPException:
-        raise
-    except Exception:
-        raise
+        response_payload = ConversationExportData(
+            data=export_data_json,
+            export_info=export_info,
+        )
+
+        return APIResponse[ConversationExportData](
+            success=True,
+            message="Conversation exported successfully in JSON format",
+            data=response_payload,
+        )
+
+    elif format == "txt":
+        lines = []
+
+        if include_metadata:
+            lines.append(f"Conversation: {conversation.title}")
+            lines.append(
+                f"Created: {conversation.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+            lines.append(f"Messages: {len(messages)}")
+            lines.append("-" * 50)
+            lines.append("")
+
+        for msg in messages:
+            timestamp = msg.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            lines.append(f"[{timestamp}] {msg.role.upper()}: {msg.content}")
+            lines.append("")
+
+        text_content = "\n".join(lines)
+
+        export_data_text = ConversationExportDataText(
+            content=text_content,
+            format="text",
+        )
+
+        response_payload = ConversationExportData(
+            data=export_data_text,
+            export_info=export_info,
+        )
+
+        return APIResponse[ConversationExportData](
+            success=True,
+            message="Conversation exported successfully in text format",
+            data=response_payload,
+        )
+
+    elif format == "csv":
+        csv_lines = []
+
+        if include_metadata:
+            csv_lines.append("# Conversation Export")
+            csv_lines.append(f"# Title: {conversation.title}")
+            csv_lines.append(f"# Created: {conversation.created_at.isoformat()}")
+            csv_lines.append(f"# Messages: {len(messages)}")
+            csv_lines.append("")
+
+        csv_lines.append("timestamp,role,content,tool_calls,tool_call_id,name")
+
+        for msg in messages:
+            content = msg.content.replace('"', '""') if msg.content else ""
+            tool_calls = json.dumps(msg.tool_calls) if msg.tool_calls else ""
+
+            csv_lines.append(
+                f'"{msg.created_at.isoformat()}","{msg.role}","{content}",'
+                f'"{tool_calls}","{msg.tool_call_id or ""}","{msg.name or ""}"'
+            )
+
+        csv_content = "\n".join(csv_lines)
+
+        export_data_csv = ConversationExportDataCSV(
+            content=csv_content,
+            format="csv",
+        )
+
+        response_payload = ConversationExportData(
+            data=export_data_csv,
+            export_info=export_info,
+        )
+
+        return APIResponse[ConversationExportData](
+            success=True,
+            message="Conversation exported successfully in CSV format",
+            data=response_payload,
+        )
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid export format. Use: json, txt, or csv",
+        )
 
 
-@router.post("/conversations/import", response_model=APIResponse)
+@router.post("/conversations/import", response_model=APIResponse[ImportConversationResult])
 @handle_api_errors("Failed to import conversation")
 async def import_conversation(
     file: UploadFile = File(...),
     title: Optional[str] = Query(None, description="Override conversation title"),
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-):
+) -> APIResponse[ImportConversationResult]:
     """Import a conversation from a JSON file."""
     log_api_call("import_conversation", user_id=str(current_user.id))
 
@@ -670,8 +760,6 @@ async def import_conversation(
             f"Imported conversation {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
         )
 
-        from shared.schemas.conversation import ConversationCreate
-
         conversation_create = ConversationCreate(title=conv_title)
 
         new_conversation = await conversation_service.create_conversation(
@@ -684,15 +772,11 @@ async def import_conversation(
 
         for msg_data in messages_data:
             try:
-                # Validate message structure
                 required_fields = ["role", "content"]
-                for field in required_fields:
-                    if field not in msg_data:
-                        errors.append(f"Message missing required field: {field}")
-                        continue
-
-                # Create message
-                from ..models.conversation import Message
+                missing_field = next((field for field in required_fields if field not in msg_data), None)
+                if missing_field:
+                    errors.append(f"Message missing required field: {missing_field}")
+                    continue
 
                 message = Message(
                     conversation_id=new_conversation.id,
@@ -711,15 +795,18 @@ async def import_conversation(
 
         await conversation_service.db.commit()
 
-        return SuccessResponse.create(
-            data={
-                "conversation_id": str(new_conversation.id),
-                "conversation_title": conv_title,
-                "imported_messages": imported_count,
-                "total_messages": len(messages_data),
-                "errors": errors[:5],  # Limit error reporting
-            },
-            message=f"Conversation imported successfully with {imported_count} messages"
+        result = ImportConversationResult(
+            conversation_id=str(new_conversation.id),
+            conversation_title=conv_title,
+            imported_messages=imported_count,
+            total_messages=len(messages_data),
+            errors=errors[:5],
+        )
+
+        return APIResponse[ImportConversationResult](
+            success=True,
+            message=f"Conversation imported successfully with {imported_count} messages",
+            data=result,
         )
 
     except HTTPException:
@@ -729,7 +816,7 @@ async def import_conversation(
         raise
 
 
-@router.post("/conversations/archive", response_model=APIResponse)
+@router.post("/conversations/archive", response_model=APIResponse[ArchivePreviewResponse | ArchiveConversationsResult])
 @handle_api_errors("Failed to archive conversations")
 async def archive_conversations(
     older_than_days: int = Query(
@@ -743,7 +830,7 @@ async def archive_conversations(
     ),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[ArchivePreviewResponse | ArchiveConversationsResult]:
     """Archive old conversations by marking them as inactive."""
     log_api_call(
         "archive_conversations",
@@ -754,72 +841,69 @@ async def archive_conversations(
     )
 
     try:
-        # Build query
         cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
         query = select(Conversation).where(Conversation.created_at < cutoff_date)
 
         if inactive_only:
-            query = query.where(Conversation.is_active is False)
+            query = query.where(Conversation.is_active.is_(False))
         else:
-            query = query.where(Conversation.is_active is True)
+            query = query.where(Conversation.is_active.is_(True))
 
-        # Get conversations to archive
         result = await db.execute(query)
         conversations = result.scalars().all()
 
+        criteria = {
+            "older_than_days": older_than_days,
+            "inactive_only": inactive_only,
+            "cutoff_date": cutoff_date.isoformat(),
+        }
+
         if dry_run:
-            # Return preview
-            preview = []
-            for conv in conversations[:10]:  # Limit preview
-                # Get message count
+            preview_items = []
+            for conv in conversations[:10]:
                 msg_count = await db.scalar(
                     select(func.count(Message.id)).where(
                         Message.conversation_id == conv.id
                     )
                 )
-
-                preview.append(
-                    {
-                        "id": str(conv.id),
-                        "title": conv.title,
-                        "created_at": conv.created_at.isoformat(),
-                        "is_active": conv.is_active,
-                        "message_count": msg_count or 0,
-                    }
+                preview_items.append(
+                    ArchivePreviewItem(
+                        id=str(conv.id),
+                        title=conv.title,
+                        created_at=conv.created_at.isoformat(),
+                        is_active=conv.is_active,
+                        message_count=msg_count or 0,
+                    )
                 )
 
-            return SuccessResponse.create(
-                data={
-                    "total_count": len(conversations),
-                    "preview": preview,
-                    "criteria": {
-                        "older_than_days": older_than_days,
-                        "inactive_only": inactive_only,
-                        "cutoff_date": cutoff_date.isoformat(),
-                    },
-                },
-                message=f"Dry run: {len(conversations)} conversations would be archived"
+            preview = ArchivePreviewResponse(
+                total_count=len(conversations),
+                preview=preview_items,
+                criteria=criteria,
+            )
+
+            return APIResponse[ArchivePreviewResponse](
+                success=True,
+                message=f"Dry run: {len(conversations)} conversations would be archived",
+                data=preview,
             )
         else:
-            # Actually archive conversations
             archived_count = 0
-
             for conv in conversations:
                 conv.is_active = False
                 archived_count += 1
 
             await db.commit()
 
-            return SuccessResponse.create(
-                data={
-                    "archived_count": archived_count,
-                    "criteria": {
-                        "older_than_days": older_than_days,
-                        "inactive_only": inactive_only,
-                        "cutoff_date": cutoff_date.isoformat(),
-                    },
-                },
-                message=f"Archived {archived_count} conversations successfully"
+            result = ArchiveConversationsResult(
+                archived_count=archived_count,
+                criteria=criteria,
+            )
+
+            return APIResponse[ArchiveConversationsResult](
+                success=True,
+                message=f"Archived {archived_count} conversations successfully",
+                data=result,
             )
 
     except Exception:
@@ -827,7 +911,7 @@ async def archive_conversations(
         raise
 
 
-@router.get("/conversations/search", response_model=SearchResponse)
+@router.get("/conversations/search", response_model=APIResponse[ConversationSearchData])
 @handle_api_errors("Failed to search conversations")
 async def search_conversations_and_messages(
     query: str = Query(..., description="Search query"),
@@ -839,48 +923,35 @@ async def search_conversations_and_messages(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[ConversationSearchData]:
     """Search conversations and messages with advanced filtering options."""
     log_api_call("search_conversations", user_id=str(current_user.id), query=query)
 
     try:
-        # Build base query
         base_query = select(Conversation).join(User, Conversation.user_id == User.id)
 
-        # Permission check for non-superusers
         if not current_user.is_superuser:
             base_query = base_query.where(Conversation.user_id == current_user.id)
 
-        # Build filters
         filters = []
-
-        # Text search in conversation titles
         title_filter = Conversation.title.ilike(f"%{query}%")
         search_filters = [title_filter]
 
-        # Search in message content if requested
         if search_messages:
-            # Subquery for conversations with matching messages
             message_subquery = (
                 select(Message.conversation_id)
                 .where(Message.content.ilike(f"%{query}%"))
                 .distinct()
             )
-
             message_filter = Conversation.id.in_(message_subquery)
             search_filters.append(message_filter)
 
         filters.append(or_(*search_filters))
 
-        # User filter
         if user_filter:
             filters.append(User.username.ilike(f"%{user_filter}%"))
-
-        # Active conversations only
         if active_only:
-            filters.append(Conversation.is_active is True)
-
-        # Date range filters
+            filters.append(Conversation.is_active.is_(True))
         if date_from:
             try:
                 date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
@@ -890,7 +961,6 @@ async def search_conversations_and_messages(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid date_from format. Use YYYY-MM-DD",
                 )
-
         if date_to:
             try:
                 date_to_obj = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
@@ -901,31 +971,22 @@ async def search_conversations_and_messages(
                     detail="Invalid date_to format. Use YYYY-MM-DD",
                 )
 
-        # Apply filters
         if filters:
             base_query = base_query.where(and_(*filters))
-
-        # Add ordering and limit
         base_query = base_query.order_by(Conversation.updated_at.desc()).limit(limit)
 
-        # Execute query
         result = await db.execute(base_query)
         conversations = result.scalars().all()
 
-        # Format results with message context
-        results = []
+        search_results: List[ConversationSearchResult] = []
         for conv in conversations:
-            # Get user info
             user_result = await db.execute(select(User).where(User.id == conv.user_id))
             user = user_result.scalar_one_or_none()
-
-            # Get message count
             msg_count = await db.scalar(
                 select(func.count(Message.id)).where(Message.conversation_id == conv.id)
             )
 
-            # Get matching messages if searching content
-            matching_messages = []
+            matching_messages: List[ConversationSearchMatchingMessage] = []
             if search_messages:
                 message_query = (
                     select(Message)
@@ -936,17 +997,14 @@ async def search_conversations_and_messages(
                         )
                     )
                     .order_by(Message.created_at)
-                    .limit(3)  # Limit to 3 matching messages per conversation
+                    .limit(3)
                 )
-
                 msg_result = await db.execute(message_query)
                 messages = msg_result.scalars().all()
-
                 for msg in messages:
-                    # Highlight matching text (simple approach)
                     content = msg.content
+                    excerpt = ""
                     if query.lower() in content.lower():
-                        # Find the position and create excerpt
                         pos = content.lower().find(query.lower())
                         start = max(0, pos - 50)
                         end = min(len(content), pos + len(query) + 50)
@@ -959,48 +1017,51 @@ async def search_conversations_and_messages(
                         excerpt = content[:100] + ("..." if len(content) > 100 else "")
 
                     matching_messages.append(
-                        {
-                            "id": str(msg.id),
-                            "role": msg.role,
-                            "excerpt": excerpt,
-                            "created_at": msg.created_at.isoformat(),
-                        }
+                        ConversationSearchMatchingMessage(
+                            id=str(msg.id),
+                            role=msg.role,
+                            excerpt=excerpt,
+                            created_at=msg.created_at.isoformat(),
+                        )
                     )
 
-            results.append(
-                {
-                    "id": str(conv.id),
-                    "title": conv.title,
-                    "created_at": conv.created_at.isoformat(),
-                    "updated_at": (
-                        conv.updated_at.isoformat() if conv.updated_at else None
+            search_results.append(
+                ConversationSearchResult(
+                    id=str(conv.id),
+                    title=conv.title,
+                    created_at=conv.created_at.isoformat(),
+                    updated_at=conv.updated_at.isoformat() if conv.updated_at else None,
+                    is_active=conv.is_active,
+                    message_count=msg_count or 0,
+                    user=ConversationSearchUserInfo(
+                        username=user.username if user else "Unknown",
+                        email=user.email if user else "Unknown",
                     ),
-                    "is_active": conv.is_active,
-                    "message_count": msg_count or 0,
-                    "user": {
-                        "username": user.username if user else "Unknown",
-                        "email": user.email if user else "Unknown",
-                    },
-                    "matching_messages": matching_messages,
-                }
+                    matching_messages=matching_messages,
+                )
             )
 
-        return SearchResponse(
+        criteria = ConversationSearchCriteria(
+            query=query,
+            search_messages=search_messages,
+            user_filter=user_filter,
+            date_from=date_from,
+            date_to=date_to,
+            active_only=active_only,
+            limit=limit,
+        )
+
+        payload = ConversationSearchData(
+            results=search_results,
+            total_found=len(search_results),
+            search_criteria=criteria,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+
+        return APIResponse[ConversationSearchData](
             success=True,
-            data={
-                "results": results,
-                "total_found": len(results),
-                "search_criteria": {
-                    "query": query,
-                    "search_messages": search_messages,
-                    "user_filter": user_filter,
-                    "date_from": date_from,
-                    "date_to": date_to,
-                    "active_only": active_only,
-                    "limit": limit,
-                },
-                "timestamp": datetime.utcnow().isoformat(),
-            },
+            message="Search completed",
+            data=payload,
         )
 
     except HTTPException:
@@ -1009,26 +1070,21 @@ async def search_conversations_and_messages(
         raise
 
 
-@router.get("/conversations/stats", response_model=ConversationStatsResponse)
+@router.get("/conversations/stats", response_model=APIResponse[ConversationStatsData])
 @handle_api_errors("Failed to get conversation statistics")
 async def get_conversation_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> ConversationStatsResponse:
+) -> APIResponse[ConversationStatsData]:
     """Get comprehensive conversation statistics and analytics."""
     log_api_call("get_conversation_statistics", user_id=str(current_user.id))
 
     try:
-        # Basic conversation counts
         total_conversations = await db.scalar(select(func.count(Conversation.id)))
         active_conversations = await db.scalar(
-            select(func.count(Conversation.id)).where(Conversation.is_active is True)
+            select(func.count(Conversation.id)).where(Conversation.is_active.is_(True))
         )
-
-        # Message statistics
         total_messages = await db.scalar(select(func.count(Message.id)))
-
-        # Average messages per conversation
         avg_messages = (
             await db.scalar(
                 select(func.avg(func.count(Message.id)))
@@ -1037,8 +1093,6 @@ async def get_conversation_statistics(
             )
             or 0
         )
-
-        # Recent activity (last 7 days)
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         recent_conversations = (
             await db.scalar(
@@ -1048,7 +1102,6 @@ async def get_conversation_statistics(
             )
             or 0
         )
-
         recent_messages = (
             await db.scalar(
                 select(func.count(Message.id)).where(
@@ -1057,15 +1110,12 @@ async def get_conversation_statistics(
             )
             or 0
         )
-
-        # User engagement
         users_with_conversations = (
             await db.scalar(select(func.count(func.distinct(Conversation.user_id))))
             or 0
         )
 
-        # Top active users by conversation count
-        top_users = await db.execute(
+        top_users_query = (
             select(
                 User.username,
                 func.count(Conversation.id).label("conversation_count"),
@@ -1080,52 +1130,50 @@ async def get_conversation_statistics(
             .order_by(func.count(Conversation.id).desc())
             .limit(5)
         )
+        top_users = await db.execute(top_users_query)
+        top_users_list = [
+            {
+                "username": row.username,
+                "conversation_count": row.conversation_count,
+                "total_messages": row.total_messages or 0,
+            }
+            for row in top_users.fetchall()
+        ]
 
-        top_users_list = []
-        for row in top_users.fetchall():
-            top_users_list.append(
-                {
-                    "username": row.username,
-                    "conversation_count": row.conversation_count,
-                    "total_messages": row.total_messages or 0,
-                }
-            )
+        role_stats_query = select(Message.role, func.count(Message.id).label("count")).group_by(
+            Message.role
+        )
+        role_stats = await db.execute(role_stats_query)
+        role_distribution = {row.role: row.count for row in role_stats.fetchall()}
 
-        # Message role distribution
-        role_stats = await db.execute(
-            select(Message.role, func.count(Message.id).label("count")).group_by(
-                Message.role
-            )
+        payload = ConversationStatsData(
+            conversations=ConversationStatsConversations(
+                total=total_conversations or 0,
+                active=active_conversations or 0,
+                inactive=(total_conversations or 0) - (active_conversations or 0),
+            ),
+            messages=ConversationStatsMessages(
+                total=total_messages or 0,
+                avg_per_conversation=round(avg_messages, 2),
+                role_distribution=role_distribution,
+            ),
+            recent_activity=ConversationStatsRecentActivity(
+                conversations_last_7_days=recent_conversations,
+                messages_last_7_days=recent_messages,
+            ),
+            user_engagement=ConversationStatsUserEngagement(
+                users_with_conversations=users_with_conversations,
+                top_users=top_users_list,
+            ),
+            timestamp=datetime.utcnow().isoformat(),
         )
 
-        role_distribution = {}
-        for row in role_stats.fetchall():
-            role_distribution[row.role] = row.count
-
-        return ConversationStatsResponse(
+        return APIResponse[ConversationStatsData](
             success=True,
-            data={
-                "conversations": {
-                    "total": total_conversations or 0,
-                    "active": active_conversations or 0,
-                    "inactive": (total_conversations or 0)
-                    - (active_conversations or 0),
-                },
-                "messages": {
-                    "total": total_messages or 0,
-                    "avg_per_conversation": round(avg_messages, 2),
-                    "role_distribution": role_distribution,
-                },
-                "recent_activity": {
-                    "conversations_last_7_days": recent_conversations,
-                    "messages_last_7_days": recent_messages,
-                },
-                "user_engagement": {
-                    "users_with_conversations": users_with_conversations,
-                    "top_users": top_users_list,
-                },
-                "timestamp": datetime.utcnow().isoformat(),
-            },
+            message="Conversation statistics retrieved successfully",
+            data=payload,
         )
     except Exception:
         raise
+
+

@@ -1,18 +1,43 @@
 """Analytics and reporting API endpoints."""
 
 from datetime import datetime, timedelta
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.analytics import (
-    AnalyticsExportResponse,
     AnalyticsOverviewResponse,
+    AnalyticsUsageResponse,
     AnalyticsPerformanceResponse,
     AnalyticsTrendsResponse,
-    AnalyticsUsageResponse,
     AnalyticsUserAnalyticsResponse,
+    AnalyticsExportResponse,
+    SystemHealthScore
+    UsersOverview
+    DocumentsOverview
+    ConversationsOverview
+    AnalyticsOverviewPayload
+    UsageMetrics
+    DailyStat
+    AnalyticsUsagePayload
+    DocumentProcessingPerformance
+    DBPerformanceEntry
+    SystemMetricsInfo
+    AnalyticsPerformancePayload
+    TopUser
+    AnalyticsUserAnalyticsPayload
+    DailyTrend
+    TrendSummary
+    AnalyticsTrendsPayload
+    DetailedUserAnalyticsPayload
+    AnalyticsExportPayload
+
+
 )
+from shared.schemas.common import APIResponse
+
+from pydantic import BaseModel, Field
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
@@ -22,12 +47,12 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["analytics"])
 
 
-@router.get("/overview", response_model=AnalyticsOverviewResponse)
+@router.get("/overview", response_model=APIResponse[AnalyticsOverviewPayload])
 @handle_api_errors("Failed to get system overview")
 async def get_system_overview(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> AnalyticsOverviewResponse:
+) -> APIResponse[AnalyticsOverviewPayload]:
     """Get comprehensive system overview and key performance indicators."""
     log_api_call("get_system_overview", user_id=str(current_user.id))
 
@@ -65,33 +90,39 @@ async def get_system_overview(
     }
     health_score = sum(health_factors.values()) / len(health_factors)
 
-    return AnalyticsOverviewResponse(
-        users={
-            "total": total_users or 0,
-            "active": active_users or 0,
-            "activity_rate": health_factors["user_activity"],
-        },
-        documents={
-            "total": total_documents or 0,
-            "processed": processed_documents or 0,
-            "processing_rate": processing_rate,
-        },
-        conversations={"total": total_conversations or 0},
-        system_health={"score": round(health_score, 2), "factors": health_factors},
+    payload = AnalyticsOverviewPayload(
+        users=UsersOverview(
+            total=total_users or 0,
+            active=active_users or 0,
+            activity_rate=health_factors["user_activity"],
+        ),
+        documents=DocumentsOverview(
+            total=total_documents or 0,
+            processed=processed_documents or 0,
+            processing_rate=processing_rate,
+        ),
+        conversations=ConversationsOverview(total=total_conversations or 0),
+        system_health=SystemHealthScore(
+            score=round(health_score, 2), factors=health_factors
+        ),
         timestamp=datetime.utcnow().isoformat(),
+    )
+
+    return APIResponse[AnalyticsOverviewPayload](
         success=True,
         message="System overview retrieved successfully",
+        data=payload,
     )
 
 
-@router.get("/usage", response_model=AnalyticsUsageResponse)
+@router.get("/usage", response_model=APIResponse[AnalyticsUsagePayload])
 @handle_api_errors("Failed to get usage statistics")
 async def get_usage_statistics(
     period: str = Query("7d", description="Time period: 1d, 7d, 30d, 90d"),
     detailed: bool = Query(False, description="Include detailed breakdown"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> AnalyticsUsageResponse:
+) -> APIResponse[AnalyticsUsagePayload]:
     """Get comprehensive usage statistics with configurable time periods and detail levels."""
     log_api_call("get_usage_statistics", user_id=str(current_user.id), period=period)
 
@@ -143,32 +174,36 @@ async def get_usage_statistics(
             )
 
             daily_stats.append(
-                {"date": day_start.date().isoformat(), "messages": day_messages or 0}
+                DailyStat(date=day_start.date().isoformat(), messages=day_messages or 0)
             )
 
-    return AnalyticsUsageResponse(
+    payload = AnalyticsUsagePayload(
         period=period,
         start_date=start_date.isoformat(),
         end_date=datetime.utcnow().isoformat(),
-        metrics={
-            "new_users": new_users or 0,
-            "new_documents": new_documents or 0,
-            "new_conversations": new_conversations or 0,
-            "total_messages": total_messages or 0,
-            "avg_messages_per_day": round((total_messages or 0) / days, 2),
-        },
+        metrics=UsageMetrics(
+            new_users=new_users or 0,
+            new_documents=new_documents or 0,
+            new_conversations=new_conversations or 0,
+            total_messages=total_messages or 0,
+            avg_messages_per_day=round((total_messages or 0) / days, 2),
+        ),
         daily_breakdown=daily_stats,
+    )
+
+    return APIResponse[AnalyticsUsagePayload](
         success=True,
         message="Usage statistics retrieved successfully",
+        data=payload,
     )
 
 
-@router.get("/performance", response_model=AnalyticsPerformanceResponse)
+@router.get("/performance", response_model=APIResponse[AnalyticsPerformancePayload])
 @handle_api_errors("Failed to get performance metrics")
 async def get_performance_metrics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> AnalyticsPerformanceResponse:
+) -> APIResponse[AnalyticsPerformancePayload]:
     """Get comprehensive system performance metrics with bottleneck analysis and optimization insights."""
     log_api_call("get_performance_metrics", user_id=str(current_user.id))
 
@@ -216,30 +251,34 @@ async def get_performance_metrics(
         """
             )
         )
-        db_performance = [dict(row) for row in db_stats.fetchall()]
+        db_performance = [DBPerformanceEntry(**dict(row)) for row in db_stats.fetchall()]
     except Exception:
         db_performance = []
 
-    return AnalyticsPerformanceResponse(
-        document_processing={
-            "total_documents": stats.total or 0,
-            "completed": stats.completed or 0,
-            "failed": stats.failed or 0,
-            "processing": stats.processing or 0,
-            "success_rate": round(success_rate, 2),
-            "failure_rate": round(100 - success_rate, 2),
-        },
+    payload = AnalyticsPerformancePayload(
+        document_processing=DocumentProcessingPerformance(
+            total_documents=stats.total or 0,
+            completed=stats.completed or 0,
+            failed=stats.failed or 0,
+            processing=stats.processing or 0,
+            success_rate=round(success_rate, 2),
+            failure_rate=round(100 - success_rate, 2),
+        ),
         database_performance=db_performance,
-        system_metrics={
-            "timestamp": datetime.utcnow().isoformat(),
-            "health_status": "operational",
-        },
+        system_metrics=SystemMetricsInfo(
+            timestamp=datetime.utcnow().isoformat(),
+            health_status="operational",
+        ),
+    )
+
+    return APIResponse[AnalyticsPerformancePayload](
         success=True,
         message="Performance metrics retrieved successfully",
+        data=payload,
     )
 
 
-@router.get("/users", response_model=AnalyticsUserAnalyticsResponse)
+@router.get("/users", response_model=APIResponse[AnalyticsUserAnalyticsPayload])
 @handle_api_errors("Failed to get user analytics")
 async def get_user_analytics(
     metric: str = Query(
@@ -249,7 +288,7 @@ async def get_user_analytics(
     period: str = Query("30d", description="Time period: 7d, 30d, 90d"),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-) -> AnalyticsUserAnalyticsResponse:
+) -> APIResponse[AnalyticsUserAnalyticsPayload]:
     """Get comprehensive user activity analytics with engagement metrics and behavioral insights."""
     log_api_call("get_user_analytics", user_id=str(current_user.id), metric=metric)
 
@@ -320,28 +359,32 @@ async def get_user_analytics(
 
     result = await db.execute(query)
     top_users = [
-        {"username": row.username, "email": row.email, "count": row.count}
+        TopUser(username=row.username, email=row.email, count=row.count)
         for row in result.fetchall()
     ]
 
-    return AnalyticsUserAnalyticsResponse(
+    payload = AnalyticsUserAnalyticsPayload(
         metric=metric,
         period=period,
         top_users=top_users,
         total_returned=len(top_users),
         generated_at=datetime.utcnow().isoformat(),
+    )
+
+    return APIResponse[AnalyticsUserAnalyticsPayload](
         success=True,
         message="User analytics retrieved successfully",
+        data=payload,
     )
 
 
-@router.get("/trends", response_model=AnalyticsTrendsResponse)
+@router.get("/trends", response_model=APIResponse[AnalyticsTrendsPayload])
 @handle_api_errors("Failed to get usage trends")
 async def get_usage_trends(
     days: int = Query(14, ge=1, le=90, description="Number of days to analyze"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> AnalyticsTrendsResponse:
+) -> APIResponse[AnalyticsTrendsPayload]:
     """Get comprehensive usage trends and growth patterns with predictive insights."""
     log_api_call("get_usage_trends", user_id=str(current_user.id), days=days)
 
@@ -378,12 +421,12 @@ async def get_usage_trends(
         )
 
         daily_trends.append(
-            {
-                "date": day_start.date().isoformat(),
-                "new_users": new_users or 0,
-                "new_documents": new_documents or 0,
-                "messages": messages or 0,
-            }
+            DailyTrend(
+                date=day_start.date().isoformat(),
+                new_users=new_users or 0,
+                new_documents=new_documents or 0,
+                messages=messages or 0,
+            )
         )
 
     # Calculate growth rates
@@ -393,9 +436,9 @@ async def get_usage_trends(
             daily_trends[-14:-7] if len(daily_trends) >= 14 else daily_trends[:-7]
         )
 
-        recent_avg = sum(day["messages"] for day in recent_week) / 7
+        recent_avg = sum(day.messages for day in recent_week) / 7
         previous_avg = (
-            sum(day["messages"] for day in previous_week) / len(previous_week)
+            sum(day.messages for day in previous_week) / len(previous_week)
             if previous_week
             else recent_avg
         )
@@ -408,29 +451,33 @@ async def get_usage_trends(
     else:
         growth_rate = 0
 
-    return AnalyticsTrendsResponse(
+    payload = AnalyticsTrendsPayload(
         period_days=days,
         daily_trends=daily_trends,
-        summary={
-            "total_new_users": sum(day["new_users"] for day in daily_trends),
-            "total_new_documents": sum(day["new_documents"] for day in daily_trends),
-            "total_messages": sum(day["messages"] for day in daily_trends),
-            "weekly_growth_rate": round(growth_rate, 2),
-        },
+        summary=TrendSummary(
+            total_new_users=sum(day.new_users for day in daily_trends),
+            total_new_documents=sum(day.new_documents for day in daily_trends),
+            total_messages=sum(day.messages for day in daily_trends),
+            weekly_growth_rate=round(growth_rate, 2),
+        ),
         generated_at=datetime.utcnow().isoformat(),
+    )
+
+    return APIResponse[AnalyticsTrendsPayload](
         success=True,
         message="Usage trends retrieved successfully",
+        data=payload,
     )
 
 
-@router.post("/export-report", response_model=AnalyticsExportResponse)
+@router.post("/export-report", response_model=APIResponse[AnalyticsExportPayload])
 @handle_api_errors("Failed to export analytics report")
 async def export_analytics_report(
     include_details: bool = Query(True, description="Include detailed breakdowns"),
     format: str = Query("json", description="Export format: json"),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-) -> AnalyticsExportResponse:
+) -> APIResponse[AnalyticsExportPayload]:
     """Export comprehensive analytics report for executive analysis and external integration."""
     log_api_call("export_analytics_report", user_id=str(current_user.id))
 
@@ -440,30 +487,35 @@ async def export_analytics_report(
         )
 
     # Gather all analytics data
-    overview_data = await get_system_overview(current_user, db)
-    usage_data = await get_usage_statistics("30d", include_details, current_user, db)
-    performance_data = await get_performance_metrics(current_user, db)
-    trends_data = await get_usage_trends(30, current_user, db)
+    overview_data_resp = await get_system_overview(current_user, db)
+    usage_data_resp = await get_usage_statistics("30d", True, current_user, db)
+    performance_data_resp = await get_performance_metrics(current_user, db)
+    trends_data_resp = await get_usage_trends(30, current_user, db)
+
+    overview_data: AnalyticsOverviewPayload = overview_data_resp.data
+    usage_data: AnalyticsUsagePayload = usage_data_resp.data
+    performance_data: AnalyticsPerformancePayload = performance_data_resp.data
+    trends_data: AnalyticsTrendsPayload = trends_data_resp.data
 
     detailed_user_analytics = None
     if include_details:
-        user_messages = await get_user_analytics(
+        user_messages_resp = await get_user_analytics(
             "messages", 20, "30d", current_user, db
         )
-        user_documents = await get_user_analytics(
+        user_documents_resp = await get_user_analytics(
             "documents", 20, "30d", current_user, db
         )
-        user_conversations = await get_user_analytics(
+        user_conversations_resp = await get_user_analytics(
             "conversations", 20, "30d", current_user, db
         )
 
-        detailed_user_analytics = {
-            "top_by_messages": user_messages.top_users,
-            "top_by_documents": user_documents.top_users,
-            "top_by_conversations": user_conversations.top_users,
-        }
+        detailed_user_analytics = DetailedUserAnalyticsPayload(
+            top_by_messages=user_messages_resp.data.top_users,
+            top_by_documents=user_documents_resp.data.top_users,
+            top_by_conversations=user_conversations_resp.data.top_users,
+        )
 
-    return AnalyticsExportResponse(
+    payload = AnalyticsExportPayload(
         report_metadata={
             "generated_at": datetime.utcnow().isoformat(),
             "generated_by": current_user.username,
@@ -476,6 +528,10 @@ async def export_analytics_report(
         performance_metrics=performance_data,
         usage_trends=trends_data,
         detailed_user_analytics=detailed_user_analytics,
+    )
+
+    return APIResponse[AnalyticsExportPayload](
         success=True,
         message="Analytics report exported successfully",
+        data=payload,
     )
