@@ -509,3 +509,64 @@ async def config():
     except Exception as e:
         error_message(f"Failed to show configuration: {str(e)}")
         raise SystemExit(1)
+
+
+@core_app.async_command("api-analysis")
+async def api_analysis():
+    """
+    Show duplicate API analysis summary.
+
+    Displays a comprehensive analysis of potentially duplicate or similar APIs
+    in the AI Chatbot MCP project, including recommendations for consolidation
+    and cleanup.
+
+    This command provides:
+        - Summary of duplicate API endpoints identified
+        - Recommendations for API consolidation
+        - Implementation priority and timeline
+        - Impact assessment for changes
+
+    Analysis Categories:
+        - High Priority: Identical functionality requiring immediate action
+        - Medium Priority: Similar functionality that could be consolidated
+        - Low Priority: Acceptable functional overlaps
+
+    Key Findings:
+        - User profile endpoint duplication (/me in auth and users APIs)
+        - Password management operations scattered across APIs
+        - Analytics functionality available in both API and CLI
+        - User management operations split between auth and users
+
+    Use Cases:
+        - API cleanup and maintenance planning
+        - Architecture review and optimization
+        - Developer onboarding and API understanding
+        - Technical debt reduction initiatives
+
+    Example:
+        ```bash
+        # Show duplicate API analysis summary
+        ai-chatbot api-analysis
+        ```
+
+    Note:
+        For detailed implementation guidance, see the full reports in:
+        - docs/duplicate_api_analysis_report.md
+        - docs/duplicate_api_implementation_guide.md
+    """
+    try:
+        # Import and run the summary function
+        import sys
+        from pathlib import Path
+        
+        # Add scripts directory to path
+        project_root = Path(__file__).parent.parent
+        scripts_dir = project_root / "scripts"
+        sys.path.insert(0, str(scripts_dir))
+        
+        from duplicate_api_summary import print_duplicate_summary
+        print_duplicate_summary()
+        
+    except Exception as e:
+        error_message(f"Failed to show API analysis: {str(e)}")
+        raise SystemExit(1)

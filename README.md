@@ -390,6 +390,9 @@ python manage.py health
 
 # System status overview
 python manage.py status
+
+# API duplicate analysis
+python manage.py api-analysis
 ```
 
 ### User Management
@@ -504,6 +507,26 @@ python manage.py profiles remove creative --confirm
 # Statistics and monitoring
 python manage.py profiles stats
 ```
+
+### API Analysis and Maintenance
+```bash
+# Analyze project for duplicate APIs
+python manage.py api-analysis
+
+# View detailed analysis reports
+cat docs/duplicate_api_analysis_report.md
+cat docs/duplicate_api_implementation_guide.md
+
+# Quick analysis summary
+python scripts/duplicate_api_summary.py
+```
+
+The API analysis feature identifies potentially duplicate or functionally similar APIs across the project:
+- **High Priority Duplicates**: Identical functionality requiring consolidation
+- **Medium Priority**: Similar functionality that could be optimized  
+- **Low Priority**: Acceptable functional overlaps (API vs CLI)
+
+Generated reports provide detailed implementation guidance for consolidating duplicate endpoints and improving API consistency.
 
 ### Legacy CLI (Deprecated)
 The original simple management commands are still available but deprecated:
