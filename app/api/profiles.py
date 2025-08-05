@@ -223,11 +223,11 @@ async def get_profile_stats(
     """Get comprehensive LLM profile usage statistics and analytics."""
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
-    LLMProfileStatisticsData.model_validate(stats)
+    payload = LLMProfileStatisticsData.model_validate(stats)
     return APIResponse[LLMProfileStatisticsData](
         success=True,
         message="Profile statistics retrieved successfully",
-        data=stats,
+        data=payload,
     )
 
 

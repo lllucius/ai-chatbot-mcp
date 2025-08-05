@@ -280,11 +280,11 @@ async def get_tool_details(
             detail=f"Tool '{tool_name}' not found",
         )
 
-    MCPToolsResponse.model_validate(tool)
+    payload = MCPToolsResponse.model_validate(tool)
     return APIResponse[MCPToolsResponse](
         success=True,
         message=f"Retrieved details for tool '{tool_name}'",
-        data=tool,
+        data=payload,
     )
 
 

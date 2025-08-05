@@ -33,13 +33,27 @@ from shared.schemas.conversation import (
     StreamToolCallResponse,
 )
 from shared.schemas.conversation_responses import (
+    ArchiveConversationsResult,
+    ArchivePreviewItem,
+    ArchivePreviewResponse,
     ConversationExportData,
     ConversationExportDataCSV,
     ConversationExportDataJSON,
     ConversationExportDataText,
     ConversationMetadata,
+    ConversationSearchCriteria,
+    ConversationSearchData,
+    ConversationSearchMatchingMessage,
+    ConversationSearchResult,
+    ConversationSearchUserInfo,
+    ConversationStatsConversations,
+    ConversationStatsData,
+    ConversationStatsMessages,
+    ConversationStatsRecentActivity,
+    ConversationStatsUserEngagement,
     ExportedMessage,
     ExportInfo,
+    ImportConversationResult,
 )
 
 from ..database import AsyncSessionLocal, get_db
