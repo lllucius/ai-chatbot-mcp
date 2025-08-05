@@ -23,17 +23,25 @@ class PromptStatisticsData(BaseModel):
     total_prompts: int = Field(..., description="Total number of prompts")
     active_prompts: int = Field(..., description="Number of active prompts")
     default_prompt: str = Field(..., description="Name of default prompt")
-    usage_stats: Dict[str, Any] = Field(default_factory=dict, description="Usage statistics")
-    most_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used prompts")
-    recently_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used prompts")
-    categories: List[PromptCategoryInfo] = Field(default_factory=list, description="Category breakdown")
+    usage_stats: Dict[str, Any] = Field(
+        default_factory=dict, description="Usage statistics"
+    )
+    most_used: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Most frequently used prompts"
+    )
+    recently_used: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Most frequently used prompts"
+    )
+    categories: List[PromptCategoryInfo] = Field(
+        default_factory=list, description="Category breakdown"
+    )
     total_tags: int = Field(..., description="Total number of tags")
 
 
 class PromptCategoriesData(BaseModel):
     """Prompt categories and tags data."""
 
-    categories: List[str] = Field(default_factory=list, description="Available prompt categories")
+    categories: List[str] = Field(
+        default_factory=list, description="Available prompt categories"
+    )
     tags: List[str] = Field(default_factory=list, description="Available prompt tags")
-
-

@@ -74,9 +74,9 @@ Example Usage:
 from typing import Optional
 
 from async_typer import AsyncTyper
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
 from typer import Argument, Option
 
 from .base import (
@@ -362,7 +362,9 @@ async def disable_tool(
 async def test_tool(
     tool_name: str = Argument(..., help="Tool name to test"),
     server: Optional[str] = Option(None, "--server", "-s", help="Server name"),
-    params: Optional[str] = Option(None, "--params", "-p", help="Test parameters as JSON"),
+    params: Optional[str] = Option(
+        None, "--params", "-p", help="Test parameters as JSON"
+    ),
 ):
     """Test execution of an MCP tool."""
     try:
@@ -370,6 +372,7 @@ async def test_tool(
         test_params = {}
         if params:
             import json
+
             try:
                 test_params = json.loads(params)
             except json.JSONDecodeError:
@@ -696,7 +699,7 @@ def _display_server_status(status_data):
             f"[{status_style}]{server.get('status', 'Unknown')}[/{status_style}]",
             f"[{status_style}]{connected_text}[/{status_style}]",
             str(server.get("tool_count", 0)),
-            server.get("last_check", "Never")
+            server.get("last_check", "Never"),
         )
 
     console.print(status_table)

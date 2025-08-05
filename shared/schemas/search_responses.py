@@ -21,11 +21,15 @@ class SearchSuggestionData(BaseModel):
     """Search suggestions data."""
 
     query: str = Field(..., description="Original query that suggestions are based on")
-    suggestions: List[str] = Field(default_factory=list, description="List of search suggestions")
+    suggestions: List[str] = Field(
+        default_factory=list, description="List of search suggestions"
+    )
 
 
 class SearchHistoryData(BaseModel):
     """Search history data."""
 
-    history: List[Dict[str, Any]] = Field(default_factory=list, description="List of recent searches")
+    history: List[Dict[str, Any]] = Field(
+        default_factory=list, description="List of recent searches"
+    )
     total: int = Field(..., description="Total number of search history entries")

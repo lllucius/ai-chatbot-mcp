@@ -240,7 +240,9 @@ async def get_performance_metrics(
         """
             )
         )
-        db_performance = [DBPerformanceEntry(**dict(row)) for row in db_stats.fetchall()]
+        db_performance = [
+            DBPerformanceEntry(**dict(row)) for row in db_stats.fetchall()
+        ]
     except Exception:
         db_performance = []
 

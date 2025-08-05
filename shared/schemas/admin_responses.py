@@ -30,6 +30,7 @@ class SearchResponse(BaseModel):
         """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
+
         return json.dumps(data)
 
 
@@ -46,6 +47,7 @@ class RegistryStatsResponse(BaseModel):
         """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
+
         return json.dumps(data)
 
 
@@ -61,4 +63,5 @@ class ConversationStatsResponse(BaseModel):
         """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
+
         return json.dumps(data)

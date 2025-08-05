@@ -70,18 +70,14 @@ async def get_task_system_status(
     try:
         active_tasks = inspector.active() if broker_status == "connected" else {}
         total_active = (
-            sum(len(tasks) for tasks in active_tasks.values())
-            if active_tasks
-            else 0
+            sum(len(tasks) for tasks in active_tasks.values()) if active_tasks else 0
         )
     except Exception:
         total_active = 0
 
     # Get queue lengths
     try:
-        reserved_tasks = (
-            inspector.reserved() if broker_status == "connected" else {}
-        )
+        reserved_tasks = inspector.reserved() if broker_status == "connected" else {}
         total_reserved = (
             sum(len(tasks) for tasks in reserved_tasks.values())
             if reserved_tasks
@@ -137,16 +133,10 @@ async def get_workers_info(
 
         worker_info = WorkerInfo(
             name=worker_name,
-            status=(
-                "online" if worker_ping.get("ok") == "pong" else "offline"
-            ),
-            pool=worker_stats.get("pool", {}).get(
-                "implementation", "unknown"
-            ),
+            status=("online" if worker_ping.get("ok") == "pong" else "offline"),
+            pool=worker_stats.get("pool", {}).get("implementation", "unknown"),
             processes=worker_stats.get("pool", {}).get("processes", 0),
-            max_concurrency=worker_stats.get("pool", {}).get(
-                "max-concurrency", 0
-            ),
+            max_concurrency=worker_stats.get("pool", {}).get("max-concurrency", 0),
             current_load=len(worker_stats.get("rusage", {})),
             broker_transport=worker_conf.get("broker_transport", "unknown"),
             prefetch_count=worker_conf.get("worker_prefetch_multiplier", 0),
@@ -328,7 +318,7 @@ async def schedule_task(
             return ErrorResponse.create(
                 error_code="INVALID_JSON_ARGUMENTS",
                 message=f"Invalid JSON in arguments: {str(e)}",
-                status_code=status.HTTP_400_BAD_REQUEST
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         celery_app = get_celery_app()
@@ -347,7 +337,7 @@ async def schedule_task(
                 "queue": queue,
                 "countdown": countdown,
             },
-            message=f"Task '{task_name}' scheduled successfully"
+            message=f"Task '{task_name}' scheduled successfully",
         )
     except Exception:
         raise
@@ -417,7 +407,7 @@ async def retry_failed_tasks(
                 "total_failed": len(failed_documents),
                 "errors": errors[:5],  # Limit error reporting
             },
-            message=f"Retry initiated for {retried_count} failed tasks"
+            message=f"Retry initiated for {retried_count} failed tasks",
         )
     except Exception:
         await db.rollback()
@@ -444,7 +434,7 @@ async def purge_queue(
                 "purged_tasks": purged_count,
                 "queue": queue_name,
             },
-            message=f"Queue '{queue_name}' purged successfully"
+            message=f"Queue '{queue_name}' purged successfully",
         )
     except Exception:
         raise
@@ -509,9 +499,7 @@ async def get_task_statistics(
     # Get average processing time for completed documents
     avg_processing_time = await db.execute(
         select(
-            func.avg(
-                func.extract("epoch", Document.updated_at - Document.created_at)
-            )
+            func.avg(func.extract("epoch", Document.updated_at - Document.created_at))
         ).where(
             and_(
                 Document.created_at >= start_time,
@@ -580,6 +568,7 @@ async def get_monitoring_data(
 
     # Get recent statistics (pass database session)
     from ..database import get_db
+
     db_gen = get_db()
     db = await db_gen.__anext__()
     try:

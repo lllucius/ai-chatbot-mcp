@@ -83,7 +83,9 @@ from .base import error_message, get_sdk, success_message
 
 console = Console()
 
-analytics_app = AsyncTyper(help="Analytics and reporting commands", rich_markup_mode=None)
+analytics_app = AsyncTyper(
+    help="Analytics and reporting commands", rich_markup_mode=None
+)
 
 
 @analytics_app.async_command()

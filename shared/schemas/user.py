@@ -884,5 +884,3 @@ class UserStatsResponse(BaseSchema):
     active_users: int = Field(..., description="Number of active users")
     inactive_users: int = Field(..., description="Number of inactive users")
     superusers: int = Field(..., description="Number of superusers")
-
-

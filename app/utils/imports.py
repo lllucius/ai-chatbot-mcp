@@ -163,9 +163,8 @@ def validate_import_order(file_path: str) -> List[str]:
 
                 if current_group and group != current_group:
                     violation_conditions = (
-                        (current_group == "standard" and group == "local") or
-                        (current_group == "third_party" and group == "standard")
-                    )
+                        current_group == "standard" and group == "local"
+                    ) or (current_group == "third_party" and group == "standard")
                     if violation_conditions:
                         violations.append(
                             f"Line {line_num}: Import order violation - {group} after {current_group}"

@@ -139,4 +139,3 @@ async def get_search_suggestions(
         message="Search suggestions generated successfully",
         data=payload,
     )
-

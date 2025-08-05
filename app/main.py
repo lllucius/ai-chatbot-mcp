@@ -364,7 +364,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     )
 
     # Preserve any headers from the original exception (e.g., Retry-After for rate limiting)
-    headers = getattr(exc, 'headers', None) or {}
+    headers = getattr(exc, "headers", None) or {}
 
     return JSONResponse(
         status_code=exc.status_code,

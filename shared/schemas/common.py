@@ -161,7 +161,9 @@ class ErrorDetails(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     code: str = Field(..., description="Machine-readable error code")
-    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
+    details: Optional[Dict[str, Any]] = Field(
+        default=None, description="Additional error details"
+    )
 
 
 class APIResponse(BaseResponse, Generic[T]):
@@ -184,9 +186,16 @@ class APIResponse(BaseResponse, Generic[T]):
     }
     """
 
-    data: Optional[T] = Field(default=None, description="Response data payload - single object, array, or null")
-    meta: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata (pagination, stats, etc)")
-    error: Optional[ErrorDetails] = Field(default=None, description="Optional error details with code and details")
+    data: Optional[T] = Field(
+        default=None,
+        description="Response data payload - single object, array, or null",
+    )
+    meta: Optional[Dict[str, Any]] = Field(
+        default=None, description="Optional metadata (pagination, stats, etc)"
+    )
+    error: Optional[ErrorDetails] = Field(
+        default=None, description="Optional error details with code and details"
+    )
 
     def model_dump_json(self, **kwargs):
         """Serialize model with comprehensive datetime handling for API responses.
@@ -241,8 +250,12 @@ class ErrorDetail(BaseModel):
 
     code: str = Field(..., description="Error code identifier")
     message: str = Field(..., description="Human-readable error message")
-    field: Optional[str] = Field(default=None, description="Field that caused the error")
-    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
+    field: Optional[str] = Field(
+        default=None, description="Field that caused the error"
+    )
+    details: Optional[Dict[str, Any]] = Field(
+        default=None, description="Additional error details"
+    )
 
     def model_dump_json(self, **kwargs):
         """Serialize model with comprehensive datetime handling for API responses.
@@ -294,9 +307,7 @@ class SuccessResponse(BaseResponse):
     """Standard success response."""
 
     success: bool = Field(default=True, description="Always true for success responses")
-    data: Optional[Any] = Field(
-        default=None, description="Response data payload"
-    )
+    data: Optional[Any] = Field(default=None, description="Response data payload")
     meta: Optional[Dict[str, Any]] = Field(
         default=None, description="Optional metadata"
     )
@@ -316,9 +327,7 @@ class SuccessResponse(BaseResponse):
         # Use the custom JSON serialization from the model to handle datetime
         content_str = response.model_dump_json(exclude_none=True)
         content = json.loads(content_str)
-        return JSONResponse(
-            content=content, status_code=status_code
-        )
+        return JSONResponse(content=content, status_code=status_code)
 
 
 class ErrorResponse(BaseResponse):
@@ -354,9 +363,7 @@ class ErrorResponse(BaseResponse):
         # Use the custom JSON serialization from the model to handle datetime
         content_str = response.model_dump_json(exclude_none=True)
         content = json.loads(content_str)
-        return JSONResponse(
-            content=content, status_code=status_code
-        )
+        return JSONResponse(content=content, status_code=status_code)
 
 
 class ValidationErrorResponse(ErrorResponse):
@@ -374,9 +381,7 @@ class ValidationErrorResponse(ErrorResponse):
 
     @classmethod
     def create(
-        cls,
-        errors: List[Dict[str, Any]],
-        message: str = "Validation failed"
+        cls, errors: List[Dict[str, Any]], message: str = "Validation failed"
     ) -> JSONResponse:
         """Create validation error response using unified envelope format."""
         error_details = [
@@ -394,7 +399,9 @@ class ValidationErrorResponse(ErrorResponse):
             message=message,
             error=ErrorDetails(
                 code="VALIDATION_ERROR",
-                details={"validation_errors": [err.model_dump() for err in error_details]}
+                details={
+                    "validation_errors": [err.model_dump() for err in error_details]
+                },
             ),
             timestamp=utcnow(),
         )
@@ -638,7 +645,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
             "total": total,
             "total_pages": total_pages,
             "has_next": has_next,
-            "has_prev": has_prev
+            "has_prev": has_prev,
         }
 
         # Use SuccessResponse.create with pagination metadata
@@ -646,7 +653,7 @@ class PaginatedResponse(BaseResponse, Generic[T]):
             data=items,
             message=message,
             meta={"pagination": pagination_meta},
-            status_code=status_code
+            status_code=status_code,
         )
 
 

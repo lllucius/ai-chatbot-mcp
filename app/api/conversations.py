@@ -203,7 +203,7 @@ async def delete_conversation(
         return APIResponse(
             success=False,
             message="Conversation not found",
-            error=dict(code="CONVERSATION_NOT_FOUND"),
+            error={"code": "CONVERSATION_NOT_FOUND"},
         )
 
 
@@ -343,13 +343,13 @@ async def chat_stream(
                         # Properly validate ai_message and conversation fields
                         for k, v in response_data.items():
                             if k == "ai_message":
-                                response_data[k] = (
-                                    MessageResponse.model_validate(v).model_dump(mode="json")
-                                )
+                                response_data[k] = MessageResponse.model_validate(
+                                    v
+                                ).model_dump(mode="json")
                             elif k == "conversation":
-                                response_data[k] = (
-                                    ConversationResponse.model_validate(v).model_dump(mode="json")
-                                )
+                                response_data[k] = ConversationResponse.model_validate(
+                                    v
+                                ).model_dump(mode="json")
                             elif k == "rag_context":
                                 if v:
                                     ctx = []
@@ -365,7 +365,9 @@ async def chat_stream(
                                 else:
                                     response_data[k] = {}
                             else:
-                                error_event = StreamErrorResponse(error=f"Unexpected key value: {k}")
+                                error_event = StreamErrorResponse(
+                                    error=f"Unexpected key value: {k}"
+                                )
                                 yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                         complete_event = StreamCompleteResponse(response=response_data)
                         yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
@@ -644,7 +646,9 @@ async def export_conversation(
         )
 
 
-@router.post("/conversations/import", response_model=APIResponse[ImportConversationResult])
+@router.post(
+    "/conversations/import", response_model=APIResponse[ImportConversationResult]
+)
 @handle_api_errors("Failed to import conversation")
 async def import_conversation(
     file: UploadFile = File(...),
@@ -709,7 +713,9 @@ async def import_conversation(
         for msg_data in messages_data:
             try:
                 required_fields = ["role", "content"]
-                missing_field = next((field for field in required_fields if field not in msg_data), None)
+                missing_field = next(
+                    (field for field in required_fields if field not in msg_data), None
+                )
                 if missing_field:
                     errors.append(f"Message missing required field: {missing_field}")
                     continue
@@ -752,7 +758,10 @@ async def import_conversation(
         raise
 
 
-@router.post("/conversations/archive", response_model=APIResponse[ArchivePreviewResponse | ArchiveConversationsResult])
+@router.post(
+    "/conversations/archive",
+    response_model=APIResponse[ArchivePreviewResponse | ArchiveConversationsResult],
+)
 @handle_api_errors("Failed to archive conversations")
 async def archive_conversations(
     older_than_days: int = Query(
@@ -1076,9 +1085,9 @@ async def get_conversation_statistics(
             for row in top_users.fetchall()
         ]
 
-        role_stats_query = select(Message.role, func.count(Message.id).label("count")).group_by(
-            Message.role
-        )
+        role_stats_query = select(
+            Message.role, func.count(Message.id).label("count")
+        ).group_by(Message.role)
         role_stats = await db.execute(role_stats_query)
         role_distribution = {row.role: row.count for row in role_stats.fetchall()}
 
@@ -1111,5 +1120,3 @@ async def get_conversation_statistics(
         )
     except Exception:
         raise
-
-

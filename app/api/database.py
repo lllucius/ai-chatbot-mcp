@@ -35,7 +35,6 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["database"])
 
 
-
 @router.post("/init", response_model=APIResponse[BaseModelSchema])
 @handle_api_errors("Failed to initialize database")
 async def initialize_database(
@@ -205,9 +204,7 @@ async def get_migration_status(
         cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     )
 
-    current_revision = (
-        result.stdout.strip() if result.returncode == 0 else "Unknown"
-    )
+    current_revision = result.stdout.strip() if result.returncode == 0 else "Unknown"
 
     # Get available migrations
     heads_result = subprocess.run(
@@ -229,14 +226,20 @@ async def get_migration_status(
         cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     )
 
-    migration_status = "up_to_date" if current_revision == available_heads else "pending"
+    migration_status = (
+        "up_to_date" if current_revision == available_heads else "pending"
+    )
 
     payload = DatabaseMigrationsResponse(
         success=True,
         applied_migrations=[],  # Could be expanded to parse history
         pending_migrations=[],  # Could be expanded to check for pending
         migration_status=migration_status,
-        last_migration={"revision": current_revision, "heads": available_heads} if current_revision != "Unknown" else None,
+        last_migration=(
+            {"revision": current_revision, "heads": available_heads}
+            if current_revision != "Unknown"
+            else None
+        ),
         timestamp=datetime.utcnow(),
     )
     return APIResponse[DatabaseMigrationsResponse](
@@ -648,6 +651,7 @@ async def execute_custom_query(
     log_api_call("execute_custom_query", user_id=str(current_user.id))
 
     import time
+
     start_time = time.time()
 
     # Safety checks
@@ -712,4 +716,3 @@ async def execute_custom_query(
         )
     except Exception:
         raise
-

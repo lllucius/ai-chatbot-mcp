@@ -93,6 +93,7 @@ async def upload_document(
         data=payload,
     )
 
+
 @router.get("/", response_model=APIResponse[List[DocumentResponse]])
 @handle_api_errors("Failed to retrieve documents")
 async def list_documents(
@@ -143,6 +144,7 @@ async def list_documents(
         data=responses,
     )
 
+
 @router.get("/byid/{document_id}", response_model=APIResponse[DocumentResponse])
 @handle_api_errors("Failed to retrieve document")
 async def get_document(
@@ -151,7 +153,9 @@ async def get_document(
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse[DocumentResponse]:
     """Get document by ID."""
-    log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
+    log_api_call(
+        "get_document", user_id=str(current_user.id), document_id=str(document_id)
+    )
     document = await document_service.get_document(document_id, current_user.id)
 
     document_response = DocumentResponse(
@@ -170,10 +174,9 @@ async def get_document(
     )
 
     return APIResponse[DocumentResponse](
-        success=True,
-        message="Document retrieved successfully",
-        data=document_response
+        success=True, message="Document retrieved successfully", data=document_response
     )
+
 
 @router.put("/byid/{document_id}", response_model=APIResponse[DocumentResponse])
 @handle_api_errors("Document update failed")
@@ -184,7 +187,9 @@ async def update_document(
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse[DocumentResponse]:
     """Update document metadata."""
-    log_api_call("update_document", user_id=str(current_user.id), document_id=str(document_id))
+    log_api_call(
+        "update_document", user_id=str(current_user.id), document_id=str(document_id)
+    )
     document = await document_service.update_document(
         document_id, request, current_user.id
     )
@@ -195,6 +200,7 @@ async def update_document(
         data=payload,
     )
 
+
 @router.delete("/byid/{document_id}", response_model=APIResponse)
 @handle_api_errors("Document deletion failed")
 async def delete_document(
@@ -203,7 +209,9 @@ async def delete_document(
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse:
     """Delete document and all associated data."""
-    log_api_call("delete_document", user_id=str(current_user.id), document_id=str(document_id))
+    log_api_call(
+        "delete_document", user_id=str(current_user.id), document_id=str(document_id)
+    )
     success = await document_service.delete_document(document_id, current_user.id)
 
     if success:
@@ -217,7 +225,10 @@ async def delete_document(
             message="Document not found",
         )
 
-@router.get("/byid/{document_id}/status", response_model=APIResponse[ProcessingStatusResponse])
+
+@router.get(
+    "/byid/{document_id}/status", response_model=APIResponse[ProcessingStatusResponse]
+)
 @handle_api_errors("Failed to get processing status", log_errors=True)
 async def get_processing_status(
     document_id: UUID,
@@ -228,7 +239,12 @@ async def get_processing_status(
     service: DocumentService = Depends(get_document_service),
 ) -> APIResponse[ProcessingStatusResponse]:
     """Get document processing status with optional background task information."""
-    log_api_call("get_processing_status", user_id=str(user.id), document_id=str(document_id), task_id=task_id)
+    log_api_call(
+        "get_processing_status",
+        user_id=str(user.id),
+        document_id=str(document_id),
+        task_id=task_id,
+    )
     if task_id:
         status_info = await service.get_processing_status(document_id, task_id)
         message = "Enhanced processing status retrieved"
@@ -259,6 +275,7 @@ async def get_processing_status(
         data=payload,
     )
 
+
 @router.post("/byid/{document_id}/reprocess", response_model=APIResponse)
 @handle_api_errors("Reprocessing failed for document", log_errors=True)
 async def reprocess_document(
@@ -267,19 +284,18 @@ async def reprocess_document(
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse:
     """Reprocess document."""
-    log_api_call("reprocess_document", user_id=str(current_user.id), document_id=str(document_id))
+    log_api_call(
+        "reprocess_document", user_id=str(current_user.id), document_id=str(document_id)
+    )
     success = await document_service.reprocess_document(document_id, current_user.id)
 
     if success:
-        return APIResponse(
-            success=True,
-            message="Document reprocessing started"
-        )
+        return APIResponse(success=True, message="Document reprocessing started")
     else:
         return APIResponse(
-            success=False,
-            message="Cannot reprocess document at this time"
+            success=False, message="Cannot reprocess document at this time"
         )
+
 
 @router.get("/byid/{document_id}/download")
 @handle_api_errors("Download of document failed", log_errors=True)
@@ -289,14 +305,19 @@ async def download_document(
     document_service: DocumentService = Depends(get_document_service),
 ) -> FileResponse:
     """Download original document file."""
-    log_api_call("download_document", user_id=str(current_user.id), document_id=str(document_id))
+    log_api_call(
+        "download_document", user_id=str(current_user.id), document_id=str(document_id)
+    )
     file_path, filename, mime_type = await document_service.get_download_info(
         document_id, current_user.id
     )
 
     return FileResponse(path=file_path, filename=filename, media_type=mime_type)
 
-@router.post("/byid/{document_id}/process", response_model=APIResponse[BackgroundTaskResponse])
+
+@router.post(
+    "/byid/{document_id}/process", response_model=APIResponse[BackgroundTaskResponse]
+)
 @handle_api_errors("Failed to start document processing", log_errors=True)
 async def start_document_processing(
     document_id: UUID,
@@ -307,7 +328,12 @@ async def start_document_processing(
     service: DocumentService = Depends(get_document_service),
 ) -> APIResponse[BackgroundTaskResponse]:
     """Start background processing for a document."""
-    log_api_call("start_document_processing", user_id=str(user.id), document_id=str(document_id), priority=priority)
+    log_api_call(
+        "start_document_processing",
+        user_id=str(user.id),
+        document_id=str(document_id),
+        priority=priority,
+    )
     task_id = await service.start_processing(document_id, priority=priority)
 
     payload = BackgroundTaskResponse(
@@ -322,6 +348,7 @@ async def start_document_processing(
         message="Document processing started",
         data=payload,
     )
+
 
 @router.get("/processing-config", response_model=APIResponse[ProcessingConfigResponse])
 @handle_api_errors("Failed to retrieve configuration", log_errors=True)
@@ -353,6 +380,7 @@ async def get_processing_config() -> APIResponse[ProcessingConfigResponse]:
         data=payload,
     )
 
+
 @router.get("/queue-status", response_model=APIResponse[QueueStatusResponse])
 @handle_api_errors("Failed to get queue status", log_errors=True)
 async def get_queue_status(
@@ -379,6 +407,7 @@ async def get_queue_status(
         message="Queue status retrieved",
         data=payload,
     )
+
 
 @router.post("/documents/cleanup", response_model=APIResponse)
 @handle_api_errors("Failed to cleanup documents")
@@ -493,6 +522,7 @@ async def cleanup_documents(
             data=payload,
         )
 
+
 @router.get("/documents/stats", response_model=APIResponse[DocumentStatisticsData])
 @handle_api_errors("Failed to get document statistics")
 async def get_document_statistics(
@@ -513,9 +543,7 @@ async def get_document_statistics(
     # Total storage usage
     total_size = (
         await db.scalar(
-            select(func.sum(Document.file_size)).where(
-                Document.file_size.is_not(None)
-            )
+            select(func.sum(Document.file_size)).where(Document.file_size.is_not(None))
         )
         or 0
     )
@@ -523,9 +551,7 @@ async def get_document_statistics(
     # File type distribution
     file_types = await db.execute(
         select(
-            func.lower(func.split_part(Document.file_name, ".", -1)).label(
-                "extension"
-            ),
+            func.lower(func.split_part(Document.file_name, ".", -1)).label("extension"),
             func.count(Document.id).label("count"),
             func.sum(Document.file_size).label("total_size"),
         )
@@ -565,9 +591,7 @@ async def get_document_statistics(
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     recent_uploads = (
         await db.scalar(
-            select(func.count(Document.id)).where(
-                Document.created_at >= seven_days_ago
-            )
+            select(func.count(Document.id)).where(Document.created_at >= seven_days_ago)
         )
         or 0
     )
@@ -608,20 +632,14 @@ async def get_document_statistics(
         )
 
     # Calculate success rate
-    total_processed = status_counts.get("completed", 0) + status_counts.get(
-        "failed", 0
-    )
-    success_rate = (
-        status_counts.get("completed", 0) / max(total_processed, 1)
-    ) * 100
+    total_processed = status_counts.get("completed", 0) + status_counts.get("failed", 0)
+    success_rate = (status_counts.get("completed", 0) / max(total_processed, 1)) * 100
 
     # Create structured data models
     storage_stats = DocumentStorageStats(
         total_size_bytes=total_size,
         total_size_mb=round(total_size / 1024 / 1024, 2),
-        avg_file_size_bytes=round(
-            total_size / max(sum(status_counts.values()), 1), 2
-        ),
+        avg_file_size_bytes=round(total_size / max(sum(status_counts.values()), 1), 2),
     )
 
     processing_stats = DocumentProcessingStats(
@@ -652,7 +670,10 @@ async def get_document_statistics(
         data=response_payload,
     )
 
-@router.post("/documents/bulk-reprocess", response_model=APIResponse[BulkReprocessResponse])
+
+@router.post(
+    "/documents/bulk-reprocess", response_model=APIResponse[BulkReprocessResponse]
+)
 @handle_api_errors("Failed to bulk reprocess documents")
 async def bulk_reprocess_documents(
     status_filter: str = Query(
@@ -702,7 +723,7 @@ async def bulk_reprocess_documents(
             reprocessed_count=0,
             total_found=0,
             errors=[],
-            criteria={"status_filter": status_filter, "limit": limit}
+            criteria={"status_filter": status_filter, "limit": limit},
         )
         return APIResponse[BulkReprocessResponse](
             success=True,
@@ -735,7 +756,10 @@ async def bulk_reprocess_documents(
         data=payload,
     )
 
-@router.get("/documents/search/advanced", response_model=APIResponse[AdvancedSearchData])
+
+@router.get(
+    "/documents/search/advanced", response_model=APIResponse[AdvancedSearchData]
+)
 @handle_api_errors("Failed to perform advanced document search")
 async def advanced_document_search(
     query: str = Query(..., description="Search query"),
@@ -856,9 +880,7 @@ async def advanced_document_search(
                 file_size=doc.file_size,
                 status=doc.status.value,
                 created_at=doc.created_at.isoformat(),
-                updated_at=(
-                    doc.updated_at.isoformat() if doc.updated_at else None
-                ),
+                updated_at=(doc.updated_at.isoformat() if doc.updated_at else None),
                 user=user_info,
                 error_message=doc.error_message,
             )

@@ -117,7 +117,6 @@ class Message(BaseModelDB):
         Index("idx_messages_created_at", "created_at"),
     )
 
-
     def __repr__(self) -> str:
         """Return string representation of Message model.
 
