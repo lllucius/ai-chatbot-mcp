@@ -11,9 +11,10 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.schemas.llm_profile import LLMProfileCreate
+
 from ..core.exceptions import NotFoundError, ValidationError
 from ..models.llm_profile import LLMProfile
-from shared.schemas.llm_profile import LLMProfileCreate
 from .base import BaseService
 
 

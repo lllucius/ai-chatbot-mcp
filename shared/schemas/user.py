@@ -64,6 +64,8 @@ Use Cases:
 """
 
 import uuid
+
+# Import datetime utilities directly since we moved from app/
 from datetime import datetime
 from typing import List, Optional
 
@@ -72,8 +74,6 @@ from pydantic import ConfigDict, EmailStr, Field, field_validator
 from .base import BaseSchema
 from .common import BaseResponse, PaginationParams
 
-# Import datetime utilities directly since we moved from app/
-from datetime import datetime
 
 def utcnow() -> datetime:
     """Get current UTC datetime."""

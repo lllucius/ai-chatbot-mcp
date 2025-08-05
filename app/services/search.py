@@ -41,9 +41,10 @@ from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from shared.schemas.document import DocumentChunkResponse, DocumentSearchRequest
+
 from ..core.exceptions import NotFoundError, SearchError
 from ..models.document import Document, DocumentChunk
-from shared.schemas.document import DocumentChunkResponse, DocumentSearchRequest
 from ..services.embedding import EmbeddingService
 from .base import BaseService
 

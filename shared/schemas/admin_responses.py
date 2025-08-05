@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-
 def utcnow() -> datetime:
     """Get current UTC datetime with timezone awareness."""
     return datetime.now(timezone.utc)

@@ -370,7 +370,7 @@ async def test_tool(
             except json.JSONDecodeError:
                 error_message("Invalid JSON format for test parameters")
                 return
-        
+
         response = await sdk.mcp.test_tool(tool_name, test_params)
         if response and response.get("success"):
             success_message(f"MCP tool '{tool_name}' test completed successfully")
@@ -669,23 +669,23 @@ def _display_server_status(status_data):
     if not status_data:
         warning_message("No server status data available")
         return
-    
+
     servers = status_data.get("servers", [])
     if not servers:
         warning_message("No servers found")
         return
-    
+
     status_table = Table(title="MCP Server Status", box=box.ROUNDED)
     status_table.add_column("Server", style="cyan")
     status_table.add_column("Status", style="bold")
     status_table.add_column("Connected", style="green")
     status_table.add_column("Tools", style="blue")
     status_table.add_column("Last Check", style="dim")
-    
+
     for server in servers:
         status_style = "green" if server.get("is_connected") else "red"
         connected_text = "✓" if server.get("is_connected") else "✗"
-        
+
         status_table.add_row(
             server.get("name", "Unknown"),
             f"[{status_style}]{server.get('status', 'Unknown')}[/{status_style}]",
@@ -693,21 +693,21 @@ def _display_server_status(status_data):
             str(server.get("tool_count", 0)),
             server.get("last_check", "Never")
         )
-    
+
     console.print(status_table)
-    
+
     # Display summary
     total_servers = len(servers)
     connected_servers = sum(1 for s in servers if s.get("is_connected"))
     total_tools = sum(s.get("tool_count", 0) for s in servers)
-    
+
     summary_table = Table(title="Summary", box=box.SIMPLE)
     summary_table.add_column("Metric", style="cyan")
     summary_table.add_column("Value", style="bold")
-    
+
     summary_table.add_row("Total Servers", str(total_servers))
     summary_table.add_row("Connected Servers", f"{connected_servers}/{total_servers}")
     summary_table.add_row("Total Tools", str(total_tools))
-    
+
     print()
     console.print(summary_table)

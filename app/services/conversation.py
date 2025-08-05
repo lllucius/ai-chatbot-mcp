@@ -31,8 +31,6 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError, ValidationError
-from ..models.conversation import Conversation, Message
 from shared.schemas.conversation import (
     ChatRequest,
     ConversationCreate,
@@ -42,6 +40,9 @@ from shared.schemas.conversation import (
 )
 from shared.schemas.document import DocumentSearchRequest
 from shared.schemas.tool_calling import ToolCallResult, ToolCallSummary
+
+from ..core.exceptions import NotFoundError, ValidationError
+from ..models.conversation import Conversation, Message
 from ..services.embedding import EmbeddingService
 from ..services.llm_profile_service import LLMProfileService
 from ..services.mcp_service import MCPService

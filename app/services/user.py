@@ -62,11 +62,12 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.schemas.user import UserUpdate
+
 from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
 from ..models.conversation import Conversation
 from ..models.document import Document
 from ..models.user import User
-from shared.schemas.user import UserUpdate
 from ..utils.security import get_password_hash, verify_password
 from ..utils.timestamp import utcnow
 from .base import BaseService

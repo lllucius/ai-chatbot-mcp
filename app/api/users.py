@@ -3,28 +3,25 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.schemas.common import (
+    APIResponse,
+    ErrorResponse,
+    PaginatedResponse,
+)
 from shared.schemas.user import (
     UserPasswordUpdate,
     UserResponse,
     UserStatsResponse,
     UserUpdate,
 )
-from shared.schemas.common import (
-    APIResponse,
-    ErrorResponse,
-    PaginatedResponse,
-)
-
-from sqlalchemy import func, select
-
-from ..models.user import User as UserModel
-
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
+from ..models.user import User as UserModel
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 

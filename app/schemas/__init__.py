@@ -8,8 +8,8 @@ instead of from app.schemas.
 Example:
     # Old import (deprecated)
     from app.schemas import UserResponse
-    
-    # New import (preferred)  
+
+    # New import (preferred)
     from shared.schemas import UserResponse
 
 This change eliminates code duplication and ensures consistency between

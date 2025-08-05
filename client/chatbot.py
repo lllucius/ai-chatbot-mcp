@@ -152,10 +152,12 @@ except ImportError:
 
 import contextlib
 
-from .ai_chatbot_sdk import (
-    AIChatbotSDK,
-    ApiError,
-)
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.table import Table
+
 from shared.schemas import (
     ChatRequest,
     DocumentSearchRequest,
@@ -165,17 +167,17 @@ from shared.schemas import (
     UserPasswordUpdate,
     UserUpdate,
 )
+
+from .ai_chatbot_sdk import (
+    AIChatbotSDK,
+    ApiError,
+)
 from .config import (
     ClientConfig,
     get_default_backup_dir,
     get_default_token_file,
     load_config,
 )
-from rich import box
-from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Prompt
-from rich.table import Table
 
 console: Console = Console()
 config: ClientConfig = load_config()

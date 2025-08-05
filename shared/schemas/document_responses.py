@@ -9,17 +9,16 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
-
 class DocumentUserInfo(BaseModel):
     """User information for document responses."""
-    
+
     username: str = Field(..., description="Username of the document owner")
     email: str = Field(..., description="Email of the document owner")
 
 
 class DocumentSearchResult(BaseModel):
     """Individual document search result."""
-    
+
     id: str = Field(..., description="Document ID")
     title: str = Field(..., description="Document title")
     file_name: str = Field(..., description="Original file name")
@@ -33,7 +32,7 @@ class DocumentSearchResult(BaseModel):
 
 class DocumentSearchCriteria(BaseModel):
     """Search criteria used for the document search."""
-    
+
     query: str = Field(..., description="Search query")
     file_types: Optional[str] = Field(default=None, description="File type filters")
     status_filter: Optional[str] = Field(default=None, description="Status filter")
@@ -47,7 +46,7 @@ class DocumentSearchCriteria(BaseModel):
 
 class AdvancedSearchData(BaseModel):
     """Advanced document search results data."""
-    
+
     results: List[DocumentSearchResult] = Field(default_factory=list, description="Search results")
     total_found: int = Field(..., description="Total number of documents found")
     search_criteria: DocumentSearchCriteria = Field(..., description="Search criteria used")
@@ -56,7 +55,7 @@ class AdvancedSearchData(BaseModel):
 
 class DocumentStorageStats(BaseModel):
     """Document storage statistics."""
-    
+
     total_size_bytes: int = Field(..., description="Total storage used in bytes")
     total_size_mb: float = Field(..., description="Total storage used in MB")
     avg_file_size_bytes: float = Field(..., description="Average file size in bytes")
@@ -64,7 +63,7 @@ class DocumentStorageStats(BaseModel):
 
 class DocumentFileTypeStats(BaseModel):
     """File type statistics."""
-    
+
     extension: str = Field(..., description="File extension")
     count: int = Field(..., description="Number of files with this extension")
     total_size: int = Field(..., description="Total size of files with this extension")
@@ -72,7 +71,7 @@ class DocumentFileTypeStats(BaseModel):
 
 class DocumentTopUser(BaseModel):
     """Top document uploader information."""
-    
+
     username: str = Field(..., description="Username")
     document_count: int = Field(..., description="Number of documents uploaded")
     total_size_bytes: int = Field(..., description="Total size of uploaded documents")
@@ -80,7 +79,7 @@ class DocumentTopUser(BaseModel):
 
 class DocumentProcessingStats(BaseModel):
     """Document processing statistics."""
-    
+
     success_rate: float = Field(..., description="Processing success rate percentage")
     avg_processing_time_seconds: float = Field(..., description="Average processing time in seconds")
     total_processed: int = Field(..., description="Total number of processed documents")
@@ -88,14 +87,14 @@ class DocumentProcessingStats(BaseModel):
 
 class DocumentRecentActivity(BaseModel):
     """Recent document activity metrics."""
-    
+
     uploads_last_7_days: int = Field(..., description="Number of uploads in last 7 days")
     processed_last_7_days: int = Field(..., description="Number of processed documents in last 7 days")
 
 
 class DocumentStatisticsData(BaseModel):
     """Document statistics data model."""
-    
+
     counts_by_status: Dict[str, int] = Field(default_factory=dict, description="Document counts by status")
     total_documents: int = Field(..., description="Total number of documents")
     storage: DocumentStorageStats = Field(..., description="Storage usage statistics")

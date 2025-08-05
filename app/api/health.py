@@ -25,7 +25,6 @@ from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
 
 
-
 # Define additional health data models not in the schema files
 class OpenAIHealthData(BaseModel):
     """OpenAI service health data."""

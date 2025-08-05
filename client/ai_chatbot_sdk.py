@@ -125,50 +125,43 @@ import httpx
 
 # Import all schema models from shared package instead of defining locally
 from shared.schemas import (
-    # Auth schemas
-    RegisterRequest,
-    Token,
-    PasswordResetRequest,
-    PasswordResetConfirm,
-    
     # Base and common schemas
     BaseResponse,
     BaseSchema,
-    PaginationParams,
-    ConversationStatsResponse,
-    RegistryStatsResponse,
-    DatabaseHealthResponse,
-    ServicesHealthResponse,
-    SystemMetricsResponse,
-    
-    # User schemas
-    UserUpdate,
-    UserPasswordUpdate,
-    UserResponse,
-    UserStatsResponse,
-    
-    # Conversation schemas
-    ConversationCreate,
-    ConversationUpdate,
-    ConversationResponse,
-    MessageResponse,
     ChatRequest,
     ChatResponse,
-    
+    # Conversation schemas
+    ConversationCreate,
+    ConversationResponse,
+    ConversationStatsResponse,
+    ConversationUpdate,
+    DatabaseHealthResponse,
     # Document schemas
     DocumentResponse,
     DocumentSearchRequest,
-    
+    LLMProfileCreate,
     # LLM Profile schemas
     LLMProfileResponse,
-    LLMProfileCreate,
-    
+    MessageResponse,
+    PaginationParams,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    PromptCreate,
     # Prompt schemas
     PromptResponse,
-    PromptCreate,
-    
+    # Auth schemas
+    RegisterRequest,
+    RegistryStatsResponse,
     # Search schemas
     SearchResponse,
+    ServicesHealthResponse,
+    SystemMetricsResponse,
+    Token,
+    UserPasswordUpdate,
+    UserResponse,
+    UserStatsResponse,
+    # User schemas
+    UserUpdate,
 )
 
 # --- Exceptions ---

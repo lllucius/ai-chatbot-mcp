@@ -243,7 +243,7 @@ async def auth_status():
                 user_info = await cli_manager.get_current_user()
                 print("\nAuthentication Status:")
                 print("=====================")
-                print(f"Status: Authenticated")
+                print("Status: Authenticated")
                 print(f"Username: {user_info.get('username', 'Unknown')}")
                 print(f"Email: {user_info.get('email', 'Unknown')}")
                 print(f"Superuser: {'Yes' if user_info.get('is_superuser') else 'No'}")
@@ -272,7 +272,7 @@ async def version():
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
         _ = await sdk.health.basic()
         app_info = await sdk._request("/")
-        
+
         print("\nVersion Information:")
         print("===================")
         print("AI Chatbot Platform API CLI")
@@ -281,7 +281,7 @@ async def version():
         print(f"Application Version: {app_info.get('version', 'Unknown')}")
         print(f"Description: {app_info.get('description', 'N/A')}")
         print(f"API Status: {app_info.get('status', 'Unknown')}")
-        print(f"CLI Mode: API-based")
+        print("CLI Mode: API-based")
     except Exception as e:
         error_message(f"Failed to get version information: {str(e)}")
         raise SystemExit(1)
@@ -296,7 +296,7 @@ async def health():
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
-        
+
         print("\nHealth Check:")
         print("=============")
         print("Performing comprehensive health check...")
@@ -364,7 +364,7 @@ async def status():
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
-        
+
         print("\nSystem Status:")
         print("==============")
         print("AI Chatbot Platform System Status")

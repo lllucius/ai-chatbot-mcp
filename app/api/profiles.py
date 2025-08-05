@@ -201,12 +201,12 @@ async def get_default_profile(
     if not profile:
         raise HTTPException(
             status_code=404,
-            detail=f"Default profile not set",
+            detail="Default profile not set",
         )
     payload = LLMProfileResponse.model_validate(profile)
     return APIResponse[LLMProfileResponse](
         success=True,
-        message=f"Default profile details retrieved successfully",
+        message="Default profile details retrieved successfully",
         data=payload,
     )
 

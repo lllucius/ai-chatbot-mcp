@@ -16,7 +16,7 @@ Key Features:
 Schema Hierarchy:
 - BaseSchema: Foundation class with core Pydantic V2 configuration
 - TimestampMixin: Provides timestamp fields and JSON serialization
-- UUIDMixin: Provides UUID field and JSON serialization  
+- UUIDMixin: Provides UUID field and JSON serialization
 - BaseModelSchema: Complete base combining UUID and timestamp functionality
 
 Configuration Features:
@@ -65,10 +65,10 @@ from pydantic import BaseModel, ConfigDict
 
 def serialize_datetime_to_iso(dt: datetime) -> str:
     """Serialize datetime to ISO format with Z suffix for UTC.
-    
+
     Args:
         dt: Datetime object to serialize
-        
+
     Returns:
         ISO format string with Z suffix for UTC
 

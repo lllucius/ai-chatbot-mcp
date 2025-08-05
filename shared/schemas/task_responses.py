@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
-
 class TaskSystemStatusData(BaseModel):
     """Task system status data model."""
 
@@ -156,14 +155,14 @@ class TaskStatisticsResponse(BaseModel):
 
 class TasksSummary(BaseModel):
     """Summary of active tasks for monitoring."""
-    
+
     count: int = Field(..., description="Number of active tasks")
     workers_busy: int = Field(..., description="Number of workers with active tasks")
 
 
 class WorkersSummary(BaseModel):
     """Summary of workers for monitoring."""
-    
+
     total: int = Field(..., description="Total number of workers")
     online: int = Field(..., description="Number of online workers")
 

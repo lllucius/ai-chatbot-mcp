@@ -9,10 +9,9 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
-
 class PromptCategoryInfo(BaseModel):
     """Prompt category information."""
-    
+
     name: str = Field(..., description="Category name")
     count: int = Field(..., description="Number of prompts in category")
     description: Optional[str] = Field(default=None, description="Category description")
@@ -20,7 +19,7 @@ class PromptCategoryInfo(BaseModel):
 
 class PromptStatisticsData(BaseModel):
     """Prompt statistics data."""
-    
+
     total_prompts: int = Field(..., description="Total number of prompts")
     active_prompts: int = Field(..., description="Number of active prompts")
     default_prompt: str = Field(..., description="Name of default prompt")
@@ -33,7 +32,7 @@ class PromptStatisticsData(BaseModel):
 
 class PromptCategoriesData(BaseModel):
     """Prompt categories and tags data."""
-    
+
     categories: List[str] = Field(default_factory=list, description="Available prompt categories")
     tags: List[str] = Field(default_factory=list, description="Available prompt tags")
 

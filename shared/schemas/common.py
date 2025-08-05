@@ -73,7 +73,7 @@ Security and Compliance:
 
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, Optional
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -157,19 +157,19 @@ class BaseResponse(BaseModel):
 
 class ErrorDetails(BaseModel):
     """Error details schema for the unified response envelope."""
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     code: str = Field(..., description="Machine-readable error code")
     details: Optional[Dict[str, Any]] = Field(default=None, description="Additional error details")
 
 
 class APIResponse(BaseResponse, Generic[T]):
     """Unified API response schema conforming to the standard envelope specification.
-    
+
     All API endpoints must return responses using this exact structure with no exceptions.
     This ensures consistent response format across the entire application.
-    
+
     Response Structure:
     {
       "success": true or false,
@@ -183,7 +183,7 @@ class APIResponse(BaseResponse, Generic[T]):
       }
     }
     """
-    
+
     data: Optional[T] = Field(default=None, description="Response data payload - single object, array, or null")
     meta: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata (pagination, stats, etc)")
     error: Optional[ErrorDetails] = Field(default=None, description="Optional error details with code and details")
@@ -236,9 +236,9 @@ class APIResponse(BaseResponse, Generic[T]):
 
 class ErrorDetail(BaseModel):
     """Detailed error information for validation and field-specific errors."""
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     code: str = Field(..., description="Error code identifier")
     message: str = Field(..., description="Human-readable error message")
     field: Optional[str] = Field(default=None, description="Field that caused the error")
@@ -372,10 +372,10 @@ class ValidationErrorResponse(ErrorResponse):
         default_factory=list, description="Detailed validation errors"
     )
 
-    @classmethod  
+    @classmethod
     def create(
         cls,
-        errors: List[Dict[str, Any]], 
+        errors: List[Dict[str, Any]],
         message: str = "Validation failed"
     ) -> JSONResponse:
         """Create validation error response using unified envelope format."""

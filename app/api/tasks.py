@@ -7,25 +7,26 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
-from shared.schemas.common import APIResponse, SuccessResponse, ErrorResponse
+from shared.schemas.common import APIResponse, ErrorResponse, SuccessResponse
 from shared.schemas.task_responses import (
-    TaskSystemStatusData,
-    WorkerInfo,
-    WorkerStatusData,
-    TaskInfo,
-    QueueInfo,
-    QueueStatusData,
     ActiveTaskInfo,
     ActiveTasksData,
     DocumentProcessingStats,
-    TaskStatisticsData,
-    TasksSummary,
-    WorkersSummary,
+    QueueInfo,
+    QueueStatusData,
+    TaskInfo,
     TaskMonitoringData,
+    TasksSummary,
+    TaskStatisticsData,
+    TaskSystemStatusData,
+    WorkerInfo,
+    WorkersSummary,
+    WorkerStatusData,
 )
+
+from ..database import get_db
+from ..dependencies import get_current_superuser, get_current_user
+from ..models.user import User
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["tasks"])
@@ -348,7 +349,7 @@ async def schedule_task(
             },
             message=f"Task '{task_name}' scheduled successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -418,7 +419,7 @@ async def retry_failed_tasks(
             },
             message=f"Retry initiated for {retried_count} failed tasks"
         )
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise
 
@@ -445,7 +446,7 @@ async def purge_queue(
             },
             message=f"Queue '{queue_name}' purged successfully"
         )
-    except Exception as e:
+    except Exception:
         raise
 
 
