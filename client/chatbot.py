@@ -158,26 +158,61 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from shared.schemas import (
-    ChatRequest,
-    DocumentSearchRequest,
-    LLMProfileCreate,
-    PromptCreate,
-    ToolHandlingMode,
-    UserPasswordUpdate,
-    UserUpdate,
-)
+try:
+    # Try relative imports first (when run as module)
+    from shared.schemas import (
+        ChatRequest,
+        DocumentSearchRequest,
+        LLMProfileCreate,
+        PromptCreate,
+        ToolHandlingMode,
+        UserPasswordUpdate,
+        UserUpdate,
+    )
+except ImportError:
+    # Fall back to absolute imports (when run as script)
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    
+    from shared.schemas import (
+        ChatRequest,
+        DocumentSearchRequest,
+        LLMProfileCreate,
+        PromptCreate,
+        ToolHandlingMode,
+        UserPasswordUpdate,
+        UserUpdate,
+    )
 
-from .ai_chatbot_sdk import (
-    AIChatbotSDK,
-    ApiError,
-)
-from .config import (
-    ClientConfig,
-    get_default_backup_dir,
-    get_default_token_file,
-    load_config,
-)
+try:
+    # Try relative imports first (when run as module)
+    from .ai_chatbot_sdk import (
+        AIChatbotSDK,
+        ApiError,
+    )
+    from .config import (
+        ClientConfig,
+        get_default_backup_dir,
+        get_default_token_file,
+        load_config,
+    )
+except ImportError:
+    # Fall back to absolute imports (when run as script)
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    
+    from client.ai_chatbot_sdk import (
+        AIChatbotSDK,
+        ApiError,
+    )
+    from client.config import (
+        ClientConfig,
+        get_default_backup_dir,
+        get_default_token_file,
+        load_config,
+    )
 
 console: Console = Console()
 config: ClientConfig = load_config()
