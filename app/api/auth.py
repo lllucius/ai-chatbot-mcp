@@ -94,31 +94,41 @@ async def refresh_token(
     )
 
 
-@router.post("/password-reset", response_model=APIResponse)
+@router.post("/password-reset", response_model=APIResponse, deprecated=True)
 @handle_api_errors("Password reset request failed")
 async def request_password_reset(
     request: PasswordResetRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse:
-    """Request password reset through administrative channels."""
+    """Request password reset through administrative channels.
+    
+    **DEPRECATED**: Use POST /api/v1/users/password-reset instead. 
+    This endpoint will be removed in v2.0.
+    """
     log_api_call("request_password_reset", email=request.email)
 
     return APIResponse(
         success=True,
-        message="Password reset request noted. Contact system administrator for password changes.",
+        message="Password reset request noted. Contact system administrator for password changes. "
+                "DEPRECATED: Use /api/v1/users/password-reset instead.",
     )
 
 
-@router.post("/password-reset/confirm", response_model=APIResponse)
+@router.post("/password-reset/confirm", response_model=APIResponse, deprecated=True)
 @handle_api_errors("Password reset confirmation failed")
 async def confirm_password_reset(
     request: PasswordResetConfirm,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse:
-    """Confirm password reset through administrative channels."""
+    """Confirm password reset through administrative channels.
+    
+    **DEPRECATED**: Use POST /api/v1/users/password-reset/confirm instead.
+    This endpoint will be removed in v2.0.
+    """
     log_api_call("confirm_password_reset", token=request.token[:8] + "...")
 
     return APIResponse(
         success=True,
-        message="Password reset must be performed by system administrator through user management interface.",
+        message="Password reset must be performed by system administrator through user management interface. "
+                "DEPRECATED: Use /api/v1/users/password-reset/confirm instead.",
     )

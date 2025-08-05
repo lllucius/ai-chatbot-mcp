@@ -201,7 +201,8 @@ def get_basic_openapi_schema():
             "/api/v1/auth/password-reset": {
                 "post": {
                     "summary": "Request password reset",
-                    "description": "Request password reset through administrative channels",
+                    "description": "Request password reset through administrative channels (DEPRECATED: Use /api/v1/users/password-reset instead)",
+                    "deprecated": True,
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -226,7 +227,8 @@ def get_basic_openapi_schema():
             "/api/v1/auth/password-reset/confirm": {
                 "post": {
                     "summary": "Confirm password reset",
-                    "description": "Confirm password reset through administrative channels",
+                    "description": "Confirm password reset through administrative channels (DEPRECATED: Use /api/v1/users/password-reset/confirm instead)",
+                    "deprecated": True,
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -308,6 +310,56 @@ def get_basic_openapi_schema():
                     "responses": {
                         "200": {
                             "description": "Password changed successfully",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/APIResponse"}
+                                }
+                            }
+                        }
+                    },
+                    "tags": ["users"]
+                }
+            },
+            "/api/v1/users/password-reset": {
+                "post": {
+                    "summary": "Request password reset",
+                    "description": "Request password reset for user account (consolidated endpoint)",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object"}
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Password reset request processed",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/APIResponse"}
+                                }
+                            }
+                        }
+                    },
+                    "tags": ["users"]
+                }
+            },
+            "/api/v1/users/password-reset/confirm": {
+                "post": {
+                    "summary": "Confirm password reset",
+                    "description": "Confirm password reset with token (consolidated endpoint)",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object"}
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Password reset confirmed successfully",
                             "content": {
                                 "application/json": {
                                     "schema": {"$ref": "#/components/schemas/APIResponse"}

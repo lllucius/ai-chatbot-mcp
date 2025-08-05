@@ -51,6 +51,101 @@ def test_users_me_endpoint_exists_in_code():
     assert '@router.get("/me"' in users_content, "The GET /me route should exist in users.py"
     assert '@router.put("/me"' in users_content, "The PUT /me route should exist in users.py"
 
+def test_password_reset_endpoints_added_to_users():
+    """
+    Test that password reset endpoints have been added to users API.
+    
+    This verifies Phase 2 of the API consolidation - moving password reset
+    endpoints from auth API to users API.
+    """
+    # Get the users.py file path
+    project_root = Path(__file__).parent.parent
+    users_file = project_root / "app" / "api" / "users.py"
+    
+    # Read the users.py file
+    with open(users_file, 'r') as f:
+        users_content = f.read()
+    
+    # Check that password reset endpoints exist in users API
+    assert "async def request_password_reset(" in users_content, "The request_password_reset function should exist in users.py"
+    assert "async def confirm_password_reset(" in users_content, "The confirm_password_reset function should exist in users.py"
+    assert '@router.post("/password-reset"' in users_content, "The POST /password-reset route should exist in users.py"
+    assert '@router.post("/password-reset/confirm"' in users_content, "The POST /password-reset/confirm route should exist in users.py"
+    
+    # Check that imports are correct
+    assert "PasswordResetConfirm" in users_content, "PasswordResetConfirm should be imported"
+    assert "PasswordResetRequest" in users_content, "PasswordResetRequest should be imported"
+
+def test_user_service_password_methods_added():
+    """
+    Test that password reset methods have been added to UserService.
+    
+    This verifies that the service layer supports the new consolidated
+    password reset functionality.
+    """
+    # Get the user service file path
+    project_root = Path(__file__).parent.parent
+    service_file = project_root / "app" / "services" / "user.py"
+    
+    # Read the user service file
+    with open(service_file, 'r') as f:
+        service_content = f.read()
+    
+    # Check that password reset methods exist
+    assert "async def request_password_reset(" in service_content, "request_password_reset method should exist in UserService"
+    assert "async def confirm_password_reset(" in service_content, "confirm_password_reset method should exist in UserService"
+    assert "async def get_user_by_id(" in service_content, "get_user_by_id method should exist in UserService"
+    assert "async def update_user_password(" in service_content, "update_user_password method should exist in UserService"
+
+def test_auth_api_password_endpoints_deprecated():
+    """
+    Test that auth API password reset endpoints are properly deprecated.
+    
+    This verifies that the auth API endpoints include deprecation warnings
+    and references to the new consolidated endpoints.
+    """
+    # Get the auth.py file path
+    project_root = Path(__file__).parent.parent
+    auth_file = project_root / "app" / "api" / "auth.py"
+    
+    # Read the auth.py file
+    with open(auth_file, 'r') as f:
+        auth_content = f.read()
+    
+    # Check that deprecation is properly marked
+    assert "deprecated=True" in auth_content, "Auth password reset endpoints should be marked as deprecated"
+    assert "DEPRECATED" in auth_content, "Deprecation warning should be in the docstrings/messages"
+    assert "/api/v1/users/password-reset" in auth_content, "Should reference new consolidated endpoints"
+
+def test_openapi_shows_consolidated_endpoints():
+    """
+    Test that OpenAPI generation includes both deprecated and new endpoints.
+    
+    This verifies that the OpenAPI schema correctly shows the API consolidation
+    with proper deprecation markings.
+    """
+    from scripts.generate_openapi_simple import get_basic_openapi_schema
+    
+    schema = get_basic_openapi_schema()
+    
+    # Verify basic structure
+    assert "openapi" in schema
+    assert "paths" in schema
+    
+    # Check that consolidated endpoints exist
+    assert "/api/v1/users/password-reset" in schema["paths"], "New consolidated password reset endpoint should exist"
+    assert "/api/v1/users/password-reset/confirm" in schema["paths"], "New consolidated password reset confirm endpoint should exist"
+    
+    # Check that deprecated endpoints are marked
+    auth_reset_path = schema["paths"].get("/api/v1/auth/password-reset", {}).get("post", {})
+    assert auth_reset_path.get("deprecated") is True, "Auth password reset should be marked as deprecated"
+    
+    auth_confirm_path = schema["paths"].get("/api/v1/auth/password-reset/confirm", {}).get("post", {})
+    assert auth_confirm_path.get("deprecated") is True, "Auth password reset confirm should be marked as deprecated"
+    
+    # Check endpoint count increase
+    assert len(schema["paths"]) >= 18, "Should have increased endpoint count with new consolidated endpoints"
+
 def test_openapi_generation_works():
     """Test that OpenAPI generation script works correctly."""
     from scripts.generate_openapi_simple import get_basic_openapi_schema

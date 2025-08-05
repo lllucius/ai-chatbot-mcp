@@ -12,6 +12,10 @@ from shared.schemas.common import (
     PaginatedResponse,
     PaginationParams,
 )
+from shared.schemas.auth import (
+    PasswordResetConfirm,
+    PasswordResetRequest,
+)
 from shared.schemas.user import (
     UserPasswordUpdate,
     UserResponse,
@@ -92,6 +96,42 @@ async def change_password(
     return APIResponse(
         success=True,
         message="Password changed successfully",
+    )
+
+
+@router.post("/password-reset", response_model=APIResponse)
+@handle_api_errors("Password reset request failed")
+async def request_password_reset(
+    request: PasswordResetRequest,
+    user_service: UserService = Depends(get_user_service),
+) -> APIResponse:
+    """Request password reset for user account."""
+    log_api_call("request_password_reset", email=request.email)
+    
+    # Implementation note: This provides a consolidated password reset endpoint
+    # that handles the full password reset workflow through the UserService
+    await user_service.request_password_reset(request.email)
+    
+    return APIResponse(
+        success=True,
+        message="Password reset request processed. Check email for instructions.",
+    )
+
+
+@router.post("/password-reset/confirm", response_model=APIResponse)
+@handle_api_errors("Password reset confirmation failed")
+async def confirm_password_reset(
+    request: PasswordResetConfirm,
+    user_service: UserService = Depends(get_user_service),
+) -> APIResponse:
+    """Confirm password reset with token."""
+    log_api_call("confirm_password_reset", token=request.token[:8] + "...")
+    
+    await user_service.confirm_password_reset(request.token, request.new_password)
+    
+    return APIResponse(
+        success=True,
+        message="Password reset successfully. You can now log in with your new password.",
     )
 
 
