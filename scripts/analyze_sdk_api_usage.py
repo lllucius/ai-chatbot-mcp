@@ -28,12 +28,23 @@ def extract_api_routes_from_file(file_path: Path) -> List[Tuple[str, str, str]]:
     with open(file_path, 'r') as f:
         content = f.read()
     
-    # Find @router.method("/path") patterns
-    route_pattern = r'@router\.(\w+)\("([^"]+)"[^)]*\)\s*(?:@[^)]+\)\s*)*\s*async def (\w+)'
+    # Find @router.method("/path") patterns - handle multi-line definitions
+    # This regex handles both single-line and multi-line router definitions
+    route_pattern = r'@router\.(\w+)\(\s*"([^"]+)"[^)]*\)(?:\s*@[^)]+\))*\s*async def (\w+)'
     matches = re.findall(route_pattern, content, re.MULTILINE | re.DOTALL)
     
     for method, route, func_name in matches:
         routes.append((method.upper(), route, func_name))
+    
+    # Handle edge cases where the route definition spans multiple lines
+    # Look for patterns like @router.post(\n    "/path"
+    multiline_pattern = r'@router\.(\w+)\(\s*\n\s*"([^"]+)"[^)]*\)(?:\s*@[^)]+\))*\s*async def (\w+)'
+    multiline_matches = re.findall(multiline_pattern, content, re.MULTILINE | re.DOTALL)
+    
+    for method, route, func_name in multiline_matches:
+        # Avoid duplicates
+        if (method.upper(), route, func_name) not in [(m, r, f) for m, r, f in routes]:
+            routes.append((method.upper(), route, func_name))
     
     return routes
 
