@@ -10,6 +10,7 @@ from shared.schemas.common import (
     APIResponse,
     ErrorResponse,
     PaginatedResponse,
+    PaginationParams,
 )
 from shared.schemas.user import (
     UserPasswordUpdate,

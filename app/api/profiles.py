@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import (
@@ -154,7 +154,7 @@ async def delete_profile(
         "delete_llm_profile", user_id=current_user.id, profile_name=profile_name
     )
 
-    await profile_service.delete_profile(profile_name)
+    success = await profile_service.delete_profile(profile_name)
 
     if not success:
         raise HTTPException(
