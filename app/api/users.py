@@ -232,7 +232,7 @@ async def promote_user_to_superuser(
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                dddetail="User not found",
+                detail="User not found",
             )
 
         if user.is_superuser:
@@ -449,6 +449,13 @@ async def get_user_statistics(
     )
 
     UserStatsResponse(
+        total_users=total_users or 0,
+        active_users=active_users or 0,
+        inactive_users=(total_users or 0) - (active_users or 0),
+        superusers=superusers or 0,
+    )
+
+    stats_data = UserStatsResponse(
         total_users=total_users or 0,
         active_users=active_users or 0,
         inactive_users=(total_users or 0) - (active_users or 0),

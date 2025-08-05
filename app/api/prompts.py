@@ -222,9 +222,9 @@ async def get_prompt_stats(
 
     stats = await prompt_service.get_prompt_stats()
 
-    payload = PromptStatisticsData(PromptStatisticsData.model_validate(stats))
+    payload = PromptStatisticsData.model_validate(stats)
 
-    return APIResponse(
+    return APIResponse[PromptStatisticsData](
         success=True,
         message="Prompt statistics retrieved successfully",
         data=payload,
