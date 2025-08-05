@@ -70,5 +70,9 @@ class LLMProfileStatisticsData(BaseModel):
     total_profiles: int = Field(..., description="Total number of profiles")
     active_profiles: int = Field(..., description="Number of active profiles")
     default_profile: str = Field(..., description="Name of default profile")
-    most_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used profiles")
-    recently_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used profiles")
+    most_used: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Most frequently used profiles"
+    )
+    recently_used: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Most frequently used profiles"
+    )

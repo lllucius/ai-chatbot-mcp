@@ -124,35 +124,28 @@ from uuid import UUID
 import httpx
 
 # Import all schema models from shared package instead of defining locally
-from shared.schemas import (
-    # Base and common schemas
+from shared.schemas import (  # Base and common schemas; Conversation schemas; Document schemas; LLM Profile schemas; Prompt schemas; Auth schemas; Search schemas; User schemas
     BaseResponse,
     BaseSchema,
     ChatRequest,
     ChatResponse,
-    # Conversation schemas
     ConversationCreate,
     ConversationResponse,
     ConversationStatsResponse,
     ConversationUpdate,
     DatabaseHealthResponse,
-    # Document schemas
     DocumentResponse,
     DocumentSearchRequest,
     LLMProfileCreate,
-    # LLM Profile schemas
     LLMProfileResponse,
     MessageResponse,
     PaginationParams,
     PasswordResetConfirm,
     PasswordResetRequest,
     PromptCreate,
-    # Prompt schemas
     PromptResponse,
-    # Auth schemas
     RegisterRequest,
     RegistryStatsResponse,
-    # Search schemas
     SearchResponse,
     ServicesHealthResponse,
     SystemMetricsResponse,
@@ -160,7 +153,6 @@ from shared.schemas import (
     UserPasswordUpdate,
     UserResponse,
     UserStatsResponse,
-    # User schemas
     UserUpdate,
 )
 
@@ -411,11 +403,15 @@ class HealthClient:
 
     async def database(self) -> DatabaseHealthResponse:
         """Check database connectivity status."""
-        return await self.sdk._request("/api/v1/health/database", DatabaseHealthResponse)
+        return await self.sdk._request(
+            "/api/v1/health/database", DatabaseHealthResponse
+        )
 
     async def services(self) -> ServicesHealthResponse:
         """Check external services status."""
-        return await self.sdk._request("/api/v1/health/services", ServicesHealthResponse)
+        return await self.sdk._request(
+            "/api/v1/health/services", ServicesHealthResponse
+        )
 
     async def metrics(self) -> SystemMetricsResponse:
         """Get system metrics and performance data."""
@@ -431,7 +427,9 @@ class HealthClient:
 
     async def performance(self) -> PerformanceMetricsResponse:
         """Get performance metrics."""
-        return await self.sdk._request("/api/v1/health/performance", PerformanceMetricsResponse)
+        return await self.sdk._request(
+            "/api/v1/health/performance", PerformanceMetricsResponse
+        )
 
 
 class AuthClient:
@@ -1005,11 +1003,15 @@ class ConversationsClient:
 
     async def stats(self) -> ConversationStatsResponse:
         """Get conversation statistics."""
-        return await self.sdk._request("/api/v1/conversations/stats", ConversationStatsResponse)
+        return await self.sdk._request(
+            "/api/v1/conversations/stats", ConversationStatsResponse
+        )
 
     async def registry_stats(self) -> RegistryStatsResponse:
         """Get registry statistics showing prompt, profile, and tool usage."""
-        return await self.sdk._request("/api/v1/conversations/registry-stats", RegistryStatsResponse)
+        return await self.sdk._request(
+            "/api/v1/conversations/registry-stats", RegistryStatsResponse
+        )
 
     async def search(
         self,
@@ -1019,19 +1021,23 @@ class ConversationsClient:
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
         active_only: bool = True,
-        limit: int = 20
+        limit: int = 20,
     ) -> SearchResponse:
         """Search conversations and messages."""
-        params = filter_query({
-            "query": query,
-            "search_messages": search_messages,
-            "user_filter": user_filter,
-            "date_from": date_from,
-            "date_to": date_to,
-            "active_only": active_only,
-            "limit": limit,
-        })
-        return await self.sdk._request("/api/v1/conversations/search", SearchResponse, params=params)
+        params = filter_query(
+            {
+                "query": query,
+                "search_messages": search_messages,
+                "user_filter": user_filter,
+                "date_from": date_from,
+                "date_to": date_to,
+                "active_only": active_only,
+                "limit": limit,
+            }
+        )
+        return await self.sdk._request(
+            "/api/v1/conversations/search", SearchResponse, params=params
+        )
 
 
 class SearchClient:

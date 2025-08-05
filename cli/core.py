@@ -160,6 +160,7 @@ async def login(
             username = input("Username: ")
         if not password:
             import getpass
+
             password = getpass.getpass("Password: ")
         token = await cli_manager.login(username, password)
         if save_token:
@@ -324,9 +325,7 @@ async def health():
 
         # Database Status
         db_status = health_data.get("database", {})
-        db_indicator = (
-            "Connected" if db_status.get("connected") else "Disconnected"
-        )
+        db_indicator = "Connected" if db_status.get("connected") else "Disconnected"
         print(f"Database: {db_indicator}")
 
         # Services Status
@@ -383,15 +382,23 @@ async def status():
                 print("-" * 50)
 
                 users_data = data.get("users", {})
-                print(f"{'Users':<15} {'Total':<15} {str(users_data.get('total', 0)):<15}")
+                print(
+                    f"{'Users':<15} {'Total':<15} {str(users_data.get('total', 0)):<15}"
+                )
                 print(f"{'':<15} {'Active':<15} {str(users_data.get('active', 0)):<15}")
 
                 docs_data = data.get("documents", {})
-                print(f"{'Documents':<15} {'Total':<15} {str(docs_data.get('total', 0)):<15}")
-                print(f"{'':<15} {'Processed':<15} {str(docs_data.get('processed', 0)):<15}")
+                print(
+                    f"{'Documents':<15} {'Total':<15} {str(docs_data.get('total', 0)):<15}"
+                )
+                print(
+                    f"{'':<15} {'Processed':<15} {str(docs_data.get('processed', 0)):<15}"
+                )
 
                 convs_data = data.get("conversations", {})
-                print(f"{'Conversations':<15} {'Total':<15} {str(convs_data.get('total', 0)):<15}")
+                print(
+                    f"{'Conversations':<15} {'Total':<15} {str(convs_data.get('total', 0)):<15}"
+                )
 
                 health_data = data.get("system_health", {})
                 print(f"{'Health':<15} {'Score':<15} {health_data.get('score', 0)}/100")
@@ -483,7 +490,7 @@ async def config():
 
         print("\nConfiguration Settings:")
         print("=======================")
-        max_key_length = max(len(key) for key in config_data.keys())
+        max_key_length = max(len(key) for key in config_data)
         for key, value in config_data.items():
             print(f"{key.ljust(max_key_length)}: {value}")
         print()

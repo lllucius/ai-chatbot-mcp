@@ -63,9 +63,12 @@ Example Usage:
 from typing import Optional
 
 from async_typer import AsyncTyper
+from rich.console import Console
 from typer import Argument, Option
 
 from .base import error_message, get_sdk, success_message
+
+console = Console()
 
 prompt_app = AsyncTyper(help="Prompt management commands", rich_markup_mode=None)
 

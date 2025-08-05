@@ -76,11 +76,16 @@ Integration:
 from typing import Optional
 
 from async_typer import AsyncTyper
+from rich.console import Console
 from typer import Option
 
 from .base import error_message, get_sdk, success_message
 
-analytics_app = AsyncTyper(help="Analytics and reporting commands", rich_markup_mode=None)
+console = Console()
+
+analytics_app = AsyncTyper(
+    help="Analytics and reporting commands", rich_markup_mode=None
+)
 
 
 @analytics_app.async_command()

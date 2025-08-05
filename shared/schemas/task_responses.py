@@ -18,7 +18,9 @@ class TaskSystemStatusData(BaseModel):
     reserved_tasks: int = Field(..., description="Number of reserved tasks in queue")
     system_status: str = Field(..., description="Overall system health status")
     timestamp: str = Field(..., description="Status timestamp")
-    error: Optional[str] = Field(default=None, description="Error message if status unavailable")
+    error: Optional[str] = Field(
+        default=None, description="Error message if status unavailable"
+    )
 
 
 class TaskSystemStatusResponse(BaseModel):
@@ -39,13 +41,17 @@ class WorkerInfo(BaseModel):
     current_load: int = Field(..., description="Current task execution load")
     broker_transport: str = Field(..., description="Message broker transport mechanism")
     prefetch_count: int = Field(..., description="Task prefetch multiplier setting")
-    last_heartbeat: str = Field(..., description="Most recent worker heartbeat timestamp")
+    last_heartbeat: str = Field(
+        ..., description="Most recent worker heartbeat timestamp"
+    )
 
 
 class WorkerStatusData(BaseModel):
     """Worker status data model."""
 
-    workers: List[WorkerInfo] = Field(default_factory=list, description="List of worker information")
+    workers: List[WorkerInfo] = Field(
+        default_factory=list, description="List of worker information"
+    )
     total_workers: int = Field(..., description="Total number of workers")
     online_workers: int = Field(..., description="Number of online workers")
     timestamp: str = Field(..., description="Status timestamp")
@@ -64,7 +70,9 @@ class TaskInfo(BaseModel):
     id: Optional[str] = Field(default=None, description="Task identifier")
     name: Optional[str] = Field(default=None, description="Task name")
     args: List[Any] = Field(default_factory=list, description="Task arguments")
-    kwargs: Dict[str, Any] = Field(default_factory=dict, description="Task keyword arguments")
+    kwargs: Dict[str, Any] = Field(
+        default_factory=dict, description="Task keyword arguments"
+    )
     worker: str = Field(..., description="Assigned worker")
     status: str = Field(..., description="Task status")
 
@@ -76,13 +84,17 @@ class QueueInfo(BaseModel):
     active: int = Field(..., description="Number of active tasks")
     reserved: int = Field(..., description="Number of reserved tasks")
     scheduled: int = Field(..., description="Number of scheduled tasks")
-    tasks: List[TaskInfo] = Field(default_factory=list, description="List of tasks in queue")
+    tasks: List[TaskInfo] = Field(
+        default_factory=list, description="List of tasks in queue"
+    )
 
 
 class QueueStatusData(BaseModel):
     """Queue status data model."""
 
-    queues: List[QueueInfo] = Field(default_factory=list, description="List of queue information")
+    queues: List[QueueInfo] = Field(
+        default_factory=list, description="List of queue information"
+    )
     total_queues: int = Field(..., description="Total number of queues")
     filtered_by: Optional[str] = Field(default=None, description="Queue filter applied")
     timestamp: str = Field(..., description="Status timestamp")
@@ -101,19 +113,27 @@ class ActiveTaskInfo(BaseModel):
     id: Optional[str] = Field(default=None, description="Task identifier")
     name: Optional[str] = Field(default=None, description="Task name")
     args: List[Any] = Field(default_factory=list, description="Task arguments")
-    kwargs: Dict[str, Any] = Field(default_factory=dict, description="Task keyword arguments")
+    kwargs: Dict[str, Any] = Field(
+        default_factory=dict, description="Task keyword arguments"
+    )
     worker: str = Field(..., description="Worker hostname")
     time_start: Optional[str] = Field(default=None, description="Task start timestamp")
     acknowledged: bool = Field(default=False, description="Task acknowledgment status")
-    delivery_info: Dict[str, Any] = Field(default_factory=dict, description="Message delivery info")
+    delivery_info: Dict[str, Any] = Field(
+        default_factory=dict, description="Message delivery info"
+    )
 
 
 class ActiveTasksData(BaseModel):
     """Active tasks data model."""
 
-    active_tasks: List[ActiveTaskInfo] = Field(default_factory=list, description="List of active tasks")
+    active_tasks: List[ActiveTaskInfo] = Field(
+        default_factory=list, description="List of active tasks"
+    )
     total_active: int = Field(..., description="Total number of active tasks")
-    workers_with_tasks: int = Field(..., description="Number of workers with active tasks")
+    workers_with_tasks: int = Field(
+        ..., description="Number of workers with active tasks"
+    )
     timestamp: str = Field(..., description="Status timestamp")
 
 
@@ -128,12 +148,22 @@ class DocumentProcessingStats(BaseModel):
     """Document processing statistics model."""
 
     total: int = Field(..., description="Total number of documents")
-    completed: int = Field(..., description="Number of successfully completed documents")
+    completed: int = Field(
+        ..., description="Number of successfully completed documents"
+    )
     failed: int = Field(..., description="Number of documents that failed processing")
-    processing: int = Field(..., description="Number of documents currently being processed")
-    success_rate: float = Field(..., description="Percentage of successful processing operations")
-    failure_rate: float = Field(..., description="Percentage of failed processing operations")
-    avg_processing_time_seconds: float = Field(..., description="Average processing duration")
+    processing: int = Field(
+        ..., description="Number of documents currently being processed"
+    )
+    success_rate: float = Field(
+        ..., description="Percentage of successful processing operations"
+    )
+    failure_rate: float = Field(
+        ..., description="Percentage of failed processing operations"
+    )
+    avg_processing_time_seconds: float = Field(
+        ..., description="Average processing duration"
+    )
 
 
 class TaskStatisticsData(BaseModel):
@@ -141,8 +171,12 @@ class TaskStatisticsData(BaseModel):
 
     period_hours: int = Field(..., description="Analysis period in hours")
     start_time: str = Field(..., description="Analysis period start timestamp")
-    document_processing: DocumentProcessingStats = Field(..., description="Document processing statistics")
-    recent_errors: List[str] = Field(default_factory=list, description="Sample of recent error messages")
+    document_processing: DocumentProcessingStats = Field(
+        ..., description="Document processing statistics"
+    )
+    recent_errors: List[str] = Field(
+        default_factory=list, description="Sample of recent error messages"
+    )
     timestamp: str = Field(..., description="Statistics timestamp")
 
 
@@ -173,9 +207,13 @@ class TaskMonitoringData(BaseModel):
     system_status: Dict[str, Any] = Field(..., description="System status information")
     active_tasks: TasksSummary = Field(..., description="Active tasks summary")
     workers: WorkersSummary = Field(..., description="Workers summary")
-    recent_performance: Dict[str, Any] = Field(..., description="Recent performance metrics")
+    recent_performance: Dict[str, Any] = Field(
+        ..., description="Recent performance metrics"
+    )
     timestamp: str = Field(..., description="Monitoring timestamp")
-    refresh_interval: int = Field(default=30, description="Suggested refresh interval in seconds")
+    refresh_interval: int = Field(
+        default=30, description="Suggested refresh interval in seconds"
+    )
 
 
 class TaskMonitoringResponse(BaseModel):
@@ -205,8 +243,12 @@ class ProfileStatisticsData(BaseModel):
 
     total_profiles: int = Field(..., description="Total number of profiles")
     active_profiles: int = Field(..., description="Number of active profiles")
-    usage_stats: Dict[str, Any] = Field(default_factory=dict, description="Profile usage statistics")
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict, description="Performance metrics")
+    usage_stats: Dict[str, Any] = Field(
+        default_factory=dict, description="Profile usage statistics"
+    )
+    performance_metrics: Dict[str, Any] = Field(
+        default_factory=dict, description="Performance metrics"
+    )
     timestamp: str = Field(..., description="Statistics timestamp")
 
 
@@ -221,8 +263,12 @@ class ProfileValidationData(BaseModel):
     """Profile validation data model."""
 
     valid: bool = Field(..., description="Whether the parameters are valid")
-    errors: List[str] = Field(default_factory=list, description="List of validation errors")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="The validated parameters")
+    errors: List[str] = Field(
+        default_factory=list, description="List of validation errors"
+    )
+    parameters: Dict[str, Any] = Field(
+        default_factory=dict, description="The validated parameters"
+    )
 
 
 class ProfileValidationResponse(BaseModel):
@@ -236,4 +282,6 @@ class DefaultProfileResponse(BaseModel):
     """Default profile response schema for the specific endpoint that returns default profile params."""
 
     success: bool = Field(..., description="Operation success status")
-    data: ProfileParametersData = Field(..., description="Default profile parameters data")
+    data: ProfileParametersData = Field(
+        ..., description="Default profile parameters data"
+    )

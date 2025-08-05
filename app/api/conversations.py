@@ -3,7 +3,7 @@
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -12,9 +12,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.admin_responses import (
-    ConversationStatsResponse,
     RegistryStatsResponse,
-    SearchResponse,
 )
 from shared.schemas.common import (
     APIResponse,
@@ -43,68 +41,6 @@ from shared.schemas.conversation_responses import (
     ExportedMessage,
     ExportInfo,
 )
-from shared.schemas.user import UserResponse
-from shared.schemas.search_responses import (
-    SearchSuggestion,
-    SearchSuggestionData,
-    SearchHistoryData,
-)
-from pydantic import BaseModel, Field
-
-from ..database import AsyncSessionLocal, get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.conversation import Conversation, Message
-from ..models.user import User
-from ..services.conversation import ConversationService
-from ..utils.api_errors import handle_api_errors, log_api_call
-
-from shared.schemas.admin_responses import (
-    ConversationStatsResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-)
-from shared.schemas.common import (
-    APIResponse,
-    ErrorResponse,
-    PaginatedResponse,
-    SuccessResponse,
-)
-from shared.schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-    StreamCompleteResponse,
-    StreamContentResponse,
-    StreamEndResponse,
-    StreamErrorResponse,
-    StreamStartResponse,
-    StreamToolCallResponse,
-)
-from shared.schemas.conversation_responses import (
-    ConversationExportData,
-    ConversationExportDataCSV,
-    ConversationExportDataJSON,
-    ConversationExportDataText,
-    ConversationMetadata,
-    ExportedMessage,
-    ExportInfo,
-)
-from shared.schemas.common import APIResponse
-from shared.schemas.conversation import MessageResponse, ConversationResponse
-from shared.schemas.conversation_responses import (
-    ConversationExportData,
-    ConversationExportDataCSV,
-    ConversationExportDataJSON,
-    ConversationExportDataText,
-    ConversationMetadata,
-    ExportInfo,
-)
-from shared.schemas.conversation import ConversationStats
-from shared.schemas.admin_responses import RegistryStatsResponse
 
 from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user
@@ -267,7 +203,7 @@ async def delete_conversation(
         return APIResponse(
             success=False,
             message="Conversation not found",
-            error=dict(code="CONVERSATION_NOT_FOUND"),
+            error={"code": "CONVERSATION_NOT_FOUND"},
         )
 
 
@@ -407,13 +343,13 @@ async def chat_stream(
                         # Properly validate ai_message and conversation fields
                         for k, v in response_data.items():
                             if k == "ai_message":
-                                response_data[k] = (
-                                    MessageResponse.model_validate(v).model_dump(mode="json")
-                                )
+                                response_data[k] = MessageResponse.model_validate(
+                                    v
+                                ).model_dump(mode="json")
                             elif k == "conversation":
-                                response_data[k] = (
-                                    ConversationResponse.model_validate(v).model_dump(mode="json")
-                                )
+                                response_data[k] = ConversationResponse.model_validate(
+                                    v
+                                ).model_dump(mode="json")
                             elif k == "rag_context":
                                 if v:
                                     ctx = []
@@ -429,7 +365,9 @@ async def chat_stream(
                                 else:
                                     response_data[k] = {}
                             else:
-                                error_event = StreamErrorResponse(error=f"Unexpected key value: {k}")
+                                error_event = StreamErrorResponse(
+                                    error=f"Unexpected key value: {k}"
+                                )
                                 yield f"data: {json.dumps(error_event.model_dump())}\n\n"
                         complete_event = StreamCompleteResponse(response=response_data)
                         yield f"data: {json.dumps(complete_event.model_dump())}\n\n"
@@ -708,7 +646,9 @@ async def export_conversation(
         )
 
 
-@router.post("/conversations/import", response_model=APIResponse[ImportConversationResult])
+@router.post(
+    "/conversations/import", response_model=APIResponse[ImportConversationResult]
+)
 @handle_api_errors("Failed to import conversation")
 async def import_conversation(
     file: UploadFile = File(...),
@@ -773,7 +713,9 @@ async def import_conversation(
         for msg_data in messages_data:
             try:
                 required_fields = ["role", "content"]
-                missing_field = next((field for field in required_fields if field not in msg_data), None)
+                missing_field = next(
+                    (field for field in required_fields if field not in msg_data), None
+                )
                 if missing_field:
                     errors.append(f"Message missing required field: {missing_field}")
                     continue
@@ -816,7 +758,10 @@ async def import_conversation(
         raise
 
 
-@router.post("/conversations/archive", response_model=APIResponse[ArchivePreviewResponse | ArchiveConversationsResult])
+@router.post(
+    "/conversations/archive",
+    response_model=APIResponse[ArchivePreviewResponse | ArchiveConversationsResult],
+)
 @handle_api_errors("Failed to archive conversations")
 async def archive_conversations(
     older_than_days: int = Query(
@@ -1140,9 +1085,9 @@ async def get_conversation_statistics(
             for row in top_users.fetchall()
         ]
 
-        role_stats_query = select(Message.role, func.count(Message.id).label("count")).group_by(
-            Message.role
-        )
+        role_stats_query = select(
+            Message.role, func.count(Message.id).label("count")
+        ).group_by(Message.role)
         role_stats = await db.execute(role_stats_query)
         role_distribution = {row.role: row.count for row in role_stats.fetchall()}
 
@@ -1175,5 +1120,3 @@ async def get_conversation_statistics(
         )
     except Exception:
         raise
-
-

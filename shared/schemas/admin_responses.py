@@ -5,7 +5,7 @@ and system monitoring that were previously scattered across common.py.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -30,6 +30,7 @@ class SearchResponse(BaseModel):
         """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
+
         return json.dumps(data)
 
 
@@ -46,6 +47,7 @@ class RegistryStatsResponse(BaseModel):
         """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
+
         return json.dumps(data)
 
 
@@ -61,4 +63,5 @@ class ConversationStatsResponse(BaseModel):
         """Serialize model with standard JSON handling."""
         data = self.model_dump(**kwargs)
         import json
+
         return json.dumps(data)

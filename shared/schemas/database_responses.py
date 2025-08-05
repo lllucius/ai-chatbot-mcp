@@ -4,9 +4,12 @@ This module provides response models for all database-related endpoints that cur
 return raw dictionaries, ensuring type safety and proper API documentation.
 """
 
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from .base import utcnow
 
 
 class DatabaseUpgradeResult(BaseModel):
@@ -42,7 +45,9 @@ class DatabaseStatusResponse(BaseModel):
 
     success: bool = Field(..., description="Operation success status")
     connection_status: str = Field(..., description="Database connection status")
-    version_info: Dict[str, Any] = Field(..., description="Database version information")
+    version_info: Dict[str, Any] = Field(
+        ..., description="Database version information"
+    )
     schema_info: Dict[str, Any] = Field(..., description="Schema information")
     performance_metrics: Dict[str, Any] = Field(..., description="Performance metrics")
     timestamp: datetime = Field(
@@ -60,6 +65,7 @@ class DatabaseStatusResponse(BaseModel):
                     iso_string = iso_string[:-6] + "Z"
                 data["timestamp"] = iso_string
         import json
+
         return json.dumps(data)
 
 
@@ -71,9 +77,7 @@ class DatabaseTablesResponse(BaseModel):
     success: bool = Field(..., description="Operation success status")
     tables: List[Dict[str, Any]] = Field(..., description="List of database tables")
     total_tables: int = Field(..., description="Total number of tables")
-    timestamp: datetime = Field(
-        default_factory=utcnow, description="Query timestamp"
-    )
+    timestamp: datetime = Field(default_factory=utcnow, description="Query timestamp")
 
     def model_dump_json(self, **kwargs):
         """Serialize model with ISO format timestamp handling."""
@@ -86,6 +90,7 @@ class DatabaseTablesResponse(BaseModel):
                     iso_string = iso_string[:-6] + "Z"
                 data["timestamp"] = iso_string
         import json
+
         return json.dumps(data)
 
 
@@ -95,13 +100,17 @@ class DatabaseMigrationsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     success: bool = Field(..., description="Operation success status")
-    applied_migrations: List[Dict[str, Any]] = Field(..., description="Applied migrations")
-    pending_migrations: List[Dict[str, Any]] = Field(..., description="Pending migrations")
-    migration_status: str = Field(..., description="Overall migration status")
-    last_migration: Optional[Dict[str, Any]] = Field(default=None, description="Last migration")
-    timestamp: datetime = Field(
-        default_factory=utcnow, description="Query timestamp"
+    applied_migrations: List[Dict[str, Any]] = Field(
+        ..., description="Applied migrations"
     )
+    pending_migrations: List[Dict[str, Any]] = Field(
+        ..., description="Pending migrations"
+    )
+    migration_status: str = Field(..., description="Overall migration status")
+    last_migration: Optional[Dict[str, Any]] = Field(
+        default=None, description="Last migration"
+    )
+    timestamp: datetime = Field(default_factory=utcnow, description="Query timestamp")
 
     def model_dump_json(self, **kwargs):
         """Serialize model with ISO format timestamp handling."""
@@ -114,6 +123,7 @@ class DatabaseMigrationsResponse(BaseModel):
                     iso_string = iso_string[:-6] + "Z"
                 data["timestamp"] = iso_string
         import json
+
         return json.dumps(data)
 
 
@@ -125,8 +135,12 @@ class DatabaseAnalysisResponse(BaseModel):
     success: bool = Field(..., description="Operation success status")
     table_stats: List[Dict[str, Any]] = Field(..., description="Table statistics")
     index_analysis: List[Dict[str, Any]] = Field(..., description="Index analysis")
-    performance_insights: Dict[str, Any] = Field(..., description="Performance insights")
-    recommendations: List[str] = Field(default_factory=list, description="Optimization recommendations")
+    performance_insights: Dict[str, Any] = Field(
+        ..., description="Performance insights"
+    )
+    recommendations: List[str] = Field(
+        default_factory=list, description="Optimization recommendations"
+    )
     timestamp: datetime = Field(
         default_factory=utcnow, description="Analysis timestamp"
     )
@@ -142,6 +156,7 @@ class DatabaseAnalysisResponse(BaseModel):
                     iso_string = iso_string[:-6] + "Z"
                 data["timestamp"] = iso_string
         import json
+
         return json.dumps(data)
 
 
@@ -153,9 +168,15 @@ class DatabaseQueryResponse(BaseModel):
     success: bool = Field(..., description="Query execution success status")
     query: str = Field(..., description="Executed query")
     result_type: str = Field(..., description="Type of query result")
-    rows_affected: Optional[int] = Field(default=None, description="Number of rows affected")
-    execution_time_ms: float = Field(..., description="Query execution time in milliseconds")
-    results: Optional[List[Dict[str, Any]]] = Field(default=None, description="Query results")
+    rows_affected: Optional[int] = Field(
+        default=None, description="Number of rows affected"
+    )
+    execution_time_ms: float = Field(
+        ..., description="Query execution time in milliseconds"
+    )
+    results: Optional[List[Dict[str, Any]]] = Field(
+        default=None, description="Query results"
+    )
     timestamp: datetime = Field(
         default_factory=utcnow, description="Execution timestamp"
     )
@@ -171,7 +192,5 @@ class DatabaseQueryResponse(BaseModel):
                     iso_string = iso_string[:-6] + "Z"
                 data["timestamp"] = iso_string
         import json
+
         return json.dumps(data)
-
-
-

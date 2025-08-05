@@ -1,42 +1,31 @@
 """Health monitoring and system status API endpoints."""
 
 import logging
-from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import APIResponse
 from shared.schemas.health_responses import (
+    ApplicationHealthData,
     CacheHealthData,
     CacheStats,
     DatabaseHealthData,
-    ServiceStatus,
-    ServicesHealthData,
-    SystemMetricsData,
-    PerformanceMetricsData,
-    LivenessProbeData,
-    ReadinessProbeData,
-    OpenAIHealthData,
-    FastMCPHealthData,
-    ApplicationHealthData,
     DetailedHealthCheckPayload,
+    FastMCPHealthData,
+    LivenessPayload,
+    OpenAIHealthData,
+    PerformanceMetricsPayload,
+    ReadinessComponentsPayload,
     ServicesHealthPayload,
     SystemMetricsPayload,
-    ReadinessComponentsPayload,
-    PerformanceMetricsPayload,
-    LivenessPayload,
-
 )
-from shared.schemas.base import BaseSchema
 
 from ..config import settings
 from ..database import get_db
 from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
-
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
@@ -44,6 +33,7 @@ from ..utils.caching import api_response_cache, embedding_cache, search_result_c
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 @router.get("/", response_model=APIResponse[ApplicationHealthData])
 @handle_api_errors("Basic health check failed")
@@ -54,12 +44,10 @@ async def basic_health_check() -> APIResponse[ApplicationHealthData]:
         name=settings.app_name,
         version=settings.app_version,
         status="healthy",
-        debug_mode=settings.debug
+        debug_mode=settings.debug,
     )
     return APIResponse[ApplicationHealthData](
-        success=True,
-        message="AI Chatbot Platform is running",
-        data=payload
+        success=True, message="AI Chatbot Platform is running", data=payload
     )
 
 
@@ -186,7 +174,7 @@ async def _check_cache_health() -> CacheHealthData:
                 hits=stats["hits"],
                 misses=stats["misses"],
                 hit_rate=stats["hit_rate"],
-                total_requests=stats["hits"] + stats["misses"]
+                total_requests=stats["hits"] + stats["misses"],
             )
 
         test_key = "health_check_test"
@@ -358,6 +346,7 @@ async def get_system_metrics() -> APIResponse[SystemMetricsPayload]:
     log_api_call("get_system_metrics")
     try:
         import time
+
         import psutil
 
         cpu_percent = psutil.cpu_percent(interval=1)
@@ -398,7 +387,7 @@ async def get_system_metrics() -> APIResponse[SystemMetricsPayload]:
             application={
                 "version": settings.app_version,
                 "debug_mode": settings.debug,
-            }
+            },
         )
         return APIResponse[SystemMetricsPayload](
             success=False,
@@ -427,7 +416,7 @@ async def readiness_check(
                 status="not_ready",
                 components={
                     "database": db_health.model_dump(),
-                }
+                },
             )
             return APIResponse[ReadinessComponentsPayload](
                 success=False,
@@ -439,7 +428,7 @@ async def readiness_check(
                 status="not_ready",
                 components={
                     "cache": cache_health.model_dump(),
-                }
+                },
             )
             return APIResponse[ReadinessComponentsPayload](
                 success=False,
@@ -451,7 +440,7 @@ async def readiness_check(
                 status="not_ready",
                 components={
                     "fastmcp": fastmcp_health.model_dump(),
-                }
+                },
             )
             return APIResponse[ReadinessComponentsPayload](
                 success=False,
@@ -464,8 +453,8 @@ async def readiness_check(
             components={
                 "database": db_health.model_dump(),
                 "cache": cache_health.model_dump(),
-                "fastmcp": fastmcp_health.model_dump()
-            }
+                "fastmcp": fastmcp_health.model_dump(),
+            },
         )
         return APIResponse[ReadinessComponentsPayload](
             success=True,
@@ -477,8 +466,7 @@ async def readiness_check(
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
         payload = ReadinessComponentsPayload(
-            status="not_ready",
-            components={"error": str(e)}
+            status="not_ready", components={"error": str(e)}
         )
         return APIResponse[ReadinessComponentsPayload](
             success=False,
@@ -495,9 +483,7 @@ async def get_performance_metrics() -> APIResponse[PerformanceMetricsPayload]:
     performance_data = get_performance_stats()
     payload = PerformanceMetricsPayload(performance=performance_data)
     return APIResponse[PerformanceMetricsPayload](
-        success=True,
-        message="Performance metrics retrieved successfully",
-        data=payload
+        success=True, message="Performance metrics retrieved successfully", data=payload
     )
 
 

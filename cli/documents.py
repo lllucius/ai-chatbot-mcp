@@ -63,6 +63,7 @@ from typing import Optional
 from uuid import UUID
 
 from async_typer import AsyncTyper
+from rich.console import Console
 from typer import Argument, Option
 
 from .base import (
@@ -73,6 +74,8 @@ from .base import (
     info_message,
     success_message,
 )
+
+console = Console()
 
 document_app = AsyncTyper(help="Document management commands", rich_markup_mode=None)
 

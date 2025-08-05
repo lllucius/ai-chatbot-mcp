@@ -27,8 +27,12 @@ class ExportedMessage(BaseModel):
     role: str = Field(..., description="Message role (user, assistant, etc.)")
     content: str = Field(..., description="Message content")
     created_at: str = Field(..., description="Message creation timestamp")
-    tool_calls: Optional[Any] = Field(default=None, description="Tool calls made in message")
-    tool_call_id: Optional[str] = Field(default=None, description="Tool call ID if this is a tool response")
+    tool_calls: Optional[Any] = Field(
+        default=None, description="Tool calls made in message"
+    )
+    tool_call_id: Optional[str] = Field(
+        default=None, description="Tool call ID if this is a tool response"
+    )
     name: Optional[str] = Field(default=None, description="Name for tool messages")
 
 
@@ -45,7 +49,9 @@ class ConversationExportDataJSON(BaseModel):
     """JSON format export data."""
 
     conversation: ConversationMetadata = Field(..., description="Conversation metadata")
-    messages: List[ExportedMessage] = Field(default_factory=list, description="Exported messages")
+    messages: List[ExportedMessage] = Field(
+        default_factory=list, description="Exported messages"
+    )
 
 
 class ConversationExportDataText(BaseModel):
@@ -66,5 +72,7 @@ class ConversationExportData(BaseModel):
     """Generic export data that can be any format."""
 
     # Union type for different export data formats
-    data: Any = Field(..., description="Export data in the requested format")  # Will be JSON, text content, or CSV content
+    data: Any = Field(
+        ..., description="Export data in the requested format"
+    )  # Will be JSON, text content, or CSV content
     export_info: ExportInfo = Field(..., description="Export operation information")

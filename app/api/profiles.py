@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import (
@@ -69,9 +69,7 @@ async def list_profiles(
 
     profile_responses = []
     for profile in profiles:
-        profile_responses.append(
-            LLMProfileResponse.model_validate(profile)
-        )
+        profile_responses.append(LLMProfileResponse.model_validate(profile))
 
     payload = PaginatedResponse(
         items=profile_responses,
@@ -79,7 +77,7 @@ async def list_profiles(
             total=total,
             page=page,
             per_page=size,
-        )
+        ),
     )
 
     return APIResponse[PaginatedResponse[LLMProfileResponse]](
@@ -123,9 +121,13 @@ async def update_profile(
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> APIResponse[LLMProfileResponse]:
     """Update an existing LLM profile with new parameters or metadata."""
-    log_api_call("update_llm_profile", user_id=current_user.id, profile_name=profile_name)
+    log_api_call(
+        "update_llm_profile", user_id=current_user.id, profile_name=profile_name
+    )
 
-    updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
+    updated_profile = await profile_service.update_profile(
+        profile_name, profile_data.model_dump(exclude_unset=True)
+    )
 
     if not updated_profile:
         raise HTTPException(
@@ -148,9 +150,11 @@ async def delete_profile(
     profile_service: LLMProfileService = Depends(get_profile_service),
 ) -> APIResponse:
     """Delete an LLM profile from the system."""
-    log_api_call("delete_llm_profile", user_id=current_user.id, profile_name=profile_name)
+    log_api_call(
+        "delete_llm_profile", user_id=current_user.id, profile_name=profile_name
+    )
 
-    await profile_service.delete_profile(profile_name)
+    success = await profile_service.delete_profile(profile_name)
 
     if not success:
         raise HTTPException(
@@ -164,7 +168,9 @@ async def delete_profile(
     )
 
 
-@router.post("/byname/{profile_name}/set-default", response_model=APIResponse[BaseResponse])
+@router.post(
+    "/byname/{profile_name}/set-default", response_model=APIResponse[BaseResponse]
+)
 @handle_api_errors("Failed to set default profile")
 async def set_default_profile(
     profile_name: str,
@@ -183,10 +189,7 @@ async def set_default_profile(
             detail=f"Profile '{profile_name}' not found",
         )
 
-    return APIResponse(
-        success=True,
-        message=f"Profile '{profile_name}' set as default"
-    )
+    return APIResponse(success=True, message=f"Profile '{profile_name}' set as default")
 
 
 @router.get("/default", response_model=APIResponse[LLMProfileResponse])
@@ -220,7 +223,7 @@ async def get_profile_stats(
     """Get comprehensive LLM profile usage statistics and analytics."""
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
-    payload = LLMProfileStatisticsData.model_validate(stats)
+    LLMProfileStatisticsData.model_validate(stats)
     return APIResponse[LLMProfileStatisticsData](
         success=True,
         message="Profile statistics retrieved successfully",
@@ -240,6 +243,7 @@ async def validate_parameters(
     errors = await profile_service.validate_parameters(**parameters)
     return APIResponse[dict](
         success=len(errors) == 0,
-        message="Parameter validation completed" + (" successfully" if len(errors) == 0 else " with errors"),
+        message="Parameter validation completed"
+        + (" successfully" if len(errors) == 0 else " with errors"),
         data=errors,
     )

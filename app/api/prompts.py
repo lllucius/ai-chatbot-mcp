@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import (
@@ -58,9 +58,7 @@ async def list_prompts(
 
     prompt_responses = []
     for prompt in prompts:
-        prompt_responses.append(
-            PromptResponse.model_validate(prompt)
-        )
+        prompt_responses.append(PromptResponse.model_validate(prompt))
 
     payload = PaginatedResponse(
         items=prompt_responses,
@@ -68,7 +66,7 @@ async def list_prompts(
             total=total,
             page=page,
             per_page=size,
-        )
+        ),
     )
 
     return APIResponse[PaginatedResponse[PromptResponse]](
@@ -135,7 +133,9 @@ async def update_prompt(
     """Update an existing prompt template."""
     log_api_call("update_prompt", user_id=current_user.id, prompt_name=prompt_name)
 
-    prompt = await prompt_service.update_prompt(prompt_name, data.model_dump(exclude_unset=True))
+    prompt = await prompt_service.update_prompt(
+        prompt_name, data.model_dump(exclude_unset=True)
+    )
 
     payload = PromptResponse.model_validate(prompt)
     return APIResponse[PromptResponse](
@@ -222,9 +222,7 @@ async def get_prompt_stats(
 
     stats = await prompt_service.get_prompt_stats()
 
-    payload = PromptStatisticsData(
-        PromptStatisticsData.model_validate(stats)
-    )
+    payload = PromptStatisticsData(PromptStatisticsData.model_validate(stats))
 
     return APIResponse(
         success=True,

@@ -10,6 +10,7 @@ from shared.schemas.common import (
     APIResponse,
     ErrorResponse,
     PaginatedResponse,
+    PaginationParams,
 )
 from shared.schemas.user import (
     UserPasswordUpdate,
@@ -93,6 +94,7 @@ async def change_password(
         message="Password changed successfully",
     )
 
+
 # Admin endpoints (require superuser privileges)
 
 
@@ -128,7 +130,7 @@ async def list_users(
             total=total,
             page=page,
             per_page=size,
-        )
+        ),
     )
 
     return APIResponse[PaginatedResponse[UserResponse]](
@@ -198,14 +200,13 @@ async def delete_user(
         return ErrorResponse.create(
             error_code="SELF_DELETION_FORBIDDEN",
             message="Cannot delete your own account",
-            status_code=status.HTTP_400_BAD_REQUEST
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     success = await user_service.delete_user(user_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     return APIResponse(
@@ -270,16 +271,14 @@ async def demote_user_from_superuser(
     # Prevent self-demotion
     if current_user.id == user_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot demote yourself"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot demote yourself"
         )
 
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
         if not user.is_superuser:
@@ -319,14 +318,12 @@ async def activate_user_account(
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
         if user.is_active:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is already active"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="User is already active"
             )
 
         # Activate user
@@ -359,16 +356,14 @@ async def deactivate_user_account(
     # Prevent self-deactivation
     if current_user.id == user_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot deactivate yourself"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot deactivate yourself"
         )
 
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
         if not user.is_active:
@@ -453,7 +448,7 @@ async def get_user_statistics(
         select(func.count(UserModel.id)).where(UserModel.is_superuser)
     )
 
-    payload = UserStatsResponse(
+    UserStatsResponse(
         total_users=total_users or 0,
         active_users=active_users or 0,
         inactive_users=(total_users or 0) - (active_users or 0),

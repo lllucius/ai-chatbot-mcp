@@ -48,9 +48,7 @@ async def list_servers(
 
     payload = []
     for server in servers:
-        payload.append(
-            MCPServerSchema.model_validate(server)
-        )
+        payload.append(MCPServerSchema.model_validate(server))
 
     return APIResponse[List[MCPServerSchema]](
         success=True,
@@ -81,7 +79,9 @@ async def create_server(
     )
 
 
-@router.get("/servers/byname/{server_name}", response_model=APIResponse[MCPServerSchema])
+@router.get(
+    "/servers/byname/{server_name}", response_model=APIResponse[MCPServerSchema]
+)
 @handle_api_errors("Failed to get MCP server")
 async def get_server(
     server_name: str,
@@ -108,7 +108,9 @@ async def get_server(
     )
 
 
-@router.patch("/servers/byname/{server_name}", response_model=APIResponse[MCPServerSchema])
+@router.patch(
+    "/servers/byname/{server_name}", response_model=APIResponse[MCPServerSchema]
+)
 @handle_api_errors("Failed to update MCP server")
 async def update_server(
     server_name: str,
@@ -153,8 +155,8 @@ async def delete_server(
             detail=f"MCP server '{server_name}' not found",
         )
     return APIResponse(
-            success=True,
-            message=f"MCP server '{server_name}' deleted successfully",
+        success=True,
+        message=f"MCP server '{server_name}' deleted successfully",
     )
 
 
@@ -178,9 +180,7 @@ async def list_tools(
 
     payload = []
     for tool in tools:
-        payload.append(
-            MCPToolResponse.model_validate(tool)
-        )
+        payload.append(MCPToolResponse.model_validate(tool))
 
     return APIResponse[List[MCPToolResponse]](
         success=True,
@@ -209,8 +209,7 @@ async def enable_tool(
         )
 
     return APIResponse(
-        success=True,
-        message=f"MCP tool '{tool_name}' enabled successfully"
+        success=True, message=f"MCP tool '{tool_name}' enabled successfully"
     )
 
 
@@ -234,8 +233,7 @@ async def disable_tool(
         )
 
     return APIResponse(
-        success=True,
-        message=f"MCP tool '{tool_name}' disabled successfully"
+        success=True, message=f"MCP tool '{tool_name}' disabled successfully"
     )
 
 
@@ -279,10 +277,10 @@ async def get_tool_details(
     if not tool:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tool '{tool_name}' not found"
+            detail=f"Tool '{tool_name}' not found",
         )
 
-    payload = MCPToolsResponse.model_validate(tool)
+    MCPToolsResponse.model_validate(tool)
     return APIResponse[MCPToolsResponse](
         success=True,
         message=f"Retrieved details for tool '{tool_name}'",

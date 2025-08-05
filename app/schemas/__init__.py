@@ -22,5 +22,5 @@ import warnings
 warnings.warn(
     "app.schemas is deprecated. Import schemas directly from shared.schemas instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )

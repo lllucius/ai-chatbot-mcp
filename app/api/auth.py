@@ -1,7 +1,8 @@
 """Authentication API endpoints."""
 
-from fastapi import APIRouter, Depends
 from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from shared.schemas.auth import (
     LoginRequest,
@@ -26,7 +27,8 @@ router = APIRouter(tags=["authentication"])
 @router.post("/register", response_model=APIResponse[UserResponse])
 @handle_api_errors("User registration failed")
 async def register(
-    request: RegisterRequest, auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: RegisterRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse[UserResponse]:
     """Register a new user account."""
     log_api_call("register", username=request.username, email=request.email)
@@ -43,7 +45,8 @@ async def register(
 @router.post("/login", response_model=APIResponse[Token])
 @handle_api_errors("User authentication failed")
 async def login(
-    request: LoginRequest, auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: LoginRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse[Token]:
     """Authenticate user and generate JWT access token."""
     log_api_call("login", username=request.username)
@@ -64,7 +67,7 @@ async def login(
 @router.get("/me", response_model=APIResponse[UserResponse])
 @handle_api_errors("Failed to get current user information")
 async def get_current_user_info(
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> APIResponse[UserResponse]:
     """Get current authenticated user information."""
     log_api_call("get_current_user_info", user_id=str(current_user.id))
@@ -81,7 +84,7 @@ async def get_current_user_info(
 async def logout() -> APIResponse:
     """Logout current user session."""
     log_api_call("logout")
-    return APIResponse[LogoutResponseModel](
+    return APIResponse(
         success=True,
         message="Logged out successfully",
     )
@@ -109,12 +112,13 @@ async def refresh_token(
 @router.post("/password-reset", response_model=APIResponse)
 @handle_api_errors("Password reset request failed")
 async def request_password_reset(
-    request: PasswordResetRequest, auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: PasswordResetRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse:
     """Request password reset through administrative channels."""
     log_api_call("request_password_reset", email=request.email)
 
-    return APIResponse[PasswordResetRequestResponseModel](
+    return APIResponse(
         success=True,
         message="Password reset request noted. Contact system administrator for password changes.",
     )
@@ -123,12 +127,13 @@ async def request_password_reset(
 @router.post("/password-reset/confirm", response_model=APIResponse)
 @handle_api_errors("Password reset confirmation failed")
 async def confirm_password_reset(
-    request: PasswordResetConfirm, auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: PasswordResetConfirm,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse:
     """Confirm password reset through administrative channels."""
     log_api_call("confirm_password_reset", token=request.token[:8] + "...")
 
-    return APIResponse[PasswordResetConfirmResponseModel](
+    return APIResponse(
         success=True,
         message="Password reset must be performed by system administrator through user management interface.",
     )

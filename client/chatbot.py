@@ -1516,6 +1516,7 @@ async def chat_loop(
             handler.display_api_error(e)
         except Exception as e:
             import traceback
+
             print_error(f"Unexpected error: {e}")
             traceback.print_exc()
 
@@ -1566,6 +1567,7 @@ def setup_graceful_exit(loop: asyncio.AbstractEventLoop) -> None:
         Silently ignores NotImplementedError on platforms without signal support.
 
     """
+
     def _exit_handler():
         """Handle signal for graceful exit.
 

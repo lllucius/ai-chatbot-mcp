@@ -4,9 +4,9 @@ This module provides analytics response schemas for system metrics,
 usage statistics, and performance monitoring.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from .base import BaseModelSchema
 
@@ -66,6 +66,7 @@ class AnalyticsExportResponse(BaseModelSchema):
     timestamp: str = Field(..., description="Response timestamp")
     success: bool = Field(default=True, description="Success status")
     message: str = Field(..., description="Response message")
+
 
 class SystemHealthScore(BaseModel):
     score: float = Field(..., description="Overall health score")
@@ -142,8 +143,12 @@ class SystemMetricsInfo(BaseModel):
 
 
 class AnalyticsPerformancePayload(BaseModel):
-    document_processing: DocumentProcessingPerformance = Field(..., description="Document processing stats")
-    database_performance: List[DBPerformanceEntry] = Field(..., description="Database performance metrics")
+    document_processing: DocumentProcessingPerformance = Field(
+        ..., description="Document processing stats"
+    )
+    database_performance: List[DBPerformanceEntry] = Field(
+        ..., description="Database performance metrics"
+    )
     system_metrics: SystemMetricsInfo = Field(..., description="System metrics")
 
 
@@ -183,18 +188,27 @@ class AnalyticsTrendsPayload(BaseModel):
 
 
 class DetailedUserAnalyticsPayload(BaseModel):
-    top_by_messages: Optional[List[TopUser]] = Field(None, description="Top users by messages")
-    top_by_documents: Optional[List[TopUser]] = Field(None, description="Top users by documents")
-    top_by_conversations: Optional[List[TopUser]] = Field(None, description="Top users by conversations")
+    top_by_messages: Optional[List[TopUser]] = Field(
+        None, description="Top users by messages"
+    )
+    top_by_documents: Optional[List[TopUser]] = Field(
+        None, description="Top users by documents"
+    )
+    top_by_conversations: Optional[List[TopUser]] = Field(
+        None, description="Top users by conversations"
+    )
 
 
 class AnalyticsExportPayload(BaseModel):
     report_metadata: dict = Field(..., description="Report metadata")
-    system_overview: AnalyticsOverviewPayload = Field(..., description="System overview")
+    system_overview: AnalyticsOverviewPayload = Field(
+        ..., description="System overview"
+    )
     usage_statistics: AnalyticsUsagePayload = Field(..., description="Usage statistics")
-    performance_metrics: AnalyticsPerformancePayload = Field(..., description="Performance metrics")
+    performance_metrics: AnalyticsPerformancePayload = Field(
+        ..., description="Performance metrics"
+    )
     usage_trends: AnalyticsTrendsPayload = Field(..., description="Usage trends")
     detailed_user_analytics: Optional[DetailedUserAnalyticsPayload] = Field(
         None, description="Detailed user analytics"
     )
-
