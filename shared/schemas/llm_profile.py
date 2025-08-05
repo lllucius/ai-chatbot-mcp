@@ -64,13 +64,11 @@ class LLMProfileUpdate(BaseModel):
     is_active: Optional[bool] = Field(None, description="Whether profile is active")
 
 
-class LLMProfileListResponse(BaseModel):
-    """Response model for listing LLM profiles."""
+class LLMProfileStatisticsData(BaseModel):
+    """LLM Profile statistics data."""
 
-    profiles: List[LLMProfileResponse] = Field(..., description="List of LLM profiles")
-    total: int = Field(..., description="Total number of profiles")
-    page: int = Field(..., description="Current page number")
-    size: int = Field(..., description="Page size")
-    pages: int = Field(..., description="Total number of pages")
-
-    model_config = {"from_attributes": True}
+    total_profiles: int = Field(..., description="Total number of profiles")
+    active_profiles: int = Field(..., description="Number of active profiles")
+    default_profile: str = Field(..., description="Name of default profile")
+    most_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used profiles")
+    recently_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used profiles")

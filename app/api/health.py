@@ -65,15 +65,12 @@ router = APIRouter()
 
 @router.get("/", response_model=APIResponse)
 @handle_api_errors("Basic health check failed")
-async def basic_health_check():
+async def basic_health_check() -> APIResponse:
     """Provide basic health check endpoint for load balancers and monitoring."""
     log_api_call("basic_health_check")
-    return SuccessResponse.create(
-        data={
-            "status": "healthy",
-            "version": settings.app_version,
-        },
-        message="AI Chatbot Platform is running"
+    return APIResponse(
+        success=True,
+        message="AI Chatbot Platform is running",
     )
 
 

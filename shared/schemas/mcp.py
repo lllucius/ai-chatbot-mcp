@@ -99,7 +99,7 @@ class MCPToolUpdateSchema(BaseModel):
     is_enabled: Optional[bool] = Field(None, description="New enabled status")
 
 
-class MCPToolSchema(BaseModelSchema):
+class MCPToolResponse(BaseModelSchema):
     """Schema for MCP tool responses."""
 
     name: str = Field(..., description="Full tool name")

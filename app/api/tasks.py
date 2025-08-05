@@ -62,141 +62,122 @@ def get_celery_app():
 @handle_api_errors("Failed to get task system status")
 async def get_task_system_status(
     current_user: User = Depends(get_current_user),
-):
+) -> APIResponse[TaskSystemStatusData]:
     """Get comprehensive background task system status and health metrics."""
     log_api_call("get_task_system_status", user_id=str(current_user.id))
 
+    celery_app = get_celery_app()
+
+    # Check broker connectivity
     try:
-        celery_app = get_celery_app()
-
-        # Check broker connectivity
-        try:
-            inspector = celery_app.control.inspect()
-            stats = inspector.stats()
-            broker_status = "connected" if stats else "disconnected"
-            active_workers = len(stats) if stats else 0
-        except Exception as e:
-            broker_status = "error"
-            active_workers = 0
-            stats = {"error": str(e)}
-
-        # Get active task counts
-        try:
-            active_tasks = inspector.active() if broker_status == "connected" else {}
-            total_active = (
-                sum(len(tasks) for tasks in active_tasks.values())
-                if active_tasks
-                else 0
-            )
-        except Exception:
-            total_active = 0
-
-        # Get queue lengths
-        try:
-            reserved_tasks = (
-                inspector.reserved() if broker_status == "connected" else {}
-            )
-            total_reserved = (
-                sum(len(tasks) for tasks in reserved_tasks.values())
-                if reserved_tasks
-                else 0
-            )
-        except Exception:
-            total_reserved = 0
-
-        response_payload = TaskSystemStatusData(
-            broker_status=broker_status,
-            active_workers=active_workers,
-            active_tasks=total_active,
-            reserved_tasks=total_reserved,
-            system_status=(
-                "healthy"
-                if broker_status == "connected" and active_workers > 0
-                else "degraded"
-            ),
-            timestamp=datetime.utcnow().isoformat(),
-        )
-        return APIResponse[TaskSystemStatusData](
-            success=True,
-            message="Task system status retrieved successfully",
-            data=response_payload,
-        )
+        inspector = celery_app.control.inspect()
+        stats = inspector.stats()
+        broker_status = "connected" if stats else "disconnected"
+        active_workers = len(stats) if stats else 0
     except Exception as e:
-        response_payload = TaskSystemStatusData(
-            broker_status="unavailable",
-            active_workers=0,
-            active_tasks=0,
-            reserved_tasks=0,
-            system_status="error",
-            timestamp=datetime.utcnow().isoformat(),
-            error=str(e),
+        broker_status = "error"
+        active_workers = 0
+        stats = {"error": str(e)}
+
+    # Get active task counts
+    try:
+        active_tasks = inspector.active() if broker_status == "connected" else {}
+        total_active = (
+            sum(len(tasks) for tasks in active_tasks.values())
+            if active_tasks
+            else 0
         )
-        return APIResponse[TaskSystemStatusData](
-            success=False,
-            message="Failed to retrieve task system status",
-            data=response_payload,
+    except Exception:
+        total_active = 0
+
+    # Get queue lengths
+    try:
+        reserved_tasks = (
+            inspector.reserved() if broker_status == "connected" else {}
         )
+        total_reserved = (
+            sum(len(tasks) for tasks in reserved_tasks.values())
+            if reserved_tasks
+            else 0
+        )
+    except Exception:
+        total_reserved = 0
+
+    payload = TaskSystemStatusData(
+        broker_status=broker_status,
+        active_workers=active_workers,
+        active_tasks=total_active,
+        reserved_tasks=total_reserved,
+        system_status=(
+            "healthy"
+            if broker_status == "connected" and active_workers > 0
+            else "degraded"
+        ),
+        timestamp=datetime.utcnow().isoformat(),
+    )
+    return APIResponse[TaskSystemStatusData](
+        success=True,
+        message="Task system status retrieved successfully",
+        data=payload,
+    )
 
 
 @router.get("/workers", response_model=APIResponse[WorkerStatusData])
 @handle_api_errors("Failed to get worker information")
 async def get_workers_info(
     current_user: User = Depends(get_current_user),
-):
+) -> APIResponse[WorkerStatusData]:
     """Get comprehensive information about Celery workers with detailed status and metrics."""
     log_api_call("get_workers_info", user_id=str(current_user.id))
 
-    try:
-        celery_app = get_celery_app()
-        inspector = celery_app.control.inspect()
+    celery_app = get_celery_app()
+    inspector = celery_app.control.inspect()
 
-        # Get worker statistics
-        stats = inspector.stats() or {}
+    # Get worker statistics
+    stats = inspector.stats() or {}
 
-        # Get worker status
-        ping_results = inspector.ping() or {}
+    # Get worker status
+    ping_results = inspector.ping() or {}
 
-        # Get worker configuration
-        conf_results = inspector.conf() or {}
+    # Get worker configuration
+    conf_results = inspector.conf() or {}
 
-        workers = []
-        for worker_name in stats:
-            worker_stats = stats.get(worker_name, {})
-            worker_ping = ping_results.get(worker_name, {})
-            worker_conf = conf_results.get(worker_name, {})
+    workers = []
+    for worker_name in stats:
+        worker_stats = stats.get(worker_name, {})
+        worker_ping = ping_results.get(worker_name, {})
+        worker_conf = conf_results.get(worker_name, {})
 
-            worker_info = WorkerInfo(
-                name=worker_name,
-                status=(
-                    "online" if worker_ping.get("ok") == "pong" else "offline"
-                ),
-                pool=worker_stats.get("pool", {}).get(
-                    "implementation", "unknown"
-                ),
-                processes=worker_stats.get("pool", {}).get("processes", 0),
-                max_concurrency=worker_stats.get("pool", {}).get(
-                    "max-concurrency", 0
-                ),
-                current_load=len(worker_stats.get("rusage", {})),
-                broker_transport=worker_conf.get("broker_transport", "unknown"),
-                prefetch_count=worker_conf.get("worker_prefetch_multiplier", 0),
-                last_heartbeat=str(worker_stats.get("clock", "unknown")),
-            )
-            workers.append(worker_info)
-
-        response_payload = WorkerStatusData(
-            workers=workers,
-            total_workers=len(workers),
-            online_workers=len([w for w in workers if w.status == "online"]),
-            timestamp=datetime.utcnow().isoformat(),
+        worker_info = WorkerInfo(
+            name=worker_name,
+            status=(
+                "online" if worker_ping.get("ok") == "pong" else "offline"
+            ),
+            pool=worker_stats.get("pool", {}).get(
+                "implementation", "unknown"
+            ),
+            processes=worker_stats.get("pool", {}).get("processes", 0),
+            max_concurrency=worker_stats.get("pool", {}).get(
+                "max-concurrency", 0
+            ),
+            current_load=len(worker_stats.get("rusage", {})),
+            broker_transport=worker_conf.get("broker_transport", "unknown"),
+            prefetch_count=worker_conf.get("worker_prefetch_multiplier", 0),
+            last_heartbeat=str(worker_stats.get("clock", "unknown")),
         )
-        return APIResponse[WorkerStatusData](
-            success=True,
-            message="Worker information retrieved successfully",
-            data=response_payload,
-        )
-    except Exception as e:
-        raise
+        workers.append(worker_info)
+
+    payload = WorkerStatusData(
+        workers=workers,
+        total_workers=len(workers),
+        online_workers=len([w for w in workers if w.status == "online"]),
+        timestamp=datetime.utcnow().isoformat(),
+    )
+    return APIResponse[WorkerStatusData](
+        success=True,
+        message="Worker information retrieved successfully",
+        data=payload,
+    )
 
 
 @router.get("/queue", response_model=APIResponse[QueueStatusData])
@@ -204,142 +185,136 @@ async def get_workers_info(
 async def get_queue_info(
     queue_name: Optional[str] = Query(None, description="Specific queue to check"),
     current_user: User = Depends(get_current_user),
-):
+) -> APIResponse[QueueStatusData]:
     """Get comprehensive task queue information with detailed metrics and task tracking."""
     log_api_call("get_queue_info", user_id=str(current_user.id), queue_name=queue_name)
 
-    try:
-        celery_app = get_celery_app()
-        inspector = celery_app.control.inspect()
+    celery_app = get_celery_app()
+    inspector = celery_app.control.inspect()
 
-        # Get active tasks
-        active_tasks = inspector.active() or {}
+    # Get active tasks
+    active_tasks = inspector.active() or {}
 
-        # Get reserved tasks (waiting in queue)
-        reserved_tasks = inspector.reserved() or {}
+    # Get reserved tasks (waiting in queue)
+    reserved_tasks = inspector.reserved() or {}
 
-        # Get scheduled tasks
-        scheduled_tasks = inspector.scheduled() or {}
+    # Get scheduled tasks
+    scheduled_tasks = inspector.scheduled() or {}
 
-        queues = {}
-        all_workers = (
-            set(active_tasks.keys())
-            | set(reserved_tasks.keys())
-            | set(scheduled_tasks.keys())
-        )
+    queues = {}
+    all_workers = (
+        set(active_tasks.keys())
+        | set(reserved_tasks.keys())
+        | set(scheduled_tasks.keys())
+    )
 
-        for worker in all_workers:
-            worker_active = active_tasks.get(worker, [])
-            worker_reserved = reserved_tasks.get(worker, [])
-            worker_scheduled = scheduled_tasks.get(worker, [])
+    for worker in all_workers:
+        worker_active = active_tasks.get(worker, [])
+        worker_reserved = reserved_tasks.get(worker, [])
+        worker_scheduled = scheduled_tasks.get(worker, [])
 
-            # Group by queue if available, otherwise use worker name
-            for task in worker_active + worker_reserved + worker_scheduled:
-                task_queue = task.get("delivery_info", {}).get("routing_key", "default")
+        # Group by queue if available, otherwise use worker name
+        for task in worker_active + worker_reserved + worker_scheduled:
+            task_queue = task.get("delivery_info", {}).get("routing_key", "default")
 
-                if queue_name and task_queue != queue_name:
-                    continue
+            if queue_name and task_queue != queue_name:
+                continue
 
-                if task_queue not in queues:
-                    queues[task_queue] = {
-                        "name": task_queue,
-                        "active": 0,
-                        "reserved": 0,
-                        "scheduled": 0,
-                        "tasks": [],
-                    }
+            if task_queue not in queues:
+                queues[task_queue] = {
+                    "name": task_queue,
+                    "active": 0,
+                    "reserved": 0,
+                    "scheduled": 0,
+                    "tasks": [],
+                }
 
-                task_info = TaskInfo(
-                    id=task.get("id"),
-                    name=task.get("name"),
-                    args=task.get("args", []),
-                    kwargs=task.get("kwargs", {}),
-                    worker=worker,
-                    status=(
-                        "active"
-                        if task in worker_active
-                        else "reserved" if task in worker_reserved else "scheduled"
-                    ),
-                )
-
-                queues[task_queue]["tasks"].append(task_info)
-
-                if task in worker_active:
-                    queues[task_queue]["active"] += 1
-                elif task in worker_reserved:
-                    queues[task_queue]["reserved"] += 1
-                elif task in worker_scheduled:
-                    queues[task_queue]["scheduled"] += 1
-
-        # Convert queues dict to QueueInfo models
-        queue_infos = [
-            QueueInfo(
-                name=queue_data["name"],
-                active=queue_data["active"],
-                reserved=queue_data["reserved"],
-                scheduled=queue_data["scheduled"],
-                tasks=queue_data["tasks"],
+            task_info = TaskInfo(
+                id=task.get("id"),
+                name=task.get("name"),
+                args=task.get("args", []),
+                kwargs=task.get("kwargs", {}),
+                worker=worker,
+                status=(
+                    "active"
+                    if task in worker_active
+                    else "reserved" if task in worker_reserved else "scheduled"
+                ),
             )
-            for queue_data in queues.values()
-        ]
 
-        response_payload = QueueStatusData(
-            queues=queue_infos,
-            total_queues=len(queues),
-            filtered_by=queue_name,
-            timestamp=datetime.utcnow().isoformat(),
+            queues[task_queue]["tasks"].append(task_info)
+
+            if task in worker_active:
+                queues[task_queue]["active"] += 1
+            elif task in worker_reserved:
+                queues[task_queue]["reserved"] += 1
+            elif task in worker_scheduled:
+                queues[task_queue]["scheduled"] += 1
+
+    # Convert queues dict to QueueInfo models
+    queue_infos = [
+        QueueInfo(
+            name=queue_data["name"],
+            active=queue_data["active"],
+            reserved=queue_data["reserved"],
+            scheduled=queue_data["scheduled"],
+            tasks=queue_data["tasks"],
         )
-        return APIResponse[QueueStatusData](
-            success=True,
-            message="Queue information retrieved successfully",
-            data=response_payload,
-        )
-    except Exception as e:
-        raise
+        for queue_data in queues.values()
+    ]
+
+    payload = QueueStatusData(
+        queues=queue_infos,
+        total_queues=len(queues),
+        filtered_by=queue_name,
+        timestamp=datetime.utcnow().isoformat(),
+    )
+    return APIResponse[QueueStatusData](
+        success=True,
+        message="Queue information retrieved successfully",
+        data=payload,
+    )
 
 
 @router.get("/active", response_model=APIResponse[ActiveTasksData])
 @handle_api_errors("Failed to get active tasks")
 async def get_active_tasks(
     current_user: User = Depends(get_current_user),
-):
+) -> APIResponse[ActiveTasksData]:
     """Get comprehensive information about currently executing tasks with detailed metadata."""
     log_api_call("get_active_tasks", user_id=str(current_user.id))
 
-    try:
-        celery_app = get_celery_app()
-        inspector = celery_app.control.inspect()
+    celery_app = get_celery_app()
+    inspector = celery_app.control.inspect()
 
-        active_tasks = inspector.active() or {}
+    active_tasks = inspector.active() or {}
 
-        all_tasks = []
-        for worker, tasks in active_tasks.items():
-            for task in tasks:
-                task_info = ActiveTaskInfo(
-                    id=task.get("id"),
-                    name=task.get("name"),
-                    args=task.get("args", []),
-                    kwargs=task.get("kwargs", {}),
-                    worker=worker,
-                    time_start=task.get("time_start"),
-                    acknowledged=task.get("acknowledged", False),
-                    delivery_info=task.get("delivery_info", {}),
-                )
-                all_tasks.append(task_info)
+    all_tasks = []
+    for worker, tasks in active_tasks.items():
+        for task in tasks:
+            task_info = ActiveTaskInfo(
+                id=task.get("id"),
+                name=task.get("name"),
+                args=task.get("args", []),
+                kwargs=task.get("kwargs", {}),
+                worker=worker,
+                time_start=task.get("time_start"),
+                acknowledged=task.get("acknowledged", False),
+                delivery_info=task.get("delivery_info", {}),
+            )
+            all_tasks.append(task_info)
 
-        response_payload = ActiveTasksData(
-            active_tasks=all_tasks,
-            total_active=len(all_tasks),
-            workers_with_tasks=len([w for w, t in active_tasks.items() if t]),
-            timestamp=datetime.utcnow().isoformat(),
-        )
-        return APIResponse[ActiveTasksData](
-            success=True,
-            message="Active tasks retrieved successfully",
-            data=response_payload,
-        )
-    except Exception as e:
-        raise
+    payload = ActiveTasksData(
+        active_tasks=all_tasks,
+        total_active=len(all_tasks),
+        workers_with_tasks=len([w for w, t in active_tasks.items() if t]),
+        timestamp=datetime.utcnow().isoformat(),
+    )
+    return APIResponse[ActiveTasksData](
+        success=True,
+        message="Active tasks retrieved successfully",
+        data=payload,
+    )
 
 
 @router.post("/schedule", response_model=APIResponse)
@@ -496,161 +471,155 @@ async def get_task_statistics(
     ),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[TaskStatisticsData]:
     """Get comprehensive task execution statistics and performance analytics."""
     log_api_call(
         "get_task_statistics", user_id=str(current_user.id), period_hours=period_hours
     )
 
-    try:
-        start_time = datetime.utcnow() - timedelta(hours=period_hours)
+    start_time = datetime.utcnow() - timedelta(hours=period_hours)
 
-        from sqlalchemy import and_, func, select
+    from sqlalchemy import and_, func, select
 
-        from ..models.document import Document, FileStatus
+    from ..models.document import Document, FileStatus
 
-        # Document processing statistics
-        total_docs = await db.scalar(
-            select(func.count(Document.id)).where(Document.created_at >= start_time)
-        )
+    # Document processing statistics
+    total_docs = await db.scalar(
+        select(func.count(Document.id)).where(Document.created_at >= start_time)
+    )
 
-        completed_docs = await db.scalar(
-            select(func.count(Document.id)).where(
-                and_(
-                    Document.created_at >= start_time,
-                    Document.status == FileStatus.COMPLETED,
-                )
+    completed_docs = await db.scalar(
+        select(func.count(Document.id)).where(
+            and_(
+                Document.created_at >= start_time,
+                Document.status == FileStatus.COMPLETED,
             )
         )
+    )
 
-        failed_docs = await db.scalar(
-            select(func.count(Document.id)).where(
-                and_(
-                    Document.created_at >= start_time,
-                    Document.status == FileStatus.FAILED,
-                )
+    failed_docs = await db.scalar(
+        select(func.count(Document.id)).where(
+            and_(
+                Document.created_at >= start_time,
+                Document.status == FileStatus.FAILED,
             )
         )
+    )
 
-        processing_docs = await db.scalar(
-            select(func.count(Document.id)).where(
-                and_(
-                    Document.created_at >= start_time,
-                    Document.status == FileStatus.PROCESSING,
-                )
+    processing_docs = await db.scalar(
+        select(func.count(Document.id)).where(
+            and_(
+                Document.created_at >= start_time,
+                Document.status == FileStatus.PROCESSING,
             )
         )
+    )
 
-        # Calculate rates
-        success_rate = (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
-        failure_rate = (failed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+    # Calculate rates
+    success_rate = (completed_docs / max(total_docs, 1)) * 100 if total_docs else 0
+    failure_rate = (failed_docs / max(total_docs, 1)) * 100 if total_docs else 0
 
-        # Get average processing time for completed documents
-        avg_processing_time = await db.execute(
-            select(
-                func.avg(
-                    func.extract("epoch", Document.updated_at - Document.created_at)
-                )
-            ).where(
-                and_(
-                    Document.created_at >= start_time,
-                    Document.status == FileStatus.COMPLETED,
-                    Document.updated_at.is_not(None),
-                )
+    # Get average processing time for completed documents
+    avg_processing_time = await db.execute(
+        select(
+            func.avg(
+                func.extract("epoch", Document.updated_at - Document.created_at)
+            )
+        ).where(
+            and_(
+                Document.created_at >= start_time,
+                Document.status == FileStatus.COMPLETED,
+                Document.updated_at.is_not(None),
             )
         )
-        avg_time_seconds = avg_processing_time.scalar() or 0
+    )
+    avg_time_seconds = avg_processing_time.scalar() or 0
 
-        # Get recent errors
-        recent_errors = await db.execute(
-            select(Document.error_message)
-            .where(
-                and_(
-                    Document.created_at >= start_time,
-                    Document.status == FileStatus.FAILED,
-                    Document.error_message.is_not(None),
-                )
+    # Get recent errors
+    recent_errors = await db.execute(
+        select(Document.error_message)
+        .where(
+            and_(
+                Document.created_at >= start_time,
+                Document.status == FileStatus.FAILED,
+                Document.error_message.is_not(None),
             )
-            .limit(5)
         )
+        .limit(5)
+    )
 
-        error_samples = [row[0] for row in recent_errors.fetchall()]
+    error_samples = [row[0] for row in recent_errors.fetchall()]
 
-        document_processing_stats = DocumentProcessingStats(
-            total=total_docs or 0,
-            completed=completed_docs or 0,
-            failed=failed_docs or 0,
-            processing=processing_docs or 0,
-            success_rate=round(success_rate, 2),
-            failure_rate=round(failure_rate, 2),
-            avg_processing_time_seconds=round(avg_time_seconds, 2),
-        )
+    document_processing_stats = DocumentProcessingStats(
+        total=total_docs or 0,
+        completed=completed_docs or 0,
+        failed=failed_docs or 0,
+        processing=processing_docs or 0,
+        success_rate=round(success_rate, 2),
+        failure_rate=round(failure_rate, 2),
+        avg_processing_time_seconds=round(avg_time_seconds, 2),
+    )
 
-        response_payload = TaskStatisticsData(
-            period_hours=period_hours,
-            start_time=start_time.isoformat(),
-            document_processing=document_processing_stats,
-            recent_errors=error_samples,
-            timestamp=datetime.utcnow().isoformat(),
-        )
-        return APIResponse[TaskStatisticsData](
-            success=True,
-            message="Task statistics retrieved successfully",
-            data=response_payload,
-        )
-    except Exception as e:
-        raise
+    payload = TaskStatisticsData(
+        period_hours=period_hours,
+        start_time=start_time.isoformat(),
+        document_processing=document_processing_stats,
+        recent_errors=error_samples,
+        timestamp=datetime.utcnow().isoformat(),
+    )
+    return APIResponse[TaskStatisticsData](
+        success=True,
+        message="Task statistics retrieved successfully",
+        data=payload,
+    )
 
 
 @router.get("/monitor", response_model=APIResponse[TaskMonitoringData])
 @handle_api_errors("Failed to get monitoring data")
 async def get_monitoring_data(
     current_user: User = Depends(get_current_user),
-):
+) -> APIResponse[TaskMonitoringData]:
     """Get real-time monitoring data for comprehensive task system observability."""
     log_api_call("get_monitoring_data", user_id=str(current_user.id))
 
+    # Get current system status
+    status_response = await get_task_system_status(current_user)
+
+    # Get active tasks
+    active_response = await get_active_tasks(current_user)
+
+    # Get worker info
+    worker_response = await get_workers_info(current_user)
+
+    # Get recent statistics (pass database session)
+    from ..database import get_db
+    db_gen = get_db()
+    db = await db_gen.__anext__()
     try:
-        # Get current system status
-        status_response = await get_task_system_status(current_user)
+        stats_response = await get_task_statistics(1, current_user, db)  # Last hour
+    finally:
+        await db_gen.aclose()
 
-        # Get active tasks
-        active_response = await get_active_tasks(current_user)
+    active_tasks_summary = TasksSummary(
+        count=active_response.data.total_active,
+        workers_busy=active_response.data.workers_with_tasks,
+    )
 
-        # Get worker info
-        worker_response = await get_workers_info(current_user)
+    workers_summary = WorkersSummary(
+        total=worker_response.data.total_workers,
+        online=worker_response.data.online_workers,
+    )
 
-        # Get recent statistics (pass database session)
-        from ..database import get_db
-        db_gen = get_db()
-        db = await db_gen.__anext__()
-        try:
-            stats_response = await get_task_statistics(1, current_user, db)  # Last hour
-        finally:
-            await db_gen.aclose()
-
-        active_tasks_summary = TasksSummary(
-            count=active_response.data.total_active,
-            workers_busy=active_response.data.workers_with_tasks,
-        )
-
-        workers_summary = WorkersSummary(
-            total=worker_response.data.total_workers,
-            online=worker_response.data.online_workers,
-        )
-
-        response_payload = TaskMonitoringData(
-            system_status=status_response.data.model_dump(),
-            active_tasks=active_tasks_summary,
-            workers=workers_summary,
-            recent_performance=stats_response.data.document_processing.model_dump(),
-            timestamp=datetime.utcnow().isoformat(),
-            refresh_interval=30,
-        )
-        return APIResponse[TaskMonitoringData](
-            success=True,
-            message="Monitoring data retrieved successfully",
-            data=response_payload,
-        )
-    except Exception as e:
-        raise
+    payload = TaskMonitoringData(
+        system_status=status_response.data.model_dump(),
+        active_tasks=active_tasks_summary,
+        workers=workers_summary,
+        recent_performance=stats_response.data.document_processing.model_dump(),
+        timestamp=datetime.utcnow().isoformat(),
+        refresh_interval=30,
+    )
+    return APIResponse[TaskMonitoringData](
+        success=True,
+        message="Monitoring data retrieved successfully",
+        data=payload,
+    )

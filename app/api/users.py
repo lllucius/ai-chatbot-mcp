@@ -100,7 +100,7 @@ async def change_password(
 # Admin endpoints (require superuser privileges)
 
 
-@router.get("/", response_model=APIResponse[PaginatedResponse[UserResponses]])
+@router.get("/", response_model=APIResponse[PaginatedResponse[UserResponse]])
 @handle_api_errors("Failed to retrieve users")
 async def list_users(
     page: int = Query(1, ge=1),
@@ -109,7 +109,7 @@ async def list_users(
     superuser_only: bool = Query(False),
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
-) -> APIResponse[PaginatedResponse[UserResponses]]:
+) -> APIResponse[PaginatedResponse[UserResponse]]:
     """List all users with filtering and pagination."""
     log_api_call(
         "list_users",
@@ -135,7 +135,7 @@ async def list_users(
         )
     )
 
-    return APIResponse[PaginatedResponse[UserResponses]](
+    return APIResponse[PaginatedResponse[UserResponse]](
         success=True,
         message="Users retrieved successfully",
         data=payload,

@@ -24,10 +24,12 @@ class PromptStatisticsData(BaseModel):
     
     total_prompts: int = Field(..., description="Total number of prompts")
     active_prompts: int = Field(..., description="Number of active prompts")
-    categories: List[PromptCategoryInfo] = Field(default_factory=list, description="Category breakdown")
+    default_prompt: str = Field(..., description="Name of default prompt")
     usage_stats: Dict[str, Any] = Field(default_factory=dict, description="Usage statistics")
-    most_used_prompts: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used prompts")
-    timestamp: str = Field(..., description="Statistics timestamp")
+    most_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used prompts")
+    recently_used: List[Dict[str, Any]] = Field(default_factory=list, description="Most frequently used prompts")
+    categories: List[PromptCategoryInfo] = Field(default_factory=list, description="Category breakdown")
+    total_tags: int = Field(..., description="Total number of tags")
 
 
 class PromptCategoriesData(BaseModel):
@@ -37,9 +39,3 @@ class PromptCategoriesData(BaseModel):
     tags: List[str] = Field(default_factory=list, description="Available prompt tags")
 
 
-class PromptStatisticsData(BaseModel):
-    """Prompt statistics data model - flexible structure for service data."""
-    
-    # This will be whatever the prompt service returns
-    # Using Any to accommodate the service's data structure
-    data: Any = Field(..., description="Prompt statistics data from service")

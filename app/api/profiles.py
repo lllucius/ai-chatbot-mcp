@@ -37,20 +37,25 @@ async def get_profile_service(db: AsyncSession = Depends(get_db)) -> LLMProfileS
     return LLMProfileService(db)
 
 
-@router.post("/", response_model=LLMProfileResponse)
+@router.post("/", response_model=APIResponse[LLMProfileResponse])
 @handle_api_errors("Failed to create profile")
 async def create_profile(
     request: LLMProfileCreate,
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> LLMProfileResponse:
+) -> APIResponse[LLMProfileResponse]:
     """Create a new LLM parameter profile with validation."""
     log_api_call("create_profile", user_id=current_user.id)
     profile = await profile_service.create_profile(request)
-    return LLMProfileResponse.model_validate(profile)
+    payload = LLMProfileResponse.model_validate(profile)
+    return APIResponse[LLMProfileResponse](
+        success=True,
+        message="Profile created successfully",
+        data=payload,
+    )
 
 
-@router.get("/", response_model=LLMProfileListResponse)
+@router.get("/", response_model=APIResponse[PaginatedResponse[ProfileResponse]])
 @handle_api_errors("Failed to list profiles")
 async def list_profiles(
     active_only: bool = Query(True, description="Show only active profiles"),
@@ -59,43 +64,43 @@ async def list_profiles(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> LLMProfileListResponse:
+) -> APIResponse[PaginatedResponse[ProfileResponse]]:
     """List all LLM parameter profiles with filtering and pagination."""
     log_api_call("list_profiles", user_id=current_user.id)
 
     profiles, total = await profile_service.list_profiles(
         active_only=active_only, search=search, page=page, size=size
     )
-    pages = (total + size - 1) // size if size else 1
+
     profile_responses = []
-    for p in profiles:
+    for profile in profiles:
         profile_responses.append(
-            LLMProfileResponse(
-                name=p.name,
-                title=p.title,
-                description=p.description,
-                model_name=settings.openai_chat_model,
-                parameters=p.to_openai_params(),
-                is_default=p.is_default,
-                is_active=p.is_active,
-                usage_count=p.usage_count,
-                last_used_at=p.last_used_at,
-                created_at=p.created_at,
-                updated_at=p.updated_at,
-            )
+            LLMProfileResponse.model_validate(profile)
         )
-    return LLMProfileListResponse(
-        profiles=profile_responses, total=total, page=page, size=size, pages=pages
+
+    payload = PaginatedResponse(
+        items=profile_responses,
+        pagination=PaginationParams(
+            total=total,
+            page=page,
+            per_page=size,
+        )
+    )
+
+    return APIResponse[PaginatedResponse[ProfileResponse]](
+        success=True,
+        message="Profiles retrieved successfully",
+        data=payload,
     )
 
 
-@router.get("/byname/{profile_name}", response_model=LLMProfileResponse)
+@router.get("/byname/{profile_name}", response_model=APIResponse[LLMProfileResponse])
 @handle_api_errors("Failed to get profile details")
 async def get_profile_details(
     profile_name: str,
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> LLMProfileResponse:
+) -> APIResponse[LLMProfileResponse]:
     """Get detailed information about a specific LLM profile by name."""
     log_api_call(
         "get_profile_details", user_id=current_user.id, profile_name=profile_name
@@ -106,37 +111,39 @@ async def get_profile_details(
             status_code=404,
             detail=f"Profile '{profile_name}' not found",
         )
-
-    response_data = {
-        "name": profile.name,
-        "title": profile.title,
-        "description": profile.description,
-        "model_name": settings.openai_chat_model,
-        "parameters": profile.to_openai_params(),
-        "is_default": profile.is_default,
-        "is_active": profile.is_active,
-        "usage_count": profile.usage_count,
-        "last_used_at": profile.last_used_at,
-        "created_at": profile.created_at,
-        "updated_at": profile.updated_at,
-    }
-    return LLMProfileResponse.model_validate(response_data)
+    payload = LLMProfileResponse.model_validate(profile)
+    return APIResponse[LLMProfileResponse](
+        success=True,
+        message=f"Profile '{profile_name}' details retrieved successfully",
+        data=payload,
+    )
 
 
-@router.put("/byname/{profile_name}", response_model=LLMProfileResponse)
+@router.put("/byname/{profile_name}", response_model=APIResponse[LLMProfileResponse])
 @handle_api_errors("Failed to update profile")
 async def update_profile(
     profile_name: str,
     profile_data: LLMProfileUpdate,
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> LLMProfileResponse:
+) -> APIResponse[LLMProfileResponse]:
     """Update an existing LLM profile with new parameters or metadata."""
     log_api_call("update_llm_profile", user_id=current_user.id, profile_name=profile_name)
 
     updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
 
-    return LLMProfileResponse.model_validate(updated_profile)
+    data = LLMProfileResponse.model_validate(updated_profile)
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Profile '{profile_name}' not found",
+        )
+    payload = LLMProfileResponse.model_validate(profile)
+    return APIResponse[LLMProfileResponse](
+        success=True,
+        message=f"Profile '{profile_name}' updated successfully",
+        data=payload,
+    )
 
 
 @router.delete("/byname/{profile_name}", response_model=APIResponse)
@@ -145,94 +152,100 @@ async def delete_profile(
     profile_name: str,
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> BaseResponse:
+) -> APIResponse:
     """Delete an LLM profile from the system."""
     log_api_call("delete_llm_profile", user_id=current_user.id, profile_name=profile_name)
 
     await profile_service.delete_profile(profile_name)
 
-    return SuccessResponse.create(
-        message=f"Profile '{profile_name}' deleted successfully"
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Profile '{profile_name}' not found",
+        )
+
+    return APIResponse(
+        success=True,
+        message=f"Profile '{profile_name}' set as default",
     )
 
 
-@router.post("/byname/{profile_name}/set-default", response_model=APIResponse)
+@router.post("/byname/{profile_name}/set-default", response_model=APIResponse[BaseResponse])
 @handle_api_errors("Failed to set default profile")
 async def set_default_profile(
     profile_name: str,
     current_user: User = Depends(get_current_superuser),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> BaseResponse:
+) -> APIResponse[BaseResponse]:
     """Set a profile as the default LLM parameter profile for the system."""
     log_api_call(
         "set_default_profile", user_id=current_user.id, profile_name=profile_name
     )
     success = await profile_service.set_default_profile(profile_name)
-    if success:
-        return SuccessResponse.create(
-            message=f"Profile '{profile_name}' set as default"
-        )
-    else:
-        return ErrorResponse.create(
-            error_code="PROFILE_NOT_FOUND",
-            message=f"Profile '{profile_name}' not found",
-            status_code=404
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Profile '{profile_name}' not found",
         )
 
-
-@router.get("/default/parameters", response_model=APIResponse)
-@handle_api_errors("Failed to get default profile parameters")
-async def get_default_profile_parameters(
-    current_user: User = Depends(get_current_user),
-    profile_service: LLMProfileService = Depends(get_profile_service),
-) -> APIResponse:
-    """Get parameters from the default LLM profile in OpenAI-compatible format."""
-    log_api_call("get_default_profile_parameters", user_id=current_user.id)
-    params = await profile_service.get_profile_for_openai()
-    response_payload = ProfileParametersData(
-        parameters=params,
-        profile_name="default",
-    )
     return APIResponse(
         success=True,
-        message="Default profile parameters retrieved successfully",
-        data=response_payload.model_dump(),
+        message=f"Profile '{profile_name}' set as default"
     )
 
 
-@router.get("/stats", response_model=APIResponse)
+@router.get("/default", response_model=APIResponse[LLMProfileResponse])
+@handle_api_errors("Failed to get default profile")
+async def get_default_profile(
+    current_user: User = Depends(get_current_user),
+    profile_service: LLMProfileService = Depends(get_profile_service),
+) -> APIResponse[LLMProfileResponse]:
+    """Get detailed information about the defualt LLM profile."""
+    log_api_call("get_default_profile", user_id=current_user.id)
+    profile = await profile_service.get_default_profile()
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Default profile not set",
+        )
+    payload = LLMProfileResponse.model_validate(profile)
+    return APIResponse[LLMProfileResponse](
+        success=True,
+        message=f"Default profile details retrieved successfully",
+        data=payload,
+    )
+
+
+@router.get("/stats", response_model=APIResponse[LLMProfileStatisticsData])
 @handle_api_errors("Failed to get profile statistics")
 async def get_profile_stats(
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> APIResponse[LLMProfileStatisticsData]:
     """Get comprehensive LLM profile usage statistics and analytics."""
     log_api_call("get_profile_stats", user_id=current_user.id)
     stats = await profile_service.get_profile_stats()
-    return APIResponse(
+    payload = LLMProfileStatisticsData.model_validate(stats)
+    return APIResponse[LLMProfileStatisticsData](
         success=True,
         message="Profile statistics retrieved successfully",
         data=stats,
     )
 
 
-@router.post("/validate", response_model=APIResponse)
+@router.post("/validate", response_model=APIResponse[dict])
 @handle_api_errors("Failed to validate parameters")
 async def validate_parameters(
     parameters: Dict[str, Any],
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-):
+) -> APIResponse[dict]:
     """Validate LLM parameters before profile creation or update."""
     log_api_call("validate_parameters", user_id=current_user.id)
     errors = await profile_service.validate_parameters(**parameters)
-    response_payload = ProfileValidationData(
-        valid=len(errors) == 0,
-        errors=errors,
-        parameters=parameters,
-    )
-    return APIResponse(
+    return APIResponse[dict](
         success=len(errors) == 0,
         message="Parameter validation completed" + (" successfully" if len(errors) == 0 else " with errors"),
-        data=response_payload.model_dump(),
+        data=errors,
     )

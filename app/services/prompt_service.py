@@ -333,7 +333,6 @@ class PromptService(BaseService):
         return {
             "total_prompts": total_prompts,
             "active_prompts": active_prompts,
-            "inactive_prompts": total_prompts - active_prompts,
             "default_prompt": default_prompt.name if default_prompt else None,
             "most_used": most_used_list,
             "recently_used": recently_used_list,

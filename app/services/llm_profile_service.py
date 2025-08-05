@@ -351,7 +351,6 @@ class LLMProfileService(BaseService):
         return {
             "total_profiles": total_profiles,
             "active_profiles": active_profiles,
-            "inactive_profiles": total_profiles - active_profiles,
             "default_profile": default_profile.name if default_profile else None,
             "most_used": most_used_list,
             "recently_used": recently_used_list,

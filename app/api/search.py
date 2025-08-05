@@ -29,13 +29,13 @@ async def get_search_service(db: AsyncSession = Depends(get_db)) -> SearchServic
     return SearchService(db)
 
 
-@router.post("/", response_model=DocumentSearchResponse)
+@router.post("/", response_model=APIResponse[DocumentSearchResponse])
 @handle_api_errors("Search operation failed")
 async def search_documents(
     request: DocumentSearchRequest,
     current_user: User = Depends(get_current_user),
     search_service: SearchService = Depends(get_search_service),
-):
+) -> APIResponse[DocumentSearchResponse]:
     """Search through documents using multiple algorithms."""
     log_api_call(
         "search_documents",
@@ -52,14 +52,18 @@ async def search_documents(
     # Calculate search time
     search_time_ms = (time.time() - start_time) * 1000
 
-    return DocumentSearchResponse(
-        success=True,
-        message=f"Search completed using {request.algorithm or 'hybrid'} algorithm",
+    payload = DocumentSearchResponse(
         results=results,
         query=request.query or "",
         algorithm=request.algorithm or "hybrid",
         total_results=len(results),
         search_time_ms=search_time_ms,
+    )
+
+    return APIResponse[DocumentSearchResponse](
+        success=True,
+        message=f"Search completed using {request.algorithm or 'hybrid'} algorithm",
+        data=payload,
     )
 
 
@@ -70,7 +74,7 @@ async def find_similar_chunks(
     limit: int = Query(5, ge=1, le=20),
     current_user: User = Depends(get_current_user),
     search_service: SearchService = Depends(get_search_service),
-):
+) -> APIResponse[DocumentSearchResponse]:
     """Find document chunks similar to a specified reference chunk."""
     log_api_call(
         "find_similar_chunks",
@@ -87,14 +91,18 @@ async def find_similar_chunks(
     # Calculate search time
     search_time_ms = (time.time() - start_time) * 1000
 
-    return DocumentSearchResponse(
-        success=True,
-        message=f"Found {len(results)} similar chunks",
+    payload = DocumentSearchResponse(
         results=results,
         query=f"similar_to_chunk_{chunk_id}",
         algorithm="vector",
         total_results=len(results),
         search_time_ms=search_time_ms,
+    )
+
+    return APIResponse[DocumentSearchResponse](
+        success=True,
+        message=f"Found {len(results)} similar chunks",
+        data=payload,
     )
 
 
@@ -105,7 +113,7 @@ async def get_search_suggestions(
     limit: int = Query(5, ge=1, le=10),
     current_user: User = Depends(get_current_user),
     search_service: SearchService = Depends(get_search_service),
-):
+) -> APIResponse[SearchSuggestionData]:
     """Generate intelligent search query suggestions."""
     log_api_call(
         "get_search_suggestions", user_id=str(current_user.id), query=query, limit=limit
@@ -123,7 +131,7 @@ async def get_search_suggestions(
         f"{query} best practices",
     ]
 
-    response_payload = SearchSuggestionData(
+    payload = SearchSuggestionData(
         query=query,
         suggestions=suggestions[:limit],
     )
@@ -131,61 +139,6 @@ async def get_search_suggestions(
     return APIResponse[SearchSuggestionData](
         success=True,
         message="Search suggestions generated successfully",
-        data=response_payload,
+        data=payload,
     )
 
-
-@router.get("/history", response_model=APIResponse[SearchHistoryData])
-@handle_api_errors("Failed to retrieve search history")
-async def get_search_history(
-    limit: int = Query(10, ge=1, le=50), current_user: User = Depends(get_current_user)
-):
-    """Retrieve user's search history with analytics and patterns."""
-    log_api_call("get_search_history", user_id=str(current_user.id), limit=limit)
-
-    # For admin dashboard, provide aggregated search analytics
-    # In a full implementation, this would query a search_history table
-
-    mock_history = [
-        {
-            "query": "machine learning",
-            "timestamp": "2024-01-22T15:30:00Z",
-            "results_count": 25,
-            "algorithm": "hybrid",
-        },
-        {
-            "query": "neural networks",
-            "timestamp": "2024-01-22T14:15:00Z",
-            "results_count": 18,
-            "algorithm": "vector",
-        },
-        {
-            "query": "data processing",
-            "timestamp": "2024-01-22T13:45:00Z",
-            "results_count": 32,
-            "algorithm": "text",
-        },
-    ]
-
-    response_payload = SearchHistoryData(
-        history=mock_history[:limit],
-        total=len(mock_history),
-    )
-
-    return APIResponse[SearchHistoryData](
-        success=True,
-        message="Search history retrieved successfully",
-        data=response_payload,
-    )
-
-
-@router.delete("/history", response_model=APIResponse)
-@handle_api_errors("Failed to clear search history")
-async def clear_search_history(current_user: User = Depends(get_current_user)):
-    """Clear user's search history and analytics data."""
-    log_api_call("clear_search_history", user_id=str(current_user.id))
-
-    # For admin dashboard, this would clear system-wide search analytics
-    # In a full implementation, this would delete from search_history table
-
-    return SuccessResponse.create(message="Search history cleared successfully")
