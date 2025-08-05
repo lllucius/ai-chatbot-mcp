@@ -1,7 +1,7 @@
 """Document management API endpoints."""
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import (
@@ -20,9 +20,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import (
     APIResponse,
-    ErrorResponse,
-    PaginatedResponse,
-    SuccessResponse,
 )
 from shared.schemas.document import (
     BackgroundTaskResponse,
@@ -44,7 +41,12 @@ from shared.schemas.document_responses import (
     DocumentStorageStats,
     DocumentTopUser,
     DocumentUserInfo,
+    CleanupPreviewItem,
+    CleanupDryRunResponse,
+    CleanupDeletedResponse,
+    BulkReprocessResponse,
 )
+from shared.schemas.base import BaseModelSchema
 
 from ..config import settings
 from ..database import get_db
@@ -58,7 +60,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 router = APIRouter(tags=["documents"])
 
 
-@router.post("/upload", response_model=DocumentUploadResponse)
+@router.post("/upload", response_model=APIResponse[DocumentUploadResponse])
 @handle_api_errors("Failed to upload document")
 async def upload_document(
     file: UploadFile = File(...),
@@ -67,32 +69,34 @@ async def upload_document(
     processing_priority: int = Form(default=5, ge=1, le=10),
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
-) -> DocumentUploadResponse:
+) -> APIResponse[DocumentUploadResponse]:
     """Upload a document for processing."""
     log_api_call(
         "upload_document", user_id=str(user.id), title=title, auto_process=auto_process
     )
 
-    # Create document
     document = await service.create_document(file, title, user.id)
 
     task_id = None
     if auto_process:
-        # Start background processing
         task_id = await service.start_processing(
             document.id, priority=processing_priority
         )
 
-    return DocumentUploadResponse(
-        success=True,
-        message="Document uploaded successfully",
+    payload = DocumentUploadResponse(
         document=DocumentResponse.model_validate(document),
         task_id=task_id,
         auto_processing=auto_process,
+        success=True,
+        message="Document uploaded successfully",
+    )
+    return APIResponse[DocumentUploadResponse](
+        success=True,
+        message="Document uploaded successfully",
+        data=payload,
     )
 
-
-@router.get("/", response_model=APIResponse)
+@router.get("/", response_model=APIResponse[List[DocumentResponse]])
 @handle_api_errors("Failed to retrieve documents")
 async def list_documents(
     page: int = Query(1, ge=1),
@@ -101,7 +105,7 @@ async def list_documents(
     status_filter: Optional[str] = Query(None, alias="status"),
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-):
+) -> APIResponse[List[DocumentResponse]]:
     """List user's documents with pagination and filtering."""
     log_api_call(
         "list_documents",
@@ -118,10 +122,8 @@ async def list_documents(
         file_type=file_type,
         status_filter=status_filter,
     )
-    responses = []
-    for document in documents:
-        # Create DocumentResponse directly with explicit field assignment
-        document_response = DocumentResponse(
+    responses = [
+        DocumentResponse(
             id=document.id,
             title=document.title,
             filename=document.filename,
@@ -135,32 +137,26 @@ async def list_documents(
             created_at=document.created_at,
             updated_at=document.updated_at,
         )
-        responses.append(document_response)
+        for document in documents
+    ]
 
-    # Convert to dict for unified response
-    response_data = [resp.model_dump() for resp in responses]
-
-    return PaginatedResponse.create_response(
-        items=response_data,
-        total=total,
-        page=page,
-        size=size,
+    return APIResponse[List[DocumentResponse]](
+        success=True,
         message="Documents retrieved successfully",
+        data=responses,
     )
 
-
-@router.get("/byid/{document_id}", response_model=APIResponse)
+@router.get("/byid/{document_id}", response_model=APIResponse[DocumentResponse])
 @handle_api_errors("Failed to retrieve document")
 async def get_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-):
+) -> APIResponse[DocumentResponse]:
     """Get document by ID."""
     log_api_call("get_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.get_document(document_id, current_user.id)
 
-    # Create DocumentResponse directly with explicit field assignment
     document_response = DocumentResponse(
         id=document.id,
         title=document.title,
@@ -176,27 +172,31 @@ async def get_document(
         updated_at=document.updated_at,
     )
 
-    return SuccessResponse.create(
-        data=document_response.model_dump(),
-        message="Document retrieved successfully"
+    return APIResponse[DocumentResponse](
+        success=True,
+        message="Document retrieved successfully",
+        data=document_response
     )
 
-
-@router.put("/byid/{document_id}", response_model=DocumentResponse)
+@router.put("/byid/{document_id}", response_model=APIResponse[DocumentResponse])
 @handle_api_errors("Document update failed")
 async def update_document(
     document_id: UUID,
     request: DocumentUpdate,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-):
+) -> APIResponse[DocumentResponse]:
     """Update document metadata."""
     log_api_call("update_document", user_id=str(current_user.id), document_id=str(document_id))
     document = await document_service.update_document(
         document_id, request, current_user.id
     )
-    return DocumentResponse.model_validate(document)
-
+    payload = DocumentResponse.model_validate(document)
+    return APIResponse[DocumentResponse](
+        success=True,
+        message="Document updated successfully",
+        data=payload,
+    )
 
 @router.delete("/byid/{document_id}", response_model=APIResponse)
 @handle_api_errors("Document deletion failed")
@@ -204,22 +204,23 @@ async def delete_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-):
+) -> APIResponse:
     """Delete document and all associated data."""
     log_api_call("delete_document", user_id=str(current_user.id), document_id=str(document_id))
     success = await document_service.delete_document(document_id, current_user.id)
 
     if success:
-        return SuccessResponse.create(message="Document deleted successfully")
+        return APIResponse(
+            success=True,
+            message="Document deleted successfully",
+        )
     else:
-        return ErrorResponse.create(
-            error_code="DOCUMENT_NOT_FOUND",
+        return APIResponse(
+            success=False,
             message="Document not found",
-            status_code=status.HTTP_404_NOT_FOUND
         )
 
-
-@router.get("/byid/{document_id}/status", response_model=ProcessingStatusResponse)
+@router.get("/byid/{document_id}/status", response_model=APIResponse[ProcessingStatusResponse])
 @handle_api_errors("Failed to get processing status", log_errors=True)
 async def get_processing_status(
     document_id: UUID,
@@ -228,20 +229,38 @@ async def get_processing_status(
     ),
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
-) -> ProcessingStatusResponse:
+) -> APIResponse[ProcessingStatusResponse]:
     """Get document processing status with optional background task information."""
     log_api_call("get_processing_status", user_id=str(user.id), document_id=str(document_id), task_id=task_id)
     if task_id:
-        # Enhanced processing status with task details
         status_info = await service.get_processing_status(document_id, task_id)
         message = "Enhanced processing status retrieved"
     else:
-        # Basic processing status
         status_info = await service.get_processing_status(document_id, None)
         message = "Processing status retrieved"
 
-    return ProcessingStatusResponse(success=True, message=message, **status_info)
+    payload = ProcessingStatusResponse(
+        success=True,
+        message=message,
+        document_id=document_id,
+        status=status_info.get("status"),
+        chunk_count=status_info.get("chunk_count", 0),
+        processing_time=status_info.get("processing_time"),
+        error_message=status_info.get("error_message"),
+        created_at=status_info.get("created_at"),
+        task_id=status_info.get("task_id"),
+        task_status=status_info.get("task_status"),
+        progress=status_info.get("progress"),
+        task_created_at=status_info.get("task_created_at"),
+        task_started_at=status_info.get("task_started_at"),
+        task_error=status_info.get("task_error"),
+    )
 
+    return APIResponse[ProcessingStatusResponse](
+        success=True,
+        message=message,
+        data=payload,
+    )
 
 @router.post("/byid/{document_id}/reprocess", response_model=APIResponse)
 @handle_api_errors("Reprocessing failed for document", log_errors=True)
@@ -249,20 +268,21 @@ async def reprocess_document(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-):
+) -> APIResponse:
     """Reprocess document."""
     log_api_call("reprocess_document", user_id=str(current_user.id), document_id=str(document_id))
     success = await document_service.reprocess_document(document_id, current_user.id)
 
     if success:
-        return SuccessResponse.create(message="Document reprocessing started")
-    else:
-        return ErrorResponse.create(
-            error_code="REPROCESS_FAILED",
-            message="Cannot reprocess document at this time",
-            status_code=status.HTTP_400_BAD_REQUEST
+        return APIResponse(
+            success=True,
+            message="Document reprocessing started"
         )
-
+    else:
+        return APIResponse(
+            success=False,
+            message="Cannot reprocess document at this time"
+        )
 
 @router.get("/byid/{document_id}/download")
 @handle_api_errors("Download of document failed", log_errors=True)
@@ -277,12 +297,9 @@ async def download_document(
         document_id, current_user.id
     )
 
-    from fastapi.responses import FileResponse
-
     return FileResponse(path=file_path, filename=filename, media_type=mime_type)
 
-
-@router.post("/byid/{document_id}/process", response_model=BackgroundTaskResponse)
+@router.post("/byid/{document_id}/process", response_model=APIResponse[BackgroundTaskResponse])
 @handle_api_errors("Failed to start document processing", log_errors=True)
 async def start_document_processing(
     document_id: UUID,
@@ -291,25 +308,30 @@ async def start_document_processing(
     ),
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
-) -> BackgroundTaskResponse:
+) -> APIResponse[BackgroundTaskResponse]:
     """Start background processing for a document."""
     log_api_call("start_document_processing", user_id=str(user.id), document_id=str(document_id), priority=priority)
     task_id = await service.start_processing(document_id, priority=priority)
 
-    return BackgroundTaskResponse(
+    payload = BackgroundTaskResponse(
         message="Document processing started",
         task_id=task_id,
         document_id=str(document_id),
         status="queued",
+        priority=priority,
+    )
+    return APIResponse[BackgroundTaskResponse](
+        success=True,
+        message="Document processing started",
+        data=payload,
     )
 
-
-@router.get("/processing-config", response_model=ProcessingConfigResponse)
+@router.get("/processing-config", response_model=APIResponse[ProcessingConfigResponse])
 @handle_api_errors("Failed to retrieve configuration", log_errors=True)
-async def get_processing_config() -> ProcessingConfigResponse:
+async def get_processing_config() -> APIResponse[ProcessingConfigResponse]:
     """Get current document processing configuration."""
     log_api_call("get_processing_config")
-    return ProcessingConfigResponse(
+    payload = ProcessingConfigResponse(
         message="Processing configuration retrieved",
         config={
             "default_chunk_size": settings.default_chunk_size,
@@ -328,23 +350,38 @@ async def get_processing_config() -> ProcessingConfigResponse:
             "supported_formats": settings.allowed_file_types,
         },
     )
+    return APIResponse[ProcessingConfigResponse](
+        success=True,
+        message="Processing configuration retrieved",
+        data=payload,
+    )
 
-
-@router.get("/queue-status", response_model=QueueStatusResponse)
+@router.get("/queue-status", response_model=APIResponse[QueueStatusResponse])
 @handle_api_errors("Failed to get queue status", log_errors=True)
 async def get_queue_status(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[QueueStatusResponse]:
     """Get background processing queue status."""
     log_api_call("get_queue_status", user_id=str(user.id))
     background_processor = await get_background_processor(db)
     queue_status = await background_processor.get_queue_status()
 
-    return QueueStatusResponse(
-        success=True, message="Queue status retrieved", **queue_status
+    payload = QueueStatusResponse(
+        success=True,
+        message="Queue status retrieved",
+        queue_size=queue_status.get("queue_size"),
+        active_tasks=queue_status.get("active_tasks"),
+        max_concurrent_tasks=queue_status.get("max_concurrent_tasks"),
+        completed_tasks=queue_status.get("completed_tasks"),
+        worker_running=queue_status.get("worker_running"),
     )
 
+    return APIResponse[QueueStatusResponse](
+        success=True,
+        message="Queue status retrieved",
+        data=payload,
+    )
 
 @router.post("/documents/cleanup", response_model=APIResponse)
 @handle_api_errors("Failed to cleanup documents")
@@ -361,7 +398,7 @@ async def cleanup_documents(
     current_user: User = Depends(get_current_superuser),
     document_service: DocumentService = Depends(get_document_service),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse:
     """Clean up old or failed documents."""
     log_api_call(
         "cleanup_documents",
@@ -371,259 +408,254 @@ async def cleanup_documents(
         dry_run=dry_run,
     )
 
-    try:
-        # Build query
-        cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
-        query = select(Document).where(Document.created_at < cutoff_date)
+    # Build query
+    cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
+    query = select(Document).where(Document.created_at < cutoff_date)
 
-        # Apply status filter
-        if status_filter:
-            status_map = {
-                "failed": FileStatus.FAILED,
-                "completed": FileStatus.COMPLETED,
-                "processing": FileStatus.PROCESSING,
-                "pending": FileStatus.PENDING,
-            }
+    # Apply status filter
+    if status_filter:
+        status_map = {
+            "failed": FileStatus.FAILED,
+            "completed": FileStatus.COMPLETED,
+            "processing": FileStatus.PROCESSING,
+            "pending": FileStatus.PENDING,
+        }
 
-            if status_filter not in status_map:
-                return ErrorResponse.create(
-                    error_code="INVALID_STATUS_FILTER",
-                    message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
-                    status_code=status.HTTP_400_BAD_REQUEST
-                )
-
-            query = query.where(Document.status == status_map[status_filter])
-
-        # Get documents to be deleted
-        result = await db.execute(query)
-        documents = result.scalars().all()
-
-        if dry_run:
-            # Return preview of what would be deleted
-            preview = []
-            for doc in documents[:10]:  # Limit preview to 10 items
-                preview.append(
-                    {
-                        "id": str(doc.id),
-                        "title": doc.title,
-                        "status": doc.status.value,
-                        "created_at": doc.created_at.isoformat(),
-                        "file_size": doc.file_size,
-                    }
-                )
-
-            return SuccessResponse.create(
-                data={
-                    "total_count": len(documents),
-                    "preview": preview,
-                    "total_size_bytes": sum(doc.file_size or 0 for doc in documents),
-                    "criteria": {
-                        "status_filter": status_filter,
-                        "older_than_days": older_than_days,
-                        "cutoff_date": cutoff_date.isoformat(),
-                    },
-                },
-                message=f"Dry run: {len(documents)} documents would be deleted"
-            )
-        else:
-            # Actually delete documents
-            deleted_count = 0
-            deleted_size = 0
-            errors = []
-
-            for doc in documents:
-                try:
-                    # Delete associated chunks and embeddings
-                    await document_service.delete_document(doc.id)
-                    deleted_count += 1
-                    deleted_size += doc.file_size or 0
-                except Exception as e:
-                    errors.append(f"Failed to delete document {doc.id}: {str(e)}")
-
-            return SuccessResponse.create(
-                data={
-                    "deleted_count": deleted_count,
-                    "deleted_size_bytes": deleted_size,
-                    "errors": errors[:5],  # Limit error reporting
-                    "criteria": {
-                        "status_filter": status_filter,
-                        "older_than_days": older_than_days,
-                        "cutoff_date": cutoff_date.isoformat(),
-                    },
-                },
-                message=f"Cleanup completed: {deleted_count} documents deleted"
+        if status_filter not in status_map:
+            return APIResponse(
+                success=False,
+                message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
             )
 
-    except HTTPException:
-        raise
-    except Exception:
-        raise
+        query = query.where(Document.status == status_map[status_filter])
 
+    # Get documents to be deleted
+    result = await db.execute(query)
+    documents = result.scalars().all()
+
+    if dry_run:
+        preview = []
+        for doc in documents[:10]:  # Limit preview to 10 items
+            preview.append(
+                CleanupPreviewItem(
+                    id=str(doc.id),
+                    title=doc.title,
+                    status=doc.status.value,
+                    created_at=doc.created_at.isoformat(),
+                    file_size=doc.file_size,
+                )
+            )
+
+        criteria = {
+            "status_filter": status_filter,
+            "older_than_days": older_than_days,
+            "cutoff_date": cutoff_date.isoformat(),
+        }
+
+        payload = CleanupDryRunResponse(
+            total_count=len(documents),
+            preview=preview,
+            total_size_bytes=sum(doc.file_size or 0 for doc in documents),
+            criteria=criteria,
+        )
+
+        return APIResponse[CleanupDryRunResponse](
+            success=True,
+            message=f"Dry run: {len(documents)} documents would be deleted",
+            data=payload,
+        )
+    else:
+        deleted_count = 0
+        deleted_size = 0
+        errors = []
+
+        for doc in documents:
+            try:
+                await document_service.delete_document(doc.id)
+                deleted_count += 1
+                deleted_size += doc.file_size or 0
+            except Exception as e:
+                errors.append(f"Failed to delete document {doc.id}: {str(e)}")
+
+        criteria = {
+            "status_filter": status_filter,
+            "older_than_days": older_than_days,
+            "cutoff_date": cutoff_date.isoformat(),
+        }
+
+        payload = CleanupDeletedResponse(
+            deleted_count=deleted_count,
+            deleted_size_bytes=deleted_size,
+            errors=errors[:5],  # Limit error reporting
+            criteria=criteria,
+        )
+
+        return APIResponse[CleanupDeletedResponse](
+            success=True,
+            message=f"Cleanup completed: {deleted_count} documents deleted",
+            data=payload,
+        )
 
 @router.get("/documents/stats", response_model=APIResponse[DocumentStatisticsData])
 @handle_api_errors("Failed to get document statistics")
 async def get_document_statistics(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[DocumentStatisticsData]:
     """Get comprehensive document statistics."""
     log_api_call("get_document_statistics", user_id=str(current_user.id))
 
-    try:
-        # Basic counts by status
-        status_counts = {}
-        for stat in FileStatus:
-            count = await db.scalar(
-                select(func.count(Document.id)).where(Document.status == stat)
-            )
-            status_counts[stat.value] = count or 0
-
-        # Total storage usage
-        total_size = (
-            await db.scalar(
-                select(func.sum(Document.file_size)).where(
-                    Document.file_size.is_not(None)
-                )
-            )
-            or 0
+    # Basic counts by status
+    status_counts = {}
+    for stat in FileStatus:
+        count = await db.scalar(
+            select(func.count(Document.id)).where(Document.status == stat)
         )
+        status_counts[stat.value] = count or 0
 
-        # File type distribution
-        file_types = await db.execute(
-            select(
-                func.lower(func.split_part(Document.file_name, ".", -1)).label(
-                    "extension"
-                ),
-                func.count(Document.id).label("count"),
-                func.sum(Document.file_size).label("total_size"),
+    # Total storage usage
+    total_size = (
+        await db.scalar(
+            select(func.sum(Document.file_size)).where(
+                Document.file_size.is_not(None)
             )
-            .group_by(func.lower(func.split_part(Document.file_name, ".", -1)))
-            .order_by(func.count(Document.id).desc())
-            .limit(10)
         )
+        or 0
+    )
 
-        file_type_stats = []
-        for row in file_types.fetchall():
-            file_type_stats.append(
-                DocumentFileTypeStats(
-                    extension=row.extension or "unknown",
-                    count=row.count,
-                    total_size=row.total_size or 0,
-                )
-            )
-
-        # Processing performance
-        avg_processing_time = (
-            await db.scalar(
-                select(
-                    func.avg(
-                        func.extract("epoch", Document.updated_at - Document.created_at)
-                    )
-                ).where(
-                    and_(
-                        Document.status == FileStatus.COMPLETED,
-                        Document.updated_at.is_not(None),
-                    )
-                )
-            )
-            or 0
-        )
-
-        # Recent activity (last 7 days)
-        seven_days_ago = datetime.utcnow() - timedelta(days=7)
-        recent_uploads = (
-            await db.scalar(
-                select(func.count(Document.id)).where(
-                    Document.created_at >= seven_days_ago
-                )
-            )
-            or 0
-        )
-
-        recent_processed = (
-            await db.scalar(
-                select(func.count(Document.id)).where(
-                    and_(
-                        Document.updated_at >= seven_days_ago,
-                        Document.status == FileStatus.COMPLETED,
-                    )
-                )
-            )
-            or 0
-        )
-
-        # Top uploaders
-        top_uploaders = await db.execute(
-            select(
-                User.username,
-                func.count(Document.id).label("document_count"),
-                func.sum(Document.file_size).label("total_size"),
-            )
-            .join(User, Document.user_id == User.id)
-            .group_by(User.id, User.username)
-            .order_by(func.count(Document.id).desc())
-            .limit(5)
-        )
-
-        top_users = []
-        for row in top_uploaders.fetchall():
-            top_users.append(
-                DocumentTopUser(
-                    username=row.username,
-                    document_count=row.document_count,
-                    total_size_bytes=row.total_size or 0,
-                )
-            )
-
-        # Calculate success rate
-        total_processed = status_counts.get("completed", 0) + status_counts.get(
-            "failed", 0
-        )
-        success_rate = (
-            status_counts.get("completed", 0) / max(total_processed, 1)
-        ) * 100
-
-        # Create structured data models
-        storage_stats = DocumentStorageStats(
-            total_size_bytes=total_size,
-            total_size_mb=round(total_size / 1024 / 1024, 2),
-            avg_file_size_bytes=round(
-                total_size / max(sum(status_counts.values()), 1), 2
+    # File type distribution
+    file_types = await db.execute(
+        select(
+            func.lower(func.split_part(Document.file_name, ".", -1)).label(
+                "extension"
             ),
+            func.count(Document.id).label("count"),
+            func.sum(Document.file_size).label("total_size"),
+        )
+        .group_by(func.lower(func.split_part(Document.file_name, ".", -1)))
+        .order_by(func.count(Document.id).desc())
+        .limit(10)
+    )
+
+    file_type_stats = []
+    for row in file_types.fetchall():
+        file_type_stats.append(
+            DocumentFileTypeStats(
+                extension=row.extension or "unknown",
+                count=row.count,
+                total_size=row.total_size or 0,
+            )
         )
 
-        processing_stats = DocumentProcessingStats(
-            success_rate=round(success_rate, 2),
-            avg_processing_time_seconds=round(avg_processing_time, 2),
-            total_processed=total_processed,
+    # Processing performance
+    avg_processing_time = (
+        await db.scalar(
+            select(
+                func.avg(
+                    func.extract("epoch", Document.updated_at - Document.created_at)
+                )
+            ).where(
+                and_(
+                    Document.status == FileStatus.COMPLETED,
+                    Document.updated_at.is_not(None),
+                )
+            )
+        )
+        or 0
+    )
+
+    # Recent activity (last 7 days)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    recent_uploads = (
+        await db.scalar(
+            select(func.count(Document.id)).where(
+                Document.created_at >= seven_days_ago
+            )
+        )
+        or 0
+    )
+
+    recent_processed = (
+        await db.scalar(
+            select(func.count(Document.id)).where(
+                and_(
+                    Document.updated_at >= seven_days_ago,
+                    Document.status == FileStatus.COMPLETED,
+                )
+            )
+        )
+        or 0
+    )
+
+    # Top uploaders
+    top_uploaders = await db.execute(
+        select(
+            User.username,
+            func.count(Document.id).label("document_count"),
+            func.sum(Document.file_size).label("total_size"),
+        )
+        .join(User, Document.user_id == User.id)
+        .group_by(User.id, User.username)
+        .order_by(func.count(Document.id).desc())
+        .limit(5)
+    )
+
+    top_users = []
+    for row in top_uploaders.fetchall():
+        top_users.append(
+            DocumentTopUser(
+                username=row.username,
+                document_count=row.document_count,
+                total_size_bytes=row.total_size or 0,
+            )
         )
 
-        recent_activity = DocumentRecentActivity(
-            uploads_last_7_days=recent_uploads,
-            processed_last_7_days=recent_processed,
-        )
+    # Calculate success rate
+    total_processed = status_counts.get("completed", 0) + status_counts.get(
+        "failed", 0
+    )
+    success_rate = (
+        status_counts.get("completed", 0) / max(total_processed, 1)
+    ) * 100
 
-        response_payload = DocumentStatisticsData(
-            counts_by_status=status_counts,
-            total_documents=sum(status_counts.values()),
-            storage=storage_stats,
-            file_types=file_type_stats,
-            processing=processing_stats,
-            recent_activity=recent_activity,
-            top_uploaders=top_users,
-            timestamp=datetime.utcnow().isoformat(),
-        )
+    # Create structured data models
+    storage_stats = DocumentStorageStats(
+        total_size_bytes=total_size,
+        total_size_mb=round(total_size / 1024 / 1024, 2),
+        avg_file_size_bytes=round(
+            total_size / max(sum(status_counts.values()), 1), 2
+        ),
+    )
 
-        return APIResponse[DocumentStatisticsData](
-            success=True,
-            message="Document statistics retrieved successfully",
-            data=response_payload,
-        )
-    except Exception:
-        raise
+    processing_stats = DocumentProcessingStats(
+        success_rate=round(success_rate, 2),
+        avg_processing_time_seconds=round(avg_processing_time, 2),
+        total_processed=total_processed,
+    )
 
+    recent_activity = DocumentRecentActivity(
+        uploads_last_7_days=recent_uploads,
+        processed_last_7_days=recent_processed,
+    )
 
-@router.post("/documents/bulk-reprocess", response_model=APIResponse)
+    response_payload = DocumentStatisticsData(
+        counts_by_status=status_counts,
+        total_documents=sum(status_counts.values()),
+        storage=storage_stats,
+        file_types=file_type_stats,
+        processing=processing_stats,
+        recent_activity=recent_activity,
+        top_uploaders=top_users,
+        timestamp=datetime.utcnow().isoformat(),
+    )
+
+    return APIResponse[DocumentStatisticsData](
+        success=True,
+        message="Document statistics retrieved successfully",
+        data=response_payload,
+    )
+
+@router.post("/documents/bulk-reprocess", response_model=APIResponse[BulkReprocessResponse])
 @handle_api_errors("Failed to bulk reprocess documents")
 async def bulk_reprocess_documents(
     status_filter: str = Query(
@@ -635,7 +667,7 @@ async def bulk_reprocess_documents(
     current_user: User = Depends(get_current_superuser),
     document_service: DocumentService = Depends(get_document_service),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[BulkReprocessResponse]:
     """Bulk reprocess documents based on status filter."""
     log_api_call(
         "bulk_reprocess_documents",
@@ -644,65 +676,67 @@ async def bulk_reprocess_documents(
         limit=limit,
     )
 
-    try:
-        # Validate status filter
-        status_map = {"failed": FileStatus.FAILED, "completed": FileStatus.COMPLETED}
+    status_map = {"failed": FileStatus.FAILED, "completed": FileStatus.COMPLETED}
 
-        if status_filter not in status_map:
-            return ErrorResponse.create(
-                error_code="INVALID_STATUS_FILTER",
-                message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Get documents to reprocess
-        query = (
-            select(Document)
-            .where(Document.status == status_map[status_filter])
-            .limit(limit)
+    if status_filter not in status_map:
+        payload = BulkReprocessResponse(
+            reprocessed_count=0,
+            total_found=0,
+            errors=[f"Invalid status filter. Use one of: {list(status_map.keys())}"],
+            criteria={"status_filter": status_filter, "limit": limit},
+        )
+        return APIResponse[BulkReprocessResponse](
+            success=False,
+            message=f"Invalid status filter. Use one of: {list(status_map.keys())}",
+            data=payload,
         )
 
-        result = await db.execute(query)
-        documents = result.scalars().all()
+    query = (
+        select(Document)
+        .where(Document.status == status_map[status_filter])
+        .limit(limit)
+    )
 
-        if not documents:
-            return SuccessResponse.create(
-                data={
-                    "reprocessed_count": 0,
-                    "total_found": 0,
-                    "criteria": {"status_filter": status_filter, "limit": limit}
-                },
-                message=f"No documents found with status '{status_filter}' to reprocess"
-            )
+    result = await db.execute(query)
+    documents = result.scalars().all()
 
-        # Reprocess documents
-        reprocessed_count = 0
-        errors = []
-
-        for doc in documents:
-            try:
-                await document_service.reprocess_document(doc.id)
-                reprocessed_count += 1
-            except Exception as e:
-                errors.append(
-                    f"Failed to reprocess document {doc.id} ({doc.title}): {str(e)}"
-                )
-
-        return SuccessResponse.create(
-            data={
-                "reprocessed_count": reprocessed_count,
-                "total_found": len(documents),
-                "errors": errors[:5],  # Limit error reporting
-                "criteria": {"status_filter": status_filter, "limit": limit},
-            },
-            message=f"Bulk reprocessing initiated for {reprocessed_count} documents"
+    if not documents:
+        payload = BulkReprocessResponse(
+            reprocessed_count=0,
+            total_found=0,
+            errors=[],
+            criteria={"status_filter": status_filter, "limit": limit}
+        )
+        return APIResponse[BulkReprocessResponse](
+            success=True,
+            message=f"No documents found with status '{status_filter}' to reprocess",
+            data=payload,
         )
 
-    except HTTPException:
-        raise
-    except Exception:
-        raise
+    reprocessed_count = 0
+    errors = []
 
+    for doc in documents:
+        try:
+            await document_service.reprocess_document(doc.id)
+            reprocessed_count += 1
+        except Exception as e:
+            errors.append(
+                f"Failed to reprocess document {doc.id} ({doc.title}): {str(e)}"
+            )
+
+    payload = BulkReprocessResponse(
+        reprocessed_count=reprocessed_count,
+        total_found=len(documents),
+        errors=errors[:5],
+        criteria={"status_filter": status_filter, "limit": limit},
+    )
+
+    return APIResponse[BulkReprocessResponse](
+        success=True,
+        message=f"Bulk reprocessing initiated for {reprocessed_count} documents",
+        data=payload,
+    )
 
 @router.get("/documents/search/advanced", response_model=APIResponse[AdvancedSearchData])
 @handle_api_errors("Failed to perform advanced document search")
@@ -726,145 +760,134 @@ async def advanced_document_search(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[AdvancedSearchData]:
     """Perform advanced document search with multiple filters."""
     log_api_call("advanced_document_search", user_id=str(current_user.id), query=query)
 
-    try:
-        # Build base query
-        base_query = select(Document).join(User, Document.user_id == User.id)
+    base_query = select(Document).join(User, Document.user_id == User.id)
 
-        # Apply filters
-        filters = []
+    filters = []
 
-        # Text search in title and content
-        if query:
-            text_filter = or_(
-                Document.title.ilike(f"%{query}%"),
-                (
-                    Document.content.ilike(f"%{query}%")
-                    if hasattr(Document, "content")
-                    else False
+    # Text search in title and content
+    if query:
+        text_filter = or_(
+            Document.title.ilike(f"%{query}%"),
+            (
+                Document.content.ilike(f"%{query}%")
+                if hasattr(Document, "content")
+                else False
+            ),
+        )
+        filters.append(text_filter)
+
+    # File type filter
+    if file_types:
+        extensions = [ext.strip().lower() for ext in file_types.split(",")]
+        file_type_filters = []
+        for ext in extensions:
+            file_type_filters.append(Document.file_name.ilike(f"%.{ext}"))
+        filters.append(or_(*file_type_filters))
+
+    # Status filter
+    if status_filter:
+        status_map = {
+            "completed": FileStatus.COMPLETED,
+            "failed": FileStatus.FAILED,
+            "processing": FileStatus.PROCESSING,
+            "pending": FileStatus.PENDING,
+        }
+        if status_filter in status_map:
+            filters.append(Document.status == status_map[status_filter])
+
+    # User filter
+    if user_filter:
+        filters.append(User.username.ilike(f"%{user_filter}%"))
+
+    # Date range filters
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
+            filters.append(Document.created_at >= date_from_obj)
+        except ValueError:
+            return APIResponse(
+                success=False,
+                message="Invalid date_from format. Use YYYY-MM-DD",
+            )
+
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+            filters.append(Document.created_at < date_to_obj)
+        except ValueError:
+            return APIResponse(
+                success=False,
+                message="Invalid date_to format. Use YYYY-MM-DD",
+            )
+
+    # File size filters
+    if min_size is not None:
+        filters.append(Document.file_size >= min_size)
+
+    if max_size is not None:
+        filters.append(Document.file_size <= max_size)
+
+    # Apply all filters
+    if filters:
+        base_query = base_query.where(and_(*filters))
+
+    # Add ordering and limit
+    base_query = base_query.order_by(Document.created_at.desc()).limit(limit)
+
+    # Execute query
+    result = await db.execute(base_query)
+    documents = result.scalars().all()
+
+    # Format results
+    results = []
+    for doc in documents:
+        user_result = await db.execute(select(User).where(User.id == doc.user_id))
+        user = user_result.scalar_one_or_none()
+        user_info = DocumentUserInfo(
+            username=user.username if user else "Unknown",
+            email=user.email if user else "Unknown",
+        )
+        results.append(
+            DocumentSearchResult(
+                id=str(doc.id),
+                title=doc.title,
+                file_name=doc.file_name,
+                file_size=doc.file_size,
+                status=doc.status.value,
+                created_at=doc.created_at.isoformat(),
+                updated_at=(
+                    doc.updated_at.isoformat() if doc.updated_at else None
                 ),
+                user=user_info,
+                error_message=doc.error_message,
             )
-            filters.append(text_filter)
-
-        # File type filter
-        if file_types:
-            extensions = [ext.strip().lower() for ext in file_types.split(",")]
-            file_type_filters = []
-            for ext in extensions:
-                file_type_filters.append(Document.file_name.ilike(f"%.{ext}"))
-            filters.append(or_(*file_type_filters))
-
-        # Status filter
-        if status_filter:
-            status_map = {
-                "completed": FileStatus.COMPLETED,
-                "failed": FileStatus.FAILED,
-                "processing": FileStatus.PROCESSING,
-                "pending": FileStatus.PENDING,
-            }
-            if status_filter in status_map:
-                filters.append(Document.status == status_map[status_filter])
-
-        # User filter
-        if user_filter:
-            filters.append(User.username.ilike(f"%{user_filter}%"))
-
-        # Date range filters
-        if date_from:
-            try:
-                date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
-                filters.append(Document.created_at >= date_from_obj)
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date_from format. Use YYYY-MM-DD",
-                )
-
-        if date_to:
-            try:
-                date_to_obj = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
-                filters.append(Document.created_at < date_to_obj)
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date_to format. Use YYYY-MM-DD",
-                )
-
-        # File size filters
-        if min_size is not None:
-            filters.append(Document.file_size >= min_size)
-
-        if max_size is not None:
-            filters.append(Document.file_size <= max_size)
-
-        # Apply all filters
-        if filters:
-            base_query = base_query.where(and_(*filters))
-
-        # Add ordering and limit
-        base_query = base_query.order_by(Document.created_at.desc()).limit(limit)
-
-        # Execute query
-        result = await db.execute(base_query)
-        documents = result.scalars().all()
-
-        # Format results
-        results = []
-        for doc in documents:
-            # Get user info
-            user_result = await db.execute(select(User).where(User.id == doc.user_id))
-            user = user_result.scalar_one_or_none()
-
-            user_info = DocumentUserInfo(
-                username=user.username if user else "Unknown",
-                email=user.email if user else "Unknown",
-            )
-
-            results.append(
-                DocumentSearchResult(
-                    id=str(doc.id),
-                    title=doc.title,
-                    file_name=doc.file_name,
-                    file_size=doc.file_size,
-                    status=doc.status.value,
-                    created_at=doc.created_at.isoformat(),
-                    updated_at=(
-                        doc.updated_at.isoformat() if doc.updated_at else None
-                    ),
-                    user=user_info,
-                    error_message=doc.error_message,
-                )
-            )
-
-        search_criteria = DocumentSearchCriteria(
-            query=query,
-            file_types=file_types,
-            status_filter=status_filter,
-            user_filter=user_filter,
-            date_from=date_from,
-            date_to=date_to,
-            min_size=min_size,
-            max_size=max_size,
-            limit=limit,
         )
 
-        response_payload = AdvancedSearchData(
-            results=results,
-            total_found=len(results),
-            search_criteria=search_criteria,
-            timestamp=datetime.utcnow().isoformat(),
-        )
+    search_criteria = DocumentSearchCriteria(
+        query=query,
+        file_types=file_types,
+        status_filter=status_filter,
+        user_filter=user_filter,
+        date_from=date_from,
+        date_to=date_to,
+        min_size=min_size,
+        max_size=max_size,
+        limit=limit,
+    )
 
-        return APIResponse[AdvancedSearchData](
-            success=True,
-            message="Advanced document search completed successfully",
-            data=response_payload,
-        )
+    response_payload = AdvancedSearchData(
+        results=results,
+        total_found=len(results),
+        search_criteria=search_criteria,
+        timestamp=datetime.utcnow().isoformat(),
+    )
 
-    except HTTPException:
-        raise
-    except Exception:
-        raise
+    return APIResponse[AdvancedSearchData](
+        success=True,
+        message="Advanced document search completed successfully",
+        data=response_payload,
+    )

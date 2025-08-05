@@ -255,3 +255,84 @@ class LivenessResponse(BaseModel):
         import json
         return json.dumps(data)
     not_ready_components: List[str] = Field(default_factory=list, description="Not ready components")
+
+class OpenAIHealthData(BaseModel):
+    """OpenAI service health data."""
+
+    status: str = Field(..., description="OpenAI service status")
+    message: str = Field(..., description="Health status message")
+    configured: bool = Field(default=False, description="Whether API key is configured")
+    models_available: Optional[bool] = Field(default=None, description="Whether required models are accessible")
+    chat_model: Optional[str] = Field(default=None, description="Available chat model information")
+    embedding_model: Optional[str] = Field(default=None, description="Available embedding model information")
+
+
+class FastMCPHealthData(BaseModel):
+    """FastMCP service health data."""
+
+    status: str = Field(..., description="FastMCP service status")
+    message: str = Field(..., description="Health status message")
+    enabled: bool = Field(..., description="Whether MCP is enabled in configuration")
+    available: Optional[bool] = Field(default=None, description="Whether FastMCP library is available")
+    registry: Optional[Dict[str, Any]] = Field(default=None, description="Registry statistics and information")
+    connected_servers: Optional[int] = Field(default=None, description="Number of successfully connected servers")
+    enabled_servers: Optional[int] = Field(default=None, description="Number of enabled servers")
+    total_servers: Optional[int] = Field(default=None, description="Total number of configured servers")
+    initialized: Optional[bool] = Field(default=None, description="Whether service is properly initialized")
+    server_status: Optional[Dict[str, Any]] = Field(default=None, description="Individual server status information")
+    tools_count: Optional[int] = Field(default=None, description="Number of available tools")
+
+
+class ApplicationHealthData(BaseModel):
+    """Application health status information."""
+
+    name: str = Field(..., description="Application name")
+    version: str = Field(..., description="Application version")
+    status: str = Field(..., description="Application health status")
+    debug_mode: bool = Field(..., description="Whether debug mode is enabled")
+
+
+class DetailedHealthCheckPayload(BaseModel):
+    """Comprehensive health check payload."""
+
+    application: ApplicationHealthData = Field(..., description="App info")
+    database: DatabaseHealthData = Field(..., description="Database health")
+    cache: CacheHealthData = Field(..., description="Cache health")
+    openai: OpenAIHealthData = Field(..., description="OpenAI health")
+    fastmcp: FastMCPHealthData = Field(..., description="FastMCP health")
+    overall_status: str = Field(..., description="Overall system status")
+
+
+class ServicesHealthPayload(BaseModel):
+    """External services health payload."""
+
+    openai: OpenAIHealthData = Field(..., description="OpenAI health")
+    fastmcp: FastMCPHealthData = Field(..., description="FastMCP health")
+
+
+class SystemMetricsPayload(BaseModel):
+    """System metrics and resource utilization."""
+
+    system: Dict[str, Any] = Field(..., description="System metrics (typed below)")
+    application: Dict[str, Any] = Field(..., description="App metrics (typed below)")
+
+
+class ReadinessComponentsPayload(BaseModel):
+    """Payload for readiness check."""
+
+    status: str = Field(..., description="Readiness status")
+    components: Dict[str, Any] = Field(..., description="Readiness details")
+
+
+class PerformanceMetricsPayload(BaseModel):
+    """Performance metrics payload."""
+
+    performance: Dict[str, Any] = Field(..., description="Performance metrics")
+
+
+class LivenessPayload(BaseModel):
+    """Liveness status payload."""
+
+    status: str = Field(..., description="Liveness status")
+
+

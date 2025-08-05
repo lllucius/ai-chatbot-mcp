@@ -103,3 +103,30 @@ class DocumentStatisticsData(BaseModel):
     recent_activity: DocumentRecentActivity = Field(..., description="Recent activity metrics")
     top_uploaders: List[DocumentTopUser] = Field(default_factory=list, description="Top document uploaders")
     timestamp: str = Field(..., description="Statistics timestamp")
+
+
+class CleanupPreviewItem(BaseModelSchema):
+    id: str
+    title: str
+    status: str
+    created_at: str
+    file_size: int
+
+class CleanupDryRunResponse(BaseModelSchema):
+    total_count: int
+    preview: List[CleanupPreviewItem]
+    total_size_bytes: int
+    criteria: dict
+
+class CleanupDeletedResponse(BaseModelSchema):
+    deleted_count: int
+    deleted_size_bytes: int
+    errors: List[str]
+    criteria: dict
+
+class BulkReprocessResponse(BaseModelSchema):
+    reprocessed_count: int
+    total_found: int
+    errors: List[str]
+    criteria: dict
+

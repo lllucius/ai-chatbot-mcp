@@ -13,6 +13,7 @@ from .base import *
 from .common import *
 from .conversation import *
 from .conversation_responses import *
+from .database_responses import *
 from .document import *
 from .document_responses import *
 from .health_responses import *
