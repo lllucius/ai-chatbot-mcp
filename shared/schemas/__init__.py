@@ -31,13 +31,10 @@ __all__ = [
     # Admin schemas
     "TaskStatusResponse",
     "TaskStatsResponse",
-    "ActiveTasksResponse",
     "QueueResponse",
     "TaskMonitorResponse",
     "WorkersResponse",
-    "ProfileParametersResponse",
     "ProfileStatsResponse",
-    "ProfileValidationResponse",
     "PromptCategoriesResponse",
     "PromptStatsResponse",
     "AdvancedSearchResponse",
