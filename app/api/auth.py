@@ -64,21 +64,6 @@ async def login(
     )
 
 
-@router.get("/me", response_model=APIResponse[UserResponse])
-@handle_api_errors("Failed to get current user information")
-async def get_current_user_info(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> APIResponse[UserResponse]:
-    """Get current authenticated user information."""
-    log_api_call("get_current_user_info", user_id=str(current_user.id))
-    payload = UserResponse.model_validate(current_user)
-    return APIResponse[UserResponse](
-        success=True,
-        message="User information retrieved successfully",
-        data=payload,
-    )
-
-
 @router.post("/logout", response_model=APIResponse)
 @handle_api_errors("Logout failed")
 async def logout() -> APIResponse:

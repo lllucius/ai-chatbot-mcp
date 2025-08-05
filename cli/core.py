@@ -570,3 +570,75 @@ async def api_analysis():
     except Exception as e:
         error_message(f"Failed to show API analysis: {str(e)}")
         raise SystemExit(1)
+
+
+@core_app.async_command("generate-openapi")
+async def generate_openapi(
+    output: str = "openapi.json",
+    info_only: bool = False,
+):
+    """
+    Generate OpenAPI JSON specification file for all API endpoints.
+
+    Creates a comprehensive OpenAPI (Swagger) specification file containing
+    documentation for all API endpoints in the AI Chatbot MCP project.
+
+    Args:
+        output: Output file path for the OpenAPI JSON (default: openapi.json)
+        info_only: Show OpenAPI information without generating file
+
+    Features:
+        - Complete API documentation with all endpoints
+        - Request/response schemas and validation rules
+        - Authentication and security scheme definitions
+        - Endpoint grouping by tags and modules
+        - Custom metadata and branding information
+
+    Output Format:
+        - OpenAPI 3.0+ compliant JSON specification
+        - Compatible with Swagger UI, Redoc, and API tools
+        - Includes authentication bearer token configuration
+        - Complete schema definitions for all data models
+
+    Use Cases:
+        - API documentation generation for external developers
+        - Integration with API testing and validation tools
+        - Client SDK generation from OpenAPI specification
+        - API gateway configuration and routing setup
+        - Contract testing and API versioning
+
+    Example:
+        ```bash
+        # Generate OpenAPI JSON file
+        ai-chatbot generate-openapi
+
+        # Generate with custom output path
+        ai-chatbot generate-openapi --output api-spec.json
+
+        # Show API information only
+        ai-chatbot generate-openapi --info-only
+        ```
+
+    Note:
+        The generated OpenAPI specification includes all current API endpoints
+        and their documentation. Update after API changes to keep specification current.
+    """
+    try:
+        import sys
+        from pathlib import Path
+        
+        # Add scripts directory to path
+        project_root = Path(__file__).parent.parent
+        scripts_dir = project_root / "scripts"
+        sys.path.insert(0, str(scripts_dir))
+        
+        if info_only:
+            from generate_openapi_simple import print_openapi_info
+            print_openapi_info()
+        else:
+            from generate_openapi_simple import generate_openapi_json
+            generate_openapi_json(output)
+        
+    except Exception as e:
+        error_message(f"Failed to generate OpenAPI specification: {str(e)}")
+        raise SystemExit(1)
