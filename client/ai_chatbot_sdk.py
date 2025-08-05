@@ -286,6 +286,63 @@ async def handle_response(
         raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
     json_data = resp.json()
+    
+    # Check if response is in APIResponse envelope format
+    if isinstance(json_data, dict) and "success" in json_data:
+        # Handle APIResponse envelope format
+        if not json_data.get("success", False):
+            # API returned an error in the envelope
+            error_info = json_data.get("error", {})
+            error_code = error_info.get("code", "UNKNOWN_ERROR")
+            error_message = json_data.get("message", "An error occurred")
+            error_details = error_info.get("details", {})
+            
+            # Create a more detailed error body
+            error_body = {
+                "error_code": error_code,
+                "message": error_message,
+                "details": error_details,
+                "timestamp": json_data.get("timestamp")
+            }
+            raise ApiError(resp.status_code, error_message, url, error_body)
+        
+        # Extract the actual data from the envelope
+        actual_data = json_data.get("data")
+        meta = json_data.get("meta")
+        
+        # Handle paginated responses (check for pagination in meta)
+        if meta and "pagination" in meta and cls:
+            pagination_info = meta["pagination"]
+            if isinstance(actual_data, list):
+                # Convert each item in the list to the target class
+                items = []
+                for item in actual_data:
+                    items.append(cls(**item))
+                
+                # Return a PaginatedResponse structure
+                return PaginatedResponse(
+                    success=json_data["success"],
+                    message=json_data["message"],
+                    timestamp=json_data.get("timestamp"),
+                    items=items,
+                    pagination=PaginationParams(**pagination_info)
+                )
+        
+        # Handle single object responses
+        if cls and actual_data is not None:
+            if isinstance(actual_data, dict):
+                return cls(**actual_data)
+            elif isinstance(actual_data, list):
+                # If we get a list but no pagination meta, it might be a simple list response
+                return [cls(**item) if isinstance(item, dict) else item for item in actual_data]
+            else:
+                # For primitive types, return as-is
+                return actual_data
+        
+        # Return the raw data if no class specified
+        return actual_data
+    
+    # Fallback to legacy handling for non-envelope responses
     if cls:
         if "items" in json_data:
             r = PaginatedResponse(**json_data)
