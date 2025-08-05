@@ -13,27 +13,25 @@ from shared.schemas.analytics import (
     AnalyticsTrendsResponse,
     AnalyticsUserAnalyticsResponse,
     AnalyticsExportResponse,
-    SystemHealthScore
-    UsersOverview
-    DocumentsOverview
-    ConversationsOverview
-    AnalyticsOverviewPayload
-    UsageMetrics
-    DailyStat
-    AnalyticsUsagePayload
-    DocumentProcessingPerformance
-    DBPerformanceEntry
-    SystemMetricsInfo
-    AnalyticsPerformancePayload
-    TopUser
-    AnalyticsUserAnalyticsPayload
-    DailyTrend
-    TrendSummary
-    AnalyticsTrendsPayload
-    DetailedUserAnalyticsPayload
-    AnalyticsExportPayload
-
-
+    SystemHealthScore,
+    UsersOverview,
+    DocumentsOverview,
+    ConversationsOverview,
+    AnalyticsOverviewPayload,
+    UsageMetrics,
+    DailyStat,
+    AnalyticsUsagePayload,
+    DocumentProcessingPerformance,
+    DBPerformanceEntry,
+    SystemMetricsInfo,
+    AnalyticsPerformancePayload,
+    TopUser,
+    AnalyticsUserAnalyticsPayload,
+    DailyTrend,
+    TrendSummary,
+    AnalyticsTrendsPayload,
+    DetailedUserAnalyticsPayload,
+    AnalyticsExportPayload,
 )
 from shared.schemas.common import APIResponse
 
