@@ -509,3 +509,136 @@ async def config():
     except Exception as e:
         error_message(f"Failed to show configuration: {str(e)}")
         raise SystemExit(1)
+
+
+@core_app.async_command("api-analysis")
+async def api_analysis():
+    """
+    Show duplicate API analysis summary.
+
+    Displays a comprehensive analysis of potentially duplicate or similar APIs
+    in the AI Chatbot MCP project, including recommendations for consolidation
+    and cleanup.
+
+    This command provides:
+        - Summary of duplicate API endpoints identified
+        - Recommendations for API consolidation
+        - Implementation priority and timeline
+        - Impact assessment for changes
+
+    Analysis Categories:
+        - High Priority: Identical functionality requiring immediate action
+        - Medium Priority: Similar functionality that could be consolidated
+        - Low Priority: Acceptable functional overlaps
+
+    Key Findings:
+        - User profile endpoint duplication (/me in auth and users APIs)
+        - Password management operations scattered across APIs
+        - Analytics functionality available in both API and CLI
+        - User management operations split between auth and users
+
+    Use Cases:
+        - API cleanup and maintenance planning
+        - Architecture review and optimization
+        - Developer onboarding and API understanding
+        - Technical debt reduction initiatives
+
+    Example:
+        ```bash
+        # Show duplicate API analysis summary
+        ai-chatbot api-analysis
+        ```
+
+    Note:
+        For detailed implementation guidance, see the full reports in:
+        - docs/duplicate_api_analysis_report.md
+        - docs/duplicate_api_implementation_guide.md
+    """
+    try:
+        # Import and run the summary function
+        import sys
+        from pathlib import Path
+        
+        # Add scripts directory to path
+        project_root = Path(__file__).parent.parent
+        scripts_dir = project_root / "scripts"
+        sys.path.insert(0, str(scripts_dir))
+        
+        from duplicate_api_summary import print_duplicate_summary
+        print_duplicate_summary()
+        
+    except Exception as e:
+        error_message(f"Failed to show API analysis: {str(e)}")
+        raise SystemExit(1)
+
+
+@core_app.async_command("generate-openapi")
+async def generate_openapi(
+    output: str = "openapi.json",
+    info_only: bool = False,
+):
+    """
+    Generate OpenAPI JSON specification file for all API endpoints.
+
+    Creates a comprehensive OpenAPI (Swagger) specification file containing
+    documentation for all API endpoints in the AI Chatbot MCP project.
+
+    Args:
+        output: Output file path for the OpenAPI JSON (default: openapi.json)
+        info_only: Show OpenAPI information without generating file
+
+    Features:
+        - Complete API documentation with all endpoints
+        - Request/response schemas and validation rules
+        - Authentication and security scheme definitions
+        - Endpoint grouping by tags and modules
+        - Custom metadata and branding information
+
+    Output Format:
+        - OpenAPI 3.0+ compliant JSON specification
+        - Compatible with Swagger UI, Redoc, and API tools
+        - Includes authentication bearer token configuration
+        - Complete schema definitions for all data models
+
+    Use Cases:
+        - API documentation generation for external developers
+        - Integration with API testing and validation tools
+        - Client SDK generation from OpenAPI specification
+        - API gateway configuration and routing setup
+        - Contract testing and API versioning
+
+    Example:
+        ```bash
+        # Generate OpenAPI JSON file
+        ai-chatbot generate-openapi
+
+        # Generate with custom output path
+        ai-chatbot generate-openapi --output api-spec.json
+
+        # Show API information only
+        ai-chatbot generate-openapi --info-only
+        ```
+
+    Note:
+        The generated OpenAPI specification includes all current API endpoints
+        and their documentation. Update after API changes to keep specification current.
+    """
+    try:
+        import sys
+        from pathlib import Path
+        
+        # Add scripts directory to path
+        project_root = Path(__file__).parent.parent
+        scripts_dir = project_root / "scripts"
+        sys.path.insert(0, str(scripts_dir))
+        
+        if info_only:
+            from generate_openapi_simple import print_openapi_info
+            print_openapi_info()
+        else:
+            from generate_openapi_simple import generate_openapi_json
+            generate_openapi_json(output)
+        
+    except Exception as e:
+        error_message(f"Failed to generate OpenAPI specification: {str(e)}")
+        raise SystemExit(1)
