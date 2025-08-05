@@ -621,7 +621,7 @@ def display_key_value_pairs(data: dict, title: str = "Information"):
     print(f"\n{title}:")
     print("=" * len(title))
 
-    max_key_length = max(len(str(key)) for key in data.keys()) if data else 0
+    max_key_length = max(len(str(key)) for key in data) if data else 0
 
     for key, value in data.items():
         key_str = str(key).replace("_", " ").title()

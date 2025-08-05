@@ -1,41 +1,32 @@
 """Analytics and reporting API endpoints."""
 
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.analytics import (
-    AnalyticsOverviewResponse,
-    AnalyticsUsageResponse,
-    AnalyticsPerformanceResponse,
-    AnalyticsTrendsResponse,
-    AnalyticsUserAnalyticsResponse,
-    AnalyticsExportResponse,
-    SystemHealthScore,
-    UsersOverview,
-    DocumentsOverview,
-    ConversationsOverview,
-    AnalyticsOverviewPayload,
-    UsageMetrics,
-    DailyStat,
-    AnalyticsUsagePayload,
-    DocumentProcessingPerformance,
-    DBPerformanceEntry,
-    SystemMetricsInfo,
-    AnalyticsPerformancePayload,
-    TopUser,
-    AnalyticsUserAnalyticsPayload,
-    DailyTrend,
-    TrendSummary,
-    AnalyticsTrendsPayload,
-    DetailedUserAnalyticsPayload,
     AnalyticsExportPayload,
+    AnalyticsOverviewPayload,
+    AnalyticsPerformancePayload,
+    AnalyticsTrendsPayload,
+    AnalyticsUsagePayload,
+    AnalyticsUserAnalyticsPayload,
+    ConversationsOverview,
+    DailyStat,
+    DailyTrend,
+    DBPerformanceEntry,
+    DetailedUserAnalyticsPayload,
+    DocumentProcessingPerformance,
+    DocumentsOverview,
+    SystemHealthScore,
+    SystemMetricsInfo,
+    TopUser,
+    TrendSummary,
+    UsageMetrics,
+    UsersOverview,
 )
 from shared.schemas.common import APIResponse
-
-from pydantic import BaseModel, Field
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user

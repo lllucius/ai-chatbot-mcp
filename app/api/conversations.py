@@ -3,7 +3,7 @@
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -12,9 +12,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.admin_responses import (
-    ConversationStatsResponse,
     RegistryStatsResponse,
-    SearchResponse,
 )
 from shared.schemas.common import (
     APIResponse,
@@ -43,68 +41,6 @@ from shared.schemas.conversation_responses import (
     ExportedMessage,
     ExportInfo,
 )
-from shared.schemas.user import UserResponse
-from shared.schemas.search_responses import (
-    SearchSuggestion,
-    SearchSuggestionData,
-    SearchHistoryData,
-)
-from pydantic import BaseModel, Field
-
-from ..database import AsyncSessionLocal, get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.conversation import Conversation, Message
-from ..models.user import User
-from ..services.conversation import ConversationService
-from ..utils.api_errors import handle_api_errors, log_api_call
-
-from shared.schemas.admin_responses import (
-    ConversationStatsResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-)
-from shared.schemas.common import (
-    APIResponse,
-    ErrorResponse,
-    PaginatedResponse,
-    SuccessResponse,
-)
-from shared.schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-    StreamCompleteResponse,
-    StreamContentResponse,
-    StreamEndResponse,
-    StreamErrorResponse,
-    StreamStartResponse,
-    StreamToolCallResponse,
-)
-from shared.schemas.conversation_responses import (
-    ConversationExportData,
-    ConversationExportDataCSV,
-    ConversationExportDataJSON,
-    ConversationExportDataText,
-    ConversationMetadata,
-    ExportedMessage,
-    ExportInfo,
-)
-from shared.schemas.common import APIResponse
-from shared.schemas.conversation import MessageResponse, ConversationResponse
-from shared.schemas.conversation_responses import (
-    ConversationExportData,
-    ConversationExportDataCSV,
-    ConversationExportDataJSON,
-    ConversationExportDataText,
-    ConversationMetadata,
-    ExportInfo,
-)
-from shared.schemas.conversation import ConversationStats
-from shared.schemas.admin_responses import RegistryStatsResponse
 
 from ..database import AsyncSessionLocal, get_db
 from ..dependencies import get_current_superuser, get_current_user

@@ -9,10 +9,8 @@ from fastapi import (
     Depends,
     File,
     Form,
-    HTTPException,
     Query,
     UploadFile,
-    status,
 )
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
@@ -32,6 +30,10 @@ from shared.schemas.document import (
 )
 from shared.schemas.document_responses import (
     AdvancedSearchData,
+    BulkReprocessResponse,
+    CleanupDeletedResponse,
+    CleanupDryRunResponse,
+    CleanupPreviewItem,
     DocumentFileTypeStats,
     DocumentProcessingStats,
     DocumentRecentActivity,
@@ -41,12 +43,7 @@ from shared.schemas.document_responses import (
     DocumentStorageStats,
     DocumentTopUser,
     DocumentUserInfo,
-    CleanupPreviewItem,
-    CleanupDryRunResponse,
-    CleanupDeletedResponse,
-    BulkReprocessResponse,
 )
-from shared.schemas.base import BaseModelSchema
 
 from ..config import settings
 from ..database import get_db

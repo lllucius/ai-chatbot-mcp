@@ -124,35 +124,28 @@ from uuid import UUID
 import httpx
 
 # Import all schema models from shared package instead of defining locally
-from shared.schemas import (
-    # Base and common schemas
+from shared.schemas import (  # Base and common schemas; Conversation schemas; Document schemas; LLM Profile schemas; Prompt schemas; Auth schemas; Search schemas; User schemas
     BaseResponse,
     BaseSchema,
     ChatRequest,
     ChatResponse,
-    # Conversation schemas
     ConversationCreate,
     ConversationResponse,
     ConversationStatsResponse,
     ConversationUpdate,
     DatabaseHealthResponse,
-    # Document schemas
     DocumentResponse,
     DocumentSearchRequest,
     LLMProfileCreate,
-    # LLM Profile schemas
     LLMProfileResponse,
     MessageResponse,
     PaginationParams,
     PasswordResetConfirm,
     PasswordResetRequest,
     PromptCreate,
-    # Prompt schemas
     PromptResponse,
-    # Auth schemas
     RegisterRequest,
     RegistryStatsResponse,
-    # Search schemas
     SearchResponse,
     ServicesHealthResponse,
     SystemMetricsResponse,
@@ -160,7 +153,6 @@ from shared.schemas import (
     UserPasswordUpdate,
     UserResponse,
     UserStatsResponse,
-    # User schemas
     UserUpdate,
 )
 

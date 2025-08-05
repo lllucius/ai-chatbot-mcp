@@ -5,7 +5,7 @@ and system monitoring that were previously scattered across common.py.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
 

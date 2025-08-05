@@ -9,28 +9,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.schemas.base import BaseModelSchema
 from shared.schemas.common import (
     APIResponse,
 )
-from shared.schemas.base import BaseModelSchema
 from shared.schemas.database_responses import (
-    DatabaseUpgradeResult,
-    DatabaseDowngradeResult,
-    DatabaseBackupResult,
-    DatabaseRestoreResult,
-    VacuumResult,
-    DatabaseStatusResponse,
-    DatabaseTablesResponse,
     DatabaseAnalysisResponse,
+    DatabaseBackupResult,
+    DatabaseDowngradeResult,
     DatabaseMigrationsResponse,
     DatabaseQueryResponse,
+    DatabaseRestoreResult,
     DatabaseStatusResponse,
     DatabaseTablesResponse,
-
-    DatabaseMigrationsResponse, DatabaseAnalysisResponse, DatabaseQueryResponse
+    DatabaseUpgradeResult,
+    VacuumResult,
 )
-
-from pydantic import BaseModel, Field
 
 from ..config import settings
 from ..database import get_db

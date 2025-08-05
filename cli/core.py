@@ -483,7 +483,7 @@ async def config():
 
         print("\nConfiguration Settings:")
         print("=======================")
-        max_key_length = max(len(key) for key in config_data.keys())
+        max_key_length = max(len(key) for key in config_data)
         for key, value in config_data.items():
             print(f"{key.ljust(max_key_length)}: {value}")
         print()

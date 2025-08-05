@@ -74,6 +74,9 @@ Example Usage:
 from typing import Optional
 
 from async_typer import AsyncTyper
+from rich.console import Console
+from rich.table import Table
+from rich import box
 from typer import Argument, Option
 
 from .base import (
@@ -83,6 +86,8 @@ from .base import (
     success_message,
     warning_message,
 )
+
+console = Console()
 
 mcp_app = AsyncTyper(
     help="MCP server and tool management commands",

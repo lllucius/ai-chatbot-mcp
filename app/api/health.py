@@ -1,42 +1,31 @@
 """Health monitoring and system status API endpoints."""
 
 import logging
-from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import APIResponse
 from shared.schemas.health_responses import (
+    ApplicationHealthData,
     CacheHealthData,
     CacheStats,
     DatabaseHealthData,
-    ServiceStatus,
-    ServicesHealthData,
-    SystemMetricsData,
-    PerformanceMetricsData,
-    LivenessProbeData,
-    ReadinessProbeData,
-    OpenAIHealthData,
-    FastMCPHealthData,
-    ApplicationHealthData,
     DetailedHealthCheckPayload,
+    FastMCPHealthData,
+    LivenessPayload,
+    OpenAIHealthData,
+    PerformanceMetricsPayload,
+    ReadinessComponentsPayload,
     ServicesHealthPayload,
     SystemMetricsPayload,
-    ReadinessComponentsPayload,
-    PerformanceMetricsPayload,
-    LivenessPayload,
-
 )
-from shared.schemas.base import BaseSchema
 
 from ..config import settings
 from ..database import get_db
 from ..dependencies import get_mcp_service
 from ..middleware.performance import get_performance_stats
-
 from ..services.mcp_service import MCPService
 from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
@@ -358,6 +347,7 @@ async def get_system_metrics() -> APIResponse[SystemMetricsPayload]:
     log_api_call("get_system_metrics")
     try:
         import time
+
         import psutil
 
         cpu_percent = psutil.cpu_percent(interval=1)

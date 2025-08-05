@@ -1,7 +1,8 @@
 """Authentication API endpoints."""
 
-from fastapi import APIRouter, Depends
 from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from shared.schemas.auth import (
     LoginRequest,
@@ -81,7 +82,7 @@ async def get_current_user_info(
 async def logout() -> APIResponse:
     """Logout current user session."""
     log_api_call("logout")
-    return APIResponse[LogoutResponseModel](
+    return APIResponse(
         success=True,
         message="Logged out successfully",
     )
@@ -114,7 +115,7 @@ async def request_password_reset(
     """Request password reset through administrative channels."""
     log_api_call("request_password_reset", email=request.email)
 
-    return APIResponse[PasswordResetRequestResponseModel](
+    return APIResponse(
         success=True,
         message="Password reset request noted. Contact system administrator for password changes.",
     )
@@ -128,7 +129,7 @@ async def confirm_password_reset(
     """Confirm password reset through administrative channels."""
     log_api_call("confirm_password_reset", token=request.token[:8] + "...")
 
-    return APIResponse[PasswordResetConfirmResponseModel](
+    return APIResponse(
         success=True,
         message="Password reset must be performed by system administrator through user management interface.",
     )
