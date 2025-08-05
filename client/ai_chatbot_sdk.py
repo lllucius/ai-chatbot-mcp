@@ -464,7 +464,7 @@ class AuthClient:
 
     async def me(self) -> UserResponse:
         """Get current user profile information."""
-        return await self.sdk._request("/api/v1/auth/me", UserResponse)
+        return await self.sdk._request("/api/v1/users/me", UserResponse)
 
     async def logout(self) -> BaseResponse:
         """Logout current user and invalidate token."""
@@ -479,7 +479,7 @@ class AuthClient:
     async def request_password_reset(self, data: PasswordResetRequest) -> BaseResponse:
         """Request password reset for a user."""
         return await self.sdk._request(
-            "/api/v1/auth/password-reset",
+            "/api/v1/users/password-reset",
             BaseResponse,
             method="POST",
             json=data.model_dump(),
@@ -488,7 +488,7 @@ class AuthClient:
     async def confirm_password_reset(self, data: PasswordResetConfirm) -> BaseResponse:
         """Confirm password reset with token."""
         return await self.sdk._request(
-            "/api/v1/auth/password-reset/confirm",
+            "/api/v1/users/password-reset/confirm",
             BaseResponse,
             method="POST",
             json=data.model_dump(),
@@ -1036,7 +1036,7 @@ class ConversationsClient:
             }
         )
         return await self.sdk._request(
-            "/api/v1/conversations/search", SearchResponse, params=params
+            "/api/v1/conversations/conversations/search", SearchResponse, params=params
         )
 
 
@@ -1107,10 +1107,12 @@ class SearchClient:
 
         Raises:
             ApiError: If the request fails.
-
+            
+        Note:
+            This endpoint is not currently implemented in the API.
         """
-        params = {"limit": limit}
-        return await self.sdk._request("/api/v1/search/history", list, params=params)
+        # TODO: Implement search history endpoint in the API
+        raise NotImplementedError("Search history endpoint not yet implemented in the API")
 
     async def clear_history(self) -> BaseResponse:
         """Clear user's search history.
@@ -1120,11 +1122,12 @@ class SearchClient:
 
         Raises:
             ApiError: If the request fails.
-
+            
+        Note:
+            This endpoint is not currently implemented in the API.
         """
-        return await self.sdk._request(
-            "/api/v1/search/history", BaseResponse, method="DELETE"
-        )
+        # TODO: Implement search history clearing endpoint in the API
+        raise NotImplementedError("Search history endpoint not yet implemented in the API")
 
 
 class MCPClient:
@@ -1275,7 +1278,8 @@ class MCPClient:
 
     async def get_servers_status(self) -> Dict[str, Any]:
         """Get comprehensive status information for all MCP servers."""
-        return await self.sdk._request("/api/v1/mcp/servers/status", dict)
+        # The servers endpoint provides server status information
+        return await self.sdk._request("/api/v1/mcp/servers", dict, params={"detailed": True})
 
     # Statistics and refresh methods
     async def get_stats(self) -> Dict[str, Any]:
@@ -1543,7 +1547,8 @@ class DatabaseClient:
 
     async def validate(self) -> Dict[str, Any]:
         """Validate database schema."""
-        return await self.sdk._request("/api/v1/database/validate", dict, method="POST")
+        # Use the analyze endpoint which provides schema validation information
+        return await self.sdk._request("/api/v1/database/analyze", dict, method="GET")
 
 
 class TasksClient:
@@ -1616,113 +1621,122 @@ class AdminClient:
     # User admin operations
     async def promote_user(self, user_id: UUID) -> BaseResponse:
         """Promote user to superuser."""
+        # Use the user update endpoint to set superuser status
+        from shared.schemas.user import UserUpdate
+        update_data = UserUpdate(is_superuser=True)
         return await self.sdk._request(
-            f"/api/v1/admin/users/byid/{user_id}/promote", BaseResponse, method="POST"
+            f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
     async def demote_user(self, user_id: UUID) -> BaseResponse:
         """Demote user from superuser."""
+        # Use the user update endpoint to remove superuser status
+        from shared.schemas.user import UserUpdate
+        update_data = UserUpdate(is_superuser=False)
         return await self.sdk._request(
-            f"/api/v1/admin/users/byid/{user_id}/demote", BaseResponse, method="POST"
+            f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
     async def activate_user(self, user_id: UUID) -> BaseResponse:
         """Activate user account."""
+        # Use the user update endpoint to set active status
+        from shared.schemas.user import UserUpdate
+        update_data = UserUpdate(is_active=True)
         return await self.sdk._request(
-            f"/api/v1/admin/users/byid/{user_id}/activate", BaseResponse, method="POST"
+            f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
     async def deactivate_user(self, user_id: UUID) -> BaseResponse:
         """Deactivate user account."""
+        # Use the user update endpoint to remove active status
+        from shared.schemas.user import UserUpdate
+        update_data = UserUpdate(is_active=False)
         return await self.sdk._request(
-            f"/api/v1/admin/users/byid/{user_id}/deactivate",
-            BaseResponse,
-            method="POST",
+            f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
     async def reset_user_password(
         self, user_id: UUID, new_password: Optional[str] = None
     ) -> BaseResponse:
         """Reset user password."""
-        data = filter_query({"new_password": new_password})
+        # Use the actual admin password reset endpoint
+        params = filter_query({"new_password": new_password}) if new_password else {}
         return await self.sdk._request(
-            f"/api/v1/admin/users/byid/{user_id}/reset-password",
+            f"/api/v1/users/users/byid/{user_id}/reset-password",
             BaseResponse,
             method="POST",
-            json=data,
+            params=params,
         )
 
     async def get_user_stats(self) -> Dict[str, Any]:
         """Get user statistics."""
-        return await self.sdk._request("/api/v1/admin/users/stats", dict)
+        return await self.sdk._request("/api/v1/users/users/stats", dict)
 
     # Document admin operations
     async def get_document_stats(self) -> Dict[str, Any]:
         """Get document statistics."""
-        return await self.sdk._request("/api/v1/admin/documents/stats", dict)
+        return await self.sdk._request("/api/v1/documents/documents/stats", dict)
 
     async def cleanup_documents(
         self, older_than: Optional[int] = None, status: Optional[str] = None
     ) -> BaseResponse:
         """Cleanup old documents."""
-        data = filter_query({"older_than": older_than, "status": status})
+        params = filter_query({"older_than_days": older_than, "status_filter": status})
         return await self.sdk._request(
-            "/api/v1/admin/documents/cleanup", BaseResponse, method="POST", json=data
+            "/api/v1/documents/documents/cleanup", BaseResponse, method="POST", params=params
         )
 
     async def bulk_reprocess_documents(
         self, document_ids: Optional[List[UUID]] = None
     ) -> BaseResponse:
         """Bulk reprocess documents."""
-        data = filter_query(
-            {"document_ids": [str(id) for id in document_ids] if document_ids else None}
-        )
-        return await self.sdk._request(
-            "/api/v1/admin/documents/bulk-reprocess",
-            BaseResponse,
-            method="POST",
-            json=data,
-        )
+        # This endpoint doesn't exist yet, so mark as not implemented
+        raise NotImplementedError("Bulk document reprocessing endpoint not yet implemented in the API")
 
     async def search_documents_advanced(self, **kwargs) -> Dict[str, Any]:
         """Advanced document search."""
+        # Use the regular search endpoint with advanced parameters
+        from shared.schemas.search import DocumentSearchRequest
+        search_request = DocumentSearchRequest(**kwargs)
         return await self.sdk._request(
-            "/api/v1/admin/documents/search/advanced", dict, params=kwargs
+            "/api/v1/search/", dict, method="POST", json=search_request.model_dump()
         )
 
     # Conversation admin operations
     async def get_conversation_stats(self) -> Dict[str, Any]:
         """Get conversation statistics."""
-        return await self.sdk._request("/api/v1/admin/conversations/stats", dict)
+        return await self.sdk._request("/api/v1/conversations/conversations/stats", dict)
 
     async def search_conversations(self, **kwargs) -> Dict[str, Any]:
         """Search conversations."""
+        params = filter_query(kwargs)
         return await self.sdk._request(
-            "/api/v1/admin/conversations/search", dict, params=kwargs
+            "/api/v1/conversations/conversations/search", dict, params=params
         )
 
     async def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
         """Export conversation."""
         return await self.sdk._request(
-            f"/api/v1/admin/conversations/byid/{conversation_id}/export", dict
+            f"/api/v1/conversations/conversations/byid/{conversation_id}/export", dict
         )
 
     async def import_conversations(self, data: Dict[str, Any]) -> BaseResponse:
         """Import conversations."""
+        # This uses the file upload endpoint, so it's more complex
         return await self.sdk._request(
-            "/api/v1/admin/conversations/import", BaseResponse, method="POST", json=data
+            "/api/v1/conversations/conversations/import", BaseResponse, method="POST", json=data
         )
 
     async def archive_conversations(
         self, older_than: Optional[int] = None
     ) -> BaseResponse:
         """Archive old conversations."""
-        data = filter_query({"older_than": older_than})
+        params = filter_query({"older_than_days": older_than, "dry_run": False})
         return await self.sdk._request(
-            "/api/v1/admin/conversations/archive",
+            "/api/v1/conversations/conversations/archive",
             BaseResponse,
             method="POST",
-            json=data,
+            params=params,
         )
 
 
