@@ -10,35 +10,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
-from shared.schemas.admin import (
-    ActiveTasksResponse,
-    QueueResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
-)
-from shared.schemas.common import APIResponse, BaseResponse, SuccessResponse, ErrorResponse
+from shared.schemas.common import APIResponse, SuccessResponse, ErrorResponse
 from shared.schemas.task_responses import (
     TaskSystemStatusData,
-    TaskSystemStatusResponse,
     WorkerInfo,
     WorkerStatusData,
-    WorkerStatusResponse,
     TaskInfo,
     QueueInfo,
     QueueStatusData,
-    QueueStatusResponse,
     ActiveTaskInfo,
     ActiveTasksData,
-    ActiveTasksResponse as NewActiveTasksResponse,
     DocumentProcessingStats,
     TaskStatisticsData,
-    TaskStatisticsResponse,
     TasksSummary,
     WorkersSummary,
     TaskMonitoringData,
-    TaskMonitoringResponse,
 )
 from ..utils.api_errors import handle_api_errors, log_api_call
 

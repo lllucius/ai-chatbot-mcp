@@ -8,21 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
-    ErrorResponse,
-    SuccessResponse,
+    PaginatedResponse,
+    PaginationParams,
 )
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
-    LLMProfileListResponse,
     LLMProfileResponse,
+    LLMProfileStatisticsData,
     LLMProfileUpdate,
 )
-from shared.schemas.task_responses import (
-    ProfileParametersData,
-    ProfileValidationData,
-)
 
-from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
@@ -55,7 +50,7 @@ async def create_profile(
     )
 
 
-@router.get("/", response_model=APIResponse[PaginatedResponse[ProfileResponse]])
+@router.get("/", response_model=APIResponse[PaginatedResponse[LLMProfileResponse]])
 @handle_api_errors("Failed to list profiles")
 async def list_profiles(
     active_only: bool = Query(True, description="Show only active profiles"),
@@ -64,7 +59,7 @@ async def list_profiles(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> APIResponse[PaginatedResponse[ProfileResponse]]:
+) -> APIResponse[PaginatedResponse[LLMProfileResponse]]:
     """List all LLM parameter profiles with filtering and pagination."""
     log_api_call("list_profiles", user_id=current_user.id)
 
@@ -87,7 +82,7 @@ async def list_profiles(
         )
     )
 
-    return APIResponse[PaginatedResponse[ProfileResponse]](
+    return APIResponse[PaginatedResponse[LLMProfileResponse]](
         success=True,
         message="Profiles retrieved successfully",
         data=payload,
@@ -132,13 +127,12 @@ async def update_profile(
 
     updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
 
-    data = LLMProfileResponse.model_validate(updated_profile)
-    if not profile:
+    if not updated_profile:
         raise HTTPException(
             status_code=404,
             detail=f"Profile '{profile_name}' not found",
         )
-    payload = LLMProfileResponse.model_validate(profile)
+    payload = LLMProfileResponse.model_validate(updated_profile)
     return APIResponse[LLMProfileResponse](
         success=True,
         message=f"Profile '{profile_name}' updated successfully",

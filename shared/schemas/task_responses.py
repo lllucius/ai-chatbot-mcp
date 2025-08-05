@@ -4,12 +4,10 @@ This module provides response models for all task-related endpoints that current
 return raw dictionaries, ensuring type safety and proper API documentation.
 """
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .base import BaseModelSchema
 
 
 class TaskSystemStatusData(BaseModel):

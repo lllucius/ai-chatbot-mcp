@@ -111,7 +111,7 @@ __all__ = [
     "MCPServerSchema",
     "MCPToolCreateSchema",
     "MCPToolUpdateSchema",
-    "MCPToolSchema",
+    "MCPToolResponse",
     "MCPToolExecutionRequestSchema",
     "MCPToolExecutionResultSchema",
     "MCPToolUsageStatsSchema",
