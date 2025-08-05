@@ -42,7 +42,7 @@ from shared.schemas.mcp import (
     MCPToolCreateSchema,
     MCPToolExecutionRequestSchema,
     MCPToolExecutionResultSchema,
-    MCPToolSchema,
+    MCPToolResponse,
     MCPToolUpdateSchema,
     MCPToolUsageStatsSchema,
 )
@@ -281,7 +281,7 @@ class MCPService:
 
     async def register_tool(
         self, tool_data: MCPToolCreateSchema
-    ) -> Optional[MCPToolSchema]:
+    ) -> Optional[MCPToolResponse]:
         """Register a new tool for a server.
 
         Args:
@@ -307,7 +307,7 @@ class MCPService:
             existing_tool.is_enabled = tool_data.is_enabled
             await self.db.commit()
             await self.db.refresh(existing_tool, ["server"])
-            return MCPToolSchema.model_validate(existing_tool)
+            return MCPToolResponse.model_validate(existing_tool)
         tool = MCPTool(
             name=tool_data.name,
             original_name=tool_data.original_name,
@@ -322,9 +322,9 @@ class MCPService:
         logger.info(
             f"Registered tool: {tool_data.name} for server {tool_data.server_name}"
         )
-        return MCPToolSchema.model_validate(tool)
+        return MCPToolResponse.model_validate(tool)
 
-    async def get_tool(self, tool_name: str) -> Optional[MCPToolSchema]:
+    async def get_tool(self, tool_name: str) -> Optional[MCPToolResponse]:
         """Get a tool by server name and tool name."""
         result = await self.db.execute(
             select(MCPTool)
@@ -333,12 +333,12 @@ class MCPService:
         )
         tool = result.scalar_one_or_none()
         if tool:
-            return MCPToolSchema.model_validate(tool)
+            return MCPToolResponse.model_validate(tool)
         return None
 
     async def list_tools(
         self, filters: Optional[MCPListFiltersSchema] = None
-    ) -> List[MCPToolSchema]:
+    ) -> List[MCPToolResponse]:
         """List all tools with optional filtering."""
         query = select(MCPTool).options(selectinload(MCPTool.server))
         if filters:
@@ -356,11 +356,11 @@ class MCPService:
                 query = query.offset(filters.offset)
         result = await self.db.execute(query.order_by(MCPTool.name))
         tools = result.scalars().all()
-        return [MCPToolSchema.model_validate(tool) for tool in tools]
+        return [MCPToolResponse.model_validate(tool) for tool in tools]
 
     async def update_tool(
         self, tool_name: str, updates: MCPToolUpdateSchema
-    ) -> Optional[MCPToolSchema]:
+    ) -> Optional[MCPToolResponse]:
         """Update an existing tool configuration."""
         tool = await self.db.execute(
             select(MCPTool)
@@ -377,7 +377,7 @@ class MCPService:
         await self.db.commit()
         await self.db.refresh(tool, ["server"])
         logger.info(f"Updated tool: {tool_name}")
-        return MCPToolSchema.model_validate(tool)
+        return MCPToolResponse.model_validate(tool)
 
     async def enable_tool(self, tool_name: str) -> bool:
         """Enable a tool.
@@ -826,7 +826,7 @@ class MCPService:
     async def get_available_tools(
         self,
         filters: Optional[MCPListFiltersSchema] = None,
-    ) -> List[MCPToolSchema]:
+    ) -> List[MCPToolResponse]:
         """Return a list of available tools (from DB/registry), optionally filtered."""
         #        if not self.is_initialized:
         #            logger.warning("MCP client not initialized - returning empty tools list")

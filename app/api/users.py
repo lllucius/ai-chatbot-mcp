@@ -6,8 +6,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin_responses import (
+from shared.schemas.user import (
+    UserCreate,
+    UserDetailResponse,
+    UserListResponse,
+    UserPasswordUpdate,
+    UserResponse,
+    UserSearchParams,
     UserStatsResponse,
+    UserUpdate,
 )
 from shared.schemas.common import (
     APIResponse,
@@ -15,7 +22,7 @@ from shared.schemas.common import (
     PaginatedResponse,
     SuccessResponse,
 )
-from shared.schemas.user import UserPasswordUpdate, UserResponse, UserUpdate, UserStatsResponse
+
 from sqlalchemy import func, select
 
 from ..models.conversation import Conversation
@@ -37,7 +44,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 
-@router.get("/me", response_model=APIResponse[UserResponse)
+@router.get("/me", response_model=APIResponse[UserResponse])
 @handle_api_errors("Failed to retrieve user profile")
 async def get_my_profile(
     current_user=Depends(get_current_user),
@@ -163,7 +170,7 @@ async def get_user(
     )
 
 
-@router.put("/byid/{user_id}", response_model=APIResponse[UserResponse)
+@router.put("/byid/{user_id}", response_model=APIResponse[UserResponse])
 @handle_api_errors("User update failed")
 async def update_user(
     user_id: UUID,
@@ -180,7 +187,7 @@ async def update_user(
     payload = UserResponse.model_validate(user)
     return APIResponse[UserResponse](
         success=True,
-        message="User updated successfully"
+        message="User updated successfully",
         data=payload,
     )
 
@@ -209,7 +216,7 @@ async def delete_user(
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"),
+            detail="User not found"
         )
 
     return APIResponse(
@@ -462,7 +469,7 @@ async def get_user_statistics(
         active_users=active_users or 0,
         inactive_users=(total_users or 0) - (active_users or 0),
         superusers=superusers or 0,
-    }
+    )
 
     return APIResponse[UserStatsResponse](
         success=True,

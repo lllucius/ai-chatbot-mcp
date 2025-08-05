@@ -187,7 +187,7 @@ class MCPToolListResponse(BaseModel):
         default=True, description="Whether the request was successful"
     )
     message: str = Field(..., description="Response message")
-    available_tools: List[MCPToolSchema] = Field(
+    available_tools: List[MCPToolResponse] = Field(
         ..., description="List of available tools"
     )
     openai_tools: List[Dict[str, Any]] = Field(
@@ -207,7 +207,7 @@ class MCPToolsResponse(BaseModel):
         default=True, description="Whether the request was successful"
     )
     message: str = Field(..., description="Response message")
-    data: List[MCPToolSchema] = Field(..., description="List of MCP tools")
+    data: List[MCPToolResponse] = Field(..., description="List of MCP tools")
 
 
 class MCPStatsResponse(BaseModel):

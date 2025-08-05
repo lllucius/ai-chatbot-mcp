@@ -9,12 +9,14 @@ from shared.schemas.common import (
     APIResponse,
     BaseResponse,
     ErrorResponse,
+    PaginatedResponse,
+    PaginationParams,
     SuccessResponse,
 )
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
-    LLMProfileListResponse,
     LLMProfileResponse,
+    LLMProfileStatisticsData,
     LLMProfileUpdate,
 )
 from shared.schemas.task_responses import (
@@ -55,7 +57,7 @@ async def create_profile(
     )
 
 
-@router.get("/", response_model=APIResponse[PaginatedResponse[ProfileResponse]])
+@router.get("/", response_model=APIResponse[PaginatedResponse[LLMProfileResponse]])
 @handle_api_errors("Failed to list profiles")
 async def list_profiles(
     active_only: bool = Query(True, description="Show only active profiles"),
@@ -64,7 +66,7 @@ async def list_profiles(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
     profile_service: LLMProfileService = Depends(get_profile_service),
-) -> APIResponse[PaginatedResponse[ProfileResponse]]:
+) -> APIResponse[PaginatedResponse[LLMProfileResponse]]:
     """List all LLM parameter profiles with filtering and pagination."""
     log_api_call("list_profiles", user_id=current_user.id)
 
@@ -87,7 +89,7 @@ async def list_profiles(
         )
     )
 
-    return APIResponse[PaginatedResponse[ProfileResponse]](
+    return APIResponse[PaginatedResponse[LLMProfileResponse]](
         success=True,
         message="Profiles retrieved successfully",
         data=payload,
