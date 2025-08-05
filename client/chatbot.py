@@ -152,7 +152,7 @@ except ImportError:
 
 import contextlib
 
-from ai_chatbot_sdk import (
+from .ai_chatbot_sdk import (
     AIChatbotSDK,
     ApiError,
 )
@@ -165,7 +165,7 @@ from shared.schemas import (
     UserPasswordUpdate,
     UserUpdate,
 )
-from config import (
+from .config import (
     ClientConfig,
     get_default_backup_dir,
     get_default_token_file,

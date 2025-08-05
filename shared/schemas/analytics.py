@@ -4,10 +4,9 @@ This module provides analytics response schemas for system metrics,
 usage statistics, and performance monitoring.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
 from .base import BaseModelSchema
 

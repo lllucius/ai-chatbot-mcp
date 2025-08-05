@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .base import serialize_datetime_to_iso
 
 
 def utcnow() -> datetime:

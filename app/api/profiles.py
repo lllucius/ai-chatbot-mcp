@@ -8,10 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
-    ErrorResponse,
     PaginatedResponse,
     PaginationParams,
-    SuccessResponse,
 )
 from shared.schemas.llm_profile import (
     LLMProfileCreate,
@@ -19,12 +17,7 @@ from shared.schemas.llm_profile import (
     LLMProfileStatisticsData,
     LLMProfileUpdate,
 )
-from shared.schemas.task_responses import (
-    ProfileParametersData,
-    ProfileValidationData,
-)
 
-from ..config import settings
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
@@ -134,13 +127,12 @@ async def update_profile(
 
     updated_profile = await profile_service.update_profile(profile_name, profile_data.model_dump(exclude_unset=True))
 
-    data = LLMProfileResponse.model_validate(updated_profile)
-    if not profile:
+    if not updated_profile:
         raise HTTPException(
             status_code=404,
             detail=f"Profile '{profile_name}' not found",
         )
-    payload = LLMProfileResponse.model_validate(profile)
+    payload = LLMProfileResponse.model_validate(updated_profile)
     return APIResponse[LLMProfileResponse](
         success=True,
         message=f"Profile '{profile_name}' updated successfully",

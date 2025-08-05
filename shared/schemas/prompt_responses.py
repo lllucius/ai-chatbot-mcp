@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .base import BaseModelSchema
 
 
 class PromptCategoryInfo(BaseModel):

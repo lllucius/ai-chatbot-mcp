@@ -1,18 +1,13 @@
 """User management API endpoints."""
 
-from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.user import (
-    UserCreate,
-    UserDetailResponse,
-    UserListResponse,
     UserPasswordUpdate,
     UserResponse,
-    UserSearchParams,
     UserStatsResponse,
     UserUpdate,
 )
@@ -20,13 +15,10 @@ from shared.schemas.common import (
     APIResponse,
     ErrorResponse,
     PaginatedResponse,
-    SuccessResponse,
 )
 
 from sqlalchemy import func, select
 
-from ..models.conversation import Conversation
-from ..models.document import Document
 from ..models.user import User as UserModel
 
 

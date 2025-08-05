@@ -7,15 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import (
     APIResponse,
-    ErrorResponse,
-    SuccessResponse,
 )
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,
     MCPServerSchema,
     MCPServerUpdateSchema,
-    MCPStatsResponse,
     MCPToolResponse,
     MCPToolsResponse,
     MCPToolUsageStatsSchema,

@@ -7,15 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import (
     APIResponse,
-    BaseResponse,
-    ErrorResponse,
     PaginatedResponse,
     PaginationParams,
-    SuccessResponse,
 )
 from shared.schemas.prompt import (
     PromptCreate,
-    PromptListResponse,
     PromptResponse,
     PromptUpdate,
 )
