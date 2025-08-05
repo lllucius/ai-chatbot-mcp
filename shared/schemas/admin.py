@@ -32,15 +32,6 @@ class TaskStatsResponse(BaseModelSchema):
     message: str = Field(..., description="Response message")
 
 
-class ActiveTasksResponse(BaseModelSchema):
-    """Active tasks response schema."""
-
-    tasks: List[Dict[str, Any]] = Field(..., description="Active tasks")
-    timestamp: str = Field(..., description="Response timestamp")
-    success: bool = Field(default=True, description="Success status")
-    message: str = Field(..., description="Response message")
-
-
 class QueueResponse(BaseModelSchema):
     """Queue status response schema."""
 
@@ -69,28 +60,10 @@ class WorkersResponse(BaseModelSchema):
 
 
 # Profile management schemas
-class ProfileParametersResponse(BaseModelSchema):
-    """Profile parameters response schema."""
-
-    parameters: Dict[str, Any] = Field(..., description="Profile parameters")
-    timestamp: str = Field(..., description="Response timestamp")
-    success: bool = Field(default=True, description="Success status")
-    message: str = Field(..., description="Response message")
-
-
 class ProfileStatsResponse(BaseModelSchema):
     """Profile statistics response schema."""
 
     stats: Dict[str, Any] = Field(..., description="Profile statistics")
-    timestamp: str = Field(..., description="Response timestamp")
-    success: bool = Field(default=True, description="Success status")
-    message: str = Field(..., description="Response message")
-
-
-class ProfileValidationResponse(BaseModelSchema):
-    """Profile validation response schema."""
-
-    validation: Dict[str, Any] = Field(..., description="Profile validation results")
     timestamp: str = Field(..., description="Response timestamp")
     success: bool = Field(default=True, description="Success status")
     message: str = Field(..., description="Response message")

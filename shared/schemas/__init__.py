@@ -31,13 +31,10 @@ __all__ = [
     # Admin schemas
     "TaskStatusResponse",
     "TaskStatsResponse",
-    "ActiveTasksResponse",
     "QueueResponse",
     "TaskMonitorResponse",
     "WorkersResponse",
-    "ProfileParametersResponse",
     "ProfileStatsResponse",
-    "ProfileValidationResponse",
     "PromptCategoriesResponse",
     "PromptStatsResponse",
     "AdvancedSearchResponse",
@@ -48,7 +45,6 @@ __all__ = [
     "DatabaseMigrationsResponse",
     "DatabaseAnalysisResponse",
     "DatabaseQueryResponse",
-    "UserStatisticsResponse",
     "SearchResponse",
     "RegistryStatsResponse",
     "ConversationStatsResponse",
@@ -84,19 +80,15 @@ __all__ = [
     "MessageListResponse",
     "ConversationStats",
     # Document schemas
-    "DocumentBase",
-    "DocumentCreate",
     "DocumentUpdate",
     "DocumentResponse",
     "DocumentListResponse",
     "DocumentSearchRequest",
     "DocumentSearchResponse",
     # LLM Profile schemas
-    "LLMProfileBase",
     "LLMProfileCreate",
     "LLMProfileUpdate",
     "LLMProfileResponse",
-    "LLMProfileListResponse",
     # MCP schemas
     "MCPServerCreateSchema",
     "MCPServerUpdateSchema",
@@ -121,7 +113,6 @@ __all__ = [
     "OpenAIToolSchema",
     "MCPOpenAIToolsResponseSchema",
     # Prompt schemas
-    "PromptBase",
     "PromptCreate",
     "PromptUpdate",
     "PromptResponse",
@@ -194,7 +185,6 @@ __all__ = [
     # Search response schemas
     "SearchSuggestion",
     "SearchSuggestionData",
-    "SearchHistoryEntry",
     "SearchHistoryData",
     # Tool calling schemas
     "ToolHandlingMode",

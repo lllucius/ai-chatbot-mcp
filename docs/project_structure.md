@@ -14,13 +14,8 @@ ai-chatbot-platform/
 │   │   ├── document.py       # Document and chunk models
 │   │   ├── conversation.py   # Conversation and message models
 │   │   └── base.py           # Base model class
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── user.py           # User Pydantic schemas
-│   │   ├── document.py       # Document Pydantic schemas
-│   │   ├── conversation.py   # Conversation Pydantic schemas
-│   │   ├── auth.py           # Authentication schemas
-│   │   └── common.py         # Common schemas
+│   ├── schemas/             # DEPRECATED - schemas moved to shared/schemas
+│   │   └── __init__.py      # Deprecation notice
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── deps.py           # API dependencies
@@ -60,6 +55,20 @@ ai-chatbot-platform/
 │   ├── startup.py           # Application startup script
 │   ├── example_usage.py     # Example usage demonstrations
 │   └── manage.py            # Database and user management CLI
+├── shared/                  # Shared schemas between API and SDK
+│   └── schemas/             # Pydantic schemas for API and client
+│       ├── __init__.py      # Schema exports and validation
+│       ├── user.py          # User-related schemas
+│       ├── document.py      # Document and search schemas
+│       ├── conversation.py  # Conversation and message schemas
+│       ├── auth.py          # Authentication schemas
+│       ├── common.py        # Common/base schemas and responses
+│       ├── mcp.py           # MCP (Model Context Protocol) schemas
+│       ├── admin.py         # Administrative schemas
+│       ├── analytics.py     # Analytics and reporting schemas
+│       ├── task_responses.py # Task and monitoring response schemas
+│       ├── search_responses.py # Search response schemas
+│       └── *_responses.py   # Various response schemas
 ├── requirements.txt         # Python dependencies
 ├── .env.example            # Environment variables example
 ├── README.md               # Comprehensive documentation
@@ -81,12 +90,20 @@ ai-chatbot-platform/
 - **app/models/conversation.py**: Conversation and message models
 
 ### Schemas (Pydantic)
-- **app/schemas/**: Request/response models for API validation
-- **app/schemas/auth.py**: Authentication-related schemas
-- **app/schemas/user.py**: User management schemas
-- **app/schemas/document.py**: Document processing schemas
-- **app/schemas/conversation.py**: Chat and conversation schemas
-- **app/schemas/common.py**: Shared schemas and base classes
+**Note**: Schema organization has been refactored for better code sharing between API and SDK.
+
+- **shared/schemas/**: Centralized schema definitions shared between API server and client SDK
+  - **shared/schemas/auth.py**: Authentication-related schemas (login, registration, tokens)
+  - **shared/schemas/user.py**: User management schemas (create, update, response)
+  - **shared/schemas/document.py**: Document processing and search schemas
+  - **shared/schemas/conversation.py**: Chat and conversation schemas
+  - **shared/schemas/common.py**: Base response classes and pagination schemas
+  - **shared/schemas/mcp.py**: Model Context Protocol (MCP) schemas
+  - **shared/schemas/admin.py**: Administrative operation schemas
+  - **shared/schemas/analytics.py**: Analytics and reporting schemas
+  - **shared/schemas/*_responses.py**: Specialized response schemas for different modules
+
+- **app/schemas/**: DEPRECATED - Contains only a deprecation notice directing to shared/schemas
 
 ### API Endpoints
 - **app/api/auth.py**: User registration, login, token management
