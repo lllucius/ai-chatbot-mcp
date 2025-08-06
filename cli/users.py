@@ -263,8 +263,8 @@ async def list(
                     "Username": user.username,
                     "Email": user.email,
                     "Full Name": user.full_name or "-",
-                    "Active": "✓" if user.is_active else "✗",
-                    "Superuser": "✓" if user.is_superuser else "✗",
+                    "Active": "Yes" if user.is_active else "No",
+                    "Superuser": "Yes" if user.is_superuser else "No",
                     "Created": format_timestamp(
                         user.created_at.isoformat() if user.created_at else ""
                     ),
@@ -299,17 +299,9 @@ async def show(
         sdk = await get_sdk()
         user = None
         try:
-            user_id = UUID(username_or_id)
-            user = await sdk.users.get(user_id)
+            user = await sdk.users.get_byid(UUID(username_or_id))
         except ValueError:
-            users_response = await sdk.users.list(page=1, size=100)
-            matching_users = [
-                u for u in users_response.items if u.username == username_or_id
-            ]
-            if not matching_users:
-                error_message(f"User '{username_or_id}' not found")
-                return
-            user = matching_users[0]
+            user = await sdk.users.get_byname(username_or_id)
 
         user_info = {
             "ID": str(user.id),

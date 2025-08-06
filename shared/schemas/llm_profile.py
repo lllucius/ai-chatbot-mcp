@@ -45,7 +45,7 @@ class LLMProfileCreate(BaseModel):
     parameters: Dict[str, Any] = Field(
         default_factory=dict, description="Model parameters dictionary"
     )
-    is_default: bool = Field(False, description="Whether this is the default profile")
+    is_default: bool = Field(True, description="Whether profile is the default")
 
 
 class LLMProfileUpdate(BaseModel):

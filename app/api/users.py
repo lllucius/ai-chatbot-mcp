@@ -182,15 +182,13 @@ async def list_users(
 
 @router.get("/byid/{user_id}", response_model=APIResponse[UserResponse])
 @handle_api_errors("Failed to retrieve user")
-async def get_user(
+async def get_user_byid(
     user_id: UUID,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse[UserResponse]:
     """Get user by ID (admin only)."""
-    log_api_call(
-        "get_user", admin_user_id=str(current_user.id), target_user_id=str(user_id)
-    )
+    log_api_call("get_user_byid", target_user_id=str(user_id))
 
     user = await user_service.get_user_profile(user_id)
     payload = UserResponse.model_validate(user)
@@ -199,6 +197,24 @@ async def get_user(
         message="User profile retrieved successfully",
         data=payload,
     )
+
+@router.get("/byname/{user_name}", response_model=APIResponse[UserResponse])
+@handle_api_errors("Failed to retrieve user")
+async def get_user_byname(
+    user_name: str,
+    current_user=Depends(get_current_superuser),
+    user_service: UserService = Depends(get_user_service),
+) -> APIResponse[UserResponse]:
+    """Get user by name (admin only)."""
+    log_api_call("get_user_byname", target_user_name=user_name)
+    user = await user_service.get_user_profile(user_name)
+    payload = UserResponse.model_validate(user)
+    return APIResponse[UserResponse](
+        success=True,
+        message="User profile retrieved successfully",
+        data=payload,
+    )
+
 
 
 @router.put("/byid/{user_id}", response_model=APIResponse[UserResponse])
@@ -255,7 +271,7 @@ async def delete_user(
     )
 
 
-@router.post("/users/byid/{user_id}/promote", response_model=APIResponse)
+@router.post("/byid/{user_id}/promote", response_model=APIResponse)
 @handle_api_errors("Failed to promote user")
 async def promote_user_to_superuser(
     user_id: UUID,
@@ -296,7 +312,7 @@ async def promote_user_to_superuser(
         raise
 
 
-@router.post("/users/byid/{user_id}/demote", response_model=APIResponse)
+@router.post("/byid/{user_id}/demote", response_model=APIResponse)
 @handle_api_errors("Failed to demote user")
 async def demote_user_from_superuser(
     user_id: UUID,
@@ -342,7 +358,7 @@ async def demote_user_from_superuser(
         raise
 
 
-@router.post("/users/byid/{user_id}/activate", response_model=APIResponse)
+@router.post("/byid/{user_id}/activate", response_model=APIResponse)
 @handle_api_errors("Failed to activate user")
 async def activate_user_account(
     user_id: UUID,
@@ -381,7 +397,7 @@ async def activate_user_account(
         raise
 
 
-@router.post("/users/byid/{user_id}/deactivate", response_model=APIResponse)
+@router.post("/byid/{user_id}/deactivate", response_model=APIResponse)
 @handle_api_errors("Failed to deactivate user")
 async def deactivate_user_account(
     user_id: UUID,
@@ -427,7 +443,7 @@ async def deactivate_user_account(
         raise
 
 
-@router.post("/users/byid/{user_id}/reset-password", response_model=APIResponse)
+@router.post("/byid/{user_id}/reset-password", response_model=APIResponse)
 @handle_api_errors("Failed to reset password")
 async def admin_reset_user_password(
     user_id: UUID,
@@ -470,7 +486,7 @@ async def admin_reset_user_password(
         raise
 
 
-@router.get("/users/stats", response_model=APIResponse[UserStatsResponse])
+@router.get("/stats", response_model=APIResponse[UserStatsResponse])
 @handle_api_errors("Failed to get user statistics")
 async def get_user_statistics(
     current_user: User = Depends(get_current_superuser),

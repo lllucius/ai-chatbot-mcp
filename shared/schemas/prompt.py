@@ -47,7 +47,7 @@ class PromptCreate(BaseModel):
     content: str = Field(..., min_length=1, description="Prompt template content")
     variables: Optional[List[str]] = Field(None, description="Template variables")
     tags: Optional[List[str]] = Field(None, description="Tags for categorization")
-    is_active: bool = Field(True, description="Whether prompt is active")
+    is_default: bool = Field(True, description="Whether prompt is the default")
 
 
 class PromptUpdate(BaseModel):

@@ -61,6 +61,9 @@ class LLMProfile(BaseModelDB):
     model_name: Mapped[str] = mapped_column(
         Text, nullable=True, doc="OpenAI model name"
     )
+    parameters: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+        JSON, nullable=True, doc="Model-specific parameters"
+    )
 
     is_default: Mapped[bool] = mapped_column(
         Boolean,
@@ -87,6 +90,7 @@ class LLMProfile(BaseModelDB):
     )
 
     # Core LLM Parameters
+    """
     temperature: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, doc="Controls randomness in generation (0.0-2.0)"
     )
@@ -117,10 +121,7 @@ class LLMProfile(BaseModelDB):
     stop: Mapped[Optional[List[str]]] = mapped_column(
         JSON, nullable=True, doc="Stop sequences as JSON list"
     )
-    other_params: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-        JSON, nullable=True, doc="Additional model-specific parameters"
-    )
-
+    """
     # Indexes for performance
     __table_args__ = (
         Index("idx_llm_profiles_default", "is_default"),

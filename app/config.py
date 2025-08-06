@@ -102,7 +102,7 @@ class Settings(BaseSettings):
 
     # Database Configuration
     database_url: str = Field(
-        default="postgresql+asyncpg://postgres:password@localhost:5432/ai_chatbot",
+        default="postgresql+asyncpg://postgres:password@localhost:5432/ai",
         description="Database connection URL",
     )
 

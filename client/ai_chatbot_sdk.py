@@ -140,6 +140,7 @@ from shared.schemas import (  # Base and common schemas; Conversation schemas; D
     LLMProfileResponse,
     MessageResponse,
     PaginationParams,
+    PaginatedResponse,
     PasswordResetConfirm,
     PasswordResetRequest,
     PromptCreate,
@@ -221,16 +222,6 @@ class ProcessingStatusResponse(BaseResponse):
     completed_at: Optional[str] = None
 
 
-class PaginatedResponse(BaseSchema, Generic[T]):
-    """Paginated response wrapper model."""
-
-    success: bool
-    message: str
-    items: List[Any]
-    pagination: PaginationParams
-    timestamp: Optional[str] = None
-
-
 class ReadinessResponse(BaseSchema):
     """Readiness check response model."""
 
@@ -308,37 +299,34 @@ async def handle_response(
         
         # Extract the actual data from the envelope
         actual_data = json_data.get("data")
-        meta = json_data.get("meta")
-        
-        # Handle paginated responses (check for pagination in meta)
-        if meta and "pagination" in meta and cls:
-            pagination_info = meta["pagination"]
-            if isinstance(actual_data, list):
+        if actual_data:
+            # Handle paginated responses
+            if "pagination" in actual_data and "items" in actual_data:
                 # Convert each item in the list to the target class
-                items = []
-                for item in actual_data:
-                    items.append(cls(**item))
-                
-                # Return a PaginatedResponse structure
+                if cls:
+                    items = []
+                    for item in actual_data["items"]:
+                        items.append(cls.model_validate(item))
+                else:
+                    items = actual_data["items"]
+
+                pagination = PaginationParams.model_validate(actual_data["pagination"])
                 return PaginatedResponse(
-                    success=json_data["success"],
-                    message=json_data["message"],
-                    timestamp=json_data.get("timestamp"),
                     items=items,
-                    pagination=PaginationParams(**pagination_info)
+                    pagination=pagination
                 )
         
-        # Handle single object responses
-        if cls and actual_data is not None:
-            if isinstance(actual_data, dict):
-                return cls(**actual_data)
-            elif isinstance(actual_data, list):
-                # If we get a list but no pagination meta, it might be a simple list response
-                return [cls(**item) if isinstance(item, dict) else item for item in actual_data]
-            else:
-                # For primitive types, return as-is
-                return actual_data
-        
+            # Handle single object responses
+            if cls:
+                if isinstance(actual_data, dict):
+                    return cls(**actual_data)
+                elif isinstance(actual_data, list):
+                    # If we get a list but no pagination meta, it might be a simple list response
+                    return [cls(**item) if isinstance(item, dict) else item for item in actual_data]
+                else:
+                    # For primitive types, return as-is
+                    return actual_data
+            
         # Return the raw data if no class specified
         return actual_data
     
@@ -623,7 +611,7 @@ class UsersClient:
         size: int = 20,
         active_only: Optional[bool] = None,
         superuser_only: Optional[bool] = None,
-    ) -> PaginatedResponse:
+    ) -> PaginatedResponse[UserResponse]:
         """List users with optional filtering and pagination.
 
         Args:
@@ -649,7 +637,7 @@ class UsersClient:
         )
         return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
-    async def get(self, user_id: UUID) -> UserResponse:
+    async def get_byid(self, user_id: UUID) -> UserResponse:
         """Get user profile by ID.
 
         Args:
@@ -663,6 +651,21 @@ class UsersClient:
 
         """
         return await self.sdk._request(f"/api/v1/users/byid/{user_id}", UserResponse)
+
+    async def get_byname(self, user_name: str) -> UserResponse:
+        """Get user profile by name.
+
+        Args:
+            user_name: string of the user to retrieve.
+
+        Returns:
+            UserResponse: User profile information.
+
+        Raises:
+            ApiError: If user not found or insufficient permissions.
+
+        """
+        return await self.sdk._request(f"/api/v1/users/byname/{user_name}", UserResponse)
 
     async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
         """Update user profile by ID.
@@ -704,7 +707,7 @@ class UsersClient:
 
     async def statistics(self) -> UserStatsResponse:
         """Get comprehensive user statistics for admin access."""
-        return await self.sdk._request("/api/v1/users/users/stats", UserStatsResponse)
+        return await self.sdk._request("/api/v1/users/stats", UserStatsResponse)
 
 
 class DocumentsClient:
@@ -1093,7 +1096,7 @@ class ConversationsClient:
             }
         )
         return await self.sdk._request(
-            "/api/v1/conversations/conversations/search", SearchResponse, params=params
+            "/api/v1/conversations/search", SearchResponse, params=params
         )
 
 
@@ -1368,12 +1371,12 @@ class PromptsClient:
         active_only: bool = True,
         category: Optional[str] = None,
         search: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> PaginatedResponse[PromptResponse]:
         """List all prompts with optional filtering."""
         params = filter_query(
             {"active_only": active_only, "category": category, "search": search}
         )
-        return await self.sdk._request("/api/v1/prompts/", dict, params=params)
+        return await self.sdk._request("/api/v1/prompts/", PromptResponse, params=params)
 
     async def get_prompt(self, prompt_name: str) -> PromptResponse:
         """Get a specific prompt by name."""
@@ -1404,6 +1407,18 @@ class PromptsClient:
             f"/api/v1/prompts/byname/{prompt_name}", BaseResponse, method="DELETE"
         )
 
+    async def activate_prompt(self, prompt_name: str) -> BaseResponse:
+        """Activate a prompt."""
+        return await self.sdk._request(
+            f"/api/v1/prompts/byname/{prompt_name}/activate", BaseResponse, method="POST"
+        )
+ 
+    async def deactivate_prompt(self, prompt_name: str) -> BaseResponse:
+        """Deactivate a prompt."""
+        return await self.sdk._request(
+            f"/api/v1/prompts/byname/{prompt_name}/deactivate", BaseResponse, method="POST"
+        )
+ 
     async def get_prompt_stats(self) -> Dict[str, Any]:
         """Get prompt usage statistics."""
         return await self.sdk._request("/api/v1/prompts/stats", dict)
@@ -1435,10 +1450,10 @@ class ProfilesClient:
 
     async def list_profiles(
         self, active_only: bool = True, search: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> PaginatedResponse[LLMProfileResponse]:
         """List all LLM profiles with optional filtering."""
         params = filter_query({"active_only": active_only, "search": search})
-        return await self.sdk._request("/api/v1/profiles/", dict, params=params)
+        return await self.sdk._request("/api/v1/profiles/", LLMProfileResponse, params=params)
 
     async def get_profile(self, profile_name: str) -> LLMProfileResponse:
         """Get a specific LLM profile by name."""
@@ -1472,10 +1487,6 @@ class ProfilesClient:
             f"/api/v1/profiles/byname/{profile_name}", BaseResponse, method="DELETE"
         )
 
-    async def get_profile_stats(self) -> Dict[str, Any]:
-        """Get LLM profile usage statistics."""
-        return await self.sdk._request("/api/v1/profiles/stats", dict)
-
     async def set_default_profile(self, profile_name: str) -> BaseResponse:
         """Set a profile as the default."""
         return await self.sdk._request(
@@ -1483,6 +1494,22 @@ class ProfilesClient:
             BaseResponse,
             method="POST",
         )
+
+    async def activate_profile(self, profile_name: str) -> BaseResponse:
+        """Activate a profile."""
+        return await self.sdk._request(
+            f"/api/v1/profiles/byname/{profile_name}/activate", BaseResponse, method="POST"
+        )
+ 
+    async def deactivate_profile(self, profile_name: str) -> BaseResponse:
+        """Deactivate a profile."""
+        return await self.sdk._request(
+            f"/api/v1/profiles/byname/{profile_name}/deactivate", BaseResponse, method="POST"
+        )
+
+    async def get_profile_stats(self) -> Dict[str, Any]:
+        """Get LLM profile usage statistics."""
+        return await self.sdk._request("/api/v1/profiles/stats", dict)
 
 
 class AnalyticsClient:
@@ -1719,7 +1746,7 @@ class AdminClient:
         # Use the actual admin password reset endpoint
         params = filter_query({"new_password": new_password}) if new_password else {}
         return await self.sdk._request(
-            f"/api/v1/users/users/byid/{user_id}/reset-password",
+            f"/api/v1/users/byid/{user_id}/reset-password",
             BaseResponse,
             method="POST",
             params=params,
@@ -1727,12 +1754,12 @@ class AdminClient:
 
     async def get_user_stats(self) -> Dict[str, Any]:
         """Get user statistics."""
-        return await self.sdk._request("/api/v1/users/users/stats", dict)
+        return await self.sdk._request("/api/v1/users/stats", dict)
 
     # Document admin operations
     async def get_document_stats(self) -> Dict[str, Any]:
         """Get document statistics."""
-        return await self.sdk._request("/api/v1/documents/documents/stats", dict)
+        return await self.sdk._request("/api/v1/documents/stats", dict)
 
     async def cleanup_documents(
         self, older_than: Optional[int] = None, status: Optional[str] = None
@@ -1740,7 +1767,7 @@ class AdminClient:
         """Cleanup old documents."""
         params = filter_query({"older_than_days": older_than, "status_filter": status})
         return await self.sdk._request(
-            "/api/v1/documents/documents/cleanup", BaseResponse, method="POST", params=params
+            "/api/v1/documents/cleanup", BaseResponse, method="POST", params=params
         )
 
     async def bulk_reprocess_documents(
@@ -1762,26 +1789,26 @@ class AdminClient:
     # Conversation admin operations
     async def get_conversation_stats(self) -> Dict[str, Any]:
         """Get conversation statistics."""
-        return await self.sdk._request("/api/v1/conversations/conversations/stats", dict)
+        return await self.sdk._request("/api/v1/conversations/stats", dict)
 
     async def search_conversations(self, **kwargs) -> Dict[str, Any]:
         """Search conversations."""
         params = filter_query(kwargs)
         return await self.sdk._request(
-            "/api/v1/conversations/conversations/search", dict, params=params
+            "/api/v1/conversations/search", dict, params=params
         )
 
     async def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
         """Export conversation."""
         return await self.sdk._request(
-            f"/api/v1/conversations/conversations/byid/{conversation_id}/export", dict
+            f"/api/v1/conversations/byid/{conversation_id}/export", dict
         )
 
     async def import_conversations(self, data: Dict[str, Any]) -> BaseResponse:
         """Import conversations."""
         # This uses the file upload endpoint, so it's more complex
         return await self.sdk._request(
-            "/api/v1/conversations/conversations/import", BaseResponse, method="POST", json=data
+            "/api/v1/conversations/import", BaseResponse, method="POST", json=data
         )
 
     async def archive_conversations(
@@ -1790,7 +1817,7 @@ class AdminClient:
         """Archive old conversations."""
         params = filter_query({"older_than_days": older_than, "dry_run": False})
         return await self.sdk._request(
-            "/api/v1/conversations/conversations/archive",
+            "/api/v1/conversations/archive",
             BaseResponse,
             method="POST",
             params=params,

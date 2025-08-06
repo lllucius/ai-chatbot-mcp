@@ -190,12 +190,6 @@ class APIResponse(BaseResponse, Generic[T]):
         default=None,
         description="Response data payload - single object, array, or null",
     )
-    meta: Optional[Dict[str, Any]] = Field(
-        default=None, description="Optional metadata (pagination, stats, etc)"
-    )
-    error: Optional[ErrorDetails] = Field(
-        default=None, description="Optional error details with code and details"
-    )
 
     def model_dump_json(self, **kwargs):
         """Serialize model with comprehensive datetime handling for API responses.
@@ -603,58 +597,13 @@ class PaginationParams(BaseModel):
         return self.per_page
 
 
-class PaginatedResponse(BaseResponse, Generic[T]):
+class PaginatedResponse(BaseModel, Generic[T]):
     """Generic paginated response schema."""
 
     items: List[Any] = Field(
         default_factory=list, description="List of paginated items"
     )
     pagination: PaginationParams = Field(..., description="Pagination parameters")
-
-    @classmethod
-    def create(
-        cls, items: List[Any], page: int, size: int, total: int, message: str
-    ) -> "PaginatedResponse":
-        """Create a paginated response with the provided items and metadata."""
-        return cls(
-            success=True,
-            message=message,
-            items=items,
-            pagination=PaginationParams(page=page, per_page=size, total=total),
-        )
-
-    @classmethod
-    def create_response(
-        cls,
-        items: List[T],
-        page: int,
-        size: int,
-        total: int,
-        message: str = "Success",
-        status_code: int = status.HTTP_200_OK,
-    ) -> JSONResponse:
-        """Create paginated response using unified envelope format."""
-        # Calculate pagination metadata
-        total_pages = (total + size - 1) // size  # Ceiling division
-        has_next = page < total_pages
-        has_prev = page > 1
-
-        pagination_meta = {
-            "page": page,
-            "per_page": size,
-            "total": total,
-            "total_pages": total_pages,
-            "has_next": has_next,
-            "has_prev": has_prev,
-        }
-
-        # Use SuccessResponse.create with pagination metadata
-        return SuccessResponse.create(
-            data=items,
-            message=message,
-            meta={"pagination": pagination_meta},
-            status_code=status_code,
-        )
 
 
 class SearchParams(PaginationParams):

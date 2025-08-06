@@ -19,28 +19,15 @@ logger = get_component_logger("middleware.logging")
 
 
 async def logging_middleware(request: Request, call_next) -> Response:
-    """Log request/response details with correlation ID for tracking.
-
-    Provides structured logging for HTTP requests and responses with metadata capture,
-    performance timing, and correlation ID generation for monitoring and debugging.
-
-    Args:
-        request: The incoming HTTP request object
-        call_next: The next middleware or endpoint handler in the processing chain
-
-    Returns:
-        Response: The HTTP response object with correlation ID propagated
-
-    Raises:
-        Exception: Catches and logs middleware processing errors without
-            affecting request flow
-    """
+    """Log request/response details with correlation ID for tracking."""
     start_time = time.time()
 
     # Generate correlation ID for this request
     from ..core.logging import set_correlation_id
 
     correlation_id = set_correlation_id()
+
+    request.state.correlation_id = correlation_id
 
     # Log request start
     logger.info(
@@ -83,22 +70,7 @@ async def logging_middleware(request: Request, call_next) -> Response:
 
 
 async def debug_content_middleware(request: Request, call_next) -> Response:
-    """Log detailed request/response content for debugging when debug mode is enabled.
-
-    Provides comprehensive request/response body inspection with pretty-printed
-    JSON formatting and content filtering. Only active when settings.debug is True.
-
-    Args:
-        request: The incoming HTTP request object for detailed inspection
-        call_next: The next middleware or endpoint handler in the processing chain
-
-    Returns:
-        Response: The HTTP response object with detailed content logged
-
-    Note:
-        Automatically disabled in production to prevent sensitive data exposure.
-        Implements content filtering and size limits for security and performance.
-    """
+    """Log detailed request/response content for debugging when debug mode is enabled."""
     if not settings.debug:
         # Skip debug logging in production
         return await call_next(request)
@@ -118,15 +90,7 @@ async def debug_content_middleware(request: Request, call_next) -> Response:
 
 
 async def _log_request_content(request: Request, correlation_id: str):
-    """Log detailed request content with intelligent parsing and filtering.
-
-    Captures and logs request information including headers and body content
-    with automatic JSON parsing and security-conscious filtering.
-
-    Args:
-        request: The HTTP request object for content analysis
-        correlation_id: Unique request identifier for tracing and correlation
-    """
+    """Log detailed request content with intelligent parsing and filtering."""
     try:
         # Prepare request details
         request_details = {
@@ -181,105 +145,68 @@ async def _log_request_content(request: Request, correlation_id: str):
         )
 
 
-async def _log_response_content(response: Response, correlation_id: str):
-    """Log detailed response content with intelligent formatting.
+async def _log_response_content(response: Response, correlation_id: str) -> Response:
+    """Log detailed response content with intelligent formatting."""
+    response_details = {
+        "correlation_id": correlation_id,
+        "status_code": response.status_code,
+        "headers": dict(response.headers),
+    }
 
-    Captures and logs response information including status codes, headers,
-    and body content with automatic content type detection and formatting.
+    if hasattr(response, "body_iterator") and response.body_iterator:
+        original_body_iterator = response.body_iterator
+        captured_chunks = []
 
-    Args:
-        response: The HTTP response object for content analysis
-        correlation_id: Unique request identifier for tracing and correlation
-    """
-    try:
-        # Prepare response details
-        response_details = {
-            "correlation_id": correlation_id,
-            "status_code": response.status_code,
-            "headers": dict(response.headers),
-        }
+        async def replay_body():
+            for chunk in captured_chunks:
+                yield chunk
 
-        # Try to capture response body
-        if hasattr(response, "body") and response.body:
-            try:
-                # Handle different response types
-                if isinstance(response, StreamingResponse):
-                    response_details["body"] = (
-                        "<Streaming Response - Body not captured>"
-                    )
-                else:
-                    body = response.body
-                    if isinstance(body, bytes):
-                        body_text = body.decode("utf-8", errors="replace")
-                    else:
-                        body_text = str(body)
+        # Capture the stream
+        async for chunk in original_body_iterator:
+            captured_chunks.append(chunk)
 
-                    # Try to parse as JSON for better formatting
-                    try:
-                        body_json = json.loads(body_text)
-                        response_details["body"] = body_json
-                    except json.JSONDecodeError:
-                        # If not JSON, log as text (truncate if too long)
-                        if len(body_text) > 1000:
-                            body_text = body_text[:1000] + "... (truncated)"
-                        response_details["body"] = body_text
+        # Log body
+        full_body = b"".join(captured_chunks)
+        await _consume_and_log_body(full_body, response_details)
 
-            except Exception as e:
-                response_details["body"] = f"<Error reading body: {e}>"
+        # Replace the original stream with a replayable one
+        response.body_iterator = replay_body()
+
+    elif hasattr(response, "body") and response.body:
+        body = response.body
+        if isinstance(body, bytes):
+            body_text = body.decode("utf-8", errors="replace")
         else:
-            response_details["body"] = None
+            body_text = str(body)
 
-        # Format and log response
-        logger.debug(
-            f"📤 DEBUG RESPONSE DETAILS\n{json.dumps(response_details, indent=4)}",
-            extra={
-                "extra_fields": {
-                    "debug_type": "response",
-                    "response_details": response_details,
-                }
-            },
-        )
+        await _consume_and_log_body(body_text.encode("utf-8"), response_details)
 
+    else:
+        response_details["body"] = None
+
+    logger.debug(
+        f"📤 DEBUG RESPONSE DETAILS\n{json.dumps(response_details, indent=4)}",
+        extra={
+            "extra_fields": {
+                "debug_type": "response",
+                "response_details": response_details,
+            }
+        },
+    )
+
+    return response
+
+
+async def _consume_and_log_body(body_bytes: bytes, response_details: dict):
+    """Capture the response body."""
+    try:
+        body_text = body_bytes.decode("utf-8", errors="replace")
+        try:
+            body_json = json.loads(body_text)
+            response_details["body"] = body_json
+        except json.JSONDecodeError:
+            if len(body_text) > 1000:
+                body_text = body_text[:1000] + "... (truncated)"
+            response_details["body"] = body_text
     except Exception as e:
-        logger.error(
-            f"Error logging response content: {e}",
-            extra={"extra_fields": {"correlation_id": correlation_id}},
-        )
-
-
-class LoggingMiddleware(BaseHTTPMiddleware):
-    """HTTP middleware class for comprehensive request/response logging.
-
-    Provides class-based logging middleware that integrates with FastAPI's middleware
-    stack, offering structured request/response tracking, performance monitoring,
-    and debug content inspection for production and development environments.
-    """
-
-    async def dispatch(self, request: Request, call_next) -> Response:
-        """Dispatch method combining standard and debug logging.
-
-        Orchestrates the logging middleware pipeline including request/response
-        logging, performance monitoring, and error handling.
-
-        Args:
-            request: The incoming HTTP request object for logging
-            call_next: The next middleware or endpoint handler in the processing chain
-
-        Returns:
-            Response: The HTTP response object with logging metadata attached
-
-        Raises:
-            Exception: Catches and logs middleware processing errors while ensuring
-                graceful request handling
-        """
-        # Apply standard logging
-        response = await logging_middleware(request, call_next)
-
-        # Apply debug logging if enabled
-        if settings.debug:
-            # Note: This is a simplified version since we can't easily
-            # re-process the response here. The debug_content_middleware
-            # should be applied separately in the middleware stack.
-            pass
-
-        return response
+        response_details["body"] = f"<Error decoding body: {e}>"

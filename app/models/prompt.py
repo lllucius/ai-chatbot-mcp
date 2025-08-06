@@ -5,9 +5,9 @@ with usage tracking and categorization capabilities.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
-from sqlalchemy import Boolean, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import BaseModelDB
@@ -18,18 +18,6 @@ class Prompt(BaseModelDB):
 
     Stores prompt templates with categorization, usage tracking, and
     management capabilities for the AI chatbot platform.
-
-    Attributes:
-        name (Mapped[str]): Unique name/identifier for the prompt.
-        title (Mapped[str]): Display title for the prompt.
-        content (Mapped[str]): The actual prompt content.
-        description (Mapped[Optional[str]]): Optional description of the prompt's purpose.
-        is_default (Mapped[bool]): Whether this is the default prompt.
-        is_active (Mapped[bool]): Whether the prompt is active/available.
-        usage_count (Mapped[int]): Number of times the prompt has been used.
-        last_used_at (Mapped[Optional[datetime]]): Timestamp of last usage.
-        category (Mapped[Optional[str]]): Optional category for organizing prompts.
-        tags (Mapped[Optional[str]]): Comma-separated tags for search and organization.
 
     """
 
@@ -80,10 +68,10 @@ class Prompt(BaseModelDB):
         index=True,
         doc="Optional category for organizing prompts",
     )
-    tags: Mapped[Optional[str]] = mapped_column(
-        String(500),
+    tags: Mapped[Optional[List[str]]] = mapped_column(
+        JSON,
         nullable=True,
-        doc="Comma-separated tags for search and organization",
+        doc="Optional tags for search and organization",
     )
 
     # Indexes for performance
@@ -99,18 +87,6 @@ class Prompt(BaseModelDB):
         """Record a prompt usage event."""
         self.usage_count += 1
         self.last_used_at = datetime.utcnow()
-
-    @property
-    def tag_list(self) -> list[str]:
-        """Get tags as a list."""
-        if not self.tags:
-            return []
-        return [tag.strip() for tag in self.tags.split(",") if tag.strip()]
-
-    @tag_list.setter
-    def tag_list(self, tags: list[str]):
-        """Set tags from a list."""
-        self.tags = ",".join(tag.strip() for tag in tags if tag.strip())
 
     def __repr__(self) -> str:
         """Return string representation of Prompt model."""

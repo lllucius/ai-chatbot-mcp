@@ -30,21 +30,34 @@ class LLMProfileService(BaseService):
         """
         super().__init__(db, "llm_profile_service")
 
-    async def create_profile(self, request: LLMProfileCreate) -> LLMProfile:
+    async def create_profile(
+        self,
+        name: str,
+        title: str,
+        parameters: dict,
+        model_name: Optional[str] = None,
+        description: Optional[str] = None,
+        is_default: bool = False,
+    ) -> LLMProfile:
         """Create a new LLM profile."""
         operation = "create_profile"
         self._log_operation_start(
-            operation, name=request.name, is_default=request.is_default
+            operation, name=name, is_default=is_default
         )
         try:
             await self._ensure_db_session()
+            print("DEFASDFASDFASDF", is_default)
+            # If setting as default, unset any existing defaults
+            if is_default:
+                await self._bulk_update(LLMProfile, [], {"is_default": False})
+
             profile = LLMProfile(
-                name=request.name,
-                title=request.title,
-                model_name=request.model_name,
-                description=request.description,
-                is_default=request.is_default,
-                **request.parameters,
+                name=name,
+                title=title,
+                parameters=parameters,
+                model_name=model_name,
+                description=description,
+                is_default=is_default,
             )
 
             self.db.add(profile)
@@ -52,12 +65,12 @@ class LLMProfileService(BaseService):
             await self.db.refresh(profile)
 
             self._log_operation_success(
-                operation, name=request.name, profile_id=str(profile.id)
+                operation, name=name, profile_id=str(profile.id)
             )
             return profile
 
         except Exception as e:
-            self._log_operation_error(operation, e, name=request.name)
+            self._log_operation_error(operation, e, name=name)
             await self.db.rollback()
             raise ValidationError(f"LLM profile creation failed: {e}")
 

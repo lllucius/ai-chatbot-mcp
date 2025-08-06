@@ -56,10 +56,8 @@ class PromptService(BaseService):
                 description=description,
                 is_default=is_default,
                 category=category,
+                tags=tags,
             )
-
-            if tags:
-                prompt.tag_list = tags
 
             self.db.add(prompt)
             await self.db.commit()
@@ -75,10 +73,7 @@ class PromptService(BaseService):
 
     async def get_prompt(self, name: str) -> Optional[Prompt]:
         """Get a prompt by name."""
-        try:
-            return await self._get_by_field(Prompt, "name", name)
-        except NotFoundError:
-            return None
+        return await self._get_by_field(Prompt, "name", name)
 
     async def get_default_prompt(self) -> Optional[Prompt]:
         """Get the default prompt."""
@@ -120,29 +115,24 @@ class PromptService(BaseService):
                 order_by=Prompt.name,
             )
 
-    async def update_prompt(self, name: str, **updates) -> Optional[Prompt]:
+    async def update_prompt(self, name: str, updates: dict) -> Optional[Prompt]:
         """Update a prompt."""
         operation = "update_prompt"
         self._log_operation_start(operation, name=name, updates=list(updates.keys()))
 
         try:
             prompt = await self.get_prompt(name)
-            if not prompt:
-                return None
 
             # Handle is_default specially
             if updates.get("is_default"):
                 # Unset any existing defaults
                 await self._bulk_update(Prompt, [], {"is_default": False})
 
-            # Handle tags list conversion
-            if "tags" in updates and isinstance(updates["tags"], list):
-                prompt.tag_list = updates.pop("tags")
-
             # Update other fields
             prompt = await self._update_entity(prompt, updates)
 
             self._log_operation_success(operation, name=name, prompt_id=str(prompt.id))
+            print("ASDFASDFASDFASDFASDFASDFASDF", prompt)
             return prompt
 
         except Exception as e:
@@ -157,8 +147,6 @@ class PromptService(BaseService):
 
         try:
             prompt = await self.get_prompt(name)
-            if not prompt:
-                return False
 
             was_default = prompt.is_default
             await self._delete_entity(prompt)
@@ -227,8 +215,6 @@ class PromptService(BaseService):
         try:
             # Get the prompt to check if it's the default
             prompt = await self.get_prompt(name)
-            if not prompt:
-                return False
 
             was_default = prompt.is_default
 
@@ -254,8 +240,6 @@ class PromptService(BaseService):
         """Record a prompt usage event."""
         try:
             prompt = await self.get_prompt(name)
-            if not prompt:
-                return False
 
             prompt.record_usage()
             await self.db.commit()
@@ -284,8 +268,7 @@ class PromptService(BaseService):
         all_tags = set()
         for row in result.all():
             if row[0]:
-                tags = [tag.strip() for tag in row[0].split(",") if tag.strip()]
-                all_tags.update(tags)
+                all_tags.update(row[0])
         return sorted(all_tags)
 
     async def get_prompt_stats(self) -> Dict[str, Any]:

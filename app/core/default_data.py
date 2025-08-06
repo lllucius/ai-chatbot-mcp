@@ -153,9 +153,7 @@ async def create_default_llm_profile(db: AsyncSession):
             },
         }
         profile_service = LLMProfileService(db)
-        profile = await profile_service.create_profile(
-            LLMProfileCreate(**default_profile)
-        )
+        profile = await profile_service.create_profile(**default_profile)
         logger.info(f"Created default LLM profile: {profile.name}")
         return default_profile
     except Exception as e:
@@ -228,9 +226,7 @@ async def create_sample_llm_profiles(db: AsyncSession):
     created_count = 0
     for profile_data in sample_profiles:
         try:
-            profile = await profile_service.create_profile(
-                LLMProfileCreate(**profile_data)
-            )
+            profile = await profile_service.create_profile(**profile_data)
             logger.info(f"Created sample LLM profile: {profile.name}")
             created_count += 1
         except Exception as e:

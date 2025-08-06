@@ -16,6 +16,7 @@ from shared.schemas.admin_responses import (
 )
 from shared.schemas.common import (
     APIResponse,
+    PaginatedResponse
 )
 from shared.schemas.conversation import (
     ChatRequest,
@@ -96,7 +97,7 @@ async def create_conversation(
     )
 
 
-@router.get("/", response_model=APIResponse[List[ConversationResponse]])
+@router.get("/", response_model=APIResponse[PaginatedResponse[ConversationResponse]])
 @handle_api_errors("Failed to retrieve conversations")
 async def list_conversations(
     page: int = Query(1, ge=1),
@@ -104,7 +105,7 @@ async def list_conversations(
     active_only: bool = Query(True),
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
-) -> APIResponse[List[ConversationResponse]]:
+) -> APIResponse[PaginatedResponse[ConversationResponse]]:
     """List user's conversations with pagination and filtering."""
     log_api_call(
         "list_conversations",
@@ -122,20 +123,19 @@ async def list_conversations(
         ConversationResponse.model_validate(conv) for conv in conversations
     ]
 
-    return APIResponse[List[ConversationResponse]](
+    payload = PaginatedResponse(
+        items=conversation_responses,
+        pagination=PaginationParams(
+            total=total,
+            page=page,
+            per_page=size,
+        ),
+    )
+
+    return APIResponse[PaginatedResponse[ConversationResponse]](
         success=True,
         message="Conversations retrieved successfully",
-        data=conversation_responses,
-        meta={
-            "pagination": {
-                "page": page,
-                "size": size,
-                "total": total,
-                "total_pages": (total + size - 1) // size,  # Ceiling division
-                "has_next": page < ((total + size - 1) // size),
-                "has_prev": page > 1,
-            }
-        },
+        data=payload,
     )
 
 
@@ -248,22 +248,20 @@ async def get_messages(
 
     message_responses = [MessageResponse.model_validate(msg) for msg in messages]
 
-    return APIResponse[List[MessageResponse]](
-        success=True,
-        message="Messages retrieved successfully",
-        data=message_responses,
-        meta={
-            "pagination": {
-                "page": page,
-                "size": size,
-                "total": total,
-                "total_pages": (total + size - 1) // size,
-                "has_next": page < ((total + size - 1) // size),
-                "has_prev": page > 1,
-            }
-        },
+    payload = PaginatedResponse(
+        items=message_responses,
+        pagination=PaginationParams(
+            total=total,
+            page=page,
+            per_page=size,
+        ),
     )
 
+    return APIResponse[PaginatedResponse[MessageResponse]](
+        success=True,
+        message="Messages retrieved successfully",
+        data=payload,
+    )
 
 @router.post("/chat", response_model=APIResponse[ChatResponse])
 @handle_api_errors("Chat processing failed")
@@ -463,7 +461,7 @@ async def get_registry_stats(
 
 
 @router.get(
-    "/conversations/byid/{conversation_id}/export",
+    "/byid/{conversation_id}/export",
     response_model=APIResponse[ConversationExportData],
 )
 @handle_api_errors("Failed to export conversation")
@@ -661,7 +659,7 @@ async def export_conversation(
 
 
 @router.post(
-    "/conversations/import", response_model=APIResponse[ImportConversationResult]
+    "/import", response_model=APIResponse[ImportConversationResult]
 )
 @handle_api_errors("Failed to import conversation")
 async def import_conversation(
@@ -773,7 +771,7 @@ async def import_conversation(
 
 
 @router.post(
-    "/conversations/archive",
+    "/archive",
     response_model=APIResponse[ArchivePreviewResponse | ArchiveConversationsResult],
 )
 @handle_api_errors("Failed to archive conversations")
@@ -870,7 +868,7 @@ async def archive_conversations(
         raise
 
 
-@router.get("/conversations/search", response_model=APIResponse[ConversationSearchData])
+@router.get("/search", response_model=APIResponse[ConversationSearchData])
 @handle_api_errors("Failed to search conversations")
 async def search_conversations_and_messages(
     query: str = Query(..., description="Search query"),
@@ -1029,7 +1027,7 @@ async def search_conversations_and_messages(
         raise
 
 
-@router.get("/conversations/stats", response_model=APIResponse[ConversationStatsData])
+@router.get("/stats", response_model=APIResponse[ConversationStatsData])
 @handle_api_errors("Failed to get conversation statistics")
 async def get_conversation_statistics(
     current_user: User = Depends(get_current_user),

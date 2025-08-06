@@ -331,7 +331,6 @@ class BaseService:
         # Execute query
         result = await self.db.execute(query)
         entities = result.scalars().all()
-
         return list(entities), total
 
     async def _search_entities(

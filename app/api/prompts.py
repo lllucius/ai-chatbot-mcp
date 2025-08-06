@@ -112,7 +112,14 @@ async def create_prompt(
     """Create a new prompt template in the registry."""
     log_api_call("create_prompt", user_id=current_user.id)
 
-    prompt = await prompt_service.create_prompt(request)
+    prompt = await prompt_service.create_prompt(
+        name=request.name,
+        title=request.title,
+        content=request.content,
+        description=request.description,
+        category=request.category,
+        tags=request.tags
+    )
 
     payload = PromptResponse.model_validate(prompt)
     return APIResponse[PromptResponse](
@@ -136,7 +143,6 @@ async def update_prompt(
     prompt = await prompt_service.update_prompt(
         prompt_name, data.model_dump(exclude_unset=True)
     )
-
     payload = PromptResponse.model_validate(prompt)
     return APIResponse[PromptResponse](
         success=True,
@@ -161,6 +167,84 @@ async def delete_prompt(
         success=True,
         message=f"Prompt '{prompt_name}' deleted successfully",
     )
+
+
+@router.post("/byname/{prompt_name}/activate", response_model=APIResponse)
+@handle_api_errors("Failed to activate prompt")
+async def activate_prompt(
+    prompt_name: str,
+    current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
+) -> APIResponse:
+    """Activate a prompt."""
+    log_api_call("activate_prompt", user_id=current_user.id, prompt_name=prompt_name)
+
+    try:
+        prompt = await prompt_service.get_prompt(prompt_name)
+        if not prompt:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Prompt not found"
+            )
+
+        if prompt.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Prompt is already active"
+            )
+
+        # Activate prompt
+        prompt.is_active = True
+        await prompt_service.db.commit()
+
+        return APIResponse(
+            success=True,
+            message=f"Prompt {prompt.name} activated successfully",
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        await prompt_service.db.rollback()
+        raise
+
+
+@router.post("/byname/{prompt_name}/deactivate", response_model=APIResponse)
+@handle_api_errors("Failed to deactivate prompt")
+async def deactivate_prompt(
+    prompt_name: str,
+    current_user: User = Depends(get_current_user),
+    prompt_service: PromptService = Depends(get_prompt_service),
+) -> APIResponse:
+    """Deactivate a prompt."""
+    log_api_call("deactivate_prompt", user_id=current_user.id, prompt_name=prompt_name)
+
+    try:
+        prompt = await prompt_service.get_prompt(prompt_name)
+        if not prompt:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                ail="Prompt not found"
+            )
+
+        if not prompt.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Prompt is already inactive",
+            )
+
+        # Deactivate prompt
+        prompt.is_active = False
+        await prompt_service.db.commit()
+
+        return APIResponse(
+            success=True,
+            message=f"Prompt {prompt.name} deactivated successfully",
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        await prompt_service.db.rollback()
+        raise
 
 
 @router.get("/categories/", response_model=APIResponse[PromptCategoriesData])

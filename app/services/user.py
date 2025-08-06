@@ -295,17 +295,17 @@ class UserService(BaseService):
             await self.db.rollback()
             raise ValidationError(f"User creation failed: {e}")
 
-    async def get_user_profile(self, user_id: UUID) -> User:
+    async def get_user_profile(self, user_id_or_username: UUID | str) -> User:
         """
         Get comprehensive user profile with embedded statistics.
 
-        Retrieves detailed user information including profile data
-        and calculated statistics such as document count, conversation
-        count, and total messages. This method provides a complete
-        view of user activity and engagement.
+        Accepts either a UUID (for user.id lookup) or a string (for user.username lookup).
+        Retrieves detailed user information including profile data and calculated statistics
+        such as document count, conversation count, and total messages. This method provides
+        a complete view of user activity and engagement.
 
         Args:
-            user_id: Unique identifier for the user
+            user_id_or_username: UUID for user ID lookup or string for username lookup
 
         Returns:
             User: Complete user profile with embedded statistics including:
@@ -315,67 +315,77 @@ class UserService(BaseService):
                 - Activity statistics (document_count, conversation_count, total_messages)
 
         Raises:
-            NotFoundError: If user with given ID does not exist
+            NotFoundError: If user with given ID/username does not exist
             Exception: If database operation fails
 
         Example:
             >>> user_service = UserService(db)
             >>> profile = await user_service.get_user_profile(user_id)
             >>> print(f"User {profile.username} has {profile.document_count} documents")
+            >>> profile = await user_service.get_user_profile("johndoe")
+            >>> print(f"User {profile.username} has {profile.document_count} documents")
         """
         operation = "get_user_profile"
-        self._log_operation_start(operation, user_id=str(user_id))
+        identifier = str(user_id_or_username)
+        self._log_operation_start(operation, identifier=identifier)
 
         try:
             await self._ensure_db_session()
 
-            # Get user basic information
-            user_result = await self.db.execute(select(User).where(User.id == user_id))
+            # Determine whether input is UUID or string
+            if isinstance(user_id_or_username, UUID):
+                user_query = select(User).where(User.id == user_id_or_username)
+            elif isinstance(user_id_or_username, str):
+                user_query = select(User).where(User.username == user_id_or_username)
+            else:
+                raise ValidationError("Invalid type for user identifier")
+
+            user_result = await self.db.execute(user_query)
             user = user_result.scalar_one_or_none()
 
             if not user:
                 self.logger.warning(
-                    "User not found", user_id=str(user_id), operation=operation
+                    "User not found", identifier=identifier, operation=operation
                 )
-                raise NotFoundError(f"User not found with ID: {user_id}")
+                raise NotFoundError(f"User not found with identifier: {identifier}")
 
-            # Get user activity statistics in parallel for better performance
+            # Get user activity statistics
             doc_count_result = await self.db.execute(
-                select(func.count(Document.id)).where(Document.owner_id == user_id)
+                select(func.count(Document.id)).where(Document.owner_id == user.id)
             )
             document_count = doc_count_result.scalar() or 0
 
             conv_count_result = await self.db.execute(
                 select(func.count(Conversation.id)).where(
-                    Conversation.user_id == user_id
+                    Conversation.user_id == user.id
                 )
             )
             conversation_count = conv_count_result.scalar() or 0
 
             msg_count_result = await self.db.execute(
                 select(func.sum(Conversation.message_count)).where(
-                    Conversation.user_id == user_id
+                    Conversation.user_id == user.id
                 )
             )
             total_messages = msg_count_result.scalar() or 0
 
-            # Create comprehensive profile data
-
             self._log_operation_success(
                 operation,
-                user_id=str(user_id),
+                user_id=str(user.id),
                 username=user.username,
                 document_count=document_count,
                 conversation_count=conversation_count,
                 total_messages=total_messages,
             )
 
+            # Optionally, you can attach these statistics to the user object if needed.
+            # For now, just return the user as before.
             return user
 
         except NotFoundError:
             raise
         except Exception as e:
-            self._log_operation_error(operation, e, user_id=str(user_id))
+            self._log_operation_error(operation, e, identifier=identifier)
             raise
 
     async def update_user(self, user_id: UUID, user_update: UserUpdate) -> User:

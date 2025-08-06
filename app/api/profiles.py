@@ -41,7 +41,16 @@ async def create_profile(
 ) -> APIResponse[LLMProfileResponse]:
     """Create a new LLM parameter profile with validation."""
     log_api_call("create_profile", user_id=current_user.id)
-    profile = await profile_service.create_profile(request)
+
+    profile = await prompt_service.create_profile(
+        name=request.name,
+        title=request.title,
+        description=request.description,
+        model_name=request.model_name,
+        parameters=request.parameters,
+        is_default=request.is_default,
+    )
+
     payload = LLMProfileResponse.model_validate(profile)
     return APIResponse[LLMProfileResponse](
         success=True,
@@ -64,7 +73,10 @@ async def list_profiles(
     log_api_call("list_profiles", user_id=current_user.id)
 
     profiles, total = await profile_service.list_profiles(
-        active_only=active_only, search=search, page=page, size=size
+        active_only=active_only,
+        search=search,
+        page=page,
+        size=size,
     )
 
     profile_responses = []
@@ -212,6 +224,84 @@ async def get_default_profile(
         message="Default profile details retrieved successfully",
         data=payload,
     )
+
+
+@router.post("/byname/{profile_name}/activate", response_model=APIResponse)
+@handle_api_errors("Failed to activate profile")
+async def activate_profile(
+    profile_name: str,
+    current_user: User = Depends(get_current_user),
+    profile_service: LLMProfileService = Depends(get_profile_service),
+) -> APIResponse:
+    """Activate a profile."""
+    log_api_call("activate_profile", user_id=current_user.id, profile_name=profile_name)
+
+    try:
+        profile = await profile_service.get_profile(profile_name)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found"
+            )
+
+        if profile.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Profile is already active"
+            )
+
+        # Activate profile
+        profile.is_active = True
+        await profile_service.db.commit()
+
+        return APIResponse(
+            success=True,
+            message=f"Profile {profile.name} activated successfully",
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        await profile_service.db.rollback()
+        raise
+
+
+@router.post("/byname/{profile_name}/deactivate", response_model=APIResponse)
+@handle_api_errors("Failed to deactivate profile")
+async def deactivate_profile(
+    profile_name: str,
+    current_user: User = Depends(get_current_user),
+    profile_service: LLMProfileService = Depends(get_profile_service),
+) -> APIResponse:
+    """Deactivate a profile."""
+    log_api_call("deactivate_profile", user_id=current_user.id, profile_name=profile_name)
+
+    try:
+        profile = await profile_service.get_profile(profile_name)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                ail="Profile not found"
+            )
+
+        if not profile.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Profile is already inactive",
+            )
+
+        # Deactivate profile
+        profile.is_active = False
+        await profile_service.db.commit()
+
+        return APIResponse(
+            success=True,
+            message=f"Profile {profile.name} deactivated successfully",
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        await profile_service.db.rollback()
+        raise
 
 
 @router.get("/stats", response_model=APIResponse[LLMProfileStatisticsData])

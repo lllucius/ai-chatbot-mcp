@@ -409,7 +409,7 @@ async def get_queue_status(
     )
 
 
-@router.post("/documents/cleanup", response_model=APIResponse)
+@router.post("cleanup", response_model=APIResponse)
 @handle_api_errors("Failed to cleanup documents")
 async def cleanup_documents(
     status_filter: Optional[str] = Query(
@@ -523,7 +523,7 @@ async def cleanup_documents(
         )
 
 
-@router.get("/documents/stats", response_model=APIResponse[DocumentStatisticsData])
+@router.get("/stats", response_model=APIResponse[DocumentStatisticsData])
 @handle_api_errors("Failed to get document statistics")
 async def get_document_statistics(
     current_user: User = Depends(get_current_user),
@@ -672,7 +672,7 @@ async def get_document_statistics(
 
 
 @router.post(
-    "/documents/bulk-reprocess", response_model=APIResponse[BulkReprocessResponse]
+    "/bulk-reprocess", response_model=APIResponse[BulkReprocessResponse]
 )
 @handle_api_errors("Failed to bulk reprocess documents")
 async def bulk_reprocess_documents(
@@ -758,7 +758,7 @@ async def bulk_reprocess_documents(
 
 
 @router.get(
-    "/documents/search/advanced", response_model=APIResponse[AdvancedSearchData]
+    "/search/advanced", response_model=APIResponse[AdvancedSearchData]
 )
 @handle_api_errors("Failed to perform advanced document search")
 async def advanced_document_search(

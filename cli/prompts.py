@@ -80,24 +80,23 @@ async def list():
         sdk = await get_sdk()
         data = await sdk.prompts.list_prompts(active_only=False)
         if data:
-            from rich.table import Table
+            prompts = data.items
 
-            prompts = data.get("items", []) if isinstance(data, dict) else data
-            table = Table(title=f"Prompts ({len(prompts)} total)")
-            table.add_column("Name", style="cyan")
-            table.add_column("Title", style="white")
-            table.add_column("Category", style="blue")
-            table.add_column("Default", style="green")
-            table.add_column("Active", style="yellow")
+            prompt_data = []
             for prompt in prompts:
-                table.add_row(
-                    prompt.get("name", ""),
-                    prompt.get("title", ""),
-                    prompt.get("category", ""),
-                    "Yes" if prompt.get("is_default") else "No",
-                    "Yes" if prompt.get("is_active") else "No",
+                prompt_data.append(
+                    {
+                        "Name": prompt.name,
+                        "Title": prompt.title,
+                        "category": prompt.category,
+                        "Default": "Yes" if prompt.is_default else "No",
+                        "Active": "Yes" if prompt.is_active else "No",
+                    }
                 )
-            console.print(table)
+
+            from .base import display_rich_table
+
+            display_rich_table(prompt_data, f"Prompts ({len(prompts)} total)")
     except Exception as e:
         error_message(f"Failed to list prompts: {str(e)}")
         raise SystemExit(1)
@@ -252,8 +251,7 @@ async def activate(
     """Activate a prompt."""
     try:
         sdk = await get_sdk()
-        update_data = {"is_active": True}
-        await sdk.prompts.update_prompt(prompt_name, update_data)
+        await sdk.prompts.activate_prompt(prompt_name)
         success_message(f"Prompt '{prompt_name}' activated")
     except Exception as e:
         error_message(f"Failed to activate prompt: {str(e)}")
@@ -267,8 +265,7 @@ async def deactivate(
     """Deactivate a prompt."""
     try:
         sdk = await get_sdk()
-        update_data = {"is_active": False}
-        await sdk.prompts.update_prompt(prompt_name, update_data)
+        await sdk.prompts.deactivate_prompt(prompt_name)
         success_message(f"Prompt '{prompt_name}' deactivated")
     except Exception as e:
         error_message(f"Failed to deactivate prompt: {str(e)}")
@@ -285,11 +282,11 @@ async def categories():
             from rich.table import Table
 
             categories = data.get("categories", [])
+            print("cats", categories)
             table = Table(title="Prompt Categories")
             table.add_column("Category", style="cyan")
-            table.add_column("Count", style="green")
             for cat in categories:
-                table.add_row(cat.get("name", ""), str(cat.get("count", 0)))
+                table.add_row(cat)
             console.print(table)
     except Exception as e:
         error_message(f"Failed to get categories: {str(e)}")
@@ -300,7 +297,17 @@ async def categories():
 async def tags():
     """List all available prompt tags."""
     try:
-        print("Tag listing not yet implemented in API")
+        sdk = await get_sdk()
+        data = await sdk.prompts.get_categories()
+        if data:
+            from rich.table import Table
+
+            tags = data.get("tags", [])
+            table = Table(title="Prompt Tags")
+            table.add_column("Tag", style="cyan")
+            for tag in tags:
+                table.add_row(tag)
+            console.print(table)
     except Exception as e:
         error_message(f"Failed to get tags: {str(e)}")
         raise SystemExit(1)

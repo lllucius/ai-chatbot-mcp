@@ -366,6 +366,7 @@ class CLIManager:
             APIError: If authentication fails
 
         """
+        return await self._sdk.auth.login(username, password)
         try:
             return await self._sdk.auth.login(username, password)
         except Exception as e:
@@ -531,6 +532,8 @@ def error_message(message: str):
         # Output: ✗ Authentication failed
 
     """
+    import traceback
+    traceback.print_exc()
     print(f"✗ {message}")
 
 

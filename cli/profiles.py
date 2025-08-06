@@ -80,22 +80,46 @@ async def list(
     search: Optional[str] = Option(None, "--search", help="Search profiles by name"),
 ):
     """List all LLM profiles with optional filtering."""
+    """
+    try:
+        sdk = await get_sdk()
+        data = await sdk.prompts.list_prompts(active_only=False)
+        if data:
+            from rich.table import Table
+
+            prompts = data.items
+            table = Table(title=f"Prompts ({len(prompts)} total)")
+            table.add_column("Name", style="cyan")
+            table.add_column("Title", style="white")
+            table.add_column("Category", style="blue")
+            table.add_column("Default", style="green")
+            table.add_column("Active", style="yellow")
+            for prompt in prompts:
+                table.add_row(
+                    prompt.name,
+                    prompt.title,
+                    prompt.category,
+                    "Yes" if prompt.is_default else "No",
+                    "Yes" if prompt.is_active else "No",
+                )
+            console.print(table)
+    """
     try:
         sdk = await get_sdk()
         data = await sdk.profiles.list_profiles(active_only=active_only, search=search)
         if data:
-            profiles = data.get("profiles", [])
+            profiles = data.items
 
             # Convert to table data
             profile_data = []
             for profile in profiles:
                 profile_data.append(
                     {
-                        "Name": profile.get("name", ""),
-                        "Title": profile.get("title", ""),
-                        "Model": profile.get("model_name", ""),
-                        "Default": "Yes" if profile.get("is_default") else "No",
-                        "Active": "Yes" if profile.get("is_active") else "No",
+                        "Name": profile.name,
+                        "Title": profile.title,
+                        "Model": profile.model_name,
+                        "Default": "Yes" if profile.is_default else "No",
+                        "Active": "Yes" if profile.is_active else "No",
                     }
                 )
 
@@ -243,6 +267,34 @@ async def set_default(
         success_message(f"Profile '{profile_name}' set as default")
     except Exception as e:
         error_message(f"Failed to set default profile: {str(e)}")
+        raise SystemExit(1)
+
+
+@profile_app.async_command()
+async def activate(
+    profile_name: str = Argument(..., help="Profile name to activate"),
+):
+    """Activate a profile."""
+    try:
+        sdk = await get_sdk()
+        await sdk.profiles.activate_profile(profile_name)
+        success_message(f"Profile '{profile_name}' activated")
+    except Exception as e:
+        error_message(f"Failed to activate profile: {str(e)}")
+        raise SystemExit(1)
+
+
+@profile_app.async_command()
+async def deactivate(
+    profile_name: str = Argument(..., help="Profile name to deactivate"),
+):
+    """Deactivate a profile."""
+    try:
+        sdk = await get_sdk()
+        await sdk.profiles.deactivate_profile(profile_name)
+        success_message(f"Profile '{profile_name}' deactivated")
+    except Exception as e:
+        error_message(f"Failed to deactivate profile: {str(e)}")
         raise SystemExit(1)
 
 
