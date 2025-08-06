@@ -5,11 +5,12 @@ These tests ensure that the SDK is calling the correct API endpoints and not usi
 deprecated or non-existent endpoints.
 """
 
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from client.ai_chatbot_sdk import AIChatbotSDK
-from shared.schemas.auth import PasswordResetRequest, PasswordResetConfirm
-from shared.schemas.user import UserUpdate, UserPasswordUpdate
+from shared.schemas.auth import PasswordResetConfirm, PasswordResetRequest
 
 
 class TestSDKAPIEndpointUsage:
@@ -26,9 +27,9 @@ class TestSDKAPIEndpointUsage:
         # Mock the _request method
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"id": "123", "username": "test"}
-            
+
             await sdk.auth.me()
-            
+
             # Should call /api/v1/users/me, not /api/v1/auth/me
             mock_request.assert_called_once_with("/api/v1/users/me", mock_request.call_args[0][1])
 
@@ -36,12 +37,12 @@ class TestSDKAPIEndpointUsage:
     async def test_password_reset_uses_correct_endpoint(self, sdk):
         """Test that password reset calls the correct endpoint."""
         request = PasswordResetRequest(email="test@example.com")
-        
+
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"success": True, "message": "Reset requested"}
-            
+
             await sdk.auth.request_password_reset(request)
-            
+
             # Should call /api/v1/users/password-reset, not /api/v1/auth/password-reset
             mock_request.assert_called_once()
             call_args = mock_request.call_args
@@ -51,12 +52,12 @@ class TestSDKAPIEndpointUsage:
     async def test_password_reset_confirm_uses_correct_endpoint(self, sdk):
         """Test that password reset confirmation calls the correct endpoint."""
         request = PasswordResetConfirm(token="test_token", new_password="NewPass123!")
-        
+
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"success": True, "message": "Reset confirmed"}
-            
+
             await sdk.auth.confirm_password_reset(request)
-            
+
             # Should call /api/v1/users/password-reset/confirm, not /api/v1/auth/password-reset/confirm
             mock_request.assert_called_once()
             call_args = mock_request.call_args
@@ -67,9 +68,9 @@ class TestSDKAPIEndpointUsage:
         """Test that conversation search uses correct endpoint."""
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"results": []}
-            
+
             await sdk.conversations.search("test query")
-            
+
             # Should call /api/v1/conversations/search with correct parameters
             mock_request.assert_called_once()
             call_args = mock_request.call_args
@@ -81,9 +82,9 @@ class TestSDKAPIEndpointUsage:
         """Test that UsersClient.me() calls correct endpoint."""
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"id": "123", "username": "test"}
-            
+
             await sdk.users.me()
-            
+
             # Should call /api/v1/users/me
             mock_request.assert_called_once_with("/api/v1/users/me", mock_request.call_args[0][1])
 
@@ -94,13 +95,13 @@ class TestSDKAPIEndpointUsage:
             "/api/v1/auth/password-reset",
             "/api/v1/auth/password-reset/confirm"
         ]
-        
+
         # Test password reset request
         request = PasswordResetRequest(email="test@example.com")
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"success": True}
             await sdk.auth.request_password_reset(request)
-            
+
             call_args = mock_request.call_args
             endpoint_called = call_args[0][0]
             assert endpoint_called not in deprecated_endpoints, f"SDK is using deprecated endpoint: {endpoint_called}"
@@ -110,7 +111,7 @@ class TestSDKAPIEndpointUsage:
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"success": True}
             await sdk.auth.confirm_password_reset(confirm_request)
-            
+
             call_args = mock_request.call_args
             endpoint_called = call_args[0][0]
             assert endpoint_called not in deprecated_endpoints, f"SDK is using deprecated endpoint: {endpoint_called}"
@@ -120,14 +121,14 @@ class TestSDKAPIEndpointUsage:
         """Test that admin endpoints map to correct actual endpoints."""
         with patch.object(sdk, '_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"total_users": 100}
-            
+
             # Test admin user stats - should map to the actual endpoint
             await sdk.admin.get_user_stats()
-            
+
             # Should call an actual endpoint, not a non-existent admin endpoint
             mock_request.assert_called_once()
             call_args = mock_request.call_args
             endpoint_called = call_args[0][0]
-            
+
             # Should not call /api/v1/admin/* which doesn't exist
             assert not endpoint_called.startswith("/api/v1/admin/"), f"Admin endpoint {endpoint_called} doesn't exist"

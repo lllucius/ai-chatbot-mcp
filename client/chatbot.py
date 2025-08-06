@@ -174,7 +174,7 @@ except ImportError:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    
+
     from shared.schemas import (
         ChatRequest,
         DocumentSearchRequest,
@@ -187,10 +187,7 @@ except ImportError:
 
 try:
     # Try relative imports first (when run as module)
-    from .ai_chatbot_sdk import (
-        AIChatbotSDK,
-        ApiError,
-    )
+    from .ai_chatbot_sdk import AIChatbotSDK, ApiError
     from .config import (
         ClientConfig,
         get_default_backup_dir,
@@ -202,11 +199,8 @@ except ImportError:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    
-    from client.ai_chatbot_sdk import (
-        AIChatbotSDK,
-        ApiError,
-    )
+
+    from client.ai_chatbot_sdk import AIChatbotSDK, ApiError
     from client.config import (
         ClientConfig,
         get_default_backup_dir,

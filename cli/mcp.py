@@ -79,13 +79,7 @@ from rich.console import Console
 from rich.table import Table
 from typer import Argument, Option
 
-from .base import (
-    error_message,
-    get_sdk,
-    info_message,
-    success_message,
-    warning_message,
-)
+from .base import error_message, get_sdk, info_message, success_message, warning_message
 
 console = Console()
 

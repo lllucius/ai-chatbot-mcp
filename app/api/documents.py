@@ -4,21 +4,12 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    File,
-    Form,
-    Query,
-    UploadFile,
-)
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import (
-    APIResponse,
-)
+from shared.schemas.common import APIResponse
 from shared.schemas.document import (
     BackgroundTaskResponse,
     DocumentResponse,

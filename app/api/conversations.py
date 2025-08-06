@@ -11,13 +11,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin_responses import (
-    RegistryStatsResponse,
-)
-from shared.schemas.common import (
-    APIResponse,
-    PaginatedResponse
-)
+from shared.schemas.admin_responses import RegistryStatsResponse
+from shared.schemas.common import APIResponse, PaginatedResponse
 from shared.schemas.conversation import (
     ChatRequest,
     ChatResponse,

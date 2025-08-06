@@ -558,15 +558,15 @@ async def api_analysis():
         # Import and run the summary function
         import sys
         from pathlib import Path
-        
+
         # Add scripts directory to path
         project_root = Path(__file__).parent.parent
         scripts_dir = project_root / "scripts"
         sys.path.insert(0, str(scripts_dir))
-        
+
         from duplicate_api_summary import print_duplicate_summary
         print_duplicate_summary()
-        
+
     except Exception as e:
         error_message(f"Failed to show API analysis: {str(e)}")
         raise SystemExit(1)
@@ -626,19 +626,19 @@ async def generate_openapi(
     try:
         import sys
         from pathlib import Path
-        
+
         # Add scripts directory to path
         project_root = Path(__file__).parent.parent
         scripts_dir = project_root / "scripts"
         sys.path.insert(0, str(scripts_dir))
-        
+
         if info_only:
             from generate_openapi_simple import print_openapi_info
             print_openapi_info()
         else:
             from generate_openapi_simple import generate_openapi_json
             generate_openapi_json(output)
-        
+
     except Exception as e:
         error_message(f"Failed to generate OpenAPI specification: {str(e)}")
         raise SystemExit(1)

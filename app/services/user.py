@@ -671,36 +671,36 @@ class UserService(BaseService):
             NotFoundError: If user not found
         """
         user = await self.get_user_by_id(user_id)
-        
+
         # Hash the new password
         hashed_password = self.password_handler.hash(new_password)
-        
+
         # Update user password
         user.hashed_password = hashed_password
         await self.db.commit()
-        
+
         logger.info(f"Password updated for user: {user.username}")
 
     async def request_password_reset(self, email: str) -> None:
         """
         Request password reset for user.
-        
+
         Args:
             email: Email address for password reset
         """
         # Check if user exists
         result = await self.db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
-        
+
         if not user:
             # Don't reveal if email exists for security
             logger.info(f"Password reset requested for non-existent email: {email}")
             return
-        
+
         # In a real implementation, this would generate a reset token and send an email
         # For now, we'll log the request for administrative processing
         logger.info(f"Password reset requested for user: {user.username} ({email})")
-        
+
         # TODO: Implement actual token generation and email sending
         # This is a placeholder implementation that follows the current pattern
         # of requiring administrative intervention for password resets
@@ -708,7 +708,7 @@ class UserService(BaseService):
     async def confirm_password_reset(self, token: str, new_password: str) -> None:
         """
         Confirm password reset with token.
-        
+
         Args:
             token: Password reset token
             new_password: New password to set
@@ -716,11 +716,11 @@ class UserService(BaseService):
         # In a real implementation, this would validate the token and update the password
         # For now, we'll require administrative processing as per current design
         logger.info(f"Password reset confirmation attempted with token: {token[:8]}...")
-        
+
         # TODO: Implement actual token validation and password update
         # This is a placeholder implementation that follows the current pattern
         # of requiring administrative intervention for password resets
-        
+
         # Note: The current system design requires administrative oversight for password resets
         # This maintains the security model established in the auth API
 

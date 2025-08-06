@@ -13,7 +13,6 @@ from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_service import MCPService
 from app.services.prompt_service import PromptService
 from app.services.user import UserService
-from shared.schemas.llm_profile import LLMProfileCreate
 from shared.schemas.mcp import MCPServerCreateSchema
 
 logger = logging.getLogger(__name__)

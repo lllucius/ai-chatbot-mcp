@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError, ValidationError
+from ..core.exceptions import ValidationError
 from ..models.prompt import Prompt
 from .base import BaseService
 

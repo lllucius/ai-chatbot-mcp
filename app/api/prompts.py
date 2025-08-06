@@ -5,20 +5,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import (
-    APIResponse,
-    PaginatedResponse,
-    PaginationParams,
-)
-from shared.schemas.prompt import (
-    PromptCreate,
-    PromptResponse,
-    PromptUpdate,
-)
-from shared.schemas.prompt_responses import (
-    PromptCategoriesData,
-    PromptStatisticsData,
-)
+from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
+from shared.schemas.prompt import PromptCreate, PromptResponse, PromptUpdate
+from shared.schemas.prompt_responses import PromptCategoriesData, PromptStatisticsData
 
 from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user

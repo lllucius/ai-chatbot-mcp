@@ -11,9 +11,7 @@ from shared.schemas.auth import (
     RegisterRequest,
     Token,
 )
-from shared.schemas.common import (
-    APIResponse,
-)
+from shared.schemas.common import APIResponse
 from shared.schemas.user import UserResponse
 
 from ..dependencies import get_auth_service, get_current_user
@@ -101,8 +99,8 @@ async def request_password_reset(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse:
     """Request password reset through administrative channels.
-    
-    **DEPRECATED**: Use POST /api/v1/users/password-reset instead. 
+
+    **DEPRECATED**: Use POST /api/v1/users/password-reset instead.
     This endpoint will be removed in v2.0.
     """
     log_api_call("request_password_reset", email=request.email)
@@ -121,7 +119,7 @@ async def confirm_password_reset(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> APIResponse:
     """Confirm password reset through administrative channels.
-    
+
     **DEPRECATED**: Use POST /api/v1/users/password-reset/confirm instead.
     This endpoint will be removed in v2.0.
     """

@@ -7,9 +7,10 @@ Creates OpenAPI specification based on documented API endpoints.
 import json
 from pathlib import Path
 
+
 def get_basic_openapi_schema():
     """Generate basic OpenAPI schema with documented endpoints."""
-    
+
     # Base OpenAPI schema structure
     openapi_schema = {
         "openapi": "3.0.2",
@@ -110,7 +111,7 @@ def get_basic_openapi_schema():
                     "tags": ["Health"]
                 }
             },
-            
+
             # Authentication endpoints
             "/api/v1/auth/register": {
                 "post": {
@@ -250,7 +251,7 @@ def get_basic_openapi_schema():
                     "tags": ["authentication"]
                 }
             },
-            
+
             # Users endpoints
             "/api/v1/users/me": {
                 "get": {
@@ -400,7 +401,7 @@ def get_basic_openapi_schema():
                     "tags": ["users"]
                 }
             },
-            
+
             # Health endpoints
             "/api/v1/health/": {
                 "get": {
@@ -436,7 +437,7 @@ def get_basic_openapi_schema():
                     "tags": ["health"]
                 }
             },
-            
+
             # Analytics endpoints
             "/api/v1/analytics/overview": {
                 "get": {
@@ -474,7 +475,7 @@ def get_basic_openapi_schema():
                     "tags": ["analytics"]
                 }
             },
-            
+
             # Document endpoints
             "/api/v1/documents/": {
                 "get": {
@@ -518,11 +519,11 @@ def get_basic_openapi_schema():
                     "tags": ["documents"]
                 }
             },
-            
+
             # Additional endpoint categories would be added here...
             # For brevity, including key endpoints that demonstrate the API structure
         },
-        
+
         "tags": [
             {"name": "Root", "description": "Root application endpoints"},
             {"name": "Health", "description": "Health check endpoints"},
@@ -539,26 +540,26 @@ def get_basic_openapi_schema():
             {"name": "tasks", "description": "Background task management"}
         ]
     }
-    
+
     return openapi_schema
 
 def generate_openapi_json(output_path: str = "openapi.json"):
     """Generate OpenAPI JSON file."""
     try:
         openapi_schema = get_basic_openapi_schema()
-        
+
         # Write to JSON file
         output_file = Path(output_path)
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(openapi_schema, f, indent=2, ensure_ascii=False)
-        
+
         print(f"✅ OpenAPI JSON generated successfully: {output_file}")
         print(f"📄 Schema contains {len(openapi_schema.get('paths', {}))} endpoints")
         print(f"🏷️  API Version: {openapi_schema.get('info', {}).get('version', 'unknown')}")
         print(f"📝 Title: {openapi_schema.get('info', {}).get('title', 'unknown')}")
-        
+
         return str(output_file)
-        
+
     except Exception as e:
         print(f"❌ Failed to generate OpenAPI JSON: {e}")
         raise
@@ -567,20 +568,20 @@ def print_openapi_info():
     """Print information about OpenAPI endpoints."""
     try:
         openapi_schema = get_basic_openapi_schema()
-        
+
         print("=" * 60)
         print("AI CHATBOT MCP - OPENAPI ENDPOINTS SUMMARY")
         print("=" * 60)
         print()
-        
+
         print("📊 API INFORMATION:")
         print(f"  • Title: {openapi_schema.get('info', {}).get('title', 'unknown')}")
         print(f"  • Version: {openapi_schema.get('info', {}).get('version', 'unknown')}")
         print(f"  • Total Endpoints: {len(openapi_schema.get('paths', {}))}")
         print()
-        
+
         print("🔗 ENDPOINTS BY TAG:")
-        
+
         # Group endpoints by tags
         endpoints_by_tag = {}
         for path, methods in openapi_schema.get('paths', {}).items():
@@ -590,13 +591,13 @@ def print_openapi_info():
                     if tag not in endpoints_by_tag:
                         endpoints_by_tag[tag] = []
                     endpoints_by_tag[tag].append(f"{method.upper()} {path}")
-        
+
         # Print endpoints grouped by tag
         for tag, endpoints in sorted(endpoints_by_tag.items()):
             print(f"\n{tag.upper()}:")
             for endpoint in sorted(endpoints):
                 print(f"  • {endpoint}")
-        
+
         print()
         print("📋 KEY API FEATURES:")
         print("  • JWT Bearer token authentication")
@@ -606,17 +607,17 @@ def print_openapi_info():
         print("  • Conversation management")
         print("  • Background task processing")
         print()
-        
+
     except Exception as e:
         print(f"❌ Failed to analyze OpenAPI schema: {e}")
         raise
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Generate OpenAPI JSON for AI Chatbot MCP")
     parser.add_argument(
-        "--output", "-o", 
+        "--output", "-o",
         default="openapi.json",
         help="Output file path (default: openapi.json)"
     )
@@ -625,9 +626,9 @@ if __name__ == "__main__":
         action="store_true",
         help="Show OpenAPI information without generating file"
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.info:
         print_openapi_info()
     else:

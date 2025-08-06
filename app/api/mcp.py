@@ -5,9 +5,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import (
-    APIResponse,
-)
+from shared.schemas.common import APIResponse
 from shared.schemas.mcp import (
     MCPListFiltersSchema,
     MCPServerCreateSchema,

@@ -118,7 +118,7 @@ Performance Considerations:
 """
 
 from collections.abc import AsyncIterator
-from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 from uuid import UUID
 
 import httpx
@@ -139,8 +139,8 @@ from shared.schemas import (  # Base and common schemas; Conversation schemas; D
     LLMProfileCreate,
     LLMProfileResponse,
     MessageResponse,
-    PaginationParams,
     PaginatedResponse,
+    PaginationParams,
     PasswordResetConfirm,
     PasswordResetRequest,
     PromptCreate,
@@ -277,7 +277,7 @@ async def handle_response(
         raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
     json_data = resp.json()
-    
+
     # Check if response is in APIResponse envelope format
     if isinstance(json_data, dict) and "success" in json_data:
         # Handle APIResponse envelope format
@@ -287,7 +287,7 @@ async def handle_response(
             error_code = error_info.get("code", "UNKNOWN_ERROR")
             error_message = json_data.get("message", "An error occurred")
             error_details = error_info.get("details", {})
-            
+
             # Create a more detailed error body
             error_body = {
                 "error_code": error_code,
@@ -296,7 +296,7 @@ async def handle_response(
                 "timestamp": json_data.get("timestamp")
             }
             raise ApiError(resp.status_code, error_message, url, error_body)
-        
+
         # Extract the actual data from the envelope
         actual_data = json_data.get("data")
         if actual_data:
@@ -315,7 +315,7 @@ async def handle_response(
                     items=items,
                     pagination=pagination
                 )
-        
+
             # Handle single object responses
             if cls:
                 if isinstance(actual_data, dict):
@@ -326,10 +326,10 @@ async def handle_response(
                 else:
                     # For primitive types, return as-is
                     return actual_data
-            
+
         # Return the raw data if no class specified
         return actual_data
-    
+
     # Fallback to legacy handling for non-envelope responses
     if cls:
         if "items" in json_data:
@@ -1167,7 +1167,7 @@ class SearchClient:
 
         Raises:
             ApiError: If the request fails.
-            
+
         Note:
             This endpoint is not currently implemented in the API.
         """
@@ -1182,7 +1182,7 @@ class SearchClient:
 
         Raises:
             ApiError: If the request fails.
-            
+
         Note:
             This endpoint is not currently implemented in the API.
         """
@@ -1412,13 +1412,13 @@ class PromptsClient:
         return await self.sdk._request(
             f"/api/v1/prompts/byname/{prompt_name}/activate", BaseResponse, method="POST"
         )
- 
+
     async def deactivate_prompt(self, prompt_name: str) -> BaseResponse:
         """Deactivate a prompt."""
         return await self.sdk._request(
             f"/api/v1/prompts/byname/{prompt_name}/deactivate", BaseResponse, method="POST"
         )
- 
+
     async def get_prompt_stats(self) -> Dict[str, Any]:
         """Get prompt usage statistics."""
         return await self.sdk._request("/api/v1/prompts/stats", dict)
@@ -1500,7 +1500,7 @@ class ProfilesClient:
         return await self.sdk._request(
             f"/api/v1/profiles/byname/{profile_name}/activate", BaseResponse, method="POST"
         )
- 
+
     async def deactivate_profile(self, profile_name: str) -> BaseResponse:
         """Deactivate a profile."""
         return await self.sdk._request(

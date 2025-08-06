@@ -5,12 +5,13 @@ Tests that the SDK properly handles APIResponse envelopes returned by the API,
 including extracting data, handling errors, and processing pagination.
 """
 
-import asyncio
-import pytest
 from unittest.mock import Mock
-from client.ai_chatbot_sdk import handle_response, ApiError
-from shared.schemas.user import UserResponse
+
+import pytest
+
+from client.ai_chatbot_sdk import ApiError, handle_response
 from shared.schemas.common import PaginationParams
+from shared.schemas.user import UserResponse
 
 
 class TestSDKResponseHandling:
@@ -108,12 +109,12 @@ class TestSDKResponseHandling:
         assert hasattr(result, 'items')
         assert hasattr(result, 'pagination')
         assert len(result.items) == 2
-        
+
         # Verify individual items are properly deserialized
         assert isinstance(result.items[0], UserResponse)
         assert result.items[0].username == 'user1'
         assert result.items[1].username == 'user2'
-        
+
         # Verify pagination info
         assert isinstance(result.pagination, PaginationParams)
         assert result.pagination.page == 1

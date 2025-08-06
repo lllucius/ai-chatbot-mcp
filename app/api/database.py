@@ -10,9 +10,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.base import BaseModelSchema
-from shared.schemas.common import (
-    APIResponse,
-)
+from shared.schemas.common import APIResponse
 from shared.schemas.database_responses import (
     DatabaseAnalysisResponse,
     DatabaseBackupResult,

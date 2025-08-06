@@ -6,9 +6,9 @@ temperature, token limits, and other LLM-specific settings.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import JSON, Boolean, Float, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import BaseModelDB
