@@ -59,3 +59,6 @@ langdetect
 
 # CLI Shell Integration  
 shellingham
+
+# GUI Framework
+PySide6

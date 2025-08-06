@@ -1,0 +1,8 @@
+#!/bin/bash
+# GUI Chatbot Launcher Script
+# 
+# This script launches the PySide6 GUI version of the AI Chatbot client.
+# It provides a desktop graphical interface as an alternative to the terminal client.
+
+base="$(realpath $(dirname $0))"
+PYTHONPATH="${base}/client:${base}" python3.12 "${base}/client/gui_chatbot.py" "$@"

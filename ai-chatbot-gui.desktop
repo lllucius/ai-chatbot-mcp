@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=AI Chatbot GUI
+Comment=Desktop GUI client for AI Chatbot Platform
+Exec=/home/runner/work/ai-chatbot-mcp/ai-chatbot-mcp/chatbot-gui
+Icon=applications-chat
+Terminal=false
+Type=Application
+Categories=Office;Development;
+Keywords=AI;Chatbot;Assistant;Machine Learning;

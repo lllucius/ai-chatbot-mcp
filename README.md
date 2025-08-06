@@ -183,9 +183,12 @@ python scripts/dev_setup.py
 
 ⚠️ **IMPORTANT**: Change these credentials immediately in production!
 
-## 📱 Frontend Application
+## 📱 Frontend Applications
 
-The React TypeScript frontend provides a comprehensive interface for all platform features:
+The platform provides multiple client interfaces:
+
+### Web Frontend (React TypeScript)
+The React TypeScript frontend provides a comprehensive web interface for all platform features:
 
 ### Key Interfaces
 - **🏠 Dashboard**: System overview with statistics and quick actions
@@ -221,6 +224,37 @@ npm start
 ```
 
 For detailed frontend documentation, see [`frontend/FRONTEND_README.md`](frontend/FRONTEND_README.md).
+
+### Desktop GUI Client (PySide6)
+The platform now includes a desktop GUI client built with PySide6, providing a native desktop experience:
+
+#### Features
+- **Native Desktop Interface**: Modern Qt-based interface with familiar desktop patterns
+- **Real-time Chat**: Interactive chat with AI models and streaming responses  
+- **Tabbed Interface**: Organized panels for chat, settings, documents, and system management
+- **Authentication**: Secure login with token persistence
+- **Document Management**: Upload documents via file dialogs and perform searches
+- **Settings Configuration**: Visual controls for RAG, tools, streaming, and LLM parameters
+- **System Administration**: Built-in tools for user and system management
+
+#### Usage
+```bash
+# Install PySide6 if not already installed
+pip install PySide6
+
+# Launch the GUI client
+./chatbot-gui
+
+# Or run directly
+python client/gui_chatbot.py
+```
+
+#### Requirements
+- PySide6 (automatically installed via requirements.txt)
+- Same backend requirements as the terminal client
+- Display server (for GUI rendering)
+
+The GUI client provides the same functionality as the terminal client but with an intuitive graphical interface, making it ideal for users who prefer desktop applications over command-line interfaces.
 
 ## 📖 API Usage
 
