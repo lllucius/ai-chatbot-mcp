@@ -97,7 +97,7 @@ async def list(
         if resp:
             from rich.table import Table
 
-            table = Table(title=f"Documents")
+            table = Table(title="Documents")
             table.add_column("ID", style="cyan")
             table.add_column("Title", style="white")
             table.add_column("File Type", style="blue")
@@ -196,7 +196,7 @@ async def status(
             details = (
                 f"Status: [yellow]{status.status}[/yellow]\n"
             )
-            if not status.status == "pending":
+            if status.status != "pending":
                 details += (
                     f"Progress: [green]{status.progress:.1%}[/green]\n"
                     f"Chunks: [white]{status.chunks_processed}/{status.total_chunks}[/white]\n"

@@ -315,7 +315,7 @@ class BackgroundProcessor(BaseService):
 
         """
         from ..database import AsyncSessionLocal
-        
+
         operation = f"process_task_{task.task_type}"
 
         # Create a fresh database session for this task

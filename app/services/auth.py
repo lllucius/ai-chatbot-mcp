@@ -8,7 +8,6 @@ lifecycle management with secure token generation and validation.
 import logging
 from datetime import timedelta
 from typing import Any, Dict, Optional
-from uuid import UUID
 
 from jose import JWTError, jwt
 from sqlalchemy import select

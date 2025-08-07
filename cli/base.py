@@ -13,8 +13,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from sdk.ai_chatbot_sdk import AIChatbotSDK
 from client.config import load_config
+from sdk.ai_chatbot_sdk import AIChatbotSDK
 
 TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
 

@@ -74,13 +74,13 @@ except ImportError:
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-    from sdk.ai_chatbot_sdk import AIChatbotSDK, ApiError
     from client.config import (
         ClientConfig,
         get_default_backup_dir,
         get_default_token_file,
         load_config,
     )
+    from sdk.ai_chatbot_sdk import AIChatbotSDK, ApiError
 
 console: Console = Console()
 config: ClientConfig = load_config()

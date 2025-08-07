@@ -125,7 +125,6 @@ import httpx
 # Import all schema models from shared package instead of defining locally
 from shared.schemas import (  # Base and common schemas; Conversation schemas; Document schemas; LLM Profile schemas; Prompt schemas; Auth schemas; Search schemas; User schemas
     BaseResponse,
-    BaseSchema,
     ChatRequest,
     ChatResponse,
     ConversationCreate,
@@ -137,10 +136,9 @@ from shared.schemas import (  # Base and common schemas; Conversation schemas; D
     DocumentSearchRequest,
     DocumentUpdate,
     DocumentUploadResponse,
-    DocumentUploadResponse,
+    LivenessResponse,
     LLMProfileCreate,
     LLMProfileResponse,
-    LivenessResponse,
     MessageResponse,
     PaginatedResponse,
     PaginationParams,

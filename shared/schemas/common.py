@@ -111,7 +111,6 @@ class APIResponse(BaseResponse, Generic[T]):
       "message": "Human-readable message",
       "timestamp": "ISO-8601 string",
       "data": any,     // single object, array, or null
-      "meta": { ... }, // optional metadata (pagination, stats, etc)
       "error": {       // optional error details
         "code": "ERROR_CODE",
         "details": { ... }
@@ -230,33 +229,6 @@ class ErrorDetail(BaseModel):
         return json.dumps(data)
 
 
-class SuccessResponse(BaseResponse):
-    """Standard success response."""
-
-    success: bool = Field(default=True, description="Always true for success responses")
-    data: Optional[Any] = Field(default=None, description="Response data payload")
-    meta: Optional[Dict[str, Any]] = Field(
-        default=None, description="Optional metadata"
-    )
-
-    @classmethod
-    def create(
-        cls,
-        data: Any = None,
-        message: str = "Success",
-        status_code: int = status.HTTP_200_OK,
-        meta: Optional[Dict[str, Any]] = None,
-    ) -> JSONResponse:
-        """Create successful response using unified envelope format."""
-        response = APIResponse(
-            success=True, data=data, message=message, meta=meta, timestamp=utcnow()
-        )
-        # Use the custom JSON serialization from the model to handle datetime
-        content_str = response.model_dump_json(exclude_none=True)
-        content = json.loads(content_str)
-        return JSONResponse(content=content, status_code=status_code)
-
-
 class ErrorResponse(BaseResponse):
     """Standard error response."""
 
@@ -276,7 +248,6 @@ class ErrorResponse(BaseResponse):
         status_code: int = status.HTTP_400_BAD_REQUEST,
         data: Any = None,
         error_details: Optional[Dict[str, Any]] = None,
-        meta: Optional[Dict[str, Any]] = None,
     ) -> JSONResponse:
         """Create error response using unified envelope format."""
         response = APIResponse(
@@ -285,7 +256,6 @@ class ErrorResponse(BaseResponse):
             message=message,
             error=ErrorDetails(code=error_code, details=error_details),
             timestamp=utcnow(),
-            meta=meta,
         )
         # Use the custom JSON serialization from the model to handle datetime
         content_str = response.model_dump_json(exclude_none=True)

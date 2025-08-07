@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import APIResponse, ErrorResponse, SuccessResponse
+from shared.schemas.common import APIResponse, ErrorResponse
 from shared.schemas.task_responses import (
     ActiveTaskInfo,
     ActiveTasksData,
@@ -294,7 +294,7 @@ async def get_active_tasks(
     )
 
 
-@router.post("/schedule", response_model=APIResponse)
+@router.post("/schedule", response_model=APIResponse[dict])
 @handle_api_errors("Failed to schedule task")
 async def schedule_task(
     task_name: str = Query(..., description="Name of the task to schedule"),
@@ -305,7 +305,7 @@ async def schedule_task(
     ),
     queue: str = Query("default", description="Queue to send the task to"),
     current_user: User = Depends(get_current_superuser),
-):
+) -> APIResponse[dict]:
     """Schedule background tasks for execution with comprehensive parameter control."""
     log_api_call("schedule_task", user_id=str(current_user.id), task_name=task_name)
 
@@ -331,19 +331,20 @@ async def schedule_task(
 
         result = celery_app.send_task(task_name, **schedule_kwargs)
 
-        return SuccessResponse.create(
+        return APIResponse[dict](
+            success=True,
+            message=f"Task '{task_name}' scheduled successfully",
             data={
                 "task_id": result.id,
                 "queue": queue,
                 "countdown": countdown,
             },
-            message=f"Task '{task_name}' scheduled successfully",
         )
     except Exception:
         raise
 
 
-@router.post("/retry-failed", response_model=APIResponse)
+@router.post("/retry-failed", response_model=APIResponse[dict])
 @handle_api_errors("Failed to retry failed tasks")
 async def retry_failed_tasks(
     task_name: Optional[str] = Query(
@@ -354,7 +355,7 @@ async def retry_failed_tasks(
     ),
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[dict]:
     """Retry failed document processing tasks with intelligent error recovery."""
     log_api_call(
         "retry_failed_tasks", user_id=str(current_user.id), task_name=task_name
@@ -401,25 +402,26 @@ async def retry_failed_tasks(
 
         await db.commit()
 
-        return SuccessResponse.create(
+        return APIResponse[dict](
+            success=True,
+            message=f"Retry initiated for {retried_count} failed tasks",
             data={
                 "retried_count": retried_count,
                 "total_failed": len(failed_documents),
                 "errors": errors[:5],  # Limit error reporting
             },
-            message=f"Retry initiated for {retried_count} failed tasks",
         )
     except Exception:
         await db.rollback()
         raise
 
 
-@router.post("/purge", response_model=APIResponse)
+@router.post("/purge", response_model=APIResponse[dict])
 @handle_api_errors("Failed to purge queue")
 async def purge_queue(
     queue_name: str = Query("default", description="Queue name to purge"),
     current_user: User = Depends(get_current_superuser),
-):
+) -> APIResponse[dict]:
     """Purge all pending tasks from specified queue with comprehensive safety warnings."""
     log_api_call("purge_queue", user_id=str(current_user.id), queue_name=queue_name)
 
@@ -429,12 +431,13 @@ async def purge_queue(
         # Purge the queue
         purged_count = celery_app.control.purge()
 
-        return SuccessResponse.create(
+        return APIResponse[dict](
+            success=True,
+            message=f"Queue '{queue_name}' purged successfully",
             data={
                 "purged_tasks": purged_count,
                 "queue": queue_name,
             },
-            message=f"Queue '{queue_name}' purged successfully",
         )
     except Exception:
         raise

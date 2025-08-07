@@ -196,8 +196,8 @@ async def version():
     """Show version information."""
     try:
         # Load config and create SDK directly for version check
-        from sdk.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
+        from sdk.ai_chatbot_sdk import AIChatbotSDK
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
@@ -222,8 +222,8 @@ async def version():
 async def health():
     """Perform comprehensive system health check."""
     try:
-        from sdk.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
+        from sdk.ai_chatbot_sdk import AIChatbotSDK
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
@@ -288,8 +288,8 @@ async def health():
 async def status():
     """Show overall system status summary."""
     try:
-        from sdk.ai_chatbot_sdk import AIChatbotSDK
         from client.config import load_config
+        from sdk.ai_chatbot_sdk import AIChatbotSDK
 
         config = load_config()
         sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
