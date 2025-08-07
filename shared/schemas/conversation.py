@@ -7,7 +7,6 @@ All fields include a 'description' argument.
 
 from datetime import datetime
 from typing import Annotated, Any, Dict, List, Optional
-from uuid import UUID
 
 from pydantic import Field
 
@@ -44,8 +43,8 @@ class ConversationUpdate(BaseSchema):
 class ConversationResponse(ConversationBase):
     """Schema for conversation response data."""
 
-    id: UUID = Field(..., description="Conversation ID")
-    user_id: UUID = Field(..., description="Owner user ID")
+    id: int = Field(..., description="Conversation ID")
+    user_id: int = Field(..., description="Owner user ID")
     message_count: int = Field(0, description="Number of messages")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
@@ -56,7 +55,7 @@ class ConversationResponse(ConversationBase):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)},
+        "json_encoders": {datetime: lambda v: v.isoformat()},
     }
 
 
@@ -74,7 +73,7 @@ class MessageBase(BaseSchema):
 class MessageCreate(MessageBase):
     """Schema for creating a new message."""
 
-    conversation_id: UUID = Field(..., description="Parent conversation ID")
+    conversation_id: int = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, ge=0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
     tool_call_results: Optional[Dict[str, Any]] = Field(
@@ -86,8 +85,8 @@ class MessageCreate(MessageBase):
 class MessageResponse(MessageBase):
     """Schema for message response data."""
 
-    id: UUID = Field(..., description="Message ID")
-    conversation_id: UUID = Field(..., description="Parent conversation ID")
+    id: int = Field(..., description="Message ID")
+    conversation_id: int = Field(..., description="Parent conversation ID")
     token_count: int = Field(0, description="Number of tokens")
     tool_calls: Optional[Dict[str, Any]] = Field(None, description="Tool calls made")
     tool_call_results: Optional[Dict[str, Any]] = Field(
@@ -98,7 +97,7 @@ class MessageResponse(MessageBase):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)},
+        "json_encoders": {datetime: lambda v: v.isoformat()},
     }
 
 
@@ -108,7 +107,7 @@ class ChatRequest(BaseSchema):
     user_message: Annotated[str, Field(min_length=1, max_length=10000)] = Field(
         ..., description="User message"
     )
-    conversation_id: Optional[UUID] = Field(
+    conversation_id: Optional[int] = Field(
         None, description="Existing conversation ID"
     )
     conversation_title: Optional[Annotated[str, Field(max_length=500)]] = Field(
@@ -120,7 +119,7 @@ class ChatRequest(BaseSchema):
         default=ToolHandlingMode.COMPLETE_WITH_RESULTS,
         description="How to handle tool call results: return_results or complete_with_results",
     )
-    rag_documents: Optional[List[UUID]] = Field(
+    rag_documents: Optional[List[int]] = Field(
         None, description="Specific document IDs for RAG"
     )
     prompt_name: Optional[str] = Field(
@@ -183,7 +182,7 @@ class ConversationStats(BaseSchema):
     )
 
     model_config = {
-        "json_encoders": {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}
+        "json_encoders": {datetime: lambda v: v.isoformat()}
     }
 
 

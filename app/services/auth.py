@@ -563,28 +563,28 @@ class AuthService(BaseService):
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
-    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+    async def get_user_by_id(self, user_id: int) -> Optional[User]:
         """
         Retrieve user account by unique identifier with validation and security.
 
-        Performs efficient database lookup to find user account by UUID with
+        Performs efficient database lookup to find user account by integer ID with
         proper identifier validation and optimized query execution. Implements
         secure user retrieval for API operations and internal service communication
         with comprehensive error handling and performance optimization.
 
         Args:
-            user_id: UUID identifier to search for in the database with
+            user_id: Integer identifier to search for in the database with
                     proper format validation and type checking
 
         Returns:
             Optional[User]: User object if found, None if no matching user exists:
                 - Found: Complete User object with all profile and security data
                 - Not found: None to indicate user ID does not exist in system
-                - Invalid UUID: None with validation error for malformed identifiers
+                - Invalid ID: None with validation error for malformed identifiers
                 - Database error: None with comprehensive error logging and monitoring
 
         Security Notes:
-            - UUID format validation prevents malformed input and injection attacks
+            - ID format validation prevents malformed input and injection attacks
             - Primary key lookup provides optimal database performance and security
             - No sensitive information exposed for non-existent user identifiers
             - Efficient query execution with proper database indexing
@@ -595,10 +595,10 @@ class AuthService(BaseService):
             - Internal service communication requiring user lookup by identifier
             - User profile management and administrative operations
             - Session management and user state tracking across application components
-            - Integration with external systems using UUID-based user references
+            - Integration with external systems using integer-based user references
 
         Example:
-            user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+            user_id = 123
             user = await auth_service.get_user_by_id(user_id)
             if user:
                 print(f"Found user: {user.username} ({user.email})")
