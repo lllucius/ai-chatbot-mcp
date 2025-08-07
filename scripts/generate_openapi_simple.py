@@ -50,7 +50,7 @@ def get_basic_openapi_schema():
                 "UserResponse": {
                     "type": "object",
                     "properties": {
-                        "id": {"type": "string", "format": "uuid"},
+                        "id": {"type": "string", "pattern": "^ml_[a-z2-9]{14}$", "description": "MLID identifier"},
                         "username": {"type": "string"},
                         "email": {"type": "string", "format": "email"},
                         "is_active": {"type": "boolean"},

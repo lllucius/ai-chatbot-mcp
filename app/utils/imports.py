@@ -17,7 +17,6 @@ Import Order Standards:
 Example Import Organization:
     # Standard library imports
     import logging
-    import uuid
     from datetime import datetime
     from typing import Any, Dict, List, Optional
 
@@ -37,6 +36,7 @@ Example Import Organization:
     # Local imports - Services
     from ..services.user import UserService
     from ..core.logging import get_service_logger
+    from ..utils.mlid import generate_mlid
 
     # Local imports - Schemas
     from shared.schemas.user import UserResponse
@@ -183,13 +183,13 @@ COMMON_PATTERNS = {
     "service": """
 # Standard library imports
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 # Third-party imports
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Local imports
 from ..core.exceptions import NotFoundError, ValidationError
+from ..utils.mlid import generate_mlid, is_valid_mlid
 from .base import BaseService
 """,
     "api_endpoint": """
@@ -207,7 +207,6 @@ from ..utils.api_errors import handle_api_errors, log_api_call
     "model": """
 # Standard library imports
 from typing import TYPE_CHECKING, List, Optional
-from uuid import UUID
 
 # Third-party imports
 from sqlalchemy import Column, String, Boolean
@@ -219,7 +218,6 @@ from .base import BaseModelDB
     "schema": """
 # Standard library imports
 from typing import List, Optional
-from uuid import UUID
 
 # Third-party imports
 from pydantic import Field, field_validator

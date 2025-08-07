@@ -599,7 +599,7 @@ class UserResponse(UserBase):
 
     Example:
         user_response = UserResponse(
-            id=uuid.uuid4(),
+            id="ml_a2b3c4d5e6f7g8",
             username="john_doe",
             email="john@example.com",
             full_name="John Doe",

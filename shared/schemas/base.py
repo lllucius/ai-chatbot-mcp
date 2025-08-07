@@ -204,7 +204,7 @@ class TimestampSchema(BaseSchema, TimestampMixin):
     and modifications. Implements custom JSON serialization with proper ISO format
     datetime handling for consistent API responses.
 
-    Use this for schemas that need timestamp tracking but not UUID identification.
+    Use this for schemas that need timestamp tracking but not MLID identification.
     """
 
     pass
