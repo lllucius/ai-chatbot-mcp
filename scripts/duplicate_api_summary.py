@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""
-Quick API duplicate analysis summary script.
+"""Quick API duplicate analysis summary script.
+
 Can be run via manage.py or directly.
 """
 
 
 def print_duplicate_summary():
     """Print a quick summary of duplicate API findings."""
-
     print("=" * 60)
     print("AI CHATBOT MCP - DUPLICATE API ANALYSIS SUMMARY")
     print("=" * 60)

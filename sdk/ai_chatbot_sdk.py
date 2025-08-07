@@ -1123,6 +1123,7 @@ class SearchClient:
 
         Note:
             This endpoint is not currently implemented in the API.
+
         """
         # TODO: Implement search history endpoint in the API
         raise NotImplementedError("Search history endpoint not yet implemented in the API")
@@ -1138,6 +1139,7 @@ class SearchClient:
 
         Note:
             This endpoint is not currently implemented in the API.
+
         """
         # TODO: Implement search history clearing endpoint in the API
         raise NotImplementedError("Search history endpoint not yet implemented in the API")

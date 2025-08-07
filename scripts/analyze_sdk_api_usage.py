@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-SDK API Usage Analysis Script
+"""SDK API Usage Analysis Script.
 
 This script analyzes the AI Chatbot SDK to identify potential issues with API endpoint usage,
 including deprecated endpoints, incorrect URLs, and missing endpoints.
@@ -21,6 +20,7 @@ def extract_api_routes_from_file(file_path: Path) -> List[Tuple[str, str, str]]:
 
     Returns:
         List of (method, route, function_name) tuples
+
     """
     routes = []
 
@@ -53,6 +53,7 @@ def extract_sdk_api_calls(file_path: Path) -> List[Tuple[str, str, str]]:
 
     Returns:
         List of (method, endpoint, context) tuples
+
     """
     calls = []
 
@@ -72,7 +73,6 @@ def extract_sdk_api_calls(file_path: Path) -> List[Tuple[str, str, str]]:
 
 def analyze_api_coverage():
     """Analyze API endpoint coverage and identify issues."""
-
     # Get all API routes from the backend
     api_dir = project_root / "app" / "api"
     all_routes = {}
