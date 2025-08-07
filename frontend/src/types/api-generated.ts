@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/api/v1/health/": {
+    "/": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,13 +12,29 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Basic Health Check
-         * @description Basic health check endpoint.
-         *
-         *     Returns:
-         *         dict: Basic application status
+         * Root endpoint
+         * @description Root endpoint with basic application information
          */
-        get: operations["basic_health_check_api_v1_health__get"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Application information */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -27,7 +43,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/health/detailed": {
+    "/ping": {
         parameters: {
             query?: never;
             header?: never;
@@ -35,160 +51,29 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Detailed Health Check
-         * @description Detailed health check with all system components.
-         *
-         *     Args:
-         *         db: Database session for connectivity check
-         *
-         *     Returns:
-         *         dict: Comprehensive system health status
+         * Health check
+         * @description Simple health check endpoint for load balancers
          */
-        get: operations["detailed_health_check_api_v1_health_detailed_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/database": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Health status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+            };
         };
-        /**
-         * Database Health Check
-         * @description Database connectivity health check.
-         *
-         *     Args:
-         *         db: Database session
-         *
-         *     Returns:
-         *         dict: Database health status
-         */
-        get: operations["database_health_check_api_v1_health_database_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/services": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Services Health Check
-         * @description External services health check.
-         *
-         *     Returns:
-         *         dict: External services health status
-         */
-        get: operations["services_health_check_api_v1_health_services_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/metrics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get System Metrics
-         * @description Get system performance metrics.
-         *
-         *     Returns:
-         *         dict: System metrics and performance data
-         */
-        get: operations["get_system_metrics_api_v1_health_metrics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/readiness": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Readiness Check
-         * @description Kubernetes-style readiness probe.
-         *
-         *     Args:
-         *         db: Database session
-         *
-         *     Returns:
-         *         dict: Readiness status
-         */
-        get: operations["readiness_check_api_v1_health_readiness_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/performance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Performance Metrics
-         * @description Get comprehensive performance metrics and statistics.
-         *
-         *     Returns:
-         *         dict: Performance metrics and system health data
-         */
-        get: operations["get_performance_metrics_api_v1_health_performance_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/liveness": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Liveness Check
-         * @description Kubernetes-style liveness probe.
-         *
-         *     Returns:
-         *         dict: Liveness status
-         */
-        get: operations["liveness_check_api_v1_health_liveness_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -207,40 +92,33 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Register
-         * @description Register a new user account with validation and conflict detection.
-         *
-         *     Creates a new user account with the provided credentials after validating
-         *     that username and email are unique. Implements comprehensive input validation
-         *     and security checks to ensure account integrity.
-         *
-         *     Args:
-         *         request: User registration data including credentials and profile info
-         *         auth_service: Injected authentication service instance
-         *
-         *     Returns:
-         *         UserResponse: Created user profile information (without sensitive data)
-         *
-         *     Raises:
-         *         HTTP 400: If username/email already exists or validation fails
-         *         HTTP 500: If user creation process fails
-         *
-         *     Security Notes:
-         *         - Passwords are securely hashed before storage
-         *         - Input validation prevents malicious data injection
-         *         - Duplicate detection ensures unique user identities
-         *         - Registration events are logged for security monitoring
-         *
-         *     Example:
-         *         POST /api/v1/auth/register
-         *         {
-         *             "username": "johndoe",
-         *             "email": "john@example.com",
-         *             "password": "SecurePassword123!",
-         *             "full_name": "John Doe"
-         *         }
+         * Register new user
+         * @description Register a new user account
          */
-        post: operations["register_api_v1_auth_register_post"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description User registered successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -257,78 +135,33 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Login
-         * @description Authenticate user and return JWT access token.
-         *
-         *     Validates user credentials against stored information and returns a JWT token
-         *     for accessing protected endpoints. Supports authentication with either username
-         *     or email address for user convenience.
-         *
-         *     Args:
-         *         request: Login credentials (username/email and password)
-         *         auth_service: Injected authentication service instance
-         *
-         *     Returns:
-         *         Token: JWT access token with expiration information
-         *
-         *     Raises:
-         *         HTTP 401: If credentials are invalid or account is inactive
-         *         HTTP 500: If authentication process fails
-         *
-         *     Security Notes:
-         *         - Supports both username and email authentication
-         *         - Password verification uses secure hashing comparison
-         *         - Login attempts are logged for security monitoring
-         *         - Token expiration provides time-limited access
-         *         - Failed attempts can trigger rate limiting
-         *
-         *     Example:
-         *         POST /api/v1/auth/login
-         *         {
-         *             "username": "johndoe",  # or email
-         *             "password": "SecurePassword123!"
-         *         }
+         * User login
+         * @description Authenticate user and generate JWT access token
          */
-        post: operations["login_api_v1_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LoginRequest"];
+                };
+            };
+            responses: {
+                /** @description Authentication successful */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
         };
-        /**
-         * Get Current User Info
-         * @description Get current authenticated user information.
-         *
-         *     Returns the profile information for the currently authenticated user
-         *     based on the JWT token provided in the Authorization header.
-         *
-         *     Args:
-         *         current_user: Automatically injected current user from JWT token
-         *
-         *     Returns:
-         *         UserResponse: Current user profile information
-         *
-         *     Security Notes:
-         *         - Requires valid JWT token in Authorization header
-         *         - User information is retrieved from token validation
-         *         - No sensitive information (password hash) is returned
-         *         - Endpoint can be used to verify token validity
-         *
-         *     Example:
-         *         GET /api/v1/auth/me
-         *         Authorization: Bearer <jwt_token>
-         */
-        get: operations["get_current_user_info_api_v1_auth_me_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -345,27 +178,29 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Logout
-         * @description Logout current user (client-side token invalidation).
-         *
-         *     Since JWT tokens are stateless, this endpoint primarily serves as a
-         *     client-side logout indicator. Clients should discard their tokens
-         *     after calling this endpoint.
-         *
-         *     Returns:
-         *         BaseResponse: Success message confirming logout
-         *
-         *     Note:
-         *         For complete security in production, consider implementing:
-         *         - Token blacklisting on the server side
-         *         - Token refresh rotation
-         *         - Short-lived access tokens with refresh tokens
-         *
-         *     Example:
-         *         POST /api/v1/auth/logout
-         *         Authorization: Bearer <jwt_token>
+         * User logout
+         * @description Logout current user session
          */
-        post: operations["logout_api_v1_auth_logout_post"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Logged out successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -382,35 +217,29 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Refresh Token
-         * @description Refresh JWT access token for continued access.
-         *
-         *     Generates a new JWT access token for the current user, extending their
-         *     session without requiring re-authentication. Requires a valid existing
-         *     token to prevent unauthorized token generation.
-         *
-         *     Args:
-         *         current_user: Automatically injected current user from JWT token
-         *         auth_service: Injected authentication service instance
-         *
-         *     Returns:
-         *         Token: New JWT access token with fresh expiration time
-         *
-         *     Raises:
-         *         HTTP 401: If current token is invalid or expired
-         *         HTTP 500: If token generation fails
-         *
-         *     Security Notes:
-         *         - Requires valid existing token for refresh
-         *         - New token has updated expiration time
-         *         - Original token should be discarded by client
-         *         - Refresh operations are logged for monitoring
-         *
-         *     Example:
-         *         POST /api/v1/auth/refresh
-         *         Authorization: Bearer <current_jwt_token>
+         * Refresh token
+         * @description Refresh JWT access token for session continuation
          */
-        post: operations["refresh_token_api_v1_auth_refresh_post"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Token refreshed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -427,14 +256,33 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Request Password Reset
-         * @description Request password reset (Admin Dashboard).
-         *
-         *     Initiates password reset process for the given email address.
-         *     In an admin-only dashboard, this would typically be handled directly
-         *     by administrators through user management interface.
+         * Request password reset
+         * @description Request password reset through administrative channels
          */
-        post: operations["request_password_reset_api_v1_auth_password_reset_post"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Password reset request processed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -451,14 +299,33 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Confirm Password Reset
-         * @description Confirm password reset (Admin Dashboard).
-         *
-         *     Resets user password using the provided reset token.
-         *     In an admin-only dashboard, password resets are handled by administrators
-         *     directly through the user management interface.
+         * Confirm password reset
+         * @description Confirm password reset through administrative channels
          */
-        post: operations["confirm_password_reset_api_v1_auth_password_reset_confirm_post"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Password reset confirmed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -473,44 +340,57 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get My Profile
-         * @description Get current user profile with comprehensive statistics.
-         *
-         *     Returns detailed profile information for the authenticated user including
-         *     account details, activity statistics, and engagement metrics. This endpoint
-         *     provides a complete view of the user's interaction with the platform.
-         *
-         *     Args:
-         *         current_user: Automatically injected current user from JWT token
-         *         user_service: Injected user service instance
-         *
-         *     Returns:
-         *         UserResponse: Complete user profile including:
-         *             - Basic profile (username, email, full_name, status)
-         *             - Account metadata (created_at, updated_at, last_login)
-         *             - Activity statistics (document_count, conversation_count, total_messages)
-         *
-         *     Example Response:
-         *         {
-         *             "id": "uuid-here",
-         *             "username": "johndoe",
-         *             "email": "john@example.com",
-         *             "full_name": "John Doe",
-         *             "is_active": true,
-         *             "document_count": 15,
-         *             "conversation_count": 8,
-         *             "total_messages": 142
-         *         }
+         * Get current user profile
+         * @description Get current user profile with statistics
          */
-        get: operations["get_my_profile_api_v1_users_me_get"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User profile retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         /**
-         * Update My Profile
-         * @description Update current user profile.
-         *
-         *     Allows users to update their own profile information
-         *     such as email and full name.
+         * Update current user profile
+         * @description Update current user profile information
          */
-        put: operations["update_my_profile_api_v1_users_me_put"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description User profile updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -528,13 +408,33 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Change Password
-         * @description Change current user password.
-         *
-         *     Requires the current password for verification
-         *     and the new password.
+         * Change password
+         * @description Change current user password with security verification
          */
-        post: operations["change_password_api_v1_users_me_change_password_post"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Password changed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -549,13 +449,32 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Users
-         * @description List all users (admin only).
-         *
-         *     Returns paginated list of users with optional filtering.
-         *     Requires superuser privileges.
+         * List users
+         * @description List all users with filtering and pagination
          */
-        get: operations["list_users_api_v1_users__get"];
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    size?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Users retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -564,7 +483,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/users/{user_id}": {
+    "/api/v1/health/": {
         parameters: {
             query?: never;
             header?: never;
@@ -572,51 +491,148 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get User
-         * @description Get user by ID (admin only).
-         *
-         *     Returns detailed user information including statistics.
-         *     Requires superuser privileges.
+         * System health check
+         * @description Comprehensive system health check
          */
-        get: operations["get_user_api_v1_users__user_id__get"];
-        /**
-         * Update User
-         * @description Update user by ID (admin only).
-         *
-         *     Allows administrators to update any user's profile.
-         *     Requires superuser privileges.
-         */
-        put: operations["update_user_api_v1_users__user_id__put"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description System health status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
-        /**
-         * Delete User
-         * @description Delete user by ID (admin only).
-         *
-         *     Permanently deletes a user and all associated data.
-         *     Requires superuser privileges.
-         */
-        delete: operations["delete_user_api_v1_users__user_id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/documents/upload": {
+    "/api/v1/health/database": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Upload Document
-         * @description Upload a document for processing.
-         *
-         *     Enhanced with auto-processing option and priority control.
+         * Database health check
+         * @description Check database connectivity and health
          */
-        post: operations["upload_document_api_v1_documents_upload_post"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Database health status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * System overview
+         * @description Get system overview analytics
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description System overview data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Performance metrics
+         * @description Get performance metrics
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Performance metrics data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -631,583 +647,58 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Documents
-         * @description List user's documents with pagination and filtering.
-         *
-         *     Returns paginated list of documents owned by the current user
-         *     with optional filtering by file type and processing status.
+         * List documents
+         * @description List documents with filtering and pagination
          */
-        get: operations["list_documents_api_v1_documents__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{document_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Documents list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
         };
-        /**
-         * Get Document
-         * @description Get document by ID.
-         *
-         *     Returns detailed information about a specific document
-         *     owned by the current user.
-         */
-        get: operations["get_document_api_v1_documents__document_id__get"];
-        /**
-         * Update Document
-         * @description Update document metadata.
-         *
-         *     Allows updating document title and metadata.
-         *     Cannot change the actual file content.
-         */
-        put: operations["update_document_api_v1_documents__document_id__put"];
-        post?: never;
-        /**
-         * Delete Document
-         * @description Delete document and all associated data.
-         *
-         *     Permanently deletes the document, its chunks, embeddings,
-         *     and removes the file from storage.
-         */
-        delete: operations["delete_document_api_v1_documents__document_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{document_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Processing Status
-         * @description Get document processing status.
-         *
-         *     Returns current processing status, progress, and any error information
-         *     for the specified document.
-         */
-        get: operations["get_processing_status_api_v1_documents__document_id__status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{document_id}/reprocess": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
         put?: never;
         /**
-         * Reprocess Document
-         * @description Reprocess document.
-         *
-         *     Triggers reprocessing of the document, including text extraction,
-         *     chunking, and embedding generation. Useful if processing failed
-         *     or if you want to update with new processing parameters.
+         * Upload document
+         * @description Upload a new document for processing
          */
-        post: operations["reprocess_document_api_v1_documents__document_id__reprocess_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{document_id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Document uploaded successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["APIResponse"];
+                    };
+                };
+            };
         };
-        /**
-         * Download Document
-         * @description Download original document file.
-         *
-         *     Returns the original uploaded file for download.
-         */
-        get: operations["download_document_api_v1_documents__document_id__download_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{document_id}/process": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start Document Processing
-         * @description Start background processing for a document.
-         *
-         *     Initiates text extraction, chunking, and embedding generation.
-         */
-        post: operations["start_document_processing_api_v1_documents__document_id__process_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{document_id}/enhanced-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Enhanced Processing Status
-         * @description Get comprehensive document processing status with background task information.
-         *
-         *     Includes both document status and background task progress details.
-         */
-        get: operations["get_enhanced_processing_status_api_v1_documents__document_id__enhanced_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/processing-config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Processing Config
-         * @description Get current document processing configuration.
-         *
-         *     Returns the current settings for chunk sizes, overlaps, and other processing parameters.
-         */
-        get: operations["get_processing_config_api_v1_documents_processing_config_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/queue-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Queue Status
-         * @description Get background processing queue status.
-         *
-         *     Provides information about current queue size, active tasks, and processing capacity.
-         */
-        get: operations["get_queue_status_api_v1_documents_queue_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Conversations
-         * @description List user's conversations with pagination.
-         *
-         *     Returns paginated list of conversations owned by the current user
-         *     with optional filtering by active status.
-         */
-        get: operations["list_conversations_api_v1_conversations__get"];
-        put?: never;
-        /**
-         * Create Conversation
-         * @description Create a new conversation.
-         *
-         *     Creates a new conversation thread for the current user.
-         */
-        post: operations["create_conversation_api_v1_conversations__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/{conversation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Conversation
-         * @description Get conversation by ID.
-         *
-         *     Returns detailed information about a specific conversation
-         *     owned by the current user.
-         */
-        get: operations["get_conversation_api_v1_conversations__conversation_id__get"];
-        /**
-         * Update Conversation
-         * @description Update conversation metadata.
-         *
-         *     Allows updating conversation title, active status, and metadata.
-         */
-        put: operations["update_conversation_api_v1_conversations__conversation_id__put"];
-        post?: never;
-        /**
-         * Delete Conversation
-         * @description Delete conversation and all messages.
-         *
-         *     Permanently deletes the conversation and all associated messages.
-         */
-        delete: operations["delete_conversation_api_v1_conversations__conversation_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/{conversation_id}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Messages
-         * @description Get messages in a conversation.
-         *
-         *     Returns paginated list of messages in the specified conversation.
-         */
-        get: operations["get_messages_api_v1_conversations__conversation_id__messages_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/chat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Chat
-         * @description Send a message and get AI response.
-         *
-         *     Sends a user message to the AI assistant and returns the response.
-         *     Supports RAG (Retrieval-Augmented Generation) for context-aware responses
-         *     and tool calling for enhanced functionality.
-         */
-        post: operations["chat_api_v1_conversations_chat_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/chat/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Chat Stream
-         * @description Send a message and get a streaming AI response.
-         *
-         *     Returns a Server-Sent Events (SSE) stream of the AI response as it's generated,
-         *     providing real-time feedback to the user.
-         */
-        post: operations["chat_stream_api_v1_conversations_chat_stream_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Conversation Stats
-         * @description Get conversation statistics for the current user.
-         *
-         *     Returns statistics about the user's conversations and messages.
-         */
-        get: operations["get_conversation_stats_api_v1_conversations_stats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/search/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Search Documents
-         * @description Search through documents using various algorithms.
-         *
-         *     Supports multiple search algorithms:
-         *     - vector: Semantic similarity using embeddings
-         *     - text: Traditional full-text search
-         *     - hybrid: Combines vector and text search
-         *     - mmr: Maximum Marginal Relevance for diverse results
-         */
-        post: operations["search_documents_api_v1_search__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/search/similar/{chunk_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Find Similar Chunks
-         * @description Find chunks similar to a given chunk.
-         *
-         *     Uses vector similarity to find document chunks that are
-         *     semantically similar to the specified chunk.
-         */
-        get: operations["find_similar_chunks_api_v1_search_similar__chunk_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/search/suggestions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Search Suggestions
-         * @description Get search query suggestions.
-         *
-         *     Returns suggested search terms based on document content
-         *     and previous search patterns.
-         */
-        get: operations["get_search_suggestions_api_v1_search_suggestions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/search/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Search History
-         * @description Get user's search history.
-         *
-         *     Returns recent search queries performed by the current user.
-         *     For admin dashboard, shows aggregated search patterns.
-         */
-        get: operations["get_search_history_api_v1_search_history_get"];
-        put?: never;
-        post?: never;
-        /**
-         * Clear Search History
-         * @description Clear user's search history.
-         *
-         *     Removes all search history entries for the current user.
-         *     For admin dashboard, this clears system-wide search analytics.
-         */
-        delete: operations["clear_search_history_api_v1_search_history_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Tools
-         * @description List all available MCP tools.
-         *
-         *     Returns information about all configured MCP tools including their
-         *     status, schemas, and configuration details.
-         *
-         *     Only available to superusers.
-         */
-        get: operations["list_tools_api_v1_tools__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/{tool_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Tool Details
-         * @description Get detailed information about a specific tool.
-         *
-         *     Returns the complete schema, configuration, and status
-         *     information for the specified tool.
-         */
-        get: operations["get_tool_details_api_v1_tools__tool_name__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/{tool_name}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Test Tool
-         * @description Test a tool with optional parameters.
-         *
-         *     Executes the tool with provided test parameters to verify
-         *     it's working correctly.
-         */
-        post: operations["test_tool_api_v1_tools__tool_name__test_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh Tools
-         * @description Refresh tool discovery and reconnect to MCP servers.
-         *
-         *     Triggers a fresh discovery of all available tools from
-         *     configured MCP servers.
-         */
-        post: operations["refresh_tools_api_v1_tools_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/servers/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Server Status
-         * @description Get status of all configured MCP servers.
-         *
-         *     Returns connection status, tool counts, and health information
-         *     for all configured MCP servers.
-         */
-        get: operations["get_server_status_api_v1_tools_servers_status_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1218,1301 +709,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * BackgroundTaskResponse
-         * @description Response schema for background task operations.
-         */
-        BackgroundTaskResponse: {
-            /** Message */
-            message: string;
-            /** Task Id */
-            task_id: string;
-            /** Document Id */
-            document_id: string;
-            /** Status */
-            status: string;
-            /** Priority */
-            priority?: number | null;
-            /** Created At */
-            created_at?: string | null;
+        APIResponse: {
+            success?: boolean;
+            message?: string;
+            data?: Record<string, never>;
+            /** Format: date-time */
+            timestamp?: string;
         };
-        /**
-         * BaseResponse
-         * @description Base response schema for API endpoints.
-         */
-        BaseResponse: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-        };
-        /** Body_upload_document_api_v1_documents_upload_post */
-        Body_upload_document_api_v1_documents_upload_post: {
-            /**
-             * File
-             * Format: binary
-             */
-            file: string;
-            /** Title */
-            title: string;
-            /**
-             * Auto Process
-             * @default true
-             */
-            auto_process: boolean;
-            /**
-             * Processing Priority
-             * @default 5
-             */
-            processing_priority: number;
-        };
-        /**
-         * ChatRequest
-         * @description Schema for chat request.
-         * @example {
-         *       "conversation_title": "ML Discussion",
-         *       "max_tokens": 1000,
-         *       "rag_documents": [
-         *         "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *         "5c50a4ea-1111-49ed-bd96-31c0b971e319"
-         *       ],
-         *       "temperature": 0.7,
-         *       "tool_handling_mode": "complete_with_results",
-         *       "use_rag": true,
-         *       "use_tools": true,
-         *       "user_message": "What is machine learning?"
-         *     }
-         */
-        ChatRequest: {
-            /**
-             * User Message
-             * @description User message
-             */
-            user_message: string;
-            /**
-             * Conversation Id
-             * @description Existing conversation ID
-             */
-            conversation_id?: string | null;
-            /**
-             * Conversation Title
-             * @description New conversation title
-             */
-            conversation_title?: string | null;
-            /**
-             * Use Rag
-             * @description Whether to use RAG for context
-             * @default true
-             */
-            use_rag: boolean;
-            /**
-             * Use Tools
-             * @description Whether to enable tool calling
-             * @default true
-             */
-            use_tools: boolean;
-            /**
-             * @description How to handle tool call results: return_results or complete_with_results
-             * @default complete_with_results
-             */
-            tool_handling_mode: components["schemas"]["ToolHandlingMode"];
-            /**
-             * Rag Documents
-             * @description Specific document IDs for RAG
-             */
-            rag_documents?: string[] | null;
-            /**
-             * Max Tokens
-             * @description Maximum response tokens
-             */
-            max_tokens?: number | null;
-            /**
-             * Temperature
-             * @description Response temperature
-             * @default 0.7
-             */
-            temperature: number;
-        };
-        /**
-         * ChatResponse
-         * @description Schema for chat response.
-         */
-        ChatResponse: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /** @description AI response message */
-            ai_message: components["schemas"]["MessageResponse"];
-            /** @description Updated conversation */
-            conversation: components["schemas"]["ConversationResponse"];
-            /**
-             * Usage
-             * @description Token usage information
-             */
-            usage?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Rag Context
-             * @description RAG context used
-             */
-            rag_context?: {
-                [key: string]: unknown;
-            }[] | null;
-            /**
-             * Tool Calls Made
-             * @description Tool calls executed (deprecated - use tool_call_summary)
-             */
-            tool_calls_made?: {
-                [key: string]: unknown;
-            }[] | null;
-            /** @description Detailed summary of tool calls executed */
-            tool_call_summary?: components["schemas"]["ToolCallSummary"] | null;
-            /**
-             * Response Time Ms
-             * @description Response time in milliseconds
-             * @default 0
-             */
-            response_time_ms: number;
-        };
-        /**
-         * ConversationCreate
-         * @description Schema for creating a new conversation.
-         * @example {
-         *       "is_active": true,
-         *       "metainfo": {
-         *         "category": "technical",
-         *         "priority": "normal"
-         *       },
-         *       "title": "AI Discussion"
-         *     }
-         */
-        ConversationCreate: {
-            /**
-             * Title
-             * @description Conversation title
-             */
-            title: string;
-            /**
-             * Is Active
-             * @description Whether conversation is active
-             * @default true
-             */
-            is_active: boolean;
-            /**
-             * Metainfo
-             * @description Additional metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * ConversationResponse
-         * @description Schema for conversation response data.
-         * @example {
-         *       "created_at": "2025-07-14T03:47:30Z",
-         *       "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "is_active": true,
-         *       "last_message_at": "2025-07-14T03:47:30Z",
-         *       "message_count": 5,
-         *       "metainfo": {
-         *         "category": "technical"
-         *       },
-         *       "title": "AI Discussion",
-         *       "updated_at": "2025-07-14T03:47:30Z",
-         *       "user_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318"
-         *     }
-         */
-        ConversationResponse: {
-            /**
-             * Title
-             * @description Conversation title
-             */
-            title: string;
-            /**
-             * Is Active
-             * @description Whether conversation is active
-             * @default true
-             */
-            is_active: boolean;
-            /**
-             * Id
-             * Format: uuid
-             * @description Conversation ID
-             */
-            id: string;
-            /**
-             * User Id
-             * Format: uuid
-             * @description Owner user ID
-             */
-            user_id: string;
-            /**
-             * Message Count
-             * @description Number of messages
-             * @default 0
-             */
-            message_count: number;
-            /**
-             * Created At
-             * Format: date-time
-             * @description Creation timestamp
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             * @description Last update timestamp
-             */
-            updated_at: string;
-            /**
-             * Last Message At
-             * @description Last message timestamp
-             */
-            last_message_at?: string | null;
-            /**
-             * Metainfo
-             * @description Additional metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * ConversationStats
-         * @description Schema for conversation statistics.
-         */
-        ConversationStats: {
-            /**
-             * Total Conversations
-             * @description Total conversations
-             * @default 0
-             */
-            total_conversations: number;
-            /**
-             * Active Conversations
-             * @description Active conversations
-             * @default 0
-             */
-            active_conversations: number;
-            /**
-             * Total Messages
-             * @description Total messages
-             * @default 0
-             */
-            total_messages: number;
-            /**
-             * Avg Messages Per Conversation
-             * @description Average messages per conversation
-             * @default 0
-             */
-            avg_messages_per_conversation: number;
-            /**
-             * Most Recent Activity
-             * @description Most recent activity
-             */
-            most_recent_activity?: string | null;
-        };
-        /**
-         * ConversationUpdate
-         * @description Schema for updating conversation information.
-         * @example {
-         *       "is_active": true,
-         *       "metainfo": {
-         *         "category": "research"
-         *       },
-         *       "title": "Updated AI Discussion"
-         *     }
-         */
-        ConversationUpdate: {
-            /**
-             * Title
-             * @description New title
-             */
-            title?: string | null;
-            /**
-             * Is Active
-             * @description New active status
-             */
-            is_active?: boolean | null;
-            /**
-             * Metainfo
-             * @description Updated metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * DocumentChunkResponse
-         * @description Schema for document chunk response data.
-         * @example {
-         *       "chunk_index": 0,
-         *       "content": "Machine learning is a subset of artificial intelligence...",
-         *       "created_at": "2025-07-14T03:47:30Z",
-         *       "document_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "document_title": "Machine Learning Guide",
-         *       "end_char": 500,
-         *       "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "metainfo": {
-         *         "section": "introduction"
-         *       },
-         *       "similarity_score": 0.95,
-         *       "start_char": 0,
-         *       "token_count": 120
-         *     }
-         */
-        DocumentChunkResponse: {
-            /**
-             * Id
-             * Format: uuid
-             * @description Chunk ID
-             */
-            id: string;
-            /**
-             * Content
-             * @description Chunk text content
-             */
-            content: string;
-            /**
-             * Chunk Index
-             * @description Chunk index in document
-             */
-            chunk_index: number;
-            /**
-             * Start Char
-             * @description Start character position
-             */
-            start_char: number;
-            /**
-             * End Char
-             * @description End character position
-             */
-            end_char: number;
-            /**
-             * Token Count
-             * @description Number of tokens
-             */
-            token_count: number;
-            /**
-             * Document Id
-             * Format: uuid
-             * @description Parent document ID
-             */
-            document_id: string;
-            /**
-             * Document Title
-             * @description Document title
-             */
-            document_title?: string | null;
-            /**
-             * Similarity Score
-             * @description Similarity score (for search)
-             */
-            similarity_score?: number | null;
-            /**
-             * Metainfo
-             * @description Additional metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Created At
-             * Format: date-time
-             * @description Creation timestamp
-             */
-            created_at: string;
-        };
-        /**
-         * DocumentResponse
-         * @description Schema for document response data.
-         * @example {
-         *       "chunk_count": 25,
-         *       "created_at": "2025-07-14T03:47:30Z",
-         *       "file_size": 2048576,
-         *       "file_type": "pdf",
-         *       "filename": "ml_guide.pdf",
-         *       "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "metainfo": {
-         *         "language": "en",
-         *         "pages": 50
-         *       },
-         *       "mime_type": "application/pdf",
-         *       "owner_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "processing_status": "completed",
-         *       "title": "Machine Learning Guide",
-         *       "updated_at": "2025-07-14T03:47:30Z"
-         *     }
-         */
-        DocumentResponse: {
-            /**
-             * Id
-             * Format: uuid
-             * @description Document ID
-             */
-            id: string;
-            /**
-             * Title
-             * @description Document title
-             */
-            title: string;
-            /**
-             * Filename
-             * @description Original filename
-             */
-            filename: string;
-            /**
-             * File Type
-             * @description File type/extension
-             */
-            file_type: string;
-            /**
-             * File Size
-             * @description File size in bytes
-             */
-            file_size: number;
-            /**
-             * Mime Type
-             * @description MIME type
-             */
-            mime_type?: string | null;
-            /**
-             * Processing Status
-             * @description Processing status
-             */
-            processing_status: string;
-            /**
-             * Owner Id
-             * Format: uuid
-             * @description Owner user ID
-             */
-            owner_id: string;
-            /**
-             * Metainfo
-             * @description Additional metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Chunk Count
-             * @description Number of chunks
-             * @default 0
-             */
-            chunk_count: number;
-            /**
-             * Created At
-             * Format: date-time
-             * @description Upload timestamp
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             * @description Last update timestamp
-             */
-            updated_at: string;
-        };
-        /**
-         * DocumentSearchRequest
-         * @description Schema for document search requests.
-         * @example {
-         *       "algorithm": "hybrid",
-         *       "document_ids": [
-         *         "4b40c3d9-208c-49ed-bd96-31c0b971e318"
-         *       ],
-         *       "file_types": [
-         *         "pdf",
-         *         "docx"
-         *       ],
-         *       "limit": 10,
-         *       "query": "machine learning algorithms",
-         *       "threshold": 0.8
-         *     }
-         */
-        DocumentSearchRequest: {
-            /**
-             * Page
-             * @description Page number
-             * @default 1
-             */
-            page: number;
-            /**
-             * Per Page
-             * @description Items per page
-             * @default 10
-             */
-            per_page: number;
-            /**
-             * Sort By
-             * @description Field to sort by
-             */
-            sort_by?: string | null;
-            /**
-             * Sort Order
-             * @description Sort order: asc or desc
-             * @default asc
-             */
-            sort_order: string | null;
-            /**
-             * Query
-             * @description Search query string
-             */
-            query?: string | null;
-            /**
-             * Algorithm
-             * @description Search algorithm to use
-             * @default hybrid
-             */
-            algorithm: string | null;
-            /**
-             * Limit
-             * @description Number of results to return
-             * @default 10
-             */
-            limit: number | null;
-            /**
-             * Threshold
-             * @description Threshold to use
-             * @default 0.7
-             */
-            threshold: number | null;
-            /**
-             * Filters
-             * @description Additional search filters
-             */
-            filters?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Document Ids
-             * @description Specific document IDs to search
-             */
-            document_ids?: string[] | null;
-            /**
-             * File Types
-             * @description File types to include
-             */
-            file_types?: string[] | null;
-        };
-        /**
-         * DocumentSearchResponse
-         * @description Response schema for document search.
-         */
-        DocumentSearchResponse: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /**
-             * Results
-             * @description Search results
-             * @default []
-             */
-            results: components["schemas"]["DocumentChunkResponse"][];
-            /**
-             * Query
-             * @description Original search query
-             */
-            query: string;
-            /**
-             * Algorithm
-             * @description Search algorithm used
-             */
-            algorithm: string;
-            /**
-             * Total Results
-             * @description Total number of results
-             * @default 0
-             */
-            total_results: number;
-            /**
-             * Search Time Ms
-             * @description Search time in milliseconds
-             * @default 0
-             */
-            search_time_ms: number;
-        };
-        /**
-         * DocumentUpdate
-         * @description Schema for document updates.
-         * @example {
-         *       "metainfo": {
-         *         "category": "AI/ML",
-         *         "difficulty": "intermediate"
-         *       },
-         *       "title": "Updated ML Guide"
-         *     }
-         */
-        DocumentUpdate: {
-            /**
-             * Title
-             * @description New title
-             */
-            title?: string | null;
-            /**
-             * Metainfo
-             * @description Updated metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * DocumentUploadResponse
-         * @description Schema for document upload response with enhanced features.
-         */
-        DocumentUploadResponse: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /** @description Uploaded document information */
-            document: components["schemas"]["DocumentResponse"];
-            /**
-             * Task Id
-             * @description Background processing task ID
-             */
-            task_id?: string | null;
-            /**
-             * Auto Processing
-             * @description Whether auto-processing was enabled
-             * @default false
-             */
-            auto_processing: boolean;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /**
-         * LoginRequest
-         * @description Schema for user login request.
-         * @example {
-         *       "password": "SecurePass123",
-         *       "username": "johndoe"
-         *     }
-         */
-        LoginRequest: {
-            /**
-             * Username
-             * @description Username or email
-             */
-            username: string;
-            /**
-             * Password
-             * @description Password
-             */
-            password: string;
-        };
-        /**
-         * MessageResponse
-         * @description Schema for message response data.
-         * @example {
-         *       "content": "Machine learning is a subset of artificial intelligence...",
-         *       "conversation_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "created_at": "2025-07-14T03:47:30Z",
-         *       "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
-         *       "metainfo": {
-         *         "model": "gpt-4"
-         *       },
-         *       "role": "assistant",
-         *       "token_count": 150
-         *     }
-         */
-        MessageResponse: {
-            /**
-             * Role
-             * @description Message role
-             */
-            role: string;
-            /**
-             * Content
-             * @description Message content
-             */
-            content: string;
-            /**
-             * Id
-             * Format: uuid
-             * @description Message ID
-             */
-            id: string;
-            /**
-             * Conversation Id
-             * Format: uuid
-             * @description Parent conversation ID
-             */
-            conversation_id: string;
-            /**
-             * Token Count
-             * @description Number of tokens
-             * @default 0
-             */
-            token_count: number;
-            /**
-             * Tool Calls
-             * @description Tool calls made
-             */
-            tool_calls?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Tool Call Results
-             * @description Tool call results
-             */
-            tool_call_results?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Metainfo
-             * @description Additional metainfo
-             */
-            metainfo?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Created At
-             * Format: date-time
-             * @description Creation timestamp
-             */
-            created_at: string;
-        };
-        /** PaginatedResponse[ConversationResponse] */
-        PaginatedResponse_ConversationResponse_: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /** Items */
-            items?: unknown[];
-            pagination: components["schemas"]["PaginationParams"];
-        };
-        /** PaginatedResponse[DocumentResponse] */
-        PaginatedResponse_DocumentResponse_: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /** Items */
-            items?: unknown[];
-            pagination: components["schemas"]["PaginationParams"];
-        };
-        /** PaginatedResponse[MessageResponse] */
-        PaginatedResponse_MessageResponse_: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /** Items */
-            items?: unknown[];
-            pagination: components["schemas"]["PaginationParams"];
-        };
-        /** PaginatedResponse[UserResponse] */
-        PaginatedResponse_UserResponse_: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /** Items */
-            items?: unknown[];
-            pagination: components["schemas"]["PaginationParams"];
-        };
-        /**
-         * PaginationParams
-         * @description Query parameters for pagination.
-         */
-        PaginationParams: {
-            /**
-             * Page
-             * @description Page number
-             * @default 1
-             */
-            page: number;
-            /**
-             * Per Page
-             * @description Items per page
-             * @default 10
-             */
-            per_page: number;
-            /**
-             * Sort By
-             * @description Field to sort by
-             */
-            sort_by?: string | null;
-            /**
-             * Sort Order
-             * @description Sort order: asc or desc
-             * @default asc
-             */
-            sort_order: string | null;
-        };
-        /**
-         * PasswordResetConfirm
-         * @description Schema for password reset confirmation.
-         * @example {
-         *       "new_password": "NewSecurePass123",
-         *       "token": "reset_token_here"
-         *     }
-         */
-        PasswordResetConfirm: {
-            /**
-             * Token
-             * @description Password reset token
-             */
-            token: string;
-            /**
-             * New Password
-             * @description New password
-             */
-            new_password: string;
-        };
-        /**
-         * PasswordResetRequest
-         * @description Schema for password reset request.
-         * @example {
-         *       "email": "john@example.com"
-         *     }
-         */
-        PasswordResetRequest: {
-            /**
-             * Email
-             * Format: email
-             * @description Email address for password reset
-             */
-            email: string;
-        };
-        /**
-         * ProcessingConfigResponse
-         * @description Response schema for processing configuration.
-         */
-        ProcessingConfigResponse: {
-            /** Message */
-            message: string;
-            /** Config */
-            config: {
-                [key: string]: unknown;
-            };
-        };
-        /**
-         * ProcessingStatusResponse
-         * @description Enhanced schema for document processing status with background task information.
-         */
-        ProcessingStatusResponse: {
-            /**
-             * Success
-             * @description Whether the request was successful
-             */
-            success: boolean;
-            /**
-             * Message
-             * @description Human-readable message
-             */
-            message: string;
-            /**
-             * Timestamp
-             * @description When the response was generated
-             */
-            timestamp?: string | null;
-            /**
-             * Document Id
-             * Format: uuid
-             * @description Document ID
-             */
-            document_id: string;
-            /**
-             * Status
-             * @description Current processing status
-             */
-            status: string;
-            /**
-             * Chunk Count
-             * @description Number of chunks created
-             * @default 0
-             */
-            chunk_count: number;
-            /**
-             * Processing Time
-             * @description Processing time in seconds
-             */
-            processing_time?: number | null;
-            /**
-             * Error Message
-             * @description Error message if failed
-             */
-            error_message?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             * @description Document creation time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             * @description Document last update time
-             */
-            updated_at: string;
-            /**
-             * Task Id
-             * @description Background task ID
-             */
-            task_id?: string | null;
-            /**
-             * Task Status
-             * @description Background task status
-             */
-            task_status?: string | null;
-            /**
-             * Progress
-             * @description Processing progress (0-1)
-             */
-            progress?: number | null;
-            /**
-             * Task Created At
-             * @description Task creation time
-             */
-            task_created_at?: string | null;
-            /**
-             * Task Started At
-             * @description Task start time
-             */
-            task_started_at?: string | null;
-            /**
-             * Task Error
-             * @description Task error message
-             */
-            task_error?: string | null;
-        };
-        /**
-         * RegisterRequest
-         * @description Schema for user registration request.
-         * @example {
-         *       "email": "john@example.com",
-         *       "full_name": "John Doe",
-         *       "password": "SecurePass123",
-         *       "username": "johndoe"
-         *     }
-         */
-        RegisterRequest: {
-            /**
-             * Username
-             * @description Unique username
-             */
-            username: string;
-            /**
-             * Email
-             * Format: email
-             * @description Valid email address
-             */
-            email: string;
-            /**
-             * Password
-             * @description Strong password
-             */
-            password: string;
-            /**
-             * Full Name
-             * @description Full display name
-             */
-            full_name?: string | null;
-        };
-        /**
-         * Token
-         * @description Schema for JWT token response.
-         * @example {
-         *       "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-         *       "expires_in": 1800,
-         *       "token_type": "bearer"
-         *     }
-         */
-        Token: {
-            /**
-             * Access Token
-             * @description JWT access token
-             */
-            access_token: string;
-            /**
-             * Token Type
-             * @description Token type
-             * @default bearer
-             */
-            token_type: string;
-            /**
-             * Expires In
-             * @description Token expiration in seconds
-             */
-            expires_in: number;
-        };
-        /**
-         * ToolCallResult
-         * @description Schema for individual tool call result.
-         */
-        ToolCallResult: {
-            /**
-             * Tool Call Id
-             * @description ID of the tool call
-             */
-            tool_call_id: string;
-            /**
-             * Tool Name
-             * @description Name of the tool that was called
-             */
-            tool_name: string;
-            /**
-             * Success
-             * @description Whether the tool call was successful
-             */
-            success: boolean;
-            /**
-             * Content
-             * @description Tool result content
-             */
-            content?: {
-                [key: string]: unknown;
-            }[];
-            /**
-             * Error
-             * @description Error message if tool call failed
-             */
-            error?: string | null;
-            /**
-             * Provider
-             * @description Tool provider (fastmcp, openai, etc.)
-             */
-            provider?: string | null;
-            /**
-             * Execution Time Ms
-             * @description Execution time in milliseconds
-             */
-            execution_time_ms?: number | null;
-        };
-        /**
-         * ToolCallSummary
-         * @description Schema for tool call execution summary.
-         */
-        ToolCallSummary: {
-            /**
-             * Total Calls
-             * @description Total number of tool calls made
-             */
-            total_calls: number;
-            /**
-             * Successful Calls
-             * @description Number of successful tool calls
-             */
-            successful_calls: number;
-            /**
-             * Failed Calls
-             * @description Number of failed tool calls
-             */
-            failed_calls: number;
-            /**
-             * Total Execution Time Ms
-             * @description Total execution time in milliseconds
-             */
-            total_execution_time_ms: number;
-            /**
-             * Results
-             * @description Individual tool call results
-             */
-            results?: components["schemas"]["ToolCallResult"][];
-        };
-        /**
-         * ToolHandlingMode
-         * @description Enum for different tool call result handling modes.
-         *
-         *     - RETURN_RESULTS: Return tool call results as content without further AI processing
-         *     - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
-         * @enum {string}
-         */
-        ToolHandlingMode: "return_results" | "complete_with_results";
-        /**
-         * UserPasswordUpdate
-         * @description Schema for updating user password.
-         */
-        UserPasswordUpdate: {
-            /**
-             * Current Password
-             * @description Current password
-             */
-            current_password: string;
-            /**
-             * New Password
-             * @description New password
-             */
-            new_password: string;
-        };
-        /**
-         * UserResponse
-         * @description Schema for user API responses.
-         */
         UserResponse: {
-            /**
-             * Username
-             * @description Unique username
-             */
+            /** Format: uuid */
+            id?: string;
+            username?: string;
+            /** Format: email */
+            email?: string;
+            is_active?: boolean;
+            is_superuser?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+        };
+        LoginRequest: {
             username: string;
-            /**
-             * Email
-             * Format: email
-             * @description User email address
-             */
-            email: string;
-            /**
-             * Full Name
-             * @description User's full name
-             */
-            full_name?: string | null;
-            /**
-             * Id
-             * Format: uuid
-             * @description Unique user identifier
-             */
-            id: string;
-            /**
-             * Is Active
-             * @description Whether the user account is active
-             */
-            is_active: boolean;
-            /**
-             * Is Superuser
-             * @description Whether the user has admin privileges
-             */
-            is_superuser: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             * @description When the user account was created
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             * @description When the user account was last updated
-             */
-            updated_at: string;
+            password: string;
         };
-        /**
-         * UserUpdate
-         * @description Schema for updating a user.
-         */
-        UserUpdate: {
-            /**
-             * Email
-             * @description New email address
-             */
-            email?: string | null;
-            /**
-             * Full Name
-             * @description Updated full name
-             */
-            full_name?: string | null;
-            /**
-             * Is Active
-             * @description Whether user is active
-             */
-            is_active?: boolean | null;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
+        Token: {
+            access_token?: string;
+            token_type?: string;
         };
     };
     responses: never;
@@ -2522,1521 +743,4 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export interface operations {
-    basic_health_check_api_v1_health__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-        };
-    };
-    detailed_health_check_api_v1_health_detailed_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    database_health_check_api_v1_health_database_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    services_health_check_api_v1_health_services_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    get_system_metrics_api_v1_health_metrics_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    readiness_check_api_v1_health_readiness_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    get_performance_metrics_api_v1_health_performance_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    liveness_check_api_v1_health_liveness_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    register_api_v1_auth_register_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    login_api_v1_auth_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Token"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_current_user_info_api_v1_auth_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-        };
-    };
-    logout_api_v1_auth_logout_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-        };
-    };
-    refresh_token_api_v1_auth_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Token"];
-                };
-            };
-        };
-    };
-    request_password_reset_api_v1_auth_password_reset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordResetRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    confirm_password_reset_api_v1_auth_password_reset_confirm_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordResetConfirm"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_my_profile_api_v1_users_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-        };
-    };
-    update_my_profile_api_v1_users_me_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    change_password_api_v1_users_me_change_password_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserPasswordUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_users_api_v1_users__get: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-                active_only?: boolean;
-                superuser_only?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_UserResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_user_api_v1_users__user_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_user_api_v1_users__user_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_user_api_v1_users__user_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_document_api_v1_documents_upload_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_documents_upload_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DocumentUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_documents_api_v1_documents__get: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-                file_type?: string | null;
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_DocumentResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_document_api_v1_documents__document_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DocumentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_document_api_v1_documents__document_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DocumentUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DocumentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_document_api_v1_documents__document_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_processing_status_api_v1_documents__document_id__status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProcessingStatusResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reprocess_document_api_v1_documents__document_id__reprocess_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    download_document_api_v1_documents__document_id__download_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_document_processing_api_v1_documents__document_id__process_post: {
-        parameters: {
-            query?: {
-                /** @description Processing priority (1=highest, 10=lowest) */
-                priority?: number;
-            };
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackgroundTaskResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_enhanced_processing_status_api_v1_documents__document_id__enhanced_status_get: {
-        parameters: {
-            query?: {
-                /** @description Optional task ID for background processing details */
-                task_id?: string | null;
-            };
-            header?: never;
-            path: {
-                document_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProcessingStatusResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_processing_config_api_v1_documents_processing_config_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProcessingConfigResponse"];
-                };
-            };
-        };
-    };
-    get_queue_status_api_v1_documents_queue_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    list_conversations_api_v1_conversations__get: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-                active_only?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ConversationResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_conversation_api_v1_conversations__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConversationCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_conversation_api_v1_conversations__conversation_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_conversation_api_v1_conversations__conversation_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConversationUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_conversation_api_v1_conversations__conversation_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_messages_api_v1_conversations__conversation_id__messages_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_MessageResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    chat_api_v1_conversations_chat_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChatRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    chat_stream_api_v1_conversations_chat_stream_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChatRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_conversation_stats_api_v1_conversations_stats_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationStats"];
-                };
-            };
-        };
-    };
-    search_documents_api_v1_search__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DocumentSearchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DocumentSearchResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    find_similar_chunks_api_v1_search_similar__chunk_id__get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                chunk_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DocumentSearchResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_search_suggestions_api_v1_search_suggestions_get: {
-        parameters: {
-            query: {
-                query: string;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_search_history_api_v1_search_history_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    clear_search_history_api_v1_search_history_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-        };
-    };
-    list_tools_api_v1_tools__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    get_tool_details_api_v1_tools__tool_name__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tool_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    test_tool_api_v1_tools__tool_name__test_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tool_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    [key: string]: unknown;
-                } | null;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    refresh_tools_api_v1_tools_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse"];
-                };
-            };
-        };
-    };
-    get_server_status_api_v1_tools_servers_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-}
+export type operations = Record<string, never>;

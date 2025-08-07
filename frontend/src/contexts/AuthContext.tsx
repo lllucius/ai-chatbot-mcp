@@ -15,8 +15,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { User } from '../types/api';
-import { useCurrentUser, useLogin, useLogout } from '../hooks/api';
+import sdkService, { type User, type LoginRequest } from '../services/sdk-service';
 
 // =============================================================================
 // Authentication Context Types
@@ -34,7 +33,7 @@ interface AuthContextValue {
   /** Whether user is currently authenticated */
   isAuthenticated: boolean;
   /** Login function that accepts credentials */
-  login: (credentials: { username: string; password: string }) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
   /** Logout function that clears authentication */
   logout: () => Promise<void>;
   /** Error from authentication operations */
@@ -91,25 +90,47 @@ export function useAuth(): AuthContextValue {
  * @returns Provider component with authentication context
  */
 export function AuthProvider({ children }: AuthProviderProps): React.ReactElement {
-  // Local state for authentication errors
+  // Local state
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // React Query hooks for authentication operations
-  const {
-    data: user,
-    isLoading: isUserLoading,
-    error: userError,
-    refetch: refetchUser,
-  } = useCurrentUser();
+  // Check if user is authenticated based on SDK state
+  const isAuthenticated = sdkService.isAuthenticated() && user !== null;
 
-  const loginMutation = useLogin();
-  const logoutMutation = useLogout();
+  /**
+   * Initialize authentication state
+   */
+  useEffect(() => {
+    const initAuth = async () => {
+      if (sdkService.isAuthenticated()) {
+        try {
+          const currentUser = await sdkService.getCurrentUser();
+          setUser(currentUser);
+        } catch (err) {
+          console.error('Failed to get current user:', err);
+          // Clear invalid token
+          sdkService.getSdk().clearToken();
+        }
+      }
+      setIsLoading(false);
+    };
 
-  // Determine if user is authenticated
-  const isAuthenticated = !!user && !userError;
-  
-  // Overall loading state (checking authentication or performing auth operations)
-  const isLoading = isUserLoading || loginMutation.isPending || logoutMutation.isPending;
+    initAuth();
+  }, []);
+
+  /**
+   * Listen for auth required events (global SDK error handling)
+   */
+  useEffect(() => {
+    const handleAuthRequired = () => {
+      setUser(null);
+      setError('Authentication required. Please log in again.');
+    };
+
+    window.addEventListener('auth:required', handleAuthRequired);
+    return () => window.removeEventListener('auth:required', handleAuthRequired);
+  }, []);
 
   /**
    * Login function
@@ -118,20 +139,24 @@ export function AuthProvider({ children }: AuthProviderProps): React.ReactElemen
    * @param credentials - User login credentials
    * @throws Error if login fails
    */
-  const login = async (credentials: { username: string; password: string }): Promise<void> => {
+  const login = async (credentials: LoginRequest): Promise<void> => {
     try {
       setError(null);
+      setIsLoading(true);
       
-      // Perform login mutation
-      await loginMutation.mutateAsync(credentials);
+      // Perform login via SDK
+      await sdkService.login(credentials);
       
-      // Refetch user data after successful login
-      await refetchUser();
+      // Get user data after successful login
+      const currentUser = await sdkService.getCurrentUser();
+      setUser(currentUser);
       
     } catch (err: any) {
       const errorMessage = err?.message || 'Login failed. Please check your credentials and try again.';
       setError(errorMessage);
       throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,12 +167,18 @@ export function AuthProvider({ children }: AuthProviderProps): React.ReactElemen
   const logout = async (): Promise<void> => {
     try {
       setError(null);
-      await logoutMutation.mutateAsync();
+      setIsLoading(true);
+      
+      await sdkService.logout();
+      setUser(null);
+      
     } catch (err: any) {
       // Logout errors are generally not critical, just log them
       console.error('Logout error:', err);
-      // Still clear error state even if logout fails
-      setError(null);
+      // Still clear user state even if logout fails
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -158,21 +189,9 @@ export function AuthProvider({ children }: AuthProviderProps): React.ReactElemen
     setError(null);
   };
 
-  // Set error from mutations if they occur
-  useEffect(() => {
-    if (loginMutation.error) {
-      const errorMessage = (loginMutation.error as any)?.message || 'Login failed';
-      setError(errorMessage);
-    }
-    if (logoutMutation.error) {
-      const errorMessage = (logoutMutation.error as any)?.message || 'Logout failed';
-      setError(errorMessage);
-    }
-  }, [loginMutation.error, logoutMutation.error]);
-
   // Context value object
   const contextValue: AuthContextValue = {
-    user: user || null,
+    user,
     isLoading,
     isAuthenticated,
     login,
