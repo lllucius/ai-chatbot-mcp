@@ -71,12 +71,25 @@ async def upload_document(
             document.id, priority=processing_priority
         )
 
+    document_response = DocumentResponse(
+        id=document.id,
+        title=document.title,
+        filename=document.filename,
+        file_type=document.file_type,
+        file_size=document.file_size,
+        mime_type=document.mime_type,
+        processing_status=document.status,
+        owner_id=document.owner_id,
+        metainfo=document.metainfo,
+        chunk_count=document.chunk_count,
+        created_at=document.created_at,
+        updated_at=document.updated_at,
+    )
+
     payload = DocumentUploadResponse(
-        document=DocumentResponse.model_validate(document),
+        document=document_response,
         task_id=task_id,
         auto_processing=auto_process,
-        success=True,
-        message="Document uploaded successfully",
     )
     return APIResponse[DocumentUploadResponse](
         success=True,

@@ -143,7 +143,7 @@ class DocumentSearchRequest(SearchParams):
     }
 
 
-class DocumentUploadResponse(BaseResponse):
+class DocumentUploadResponse(BaseSchema):
     """Schema for document upload response with enhanced features."""
 
     document: DocumentResponse = Field(..., description="Uploaded document information")
@@ -153,7 +153,7 @@ class DocumentUploadResponse(BaseResponse):
     )
 
 
-class ProcessingStatusResponse(BaseResponse):
+class ProcessingStatusResponse(BaseSchema):
     """Enhanced schema for document processing status with background task information."""
 
     document_id: UUID = Field(..., description="Document ID")

@@ -196,11 +196,14 @@ async def status(
 
             details = (
                 f"Status: [yellow]{status.status}[/yellow]\n"
-                f"Progress: [green]{status.progress:.1%}[/green]\n"
-                f"Chunks: [white]{status.chunks_processed}/{status.total_chunks}[/white]\n"
-                f"Started: [magenta]{format_timestamp(str(status.started_at)) if status.started_at else 'N/A'}[/magenta]\n"
-                f"Completed: [magenta]{format_timestamp(str(status.completed_at)) if status.completed_at else 'N/A'}[/magenta]"
             )
+            if not status.status == "pending":
+                details += (
+                    f"Progress: [green]{status.progress:.1%}[/green]\n"
+                    f"Chunks: [white]{status.chunks_processed}/{status.total_chunks}[/white]\n"
+                    f"Started: [magenta]{format_timestamp(str(status.started_at)) if status.started_at else 'N/A'}[/magenta]\n"
+                    f"Completed: [magenta]{format_timestamp(str(status.completed_at)) if status.completed_at else 'N/A'}[/magenta]"
+                )
             panel = Panel(details, title="Processing Status", border_style="blue")
             console.print(panel)
     except Exception as e:

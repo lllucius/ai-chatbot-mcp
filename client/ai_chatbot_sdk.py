@@ -136,15 +136,22 @@ from shared.schemas import (  # Base and common schemas; Conversation schemas; D
     DatabaseHealthResponse,
     DocumentResponse,
     DocumentSearchRequest,
+    DocumentUpdate,
+    DocumentUploadResponse,
+    DocumentUploadResponse,
     LLMProfileCreate,
     LLMProfileResponse,
+    LivenessResponse,
     MessageResponse,
     PaginatedResponse,
     PaginationParams,
     PasswordResetConfirm,
     PasswordResetRequest,
+    PerformanceMetricsResponse,
+    ProcessingStatusResponse,
     PromptCreate,
     PromptResponse,
+    ReadinessResponse,
     RegisterRequest,
     RegistryStatsResponse,
     SearchResponse,
@@ -189,59 +196,6 @@ class ApiError(Exception):
 
 
 T = TypeVar("T")
-
-
-# --- Additional Response Models (not in shared schemas) ---
-
-
-class DocumentUploadResponse(BaseResponse):
-    """Document upload response model."""
-
-    document: DocumentResponse
-    processing_started: bool
-    estimated_completion: Optional[str] = None
-
-
-class DocumentUpdate(BaseSchema):
-    """Document update request model."""
-
-    title: Optional[str] = None
-    metainfo: Optional[Dict[str, Any]] = None
-
-
-class ProcessingStatusResponse(BaseResponse):
-    """Document processing status response model."""
-
-    document_id: UUID
-    status: str
-    progress: float
-    chunks_processed: int
-    total_chunks: int
-    error_message: Optional[str] = None
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
-
-
-class ReadinessResponse(BaseSchema):
-    """Readiness check response model."""
-
-    status: str
-    message: str
-    timestamp: str
-
-
-class LivenessResponse(BaseSchema):
-    """Liveness check response model."""
-
-    status: str
-    message: str
-    timestamp: str
-
-
-class PerformanceMetricsResponse(BaseSchema):
-    """Performance metrics response model."""
-
-    data: Dict[str, Any]
 
 
 # --- Utility Functions ---
