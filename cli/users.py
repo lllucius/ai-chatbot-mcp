@@ -81,7 +81,7 @@ from uuid import UUID
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from client.ai_chatbot_sdk import ApiError
+from sdk.ai_chatbot_sdk import ApiError
 from shared.schemas import RegisterRequest
 
 from .base import (

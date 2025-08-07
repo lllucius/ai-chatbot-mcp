@@ -16,7 +16,7 @@ A comprehensive Python SDK for interacting with the AI Chatbot Platform API.
 The SDK is included in the main project. Import it directly:
 
 ```python
-from client.ai_chatbot_sdk import AIChatbotSDK
+from sdk.ai_chatbot_sdk import AIChatbotSDK
 ```
 
 ## Enhanced Terminal Client
@@ -92,13 +92,13 @@ The enhanced client supports many new commands:
 The SDK is included in the main project. Import it directly:
 
 ```python
-from client.ai_chatbot_sdk import AIChatbotSDK
+from sdk.ai_chatbot_sdk import AIChatbotSDK
 ```
 
 ## Quick Start
 
 ```python
-from client.ai_chatbot_sdk import AIChatbotSDK
+from sdk.ai_chatbot_sdk import AIChatbotSDK
 from shared.schemas import (
     ChatRequest, 
     RegisterRequest, 
@@ -233,7 +233,7 @@ metrics = sdk.health.metrics()
 ## Error Handling
 
 ```python
-from client.ai_chatbot_sdk import ApiError
+from sdk.ai_chatbot_sdk import ApiError
 
 try:
     response = sdk.conversations.chat(ChatRequest(

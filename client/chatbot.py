@@ -200,7 +200,7 @@ except ImportError:
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-    from client.ai_chatbot_sdk import AIChatbotSDK, ApiError
+    from sdk.ai_chatbot_sdk import AIChatbotSDK, ApiError
     from client.config import (
         ClientConfig,
         get_default_backup_dir,

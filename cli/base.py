@@ -76,7 +76,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from client.ai_chatbot_sdk import AIChatbotSDK
+from sdk.ai_chatbot_sdk import AIChatbotSDK
 from client.config import load_config
 
 TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
