@@ -740,8 +740,8 @@ export function PasswordChangeForm({ onChangeSuccess }: PasswordChangeFormProps)
 
     try {
       await changePasswordMutation.mutateAsync({
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword,
       });
       
       // Reset form on success
