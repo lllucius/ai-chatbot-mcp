@@ -7,7 +7,6 @@ Augmented Generation) capabilities with embedding services and tool calling.
 
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
-from uuid import UUID
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,7 +60,7 @@ class ConversationService(BaseService):
         self.openai_client = OpenAIClient(self.mcp_service)
 
     async def create_conversation(
-        self, request: ConversationCreate, user_id: UUID
+        self, request: ConversationCreate, user_id: int
     ) -> Conversation:
         """Create a new conversation.
 
@@ -93,7 +92,7 @@ class ConversationService(BaseService):
             raise ValidationError(f"Conversation creation failed: {e}")
 
     async def get_conversation(
-        self, conversation_id: UUID, user_id: UUID
+        self, conversation_id: int, user_id: int
     ) -> Conversation:
         """Get conversation by ID.
 
@@ -123,7 +122,7 @@ class ConversationService(BaseService):
         return conversation
 
     async def list_conversations(
-        self, user_id: UUID, page: int = 1, size: int = 20, active_only: bool = True
+        self, user_id: int, page: int = 1, size: int = 20, active_only: bool = True
     ) -> Tuple[List[Conversation], int]:
         """List conversations for a user with pagination.
 
@@ -162,7 +161,7 @@ class ConversationService(BaseService):
         return list(conversations), total
 
     async def update_conversation(
-        self, conversation_id: UUID, request: ConversationUpdate, user_id: UUID
+        self, conversation_id: int, request: ConversationUpdate, user_id: int
     ) -> Conversation:
         """Update conversation metainfo.
 
@@ -191,7 +190,7 @@ class ConversationService(BaseService):
         logger.info(f"Conversation updated: {conversation_id}")
         return conversation
 
-    async def delete_conversation(self, conversation_id: UUID, user_id: UUID) -> bool:
+    async def delete_conversation(self, conversation_id: int, user_id: int) -> bool:
         """Delete conversation and all messages.
 
         Args:
@@ -211,7 +210,7 @@ class ConversationService(BaseService):
         return True
 
     async def get_messages(
-        self, conversation_id: UUID, user_id: UUID, page: int = 1, size: int = 50
+        self, conversation_id: int, user_id: int, page: int = 1, size: int = 50
     ) -> Tuple[List[Message], int]:
         """Get messages in a conversation.
 
@@ -249,7 +248,7 @@ class ConversationService(BaseService):
 
         return list(messages), total
 
-    async def process_chat(self, request: ChatRequest, user_id: UUID) -> Dict[str, Any]:
+    async def process_chat(self, request: ChatRequest, user_id: int) -> Dict[str, Any]:
         """Process chat request and generate AI response.
 
         Args:
@@ -416,7 +415,7 @@ class ConversationService(BaseService):
             raise ValidationError(f"Chat processing failed: {e}")
 
     async def process_chat_stream(
-        self, request: ChatRequest, user_id: UUID
+        self, request: ChatRequest, user_id: int
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """Process chat request and generate streaming AI response.
 
@@ -598,7 +597,7 @@ class ConversationService(BaseService):
             yield {"type": "error", "error": str(e)}
 
     async def _get_conversation_history(
-        self, conversation_id: UUID, limit: int = 20
+        self, conversation_id: int, limit: int = 20
     ) -> List[Message]:
         """Get recent conversation history."""
         query = (
@@ -656,7 +655,7 @@ class ConversationService(BaseService):
         return "\n".join(prompt_parts)
 
     async def _get_rag_context(
-        self, request: ChatRequest, user_id: UUID
+        self, request: ChatRequest, user_id: int
     ) -> Optional[List[Dict[str, Any]]]:
         """Get RAG context for the chat request."""
         try:
@@ -758,7 +757,7 @@ class ConversationService(BaseService):
             results=results,
         )
 
-    async def get_user_stats(self, user_id: UUID) -> Dict[str, Any]:
+    async def get_user_stats(self, user_id: int) -> Dict[str, Any]:
         """Get conversation statistics for a user with registry insights.
 
         Args:

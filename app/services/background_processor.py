@@ -13,7 +13,6 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
-from uuid import UUID
 
 from sqlalchemy import select, update
 
@@ -43,7 +42,7 @@ class ProcessingTask:
     def __init__(
         self,
         task_id: str,
-        document_id: UUID,
+        document_id: int,
         task_type: str = "process_document",
         priority: int = 5,
         max_retries: int = 3,
@@ -53,7 +52,7 @@ class ProcessingTask:
 
         Args:
             task_id: Unique identifier for the task.
-            document_id: UUID of the document to process.
+            document_id: ID of the document to process.
             task_type: Type of processing task to perform.
             priority: Task priority (lower numbers = higher priority).
             max_retries: Maximum number of retry attempts.
@@ -183,7 +182,7 @@ class BackgroundProcessor(BaseService):
 
     async def queue_document_processing(
         self,
-        document_id: UUID,
+        document_id: int,
         priority: int = 5,
         processing_config: Optional[Dict[str, Any]] = None,
     ) -> str:

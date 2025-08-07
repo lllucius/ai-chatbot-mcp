@@ -11,7 +11,6 @@ import os
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from uuid import UUID
 
 from fastapi import UploadFile
 from sqlalchemy import and_, desc, func, select
@@ -57,7 +56,7 @@ class DocumentService(BaseService):
         self.embedding_service = EmbeddingService(db)
 
     async def create_document(
-        self, file: UploadFile, title: str, user_id: UUID
+        self, file: UploadFile, title: str, user_id: int
     ) -> Document:
         """Create a new document record and initiate processing pipeline.
 
@@ -68,7 +67,7 @@ class DocumentService(BaseService):
         Args:
             file: Uploaded file object with content and metadata
             title: Human-readable title for the document
-            user_id: UUID of the document owner
+            user_id: int of the document owner
 
         Returns:
             Document: Created document object with pending processing status
@@ -235,7 +234,7 @@ class DocumentService(BaseService):
             await self.db.rollback()
             raise DocumentError(f"Document creation failed: {e}")
 
-    async def start_processing(self, document_id: UUID, priority: int = 5) -> str:
+    async def start_processing(self, document_id: int, priority: int = 5) -> str:
         """Start background document processing (text extraction and chunking).
 
         Args:
@@ -290,7 +289,7 @@ class DocumentService(BaseService):
             raise
 
     async def get_processing_status(
-        self, document_id: UUID, task_id: Optional[str] = None
+        self, document_id: int, task_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get document processing status including background task information.
 
@@ -428,7 +427,7 @@ class DocumentService(BaseService):
             await self.db.commit()
             raise
 
-    async def get_document(self, document_id: UUID, user_id: UUID) -> Document:
+    async def get_document(self, document_id: int, user_id: int) -> Document:
         """Get document by ID with access control.
 
         Args:
@@ -454,7 +453,7 @@ class DocumentService(BaseService):
 
         return document
 
-    async def get_document_by_id(self, document_id: UUID) -> Optional[Document]:
+    async def get_document_by_id(self, document_id: int) -> Optional[Document]:
         """Get document by ID without access control (internal use)."""
         result = await self.db.execute(
             select(Document).where(Document.id == document_id)
@@ -463,7 +462,7 @@ class DocumentService(BaseService):
 
     async def list_documents(
         self,
-        user_id: UUID,
+        user_id: int,
         page: int = 1,
         size: int = 20,
         file_type: Optional[str] = None,
@@ -511,7 +510,7 @@ class DocumentService(BaseService):
         return list(documents), total
 
     async def update_document(
-        self, document_id: UUID, request: DocumentUpdate, user_id: UUID
+        self, document_id: int, request: DocumentUpdate, user_id: int
     ) -> Document:
         """Update document metainfo.
 
@@ -542,7 +541,7 @@ class DocumentService(BaseService):
         logger.info(f"Document updated: {document_id}")
         return document
 
-    async def delete_document(self, document_id: UUID, user_id: UUID) -> bool:
+    async def delete_document(self, document_id: int, user_id: int) -> bool:
         """Delete document and all associated data.
 
         Args:
@@ -569,7 +568,7 @@ class DocumentService(BaseService):
         logger.info(f"Document deleted: {document_id}")
         return True
 
-    async def get_status(self, document_id: UUID, user_id: UUID) -> Dict[str, Any]:
+    async def get_status(self, document_id: int, user_id: int) -> Dict[str, Any]:
         """Get document processing status and progress.
 
         Args:
@@ -620,7 +619,7 @@ class DocumentService(BaseService):
             ),
         }
 
-    async def reprocess_document(self, document_id: UUID, user_id: UUID) -> bool:
+    async def reprocess_document(self, document_id: int, user_id: int) -> bool:
         """Reprocess document (re-extract text and regenerate chunks/embeddings).
 
         Args:
@@ -651,7 +650,7 @@ class DocumentService(BaseService):
         return await self.start_processing(document_id)
 
     async def get_download_info(
-        self, document_id: UUID, user_id: UUID
+        self, document_id: int, user_id: int
     ) -> Tuple[str, str, str]:
         """Get document download information.
 
