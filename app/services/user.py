@@ -198,7 +198,7 @@ class UserService(BaseService):
 
         Returns:
             User: Newly created user object containing the following properties:
-                - id: Unique UUID identifier for the user account
+                - id: Unique integer identifier for the user account
                 - username: Validated and sanitized username for login
                 - email: Validated email address for account management
                 - full_name: Optional full name for profile display

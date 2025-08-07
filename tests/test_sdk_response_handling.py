@@ -26,7 +26,7 @@ class TestSDKResponseHandling:
             'message': 'User retrieved successfully',
             'timestamp': '2024-01-01T12:00:00Z',
             'data': {
-                'id': '123e4567-e89b-12d3-a456-426614174000',
+                'id': 123,
                 'username': 'testuser',
                 'email': 'test@example.com',
                 'full_name': 'Test User',
@@ -64,7 +64,7 @@ class TestSDKResponseHandling:
             'timestamp': '2024-01-01T12:00:00Z',
             'data': [
                 {
-                    'id': '123e4567-e89b-12d3-a456-426614174000',
+                    'id': 123,
                     'username': 'user1',
                     'email': 'user1@example.com',
                     'full_name': 'User One',
@@ -74,7 +74,7 @@ class TestSDKResponseHandling:
                     'updated_at': '2024-01-01T12:00:00Z'
                 },
                 {
-                    'id': '456e7890-e89b-12d3-a456-426614174001',
+                    'id': 456,
                     'username': 'user2',
                     'email': 'user2@example.com',
                     'full_name': 'User Two',
@@ -133,7 +133,7 @@ class TestSDKResponseHandling:
             'error': {
                 'code': 'USER_NOT_FOUND',
                 'details': {
-                    'user_id': '123e4567-e89b-12d3-a456-426614174000',
+                    'user_id': 123,
                     'reason': 'No user exists with the specified ID'
                 }
             }
@@ -210,7 +210,7 @@ class TestSDKResponseHandling:
         """Test that legacy response format (non-envelope) still works."""
         # Simulate legacy API response (direct data, no envelope)
         legacy_response_json = {
-            'id': '123e4567-e89b-12d3-a456-426614174000',
+            'id': 123,
             'username': 'testuser',
             'email': 'test@example.com',
             'full_name': 'Test User',

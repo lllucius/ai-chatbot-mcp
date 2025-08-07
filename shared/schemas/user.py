@@ -552,7 +552,7 @@ class UserResponse(UserBase):
 
     Provides complete user profile information for API responses including account
     metadata, status information, and audit timestamps. Implements custom JSON
-    serialization for proper UUID and datetime handling with frontend-compatible
+    serialization for proper integer ID and datetime handling with frontend-compatible
     formatting and comprehensive user data presentation.
 
     Response Information:
@@ -563,7 +563,7 @@ class UserResponse(UserBase):
         - Custom JSON serialization for proper type conversion
 
     User Metadata:
-        - id: Unique UUID identifier for user entity correlation
+        - id: Unique integer identifier for user entity correlation
         - is_active: Account status for access control and lifecycle management
         - is_superuser: Administrative privilege indicator for authorization
         - created_at: Account creation timestamp for audit and analytics
@@ -577,7 +577,7 @@ class UserResponse(UserBase):
         - Audit timestamps for security monitoring and compliance
 
     JSON Serialization:
-        - UUID fields converted to string representation for API compatibility
+        - Integer ID fields are preserved in their original format for API compatibility
         - Datetime fields converted to ISO format with timezone indicators
         - Custom serialization for frontend compatibility and integration
         - Consistent field formatting across all API responses

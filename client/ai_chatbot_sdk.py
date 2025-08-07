@@ -252,9 +252,11 @@ async def handle_response(
 
         # Extract the actual data from the envelope
         actual_data = json_data.get("data")
-        if actual_data:
-            # Handle paginated responses
-            if "pagination" in actual_data and "items" in actual_data:
+        meta_data = json_data.get("meta")
+        
+        if actual_data is not None:
+            # Handle paginated responses - check if pagination is in data directly
+            if isinstance(actual_data, dict) and "pagination" in actual_data and "items" in actual_data:
                 # Convert each item in the list to the target class
                 if cls:
                     items = []
@@ -264,6 +266,22 @@ async def handle_response(
                     items = actual_data["items"]
 
                 pagination = PaginationParams.model_validate(actual_data["pagination"])
+                return PaginatedResponse(
+                    items=items,
+                    pagination=pagination
+                )
+            
+            # Handle paginated responses - check if pagination is in meta
+            elif isinstance(actual_data, list) and isinstance(meta_data, dict) and "pagination" in meta_data:
+                # Convert each item in the list to the target class
+                if cls:
+                    items = []
+                    for item in actual_data:
+                        items.append(cls.model_validate(item))
+                else:
+                    items = actual_data
+
+                pagination = PaginationParams.model_validate(meta_data["pagination"])
                 return PaginatedResponse(
                     items=items,
                     pagination=pagination

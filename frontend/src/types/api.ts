@@ -74,7 +74,7 @@ export interface PaginatedResponse<T> {
  * Represents a user in the system with all profile details
  */
 export interface User {
-  /** Unique user identifier (UUID) */
+  /** Unique user identifier (integer) */
   id: string;
   /** Unique username for login */
   username: string;
