@@ -42,6 +42,7 @@ class AuthService(BaseService):
 
         Args:
             db: Database session for authentication operations and user management
+
         """
         super().__init__(db, "auth_service")
 

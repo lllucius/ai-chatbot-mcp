@@ -36,24 +36,7 @@ class DocumentService(BaseService):
 
     This service extends BaseService to provide document-specific functionality
     including file upload handling, content extraction, text processing, chunking,
-    embedding generation, and document lifecycle management with enhanced logging
-    and error recovery capabilities.
-
-    Processing Capabilities:
-    - Multi-format file support (PDF, DOCX, TXT, MD, RTF)
-    - Intelligent text extraction and preprocessing
-    - Configurable text chunking with context preservation
-    - Asynchronous embedding generation and storage
-    - Document status tracking and progress monitoring
-    - Comprehensive error handling and recovery
-
-    Responsibilities:
-    - Document upload and file storage management
-    - Content extraction from various file formats
-    - Text chunking and preprocessing for search optimization
-    - Vector embedding generation and database storage
-    - Document metadata and status management
-    - User access control and ownership management
+    embedding generation, and document lifecycle management with error recovery.
     """
 
     def __init__(self, db: AsyncSession):

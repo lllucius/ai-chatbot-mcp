@@ -74,70 +74,7 @@ class EmbeddingService:
 
     This service provides enterprise-grade functionality for generating high-quality
     embeddings, performing advanced similarity calculations, and managing vector
-    operations for semantic search and RAG applications. Integrates directly with
-    PGVector-powered PostgreSQL for scalable vector storage and optimized similarity
-    search with comprehensive performance monitoring and cost optimization.
-
-    Vector Generation:
-    - OpenAI embedding model integration with configurable parameters and quality settings
-    - Batch processing for efficient large-scale embedding generation with rate limiting
-    - Text preprocessing and normalization for optimal embedding quality
-    - Error handling and retry logic for robust API integration
-    - Cost optimization through intelligent batching and caching strategies
-    - Support for multiple embedding models and dimension configurations
-
-    Similarity Operations:
-    - Cosine similarity calculations for semantic relationship analysis
-    - Euclidean distance measurements for geometric similarity analysis
-    - Dot product operations for mathematical vector analysis
-    - Vector normalization and standardization for consistent metrics
-    - Batch similarity calculations for efficient large-scale operations
-    - Multiple distance metrics and similarity algorithms for diverse use cases
-
-    Database Integration:
-    - Native PGVector integration for high-performance vector storage and retrieval
-    - Optimized vector indexing (IVFFlat, HNSW) for fast similarity search operations
-    - Parallel query execution for high-throughput search with minimal latency
-    - Vector dimension validation and constraint enforcement for data integrity
-    - Connection pooling and resource management for high-concurrency operations
-    - Query optimization and execution planning for optimal performance
-
-    Performance Features:
-    - Intelligent caching for frequently accessed embeddings and similarity results
-    - Memory-efficient vector processing for large document collections
-    - Batch processing with configurable sizes for optimal resource utilization
-    - Rate limiting and throttling for external API integration and cost control
-    - Performance monitoring and metrics collection for operational visibility
-    - Resource optimization and garbage collection for long-running operations
-
-    Args:
-        db: SQLAlchemy async session for database operations with transaction support
-        openai_client: Optional OpenAI client for embedding generation. Creates new instance if not provided
-        vector_dimension: Expected dimension of embeddings. Inferred from DocumentChunk model if not specified
-        batch_size: Maximum API batch size for embedding generation (default: 100)
-        embedding_encoding: Encoding format for embedding API operations (default: 'cl100k_base')
-
-    Use Cases:
-        - Semantic document search and retrieval for RAG (Retrieval-Augmented Generation)
-        - Content recommendation systems based on semantic similarity analysis
-        - Duplicate content detection and clustering for data quality management
-        - Question-answering systems with intelligent context retrieval
-        - Document classification and categorization using semantic embeddings
-        - Knowledge base construction with semantic relationship mapping
-
-    Example:
-        embedding_service = EmbeddingService(db_session, openai_client)
-
-        # Generate embedding for text
-        embedding = await embedding_service.generate_embedding("example text")
-
-        # Find similar documents
-        similar_docs = await embedding_service.find_similar_documents(
-            query_embedding=embedding,
-            limit=10,
-            threshold=0.8
-        )
-
+    operations for semantic search and RAG applications with PGVector-powered PostgreSQL.
     """
 
     def __init__(

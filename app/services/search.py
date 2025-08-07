@@ -106,27 +106,7 @@ class SearchService(BaseService):
 
     This service extends BaseService to provide advanced search capabilities
     including vector similarity search, text search, hybrid algorithms, and
-    Maximum Marginal Relevance (MMR) with enhanced caching, logging, and
-    performance optimization.
-
-    Search Algorithms:
-    - Vector Search: Pure semantic similarity using embeddings with PGVector
-    - Text Search: Traditional full-text search with PostgreSQL GIN indexing
-    - Hybrid Search: Weighted combination of vector and text search results
-    - MMR Search: Maximum Marginal Relevance for diverse result sets
-
-    Performance Features:
-    - LRU caching for query embeddings to reduce API calls
-    - Optimized database queries with proper indexing
-    - Configurable similarity thresholds and result limits
-    - User-based access control and security filtering
-
-    Responsibilities:
-    - Query embedding generation with caching optimization
-    - Multi-algorithm search execution with result ranking
-    - Search result formatting and metadata enrichment
-    - Performance monitoring and query optimization
-    - User access control and security enforcement
+    Maximum Marginal Relevance (MMR) with enhanced caching and optimization.
     """
 
     def __init__(self, db: AsyncSession):

@@ -41,28 +41,6 @@ class ConversationService(BaseService):
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
     and tool calling with enhanced logging and context management.
-
-    AI Capabilities:
-    - Multi-turn conversations with context preservation
-    - Integration with OpenAI GPT models for intelligent responses
-    - RAG (Retrieval Augmented Generation) with document search
-    - Tool calling through ToolExecutor integration
-    - Token usage optimization and tracking
-    - Response quality monitoring and analytics
-
-    Tool Integration:
-    - Uses tool calling instead of manual tool management
-    - Automatic tool availability and execution through OpenAI client
-    - Proper tool call result handling and user feedback
-    - Complete tool calling implementation (no TODOs remaining)
-
-    Responsibilities:
-    - Conversation lifecycle management (create, update, archive)
-    - Message processing and storage with metadata
-    - AI model orchestration and response generation
-    - Document search integration for context enhancement
-    - Usage analytics and performance monitoring
-    - Error handling and recovery for AI operations
     """
 
     def __init__(self, db: AsyncSession):
