@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Simple OpenAPI JSON generation script for AI Chatbot MCP.
+"""Simple OpenAPI JSON generation script for AI Chatbot MCP.
+
 Creates OpenAPI specification based on documented API endpoints.
 """
 
@@ -10,7 +10,6 @@ from pathlib import Path
 
 def get_basic_openapi_schema():
     """Generate basic OpenAPI schema with documented endpoints."""
-
     # Base OpenAPI schema structure
     openapi_schema = {
         "openapi": "3.0.2",
