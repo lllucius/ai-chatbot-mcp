@@ -1,33 +1,9 @@
-"""
-Authentication service for comprehensive user management and JWT token lifecycle.
+"""Authentication service for comprehensive user management and JWT token lifecycle.
 
 This service provides enterprise-grade authentication functionality including secure
-user registration, multi-factor authentication support, password management, and
-comprehensive JWT token lifecycle management. Implements advanced security patterns
-with protection against common authentication vulnerabilities, comprehensive audit
-logging, and robust error handling for production-ready authentication workflows.
-
-Key Features:
-- Secure user registration with comprehensive validation and conflict detection
-- Multi-identifier authentication supporting username and email login methods
-- JWT token creation, verification, and lifecycle management with configurable expiration
-- Password security validation with industry-standard hashing algorithms
-- Comprehensive audit logging and security event monitoring
-- Protection against timing attacks and common authentication vulnerabilities
-
-Security Features:
-- Advanced password hashing using bcrypt with configurable work factors
-- JWT token generation with secure algorithms and proper expiration handling
-- Protection against timing attacks in user lookup and password verification
-- Comprehensive security event logging for audit trails and monitoring
-- Input validation and sanitization to prevent injection attacks
-- Session management with proper token invalidation and security controls
-
-Authentication Capabilities:
-- Username-based authentication with case-insensitive lookup
-- Email-based authentication with proper format validation
-- Flexible identifier support allowing username or email for login
-- Account status validation including active/inactive user management
+user registration, multi-factor authentication support, and comprehensive JWT token
+lifecycle management.
+"""
 - Last login tracking for security monitoring and user analytics
 - Multi-layer validation for registration conflict detection
 

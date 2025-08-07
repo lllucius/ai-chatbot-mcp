@@ -1,33 +1,8 @@
 """Base utilities and infrastructure for the AI Chatbot Platform CLI.
 
 This module provides the foundational infrastructure for the command-line interface,
-including authentication management, error handling, output formatting, and SDK
-integration. It serves as the central hub for all CLI operations, ensuring consistent
-behavior across all commands.
-
-The module implements a comprehensive authentication system with secure token storage,
-rich terminal output formatting, and robust error handling patterns. All CLI commands
-depend on these base utilities for consistent user experience and reliable operation.
-
-Key Components:
-    - CLIManager: Centralized authentication and SDK management
-    - APIError: Specialized exception handling for API operations
-    - Console utilities: Rich-formatted output functions
-    - Token management: Secure storage and retrieval of authentication tokens
-    - Response handling: Standardized API response processing
-
-Architecture Features:
-    - Singleton pattern for CLI manager to ensure consistent state
-    - Secure token storage with proper file permissions (0o600)
-    - Automatic token validation and refresh handling
-    - Rich terminal formatting with colors, tables, and progress indicators
-    - Modular utility functions for common CLI operations
-
-Security Features:
-    - Secure token storage in user's home directory (~/.ai-chatbot-cli/)
-    - Automatic cleanup of invalid or expired tokens
-    - Protected file permissions for sensitive data
-    - Secure credential handling and validation
+including authentication management, error handling, output formatting, and SDK integration.
+"""
     - Authentication state management across CLI sessions
 
 Performance Optimizations:

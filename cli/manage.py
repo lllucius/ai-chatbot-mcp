@@ -1,33 +1,10 @@
 #!/usr/bin/env python3
-"""
-AI Chatbot Platform Management CLI - Main Entry Point.
+"""AI Chatbot Platform Management CLI - Main Entry Point.
 
 This module serves as the primary entry point for the AI Chatbot Platform command-line
 interface, providing a comprehensive management system for all platform operations
 through a modern async architecture and intuitive sub-command structure.
-
-The CLI integrates multiple functional domains into a cohesive management experience,
-enabling developers, administrators, and operators to interact with the platform
-through well-organized command hierarchies. Each sub-command area provides specialized
-functionality while maintaining consistent authentication, error handling, and output
-formatting.
-
-Architecture Features:
-    - AsyncTyper framework for high-performance async operations
-    - Rich terminal interface with beautiful formatting and progress indicators
-    - Modular sub-command structure organized by functional domain
-    - Comprehensive error handling and user feedback
-    - Consistent authentication and session management across all commands
-
-Command Domains:
-    - Core Commands: Authentication, configuration, health checks
-    - User Management: Account creation, modification, and administration
-    - Conversation Management: Chat operations, history, and analytics
-    - Document Management: File upload, processing, and search
-    - Analytics: Performance metrics, usage reports, and dashboards
-    - Database: Schema management, migrations, and maintenance
-    - Tasks: Background job monitoring and queue management
-    - MCP Integration: Model Context Protocol server management
+"""
     - Prompts: Template management and customization
     - Profiles: User profile and preference management
 

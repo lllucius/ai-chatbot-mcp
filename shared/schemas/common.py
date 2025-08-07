@@ -1,33 +1,8 @@
 """Common Pydantic schemas for comprehensive API requests and responses across the application.
 
 This module provides foundational schemas and standardized response formats using
-modern Pydantic V2 features with advanced validation, serialization, and type safety.
-Implements consistent API response structures, pagination handling, health monitoring,
-and error reporting patterns used throughout the application.
-
-Key Features:
-- Standardized API response formats with consistent structure and metadata
-- Comprehensive pagination support with flexible parameters and calculations
-- Advanced health monitoring schemas for system observability and diagnostics
-- Error handling schemas with structured error reporting and validation
-- Generic response patterns with type safety and reusability
-- Custom JSON serialization with proper datetime and type handling
-
-Response Architecture:
-- BaseResponse: Foundation for all API responses with success status and messaging
-- SuccessResponse: Standardized success response with optional data payload
-- ErrorResponse: Structured error response with error codes and details
-- ValidationErrorResponse: Specialized validation error with field-level reporting
-- PaginatedResponse: Generic paginated response with type safety and metadata
-
-Health Monitoring:
-- HealthCheckResponse: Basic application health status and version information
-- DetailedHealthCheckResponse: Comprehensive system health with component status
-- DatabaseHealthResponse: Database connectivity and schema validation status
-- ServicesHealthResponse: External service availability and performance metrics
-- SystemMetricsResponse: System resource utilization and performance indicators
-
-Pagination and Search:
+modern Pydantic V2 features with advanced validation and consistent API response structures.
+"""
 - PaginationParams: Comprehensive pagination parameters with sorting and calculations
 - SearchParams: Advanced search parameters with algorithm selection and filtering
 - PaginatedResponse: Generic paginated response with type safety and metadata

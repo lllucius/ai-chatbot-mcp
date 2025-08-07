@@ -1,9 +1,7 @@
-"""
-Configuration management for the AI Chatbot Terminal Client.
+"""Configuration management for the AI Chatbot Terminal Client.
 
 This module provides unified configuration management that extends the main app
-configuration with client-specific settings. It uses the same .env file as the
-main application for consistent configuration across all components.
+configuration with client-specific settings for consistent configuration across components.
 """
 
 from pathlib import Path
@@ -14,25 +12,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ClientConfig(BaseSettings):
-    """
-    Client configuration that includes all necessary settings for both app and client.
+    """Client configuration that includes all necessary settings for both app and client.
 
     This class contains all settings needed for the client while sharing the same
     .env file structure as the main application.
-
-    All settings can be provided via:
-    - Environment variables (both APP_ and CLIENT_ prefixes supported)
-    - The shared .env file used by the main application
-    - Command line arguments (when using CLI)
-
-    Example:
-        # Via environment variables
-        export API_BASE_URL="http://localhost:8000"
-        export CLIENT_USERNAME="admin"
-
-        # Via .env file (shared with main app)
-        API_BASE_URL=http://localhost:8000
-        CLIENT_USERNAME=admin
     """
 
     model_config = SettingsConfigDict(

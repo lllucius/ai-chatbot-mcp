@@ -1,53 +1,8 @@
-"""
-User management commands for the AI Chatbot Platform CLI.
+"""User management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive user account management functionality through
-async operations and the AI Chatbot SDK. It enables administrators and authorized
-users to create, modify, and manage user accounts with full validation, security
-controls, and audit logging.
-
-The module implements enterprise-grade user management patterns including role-based
-access control, secure password handling, and comprehensive user lifecycle management.
-All operations integrate seamlessly with the platform's authentication and
-authorization systems.
-
-Key Features:
-    - User account creation with validation and setup
-    - Comprehensive user listing with filtering and pagination
-    - User profile management and updates
-    - Account activation and deactivation
-    - Role and permission management
-    - Bulk user operations for administrative efficiency
-
-Security Features:
-    - Secure password handling with masked input prompts
-    - Role-based access control for user operations
-    - Comprehensive audit logging for all user actions
-    - Input validation and sanitization
-    - Protection against common user management vulnerabilities
-
-Administrative Capabilities:
-    - Superuser account creation and management
-    - Bulk user import and export operations
-    - User activity monitoring and reporting
-    - Account lockout and security management
-    - Integration with external authentication systems
-
-Performance Optimizations:
-    - Async operations for responsive user interface
-    - Efficient pagination for large user datasets
-    - Optimized API calls with request batching
-    - Fast user search and filtering capabilities
-    - Minimal memory footprint for bulk operations
-
-Use Cases:
-    - User onboarding and account provisioning
-    - Administrative user management tasks
-    - Bulk user operations for organizational changes
-    - Security incident response and account management
-    - User activity monitoring and compliance reporting
-
-Example Usage:
+async operations and the AI Chatbot SDK with full validation and security controls.
+"""
     ```bash
     # Create new user accounts
     ai-chatbot users create john john@example.com --full-name "John Doe"

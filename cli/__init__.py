@@ -1,18 +1,9 @@
-"""
-AI Chatbot Platform Command Line Interface.
+"""AI Chatbot Platform Command Line Interface.
 
 This package provides a comprehensive command-line interface for the AI Chatbot Platform,
-enabling developers and administrators to interact with the platform through terminal
-commands. The CLI offers full functionality for managing users, conversations, analytics,
-and system administration tasks.
-
-The CLI is built using AsyncTyper for high-performance async operations and Rich for
-beautiful terminal output with progress bars, tables, and formatted text. It integrates
-seamlessly with the AI Chatbot SDK for secure API communication.
-
-Key Features:
-    - Comprehensive user and conversation management
-    - Real-time analytics and reporting
+enabling developers and administrators to interact with the platform through terminal commands
+with full functionality for managing users, conversations, and system administration.
+"""
     - Database administration and maintenance
     - MCP server integration and management
     - Profile and prompt template management

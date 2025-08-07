@@ -1,23 +1,9 @@
-"""
-Conversation service for comprehensive chat functionality and message management.
+"""Conversation service for comprehensive chat functionality and message management.
 
 This service provides complete conversation lifecycle management including chat
 session creation, message handling, AI model integration, and RAG (Retrieval
-Augmented Generation) capabilities. It orchestrates multiple services to deliver
-intelligent conversational experiences with document context.
-
-Key Features:
-- Conversation lifecycle management (create, update, archive)
-- AI-powered chat with OpenAI integration
-- RAG capabilities with document search integration
-- Message history and context management
-- Multi-turn conversation handling with context preservation
-- Usage tracking and analytics
-- Comprehensive error handling and recovery
-
-AI Integration:
-- OpenAI GPT models for intelligent responses
-- Document search integration for contextual information
+Augmented Generation) capabilities.
+"""
 - Embedding services for semantic understanding
 - Tool calling capabilities through MCP integration
 - Token usage tracking and optimization

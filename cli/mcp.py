@@ -1,23 +1,9 @@
 """Model Context Protocol (MCP) management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive MCP server and tool management functionality
-through async operations and the AI Chatbot SDK. It enables administrators and
-developers to configure, monitor, and manage MCP servers and their associated
-tools for enhanced AI model capabilities.
-
-The Model Context Protocol (MCP) is a standard for connecting AI models with
-external tools and data sources. This module facilitates the management of
-MCP servers, tool discovery, and integration with the AI Chatbot Platform.
-
-Key Features:
-    - MCP server registration and configuration management
-    - Tool discovery and capability enumeration
-    - Server health monitoring and status reporting
-    - Integration testing and validation
-    - Security configuration and access control
-    - Performance monitoring and optimization
-
-Server Management:
+through async operations and the AI Chatbot SDK for configuring and monitoring
+MCP servers and their associated tools.
+"""
     - Server registration with validation and security checks
     - Configuration management for connection parameters
     - Health monitoring and automatic failover capabilities
