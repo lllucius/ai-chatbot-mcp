@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/": {
+    "/api/v1/analytics/overview": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,29 +12,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Root endpoint
-         * @description Root endpoint with basic application information
+         * Get System Overview
+         * @description Get comprehensive system overview and key performance indicators.
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Application information */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["get_system_overview_api_v1_analytics_overview_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -43,7 +24,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/ping": {
+    "/api/v1/analytics/usage": {
         parameters: {
             query?: never;
             header?: never;
@@ -51,31 +32,92 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Health check
-         * @description Simple health check endpoint for load balancers
+         * Get Usage Statistics
+         * @description Get comprehensive usage statistics with configurable time periods and detail levels.
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Health status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": Record<string, never>;
-                    };
-                };
-            };
-        };
+        get: operations["get_usage_statistics_api_v1_analytics_usage_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Performance Metrics
+         * @description Get comprehensive system performance metrics with bottleneck analysis and optimization insights.
+         */
+        get: operations["get_performance_metrics_api_v1_analytics_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Analytics
+         * @description Get comprehensive user activity analytics with engagement metrics and behavioral insights.
+         */
+        get: operations["get_user_analytics_api_v1_analytics_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Usage Trends
+         * @description Get comprehensive usage trends and growth patterns with predictive insights.
+         */
+        get: operations["get_usage_trends_api_v1_analytics_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/export-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Analytics Report
+         * @description Export comprehensive analytics report for executive analysis and external integration.
+         */
+        post: operations["export_analytics_report_api_v1_analytics_export_report_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -92,33 +134,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Register new user
-         * @description Register a new user account
+         * Register
+         * @description Register a new user account.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description User registered successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["register_api_v1_auth_register_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -135,33 +154,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * User login
-         * @description Authenticate user and generate JWT access token
+         * Login
+         * @description Authenticate user and generate JWT access token.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["LoginRequest"];
-                };
-            };
-            responses: {
-                /** @description Authentication successful */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["login_api_v1_auth_login_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -178,29 +174,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * User logout
-         * @description Logout current user session
+         * Logout
+         * @description Logout current user session.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Logged out successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["logout_api_v1_auth_logout_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -217,29 +194,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Refresh token
-         * @description Refresh JWT access token for session continuation
+         * Refresh Token
+         * @description Refresh JWT access token for session continuation.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Token refreshed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["refresh_token_api_v1_auth_refresh_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -256,33 +214,14 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Request password reset
-         * @description Request password reset through administrative channels
+         * Request Password Reset
+         * @deprecated
+         * @description Request password reset through administrative channels.
+         *
+         *     **DEPRECATED**: Use POST /api/v1/users/password-reset instead.
+         *     This endpoint will be removed in v2.0.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description Password reset request processed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        post: operations["request_password_reset_api_v1_auth_password_reset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -299,33 +238,1661 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Confirm password reset
-         * @description Confirm password reset through administrative channels
+         * Confirm Password Reset
+         * @deprecated
+         * @description Confirm password reset through administrative channels.
+         *
+         *     **DEPRECATED**: Use POST /api/v1/users/password-reset/confirm instead.
+         *     This endpoint will be removed in v2.0.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description Password reset confirmed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
+        post: operations["confirm_password_reset_api_v1_auth_password_reset_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        /**
+         * List Conversations
+         * @description List user's conversations with pagination and filtering.
+         */
+        get: operations["list_conversations_api_v1_conversations__get"];
+        put?: never;
+        /**
+         * Create Conversation
+         * @description Create a new conversation.
+         */
+        post: operations["create_conversation_api_v1_conversations__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/byid/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Conversation
+         * @description Get conversation by ID.
+         */
+        get: operations["get_conversation_api_v1_conversations_byid__conversation_id__get"];
+        /**
+         * Update Conversation
+         * @description Update conversation metadata and settings.
+         */
+        put: operations["update_conversation_api_v1_conversations_byid__conversation_id__put"];
+        post?: never;
+        /**
+         * Delete Conversation
+         * @description Delete conversation and all associated messages.
+         */
+        delete: operations["delete_conversation_api_v1_conversations_byid__conversation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/byid/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Messages
+         * @description Get paginated messages from a conversation.
+         */
+        get: operations["get_messages_api_v1_conversations_byid__conversation_id__messages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat
+         * @description Send a message and get AI response.
+         */
+        post: operations["chat_api_v1_conversations_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/chat/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat Stream
+         * @description Send a message and get a streaming AI response.
+         */
+        post: operations["chat_stream_api_v1_conversations_chat_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Conversation Statistics
+         * @description Get comprehensive conversation statistics and analytics.
+         */
+        get: operations["get_conversation_statistics_api_v1_conversations_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/registry-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Registry Stats
+         * @description Get registry statistics showing prompt, profile, and tool usage.
+         *
+         *     Returns comprehensive statistics about registry usage including:
+         *     - Active prompts and most used prompts
+         *     - Active LLM profiles and usage patterns
+         *     - MCP tools and server status
+         */
+        get: operations["get_registry_stats_api_v1_conversations_registry_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/byid/{conversation_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Conversation
+         * @description Export a conversation to various formats.
+         */
+        get: operations["export_conversation_api_v1_conversations_byid__conversation_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Conversation
+         * @description Import a conversation from a JSON file.
+         */
+        post: operations["import_conversation_api_v1_conversations_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive Conversations
+         * @description Archive old conversations by marking them as inactive.
+         */
+        post: operations["archive_conversations_api_v1_conversations_archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Conversations And Messages
+         * @description Search conversations and messages with advanced filtering options.
+         */
+        get: operations["search_conversations_and_messages_api_v1_conversations_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initialize Database
+         * @description Initialize the database and create all tables with required extensions.
+         */
+        post: operations["initialize_database_api_v1_database_init_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Database Status
+         * @description Get comprehensive database connection status and configuration information.
+         */
+        get: operations["get_database_status_api_v1_database_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Database Tables
+         * @description List all database tables with comprehensive metadata and statistics.
+         */
+        get: operations["list_database_tables_api_v1_database_tables_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/migrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Migration Status
+         * @description Get comprehensive database migration status and history.
+         */
+        get: operations["get_migration_status_api_v1_database_migrations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/upgrade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upgrade Database
+         * @description Execute database schema migrations to upgrade to target revision.
+         */
+        post: operations["upgrade_database_api_v1_database_upgrade_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/downgrade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Downgrade Database
+         * @description Downgrade database schema to a previous migration revision.
+         */
+        post: operations["downgrade_database_api_v1_database_downgrade_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Database Backup
+         * @description Create a comprehensive database backup using PostgreSQL dump utilities.
+         */
+        post: operations["create_database_backup_api_v1_database_backup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Database
+         * @description Restore database from a backup file with comprehensive data replacement.
+         */
+        post: operations["restore_database_api_v1_database_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/vacuum": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vacuum Database
+         * @description Execute database maintenance with VACUUM operations for optimal performance.
+         */
+        post: operations["vacuum_database_api_v1_database_vacuum_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Analyze Database
+         * @description Perform comprehensive database analysis with performance insights and recommendations.
+         */
+        get: operations["analyze_database_api_v1_database_analyze_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute Custom Query
+         * @description Execute custom SQL queries with comprehensive safety controls and monitoring.
+         */
+        post: operations["execute_custom_query_api_v1_database_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Document
+         * @description Upload a document for processing.
+         */
+        post: operations["upload_document_api_v1_documents_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Documents
+         * @description List user's documents with pagination and filtering.
+         */
+        get: operations["list_documents_api_v1_documents__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/byid/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Document
+         * @description Get document by ID.
+         */
+        get: operations["get_document_api_v1_documents_byid__document_id__get"];
+        /**
+         * Update Document
+         * @description Update document metadata.
+         */
+        put: operations["update_document_api_v1_documents_byid__document_id__put"];
+        post?: never;
+        /**
+         * Delete Document
+         * @description Delete document and all associated data.
+         */
+        delete: operations["delete_document_api_v1_documents_byid__document_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/byid/{document_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Processing Status
+         * @description Get document processing status with optional background task information.
+         */
+        get: operations["get_processing_status_api_v1_documents_byid__document_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/byid/{document_id}/reprocess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reprocess Document
+         * @description Reprocess document.
+         */
+        post: operations["reprocess_document_api_v1_documents_byid__document_id__reprocess_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/byid/{document_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Document
+         * @description Download original document file.
+         */
+        get: operations["download_document_api_v1_documents_byid__document_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/byid/{document_id}/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Document Processing
+         * @description Start background processing for a document.
+         */
+        post: operations["start_document_processing_api_v1_documents_byid__document_id__process_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/processing-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Processing Config
+         * @description Get current document processing configuration.
+         */
+        get: operations["get_processing_config_api_v1_documents_processing_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/queue-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Queue Status
+         * @description Get background processing queue status.
+         */
+        get: operations["get_queue_status_api_v1_documents_queue_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documentscleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cleanup Documents
+         * @description Clean up old or failed documents.
+         */
+        post: operations["cleanup_documents_api_v1_documentscleanup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Document Statistics
+         * @description Get comprehensive document statistics.
+         */
+        get: operations["get_document_statistics_api_v1_documents_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/bulk-reprocess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Reprocess Documents
+         * @description Bulk reprocess documents based on status filter.
+         */
+        post: operations["bulk_reprocess_documents_api_v1_documents_bulk_reprocess_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/search/advanced": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Advanced Document Search
+         * @description Perform advanced document search with multiple filters.
+         */
+        get: operations["advanced_document_search_api_v1_documents_search_advanced_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Basic Health Check
+         * @description Provide basic health check endpoint for load balancers and monitoring.
+         */
+        get: operations["basic_health_check_api_v1_health__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/detailed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detailed Health Check
+         * @description Comprehensive health check with all system components.
+         */
+        get: operations["detailed_health_check_api_v1_health_detailed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/database": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Database Health Check
+         * @description Database connectivity and schema health check.
+         */
+        get: operations["database_health_check_api_v1_health_database_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Services Health Check
+         * @description External services health check.
+         */
+        get: operations["services_health_check_api_v1_health_services_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get System Metrics
+         * @description Get system performance metrics and resource utilization.
+         */
+        get: operations["get_system_metrics_api_v1_health_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Readiness Check
+         * @description Kubernetes-style readiness probe.
+         */
+        get: operations["readiness_check_api_v1_health_readiness_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Performance Metrics
+         * @description Get application performance metrics and statistics.
+         */
+        get: operations["get_performance_metrics_api_v1_health_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/liveness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Liveness Check
+         * @description Kubernetes-style liveness probe.
+         */
+        get: operations["liveness_check_api_v1_health_liveness_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/servers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Servers
+         * @description List all registered MCP servers with optional filtering.
+         */
+        get: operations["list_servers_api_v1_mcp_servers_get"];
+        put?: never;
+        /**
+         * Create Server
+         * @description Create a new MCP server with comprehensive configuration.
+         */
+        post: operations["create_server_api_v1_mcp_servers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/servers/byname/{server_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Server
+         * @description Get detailed information about a specific MCP server by name.
+         */
+        get: operations["get_server_api_v1_mcp_servers_byname__server_name__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Server
+         * @description Delete an MCP server and clean up associated resources.
+         */
+        delete: operations["delete_server_api_v1_mcp_servers_byname__server_name__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Server
+         * @description Update configuration settings for an existing MCP server.
+         */
+        patch: operations["update_server_api_v1_mcp_servers_byname__server_name__patch"];
+        trace?: never;
+    };
+    "/api/v1/mcp/tools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tools
+         * @description List all available MCP tools with filtering and detailed information.
+         */
+        get: operations["list_tools_api_v1_mcp_tools_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/tools/byname/{tool_name}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Enable Tool
+         * @description Enable a specific MCP tool for system-wide availability.
+         */
+        patch: operations["enable_tool_api_v1_mcp_tools_byname__tool_name__enable_patch"];
+        trace?: never;
+    };
+    "/api/v1/mcp/tools/byname/{tool_name}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Disable Tool
+         * @description Disable a specific MCP tool to remove it from system availability.
+         */
+        patch: operations["disable_tool_api_v1_mcp_tools_byname__tool_name__disable_patch"];
+        trace?: never;
+    };
+    "/api/v1/mcp/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Mcp Stats
+         * @description Get comprehensive MCP usage statistics and performance analytics.
+         */
+        get: operations["get_mcp_stats_api_v1_mcp_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/tools/byname/{tool_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tool Details
+         * @description Get detailed information about a specific MCP tool by name.
+         *
+         *     Retrieves comprehensive details about an MCP tool including its schema,
+         *     current status, usage statistics, and configuration parameters.
+         */
+        get: operations["get_tool_details_api_v1_mcp_tools_byname__tool_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/tools/byname/{tool_name}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Tool
+         * @description Test execution of a specific MCP tool with optional parameters.
+         *
+         *     Executes a test run of the specified tool to verify functionality,
+         *     connectivity, and parameter validation.
+         */
+        post: operations["test_tool_api_v1_mcp_tools_byname__tool_name__test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Mcp
+         * @description Refresh MCP server connections and perform comprehensive tool discovery.
+         */
+        post: operations["refresh_mcp_api_v1_mcp_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Profiles
+         * @description List all LLM parameter profiles with filtering and pagination.
+         */
+        get: operations["list_profiles_api_v1_profiles__get"];
+        put?: never;
+        /**
+         * Create Profile
+         * @description Create a new LLM parameter profile with validation.
+         */
+        post: operations["create_profile_api_v1_profiles__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/byname/{profile_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Profile Details
+         * @description Get detailed information about a specific LLM profile by name.
+         */
+        get: operations["get_profile_details_api_v1_profiles_byname__profile_name__get"];
+        /**
+         * Update Profile
+         * @description Update an existing LLM profile with new parameters or metadata.
+         */
+        put: operations["update_profile_api_v1_profiles_byname__profile_name__put"];
+        post?: never;
+        /**
+         * Delete Profile
+         * @description Delete an LLM profile from the system.
+         */
+        delete: operations["delete_profile_api_v1_profiles_byname__profile_name__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/byname/{profile_name}/set-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Default Profile
+         * @description Set a profile as the default LLM parameter profile for the system.
+         */
+        post: operations["set_default_profile_api_v1_profiles_byname__profile_name__set_default_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Default Profile
+         * @description Get detailed information about the defualt LLM profile.
+         */
+        get: operations["get_default_profile_api_v1_profiles_default_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/byname/{profile_name}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate Profile
+         * @description Activate a profile.
+         */
+        post: operations["activate_profile_api_v1_profiles_byname__profile_name__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/byname/{profile_name}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deactivate Profile
+         * @description Deactivate a profile.
+         */
+        post: operations["deactivate_profile_api_v1_profiles_byname__profile_name__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Profile Stats
+         * @description Get comprehensive LLM profile usage statistics and analytics.
+         */
+        get: operations["get_profile_stats_api_v1_profiles_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Parameters
+         * @description Validate LLM parameters before profile creation or update.
+         */
+        post: operations["validate_parameters_api_v1_profiles_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Prompts
+         * @description List all prompts with filtering, categorization, and pagination.
+         */
+        get: operations["list_prompts_api_v1_prompts__get"];
+        put?: never;
+        /**
+         * Create Prompt
+         * @description Create a new prompt template in the registry.
+         */
+        post: operations["create_prompt_api_v1_prompts__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/byname/{prompt_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Prompt Details
+         * @description Get detailed information about a specific prompt by name.
+         */
+        get: operations["get_prompt_details_api_v1_prompts_byname__prompt_name__get"];
+        /**
+         * Update Prompt
+         * @description Update an existing prompt template.
+         */
+        put: operations["update_prompt_api_v1_prompts_byname__prompt_name__put"];
+        post?: never;
+        /**
+         * Delete Prompt
+         * @description Delete a prompt template from the registry.
+         */
+        delete: operations["delete_prompt_api_v1_prompts_byname__prompt_name__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/byname/{prompt_name}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate Prompt
+         * @description Activate a prompt.
+         */
+        post: operations["activate_prompt_api_v1_prompts_byname__prompt_name__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/byname/{prompt_name}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deactivate Prompt
+         * @description Deactivate a prompt.
+         */
+        post: operations["deactivate_prompt_api_v1_prompts_byname__prompt_name__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/categories/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Categories
+         * @description Get all available prompt categories and tags for organization.
+         */
+        get: operations["get_categories_api_v1_prompts_categories__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/byname/{prompt_name}/set-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Default Prompt
+         * @description Set a prompt as the default system prompt for conversations.
+         */
+        post: operations["set_default_prompt_api_v1_prompts_byname__prompt_name__set_default_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prompts/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Prompt Stats
+         * @description Get comprehensive prompt usage statistics and analytics.
+         */
+        get: operations["get_prompt_stats_api_v1_prompts_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Documents
+         * @description Search through documents using multiple algorithms.
+         */
+        post: operations["search_documents_api_v1_search__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/similar/byid/{chunk_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find Similar Chunks
+         * @description Find document chunks similar to a specified reference chunk.
+         */
+        get: operations["find_similar_chunks_api_v1_search_similar_byid__chunk_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Search Suggestions
+         * @description Generate intelligent search query suggestions.
+         */
+        get: operations["get_search_suggestions_api_v1_search_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Task System Status
+         * @description Get comprehensive background task system status and health metrics.
+         */
+        get: operations["get_task_system_status_api_v1_tasks_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Workers Info
+         * @description Get comprehensive information about Celery workers with detailed status and metrics.
+         */
+        get: operations["get_workers_info_api_v1_tasks_workers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Queue Info
+         * @description Get comprehensive task queue information with detailed metrics and task tracking.
+         */
+        get: operations["get_queue_info_api_v1_tasks_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Active Tasks
+         * @description Get comprehensive information about currently executing tasks with detailed metadata.
+         */
+        get: operations["get_active_tasks_api_v1_tasks_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Schedule Task
+         * @description Schedule background tasks for execution with comprehensive parameter control.
+         */
+        post: operations["schedule_task_api_v1_tasks_schedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/retry-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Failed Tasks
+         * @description Retry failed document processing tasks with intelligent error recovery.
+         */
+        post: operations["retry_failed_tasks_api_v1_tasks_retry_failed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purge Queue
+         * @description Purge all pending tasks from specified queue with comprehensive safety warnings.
+         */
+        post: operations["purge_queue_api_v1_tasks_purge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Task Statistics
+         * @description Get comprehensive task execution statistics and performance analytics.
+         */
+        get: operations["get_task_statistics_api_v1_tasks_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/monitor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Monitoring Data
+         * @description Get real-time monitoring data for comprehensive task system observability.
+         */
+        get: operations["get_monitoring_data_api_v1_tasks_monitor_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -340,57 +1907,15 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get current user profile
-         * @description Get current user profile with statistics
+         * Get My Profile
+         * @description Get current user profile with statistics.
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User profile retrieved successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["get_my_profile_api_v1_users_me_get"];
         /**
-         * Update current user profile
-         * @description Update current user profile information
+         * Update My Profile
+         * @description Update current user profile information.
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description User profile updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        put: operations["update_my_profile_api_v1_users_me_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -408,33 +1933,50 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Change password
-         * @description Change current user password with security verification
+         * Change Password
+         * @description Change current user password with security verification.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description Password changed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
+        post: operations["change_password_api_v1_users_me_change_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        get?: never;
+        put?: never;
+        /**
+         * Request Password Reset
+         * @description Request password reset for user account.
+         */
+        post: operations["request_password_reset_api_v1_users_password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Password Reset
+         * @description Confirm password reset with token.
+         */
+        post: operations["confirm_password_reset_api_v1_users_password_reset_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -449,32 +1991,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List users
-         * @description List all users with filtering and pagination
+         * List Users
+         * @description List all users with filtering and pagination.
          */
-        get: {
-            parameters: {
-                query?: {
-                    page?: number;
-                    size?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Users retrieved successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["list_users_api_v1_users__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -483,7 +2003,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/health/": {
+    "/api/v1/users/byid/{user_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -491,29 +2011,38 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * System health check
-         * @description Comprehensive system health check
+         * Get User Byid
+         * @description Get user by ID (admin only).
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description System health status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
+        get: operations["get_user_byid_api_v1_users_byid__user_id__get"];
+        /**
+         * Update User
+         * @description Update user by ID (admin only).
+         */
+        put: operations["update_user_api_v1_users_byid__user_id__put"];
+        post?: never;
+        /**
+         * Delete User
+         * @description Delete user by ID (admin only).
+         */
+        delete: operations["delete_user_api_v1_users_byid__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/byname/{user_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        /**
+         * Get User Byname
+         * @description Get user by name (admin only).
+         */
+        get: operations["get_user_byname_api_v1_users_byname__user_name__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -522,124 +2051,107 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/health/database": {
+    "/api/v1/users/byid/{user_id}/promote": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Database health check
-         * @description Check database connectivity and health
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Database health status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Promote User To Superuser
+         * @description Promote a user to superuser status.
+         */
+        post: operations["promote_user_to_superuser_api_v1_users_byid__user_id__promote_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/analytics/overview": {
+    "/api/v1/users/byid/{user_id}/demote": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * System overview
-         * @description Get system overview analytics
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description System overview data */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Demote User From Superuser
+         * @description Demote a superuser to regular user status.
+         */
+        post: operations["demote_user_from_superuser_api_v1_users_byid__user_id__demote_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/analytics/performance": {
+    "/api/v1/users/byid/{user_id}/activate": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Performance metrics
-         * @description Get performance metrics
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Performance metrics data */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Activate User Account
+         * @description Activate a user account.
+         */
+        post: operations["activate_user_account_api_v1_users_byid__user_id__activate_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/documents/": {
+    "/api/v1/users/byid/{user_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deactivate User Account
+         * @description Deactivate a user account.
+         */
+        post: operations["deactivate_user_account_api_v1_users_byid__user_id__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/byid/{user_id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin Reset User Password
+         * @description Reset a user's password (admin operation).
+         */
+        post: operations["admin_reset_user_password_api_v1_users_byid__user_id__reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/stats": {
         parameters: {
             query?: never;
             header?: never;
@@ -647,58 +2159,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List documents
-         * @description List documents with filtering and pagination
+         * Get User Statistics
+         * @description Get comprehensive user statistics for administrative reporting.
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Documents list */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["get_user_statistics_api_v1_users_stats_get"];
         put?: never;
-        /**
-         * Upload document
-         * @description Upload a new document for processing
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "multipart/form-data": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description Document uploaded successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["APIResponse"];
-                    };
-                };
-            };
-        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -709,31 +2175,6229 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * APIResponse
+         * @description Unified API response schema conforming to the standard envelope specification.
+         *
+         *     All API endpoints must return responses using this exact structure with no exceptions.
+         *     This ensures consistent response format across the entire application.
+         *
+         *     Response Structure:
+         *     {
+         *       "success": true or false,
+         *       "message": "Human-readable message",
+         *       "timestamp": "ISO-8601 string",
+         *       "data": any,     // single object, array, or null
+         *       "meta": { ... }, // optional metadata (pagination, stats, etc)
+         *       "error": {       // optional error details
+         *         "code": "ERROR_CODE",
+         *         "details": { ... }
+         *       }
+         *     }
+         */
         APIResponse: {
-            success?: boolean;
-            message?: string;
-            data?: Record<string, never>;
-            /** Format: date-time */
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: unknown | null;
+        };
+        /** APIResponse[ActiveTasksData] */
+        APIResponse_ActiveTasksData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ActiveTasksData"] | null;
+        };
+        /** APIResponse[AdvancedSearchData] */
+        APIResponse_AdvancedSearchData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AdvancedSearchData"] | null;
+        };
+        /** APIResponse[AnalyticsExportPayload] */
+        APIResponse_AnalyticsExportPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AnalyticsExportPayload"] | null;
+        };
+        /** APIResponse[AnalyticsOverviewPayload] */
+        APIResponse_AnalyticsOverviewPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AnalyticsOverviewPayload"] | null;
+        };
+        /** APIResponse[AnalyticsPerformancePayload] */
+        APIResponse_AnalyticsPerformancePayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AnalyticsPerformancePayload"] | null;
+        };
+        /** APIResponse[AnalyticsTrendsPayload] */
+        APIResponse_AnalyticsTrendsPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AnalyticsTrendsPayload"] | null;
+        };
+        /** APIResponse[AnalyticsUsagePayload] */
+        APIResponse_AnalyticsUsagePayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AnalyticsUsagePayload"] | null;
+        };
+        /** APIResponse[AnalyticsUserAnalyticsPayload] */
+        APIResponse_AnalyticsUserAnalyticsPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["AnalyticsUserAnalyticsPayload"] | null;
+        };
+        /** APIResponse[ApplicationHealthData] */
+        APIResponse_ApplicationHealthData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ApplicationHealthData"] | null;
+        };
+        /** APIResponse[BackgroundTaskResponse] */
+        APIResponse_BackgroundTaskResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["BackgroundTaskResponse"] | null;
+        };
+        /** APIResponse[BaseModelSchema] */
+        APIResponse_BaseModelSchema_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["BaseModelSchema"] | null;
+        };
+        /** APIResponse[BaseResponse] */
+        APIResponse_BaseResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["BaseResponse"] | null;
+        };
+        /** APIResponse[BulkReprocessResponse] */
+        APIResponse_BulkReprocessResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["BulkReprocessResponse"] | null;
+        };
+        /** APIResponse[ChatResponse] */
+        APIResponse_ChatResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ChatResponse"] | null;
+        };
+        /** APIResponse[ConversationExportData] */
+        APIResponse_ConversationExportData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ConversationExportData"] | null;
+        };
+        /** APIResponse[ConversationResponse] */
+        APIResponse_ConversationResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ConversationResponse"] | null;
+        };
+        /** APIResponse[ConversationSearchData] */
+        APIResponse_ConversationSearchData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ConversationSearchData"] | null;
+        };
+        /** APIResponse[ConversationStatsData] */
+        APIResponse_ConversationStatsData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ConversationStatsData"] | null;
+        };
+        /** APIResponse[ConversationStats] */
+        APIResponse_ConversationStats_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ConversationStats"] | null;
+        };
+        /** APIResponse[DatabaseAnalysisResponse] */
+        APIResponse_DatabaseAnalysisResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseAnalysisResponse"] | null;
+        };
+        /** APIResponse[DatabaseBackupResult] */
+        APIResponse_DatabaseBackupResult_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseBackupResult"] | null;
+        };
+        /** APIResponse[DatabaseDowngradeResult] */
+        APIResponse_DatabaseDowngradeResult_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseDowngradeResult"] | null;
+        };
+        /** APIResponse[DatabaseHealthData] */
+        APIResponse_DatabaseHealthData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseHealthData"] | null;
+        };
+        /** APIResponse[DatabaseMigrationsResponse] */
+        APIResponse_DatabaseMigrationsResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseMigrationsResponse"] | null;
+        };
+        /** APIResponse[DatabaseQueryResponse] */
+        APIResponse_DatabaseQueryResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseQueryResponse"] | null;
+        };
+        /** APIResponse[DatabaseRestoreResult] */
+        APIResponse_DatabaseRestoreResult_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseRestoreResult"] | null;
+        };
+        /** APIResponse[DatabaseStatusResponse] */
+        APIResponse_DatabaseStatusResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseStatusResponse"] | null;
+        };
+        /** APIResponse[DatabaseTablesResponse] */
+        APIResponse_DatabaseTablesResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseTablesResponse"] | null;
+        };
+        /** APIResponse[DatabaseUpgradeResult] */
+        APIResponse_DatabaseUpgradeResult_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DatabaseUpgradeResult"] | null;
+        };
+        /** APIResponse[DetailedHealthCheckPayload] */
+        APIResponse_DetailedHealthCheckPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DetailedHealthCheckPayload"] | null;
+        };
+        /** APIResponse[DocumentResponse] */
+        APIResponse_DocumentResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DocumentResponse"] | null;
+        };
+        /** APIResponse[DocumentSearchResponse] */
+        APIResponse_DocumentSearchResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DocumentSearchResponse"] | null;
+        };
+        /** APIResponse[DocumentStatisticsData] */
+        APIResponse_DocumentStatisticsData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DocumentStatisticsData"] | null;
+        };
+        /** APIResponse[DocumentUploadResponse] */
+        APIResponse_DocumentUploadResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["DocumentUploadResponse"] | null;
+        };
+        /** APIResponse[ImportConversationResult] */
+        APIResponse_ImportConversationResult_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ImportConversationResult"] | null;
+        };
+        /** APIResponse[LLMProfileResponse] */
+        APIResponse_LLMProfileResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["LLMProfileResponse"] | null;
+        };
+        /** APIResponse[LLMProfileStatisticsData] */
+        APIResponse_LLMProfileStatisticsData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["LLMProfileStatisticsData"] | null;
+        };
+        /** APIResponse[List[DocumentResponse]] */
+        APIResponse_List_DocumentResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: components["schemas"]["DocumentResponse"][] | null;
+        };
+        /** APIResponse[List[MCPServerSchema]] */
+        APIResponse_List_MCPServerSchema__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: components["schemas"]["MCPServerSchema"][] | null;
+        };
+        /** APIResponse[List[MCPToolResponse]] */
+        APIResponse_List_MCPToolResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: components["schemas"]["MCPToolResponse"][] | null;
+        };
+        /** APIResponse[List[MessageResponse]] */
+        APIResponse_List_MessageResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: components["schemas"]["MessageResponse"][] | null;
+        };
+        /** APIResponse[LivenessPayload] */
+        APIResponse_LivenessPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["LivenessPayload"] | null;
+        };
+        /** APIResponse[MCPServerSchema] */
+        APIResponse_MCPServerSchema_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["MCPServerSchema"] | null;
+        };
+        /** APIResponse[MCPToolUsageStatsSchema] */
+        APIResponse_MCPToolUsageStatsSchema_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["MCPToolUsageStatsSchema"] | null;
+        };
+        /** APIResponse[MCPToolsResponse] */
+        APIResponse_MCPToolsResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["MCPToolsResponse"] | null;
+        };
+        /** APIResponse[PaginatedResponse[ConversationResponse]] */
+        APIResponse_PaginatedResponse_ConversationResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PaginatedResponse_ConversationResponse_"] | null;
+        };
+        /** APIResponse[PaginatedResponse[LLMProfileResponse]] */
+        APIResponse_PaginatedResponse_LLMProfileResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PaginatedResponse_LLMProfileResponse_"] | null;
+        };
+        /** APIResponse[PaginatedResponse[PromptResponse]] */
+        APIResponse_PaginatedResponse_PromptResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PaginatedResponse_PromptResponse_"] | null;
+        };
+        /** APIResponse[PaginatedResponse[UserResponse]] */
+        APIResponse_PaginatedResponse_UserResponse__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PaginatedResponse_UserResponse_"] | null;
+        };
+        /** APIResponse[PerformanceMetricsPayload] */
+        APIResponse_PerformanceMetricsPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PerformanceMetricsPayload"] | null;
+        };
+        /** APIResponse[ProcessingConfigResponse] */
+        APIResponse_ProcessingConfigResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ProcessingConfigResponse"] | null;
+        };
+        /** APIResponse[ProcessingStatusResponse] */
+        APIResponse_ProcessingStatusResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ProcessingStatusResponse"] | null;
+        };
+        /** APIResponse[PromptCategoriesData] */
+        APIResponse_PromptCategoriesData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PromptCategoriesData"] | null;
+        };
+        /** APIResponse[PromptResponse] */
+        APIResponse_PromptResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PromptResponse"] | null;
+        };
+        /** APIResponse[PromptStatisticsData] */
+        APIResponse_PromptStatisticsData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["PromptStatisticsData"] | null;
+        };
+        /** APIResponse[QueueStatusData] */
+        APIResponse_QueueStatusData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["QueueStatusData"] | null;
+        };
+        /** APIResponse[QueueStatusResponse] */
+        APIResponse_QueueStatusResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["QueueStatusResponse"] | null;
+        };
+        /** APIResponse[ReadinessComponentsPayload] */
+        APIResponse_ReadinessComponentsPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ReadinessComponentsPayload"] | null;
+        };
+        /** APIResponse[RegistryStatsResponse] */
+        APIResponse_RegistryStatsResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["RegistryStatsResponse"] | null;
+        };
+        /** APIResponse[SearchSuggestionData] */
+        APIResponse_SearchSuggestionData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["SearchSuggestionData"] | null;
+        };
+        /** APIResponse[ServicesHealthPayload] */
+        APIResponse_ServicesHealthPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["ServicesHealthPayload"] | null;
+        };
+        /** APIResponse[SystemMetricsPayload] */
+        APIResponse_SystemMetricsPayload_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["SystemMetricsPayload"] | null;
+        };
+        /** APIResponse[TaskMonitoringData] */
+        APIResponse_TaskMonitoringData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["TaskMonitoringData"] | null;
+        };
+        /** APIResponse[TaskStatisticsData] */
+        APIResponse_TaskStatisticsData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["TaskStatisticsData"] | null;
+        };
+        /** APIResponse[TaskSystemStatusData] */
+        APIResponse_TaskSystemStatusData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["TaskSystemStatusData"] | null;
+        };
+        /** APIResponse[Token] */
+        APIResponse_Token_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["Token"] | null;
+        };
+        /** APIResponse[Union[ArchivePreviewResponse, ArchiveConversationsResult]] */
+        APIResponse_Union_ArchivePreviewResponse__ArchiveConversationsResult__: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: components["schemas"]["ArchivePreviewResponse"] | components["schemas"]["ArchiveConversationsResult"] | null;
+        };
+        /** APIResponse[UserResponse] */
+        APIResponse_UserResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["UserResponse"] | null;
+        };
+        /** APIResponse[UserStatsResponse] */
+        APIResponse_UserStatsResponse_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["UserStatsResponse"] | null;
+        };
+        /** APIResponse[VacuumResult] */
+        APIResponse_VacuumResult_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["VacuumResult"] | null;
+        };
+        /** APIResponse[WorkerStatusData] */
+        APIResponse_WorkerStatusData_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Response data payload - single object, array, or null */
+            data?: components["schemas"]["WorkerStatusData"] | null;
+        };
+        /** APIResponse[dict] */
+        APIResponse_dict_: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Data
+             * @description Response data payload - single object, array, or null
+             */
+            data?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * ActiveTaskInfo
+         * @description Active task information model.
+         */
+        ActiveTaskInfo: {
+            /**
+             * Id
+             * @description Task identifier
+             */
+            id?: string | null;
+            /**
+             * Name
+             * @description Task name
+             */
+            name?: string | null;
+            /**
+             * Args
+             * @description Task arguments
+             */
+            args?: unknown[];
+            /**
+             * Kwargs
+             * @description Task keyword arguments
+             */
+            kwargs?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Worker
+             * @description Worker hostname
+             */
+            worker: string;
+            /**
+             * Time Start
+             * @description Task start timestamp
+             */
+            time_start?: string | null;
+            /**
+             * Acknowledged
+             * @description Task acknowledgment status
+             * @default false
+             */
+            acknowledged: boolean;
+            /**
+             * Delivery Info
+             * @description Message delivery info
+             */
+            delivery_info?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ActiveTasksData
+         * @description Active tasks data model.
+         */
+        ActiveTasksData: {
+            /**
+             * Active Tasks
+             * @description List of active tasks
+             */
+            active_tasks?: components["schemas"]["ActiveTaskInfo"][];
+            /**
+             * Total Active
+             * @description Total number of active tasks
+             */
+            total_active: number;
+            /**
+             * Workers With Tasks
+             * @description Number of workers with active tasks
+             */
+            workers_with_tasks: number;
+            /**
+             * Timestamp
+             * @description Status timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * AdvancedSearchData
+         * @description Advanced document search results data.
+         */
+        AdvancedSearchData: {
+            /**
+             * Results
+             * @description Search results
+             */
+            results?: components["schemas"]["DocumentSearchResult"][];
+            /**
+             * Total Found
+             * @description Total number of documents found
+             */
+            total_found: number;
+            /** @description Search criteria used */
+            search_criteria: components["schemas"]["DocumentSearchCriteria"];
+            /**
+             * Timestamp
+             * @description Search timestamp
+             */
+            timestamp: string;
+        };
+        /** AnalyticsExportPayload */
+        AnalyticsExportPayload: {
+            /**
+             * Report Metadata
+             * @description Report metadata
+             */
+            report_metadata: {
+                [key: string]: unknown;
+            };
+            /** @description System overview */
+            system_overview: components["schemas"]["AnalyticsOverviewPayload"];
+            /** @description Usage statistics */
+            usage_statistics: components["schemas"]["AnalyticsUsagePayload"];
+            /** @description Performance metrics */
+            performance_metrics: components["schemas"]["AnalyticsPerformancePayload"];
+            /** @description Usage trends */
+            usage_trends: components["schemas"]["AnalyticsTrendsPayload"];
+            /** @description Detailed user analytics */
+            detailed_user_analytics?: components["schemas"]["DetailedUserAnalyticsPayload"] | null;
+        };
+        /** AnalyticsOverviewPayload */
+        AnalyticsOverviewPayload: {
+            /** @description User stats */
+            users: components["schemas"]["UsersOverview"];
+            /** @description Document stats */
+            documents: components["schemas"]["DocumentsOverview"];
+            /** @description Conversation stats */
+            conversations: components["schemas"]["ConversationsOverview"];
+            /** @description System health score */
+            system_health: components["schemas"]["SystemHealthScore"];
+            /**
+             * Timestamp
+             * @description Timestamp
+             */
+            timestamp: string;
+        };
+        /** AnalyticsPerformancePayload */
+        AnalyticsPerformancePayload: {
+            /** @description Document processing stats */
+            document_processing: components["schemas"]["DocumentProcessingPerformance"];
+            /**
+             * Database Performance
+             * @description Database performance metrics
+             */
+            database_performance: components["schemas"]["DBPerformanceEntry"][];
+            /** @description System metrics */
+            system_metrics: components["schemas"]["SystemMetricsInfo"];
+        };
+        /** AnalyticsTrendsPayload */
+        AnalyticsTrendsPayload: {
+            /**
+             * Period Days
+             * @description Period days
+             */
+            period_days: number;
+            /**
+             * Daily Trends
+             * @description Daily trends
+             */
+            daily_trends: components["schemas"]["DailyTrend"][];
+            /** @description Summary */
+            summary: components["schemas"]["TrendSummary"];
+            /**
+             * Generated At
+             * @description Generated timestamp
+             */
+            generated_at: string;
+        };
+        /** AnalyticsUsagePayload */
+        AnalyticsUsagePayload: {
+            /**
+             * Period
+             * @description Period string
+             */
+            period: string;
+            /**
+             * Start Date
+             * @description Period start date
+             */
+            start_date: string;
+            /**
+             * End Date
+             * @description Period end date
+             */
+            end_date: string;
+            /** @description Metrics */
+            metrics: components["schemas"]["UsageMetrics"];
+            /**
+             * Daily Breakdown
+             * @description Daily breakdown
+             */
+            daily_breakdown?: components["schemas"]["DailyStat"][] | null;
+        };
+        /** AnalyticsUserAnalyticsPayload */
+        AnalyticsUserAnalyticsPayload: {
+            /**
+             * Metric
+             * @description Metric analyzed
+             */
+            metric: string;
+            /**
+             * Period
+             * @description Period
+             */
+            period: string;
+            /**
+             * Top Users
+             * @description Top users
+             */
+            top_users: components["schemas"]["TopUser"][];
+            /**
+             * Total Returned
+             * @description Total users returned
+             */
+            total_returned: number;
+            /**
+             * Generated At
+             * @description Generated timestamp
+             */
+            generated_at: string;
+        };
+        /**
+         * ApplicationHealthData
+         * @description Application health status information.
+         */
+        ApplicationHealthData: {
+            /**
+             * Name
+             * @description Application name
+             */
+            name: string;
+            /**
+             * Version
+             * @description Application version
+             */
+            version: string;
+            /**
+             * Status
+             * @description Application health status
+             */
+            status: string;
+            /**
+             * Debug Mode
+             * @description Whether debug mode is enabled
+             */
+            debug_mode: boolean;
+        };
+        /**
+         * ArchiveConversationsResult
+         * @description Result of archiving conversations.
+         */
+        ArchiveConversationsResult: {
+            /**
+             * Archived Count
+             * @description Number of conversations archived
+             */
+            archived_count: number;
+            /**
+             * Criteria
+             * @description Archive criteria used
+             */
+            criteria?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ArchivePreviewItem
+         * @description Preview item for conversation archiving.
+         */
+        ArchivePreviewItem: {
+            /**
+             * Id
+             * @description Conversation ID
+             */
+            id: string;
+            /**
+             * Title
+             * @description Conversation title
+             */
+            title: string;
+            /**
+             * Created At
+             * @description Creation timestamp
+             */
+            created_at: string;
+            /**
+             * Is Active
+             * @description Whether conversation is active
+             */
+            is_active: boolean;
+            /**
+             * Message Count
+             * @description Number of messages
+             */
+            message_count: number;
+        };
+        /**
+         * ArchivePreviewResponse
+         * @description Preview response for conversation archiving.
+         */
+        ArchivePreviewResponse: {
+            /**
+             * Total Count
+             * @description Total conversations to be archived
+             */
+            total_count: number;
+            /**
+             * Preview
+             * @description Preview of conversations to archive
+             */
+            preview?: components["schemas"]["ArchivePreviewItem"][];
+            /**
+             * Criteria
+             * @description Archive criteria used
+             */
+            criteria?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * BackgroundTaskResponse
+         * @description Response schema for background task operations.
+         */
+        BackgroundTaskResponse: {
+            /**
+             * Message
+             * @description Status message
+             */
+            message: string;
+            /**
+             * Task Id
+             * @description Background task ID
+             */
+            task_id: string;
+            /**
+             * Document Id
+             * @description Document ID
+             */
+            document_id: string;
+            /**
+             * Status
+             * @description Task status
+             */
+            status: string;
+            /**
+             * Priority
+             * @description Task priority
+             */
+            priority?: number | null;
+            /**
+             * Created At
+             * @description Task creation timestamp
+             */
+            created_at?: string | null;
+        };
+        /**
+         * BaseModelSchema
+         * @description Complete foundational schema combining UUID identification and timestamp auditing.
+         *
+         *     Comprehensive base schema that merges UUID-based unique identification with
+         *     timestamp-based auditing capabilities, providing the complete foundation for
+         *     entity schemas across the application. Implements advanced JSON serialization
+         *     with proper handling of both UUID and datetime field types.
+         *
+         *     This is the recommended base class for most domain entity schemas that need
+         *     both unique identification and audit trail capabilities.
+         */
+        BaseModelSchema: {
+            /** Id */
+            id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Updated At */
+            updated_at?: string | null;
+        };
+        /**
+         * BaseResponse
+         * @description Foundation response schema for all API endpoints with comprehensive status and metadata.
+         *
+         *     Serves as the base class for all API responses providing consistent structure,
+         *     status reporting, and timestamp information across the application. Implements
+         *     standardized response format with success indicators, human-readable messages,
+         *     and automatic timestamp generation for audit and monitoring purposes.
+         *
+         *     Response Structure:
+         *         - success: Boolean indicator for operation success or failure
+         *         - message: Human-readable description of the operation result
+         *         - timestamp: Automatic timestamp generation for audit and tracking
+         *
+         *     Standardization Features:
+         *         - Consistent response format across all API endpoints
+         *         - Automatic timestamp generation for audit trails and monitoring
+         *         - Success/failure indication for client-side handling
+         *         - Human-readable messages for user interface display
+         *         - Custom JSON serialization for proper datetime formatting
+         *
+         *     Configuration Benefits:
+         *         - from_attributes: Enables ORM model to response conversion
+         *         - populate_by_name: Supports flexible field naming and aliases
+         *         - use_enum_values: Serializes enum values for consistent JSON output
+         *         - validate_assignment: Ensures data integrity during field updates
+         *         - extra="ignore": Accepts additional fields without validation errors
+         *
+         *     Use Cases:
+         *         - Base class for all API endpoint responses
+         *         - Consistent error and success reporting across endpoints
+         *         - Audit trail generation with automatic timestamping
+         *         - Client-side response handling with standardized format
+         *         - Integration with monitoring and logging systems
+         *
+         *     JSON Serialization:
+         *         - Custom datetime handling with ISO format and timezone indicators
+         *         - Consistent timestamp formatting for frontend integration
+         *         - Proper type conversion for JSON compatibility
+         *         - UTC timezone standardization for global applications
+         *         - Frontend-compatible response structure
+         *
+         *     Example:
+         *         response = BaseResponse(
+         *             success=True,
+         *             message="Operation completed successfully",
+         *             timestamp=datetime.now()
+         *         )
+         *         json_str = response.model_dump_json()  # Proper ISO datetime format
+         */
+        BaseResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+        };
+        /** Body_import_conversation_api_v1_conversations_import_post */
+        Body_import_conversation_api_v1_conversations_import_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+        };
+        /** Body_upload_document_api_v1_documents_upload_post */
+        Body_upload_document_api_v1_documents_upload_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+            /** Title */
+            title: string;
+            /**
+             * Auto Process
+             * @default true
+             */
+            auto_process: boolean;
+            /**
+             * Processing Priority
+             * @default 5
+             */
+            processing_priority: number;
+        };
+        /** BulkReprocessResponse */
+        BulkReprocessResponse: {
+            /** Id */
+            id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Updated At */
+            updated_at?: string | null;
+            /** Reprocessed Count */
+            reprocessed_count: number;
+            /** Total Found */
+            total_found: number;
+            /** Errors */
+            errors: string[];
+            /** Criteria */
+            criteria: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * CacheHealthData
+         * @description Cache system health data.
+         */
+        CacheHealthData: {
+            /**
+             * Status
+             * @description Cache system status
+             */
+            status: string;
+            /**
+             * Message
+             * @description Health status message
+             */
+            message: string;
+            /**
+             * Stats
+             * @description Cache statistics by cache name
+             */
+            stats?: {
+                [key: string]: components["schemas"]["CacheStats"];
+            };
+            /**
+             * Overall Hit Rate
+             * @description Overall hit rate across all caches
+             */
+            overall_hit_rate?: number | null;
+            /**
+             * Total Requests
+             * @description Total requests across all caches
+             */
+            total_requests?: number | null;
+        };
+        /**
+         * CacheStats
+         * @description Individual cache statistics.
+         */
+        CacheStats: {
+            /**
+             * Hits
+             * @description Number of cache hits
+             */
+            hits: number;
+            /**
+             * Misses
+             * @description Number of cache misses
+             */
+            misses: number;
+            /**
+             * Hit Rate
+             * @description Cache hit rate percentage
+             */
+            hit_rate: number;
+            /**
+             * Total Requests
+             * @description Total number of requests
+             */
+            total_requests: number;
+        };
+        /**
+         * ChatRequest
+         * @description Schema for chat request with enhanced registry integration.
+         */
+        ChatRequest: {
+            /**
+             * User Message
+             * @description User message
+             */
+            user_message: string;
+            /**
+             * Conversation Id
+             * @description Existing conversation ID
+             */
+            conversation_id?: string | null;
+            /**
+             * Conversation Title
+             * @description New conversation title
+             */
+            conversation_title?: string | null;
+            /**
+             * Use Rag
+             * @description Whether to use RAG for context
+             * @default true
+             */
+            use_rag: boolean;
+            /**
+             * Use Tools
+             * @description Whether to enable tool calling
+             * @default true
+             */
+            use_tools: boolean;
+            /**
+             * @description How to handle tool call results: return_results or complete_with_results
+             * @default complete_with_results
+             */
+            tool_handling_mode: components["schemas"]["ToolHandlingMode"];
+            /**
+             * Rag Documents
+             * @description Specific document IDs for RAG
+             */
+            rag_documents?: string[] | null;
+            /**
+             * Prompt Name
+             * @description Name of prompt to use from prompt registry
+             */
+            prompt_name?: string | null;
+            /**
+             * Profile Name
+             * @description Name of LLM profile to use from profile registry
+             */
+            profile_name?: string | null;
+            /**
+             * Llm Profile
+             * @description LLM profile object with parameter configuration
+             */
+            llm_profile?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * ChatResponse
+         * @description Schema for chat response.
+         */
+        ChatResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description AI response message */
+            ai_message: components["schemas"]["MessageResponse"];
+            /** @description Updated conversation */
+            conversation: components["schemas"]["ConversationResponse"];
+            /**
+             * Usage
+             * @description Token usage information
+             */
+            usage?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Rag Context
+             * @description RAG context used
+             */
+            rag_context?: {
+                [key: string]: unknown;
+            }[] | null;
+            /**
+             * Tool Calls Made
+             * @description Tool calls executed (deprecated - use tool_call_summary)
+             */
+            tool_calls_made?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** @description Detailed summary of tool calls executed */
+            tool_call_summary?: components["schemas"]["ToolCallSummary"] | null;
+            /**
+             * Response Time Ms
+             * @description Response time in milliseconds
+             * @default 0
+             */
+            response_time_ms: number;
+        };
+        /**
+         * ConversationCreate
+         * @description Schema for creating a new conversation.
+         */
+        ConversationCreate: {
+            /**
+             * Title
+             * @description Conversation title
+             */
+            title: string;
+            /**
+             * Is Active
+             * @description Whether conversation is active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Metainfo
+             * @description Additional metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * ConversationExportData
+         * @description Generic export data that can be any format.
+         */
+        ConversationExportData: {
+            /**
+             * Data
+             * @description Export data in the requested format
+             */
+            data: unknown;
+            /** @description Export operation information */
+            export_info: components["schemas"]["ExportInfo"];
+        };
+        /**
+         * ConversationResponse
+         * @description Schema for conversation response data.
+         */
+        ConversationResponse: {
+            /**
+             * Title
+             * @description Conversation title
+             */
+            title: string;
+            /**
+             * Is Active
+             * @description Whether conversation is active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Id
+             * Format: uuid
+             * @description Conversation ID
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             * @description Owner user ID
+             */
+            user_id: string;
+            /**
+             * Message Count
+             * @description Number of messages
+             * @default 0
+             */
+            message_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updated_at: string;
+            /**
+             * Last Message At
+             * @description Last message timestamp
+             */
+            last_message_at?: string | null;
+            /**
+             * Metainfo
+             * @description Additional metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * ConversationSearchCriteria
+         * @description Search criteria for conversations.
+         */
+        ConversationSearchCriteria: {
+            /**
+             * Query
+             * @description Search query
+             */
+            query: string;
+            /**
+             * Search Messages
+             * @description Whether to search messages
+             */
+            search_messages: boolean;
+            /**
+             * User Filter
+             * @description User filter
+             */
+            user_filter?: string | null;
+            /**
+             * Date From
+             * @description Start date filter
+             */
+            date_from?: string | null;
+            /**
+             * Date To
+             * @description End date filter
+             */
+            date_to?: string | null;
+            /**
+             * Active Only
+             * @description Active conversations only
+             */
+            active_only: boolean;
+            /**
+             * Limit
+             * @description Result limit
+             */
+            limit: number;
+        };
+        /**
+         * ConversationSearchData
+         * @description Data for conversation search results.
+         */
+        ConversationSearchData: {
+            /**
+             * Results
+             * @description Search results
+             */
+            results?: components["schemas"]["ConversationSearchResult"][];
+            /**
+             * Total Found
+             * @description Total results found
+             */
+            total_found: number;
+            /** @description Search criteria used */
+            search_criteria: components["schemas"]["ConversationSearchCriteria"];
+            /**
+             * Timestamp
+             * @description Search timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * ConversationSearchMatchingMessage
+         * @description Matching message in conversation search.
+         */
+        ConversationSearchMatchingMessage: {
+            /**
+             * Id
+             * @description Message ID
+             */
+            id: string;
+            /**
+             * Role
+             * @description Message role
+             */
+            role: string;
+            /**
+             * Excerpt
+             * @description Content excerpt with search term
+             */
+            excerpt: string;
+            /**
+             * Created At
+             * @description Message creation timestamp
+             */
+            created_at: string;
+        };
+        /**
+         * ConversationSearchResult
+         * @description Search result for conversations.
+         */
+        ConversationSearchResult: {
+            /**
+             * Id
+             * @description Conversation ID
+             */
+            id: string;
+            /**
+             * Title
+             * @description Conversation title
+             */
+            title: string;
+            /**
+             * Created At
+             * @description Creation timestamp
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * @description Last update timestamp
+             */
+            updated_at?: string | null;
+            /**
+             * Is Active
+             * @description Whether conversation is active
+             */
+            is_active: boolean;
+            /**
+             * Message Count
+             * @description Number of messages
+             */
+            message_count: number;
+            /** @description User information */
+            user: components["schemas"]["ConversationSearchUserInfo"];
+            /**
+             * Matching Messages
+             * @description Messages matching search
+             */
+            matching_messages?: components["schemas"]["ConversationSearchMatchingMessage"][];
+        };
+        /**
+         * ConversationSearchUserInfo
+         * @description User information for search results.
+         */
+        ConversationSearchUserInfo: {
+            /**
+             * Username
+             * @description Username
+             */
+            username: string;
+            /**
+             * Email
+             * @description User email
+             */
+            email: string;
+        };
+        /**
+         * ConversationStats
+         * @description Schema for conversation statistics.
+         */
+        ConversationStats: {
+            /**
+             * Total Conversations
+             * @description Total conversations
+             */
+            total_conversations: number;
+            /**
+             * Active Conversations
+             * @description Active conversations
+             */
+            active_conversations: number;
+            /**
+             * Total Messages
+             * @description Total messages
+             */
+            total_messages: number;
+            /**
+             * Avg Messages Per Conversation
+             * @description Average messages per conversation
+             */
+            avg_messages_per_conversation: number;
+            /**
+             * Most Recent Activity
+             * @description Most recent activity
+             */
+            most_recent_activity?: string | null;
+        };
+        /**
+         * ConversationStatsConversations
+         * @description Conversation statistics for conversations.
+         */
+        ConversationStatsConversations: {
+            /**
+             * Total
+             * @description Total conversations
+             */
+            total: number;
+            /**
+             * Active
+             * @description Active conversations
+             */
+            active: number;
+            /**
+             * Inactive
+             * @description Inactive conversations
+             */
+            inactive: number;
+        };
+        /**
+         * ConversationStatsData
+         * @description Comprehensive conversation statistics.
+         */
+        ConversationStatsData: {
+            /** @description Conversation statistics */
+            conversations: components["schemas"]["ConversationStatsConversations"];
+            /** @description Message statistics */
+            messages: components["schemas"]["ConversationStatsMessages"];
+            /** @description Recent activity statistics */
+            recent_activity: components["schemas"]["ConversationStatsRecentActivity"];
+            /** @description User engagement statistics */
+            user_engagement: components["schemas"]["ConversationStatsUserEngagement"];
+            /**
+             * Timestamp
+             * @description Statistics timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * ConversationStatsMessages
+         * @description Conversation statistics for messages.
+         */
+        ConversationStatsMessages: {
+            /**
+             * Total
+             * @description Total messages
+             */
+            total: number;
+            /**
+             * Avg Per Conversation
+             * @description Average messages per conversation
+             */
+            avg_per_conversation: number;
+            /**
+             * Role Distribution
+             * @description Message distribution by role
+             */
+            role_distribution?: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * ConversationStatsRecentActivity
+         * @description Recent activity statistics.
+         */
+        ConversationStatsRecentActivity: {
+            /**
+             * Conversations Last 7 Days
+             * @description New conversations in last 7 days
+             */
+            conversations_last_7_days: number;
+            /**
+             * Messages Last 7 Days
+             * @description New messages in last 7 days
+             */
+            messages_last_7_days: number;
+        };
+        /**
+         * ConversationStatsUserEngagement
+         * @description User engagement statistics.
+         */
+        ConversationStatsUserEngagement: {
+            /**
+             * Users With Conversations
+             * @description Users with conversations
+             */
+            users_with_conversations: number;
+            /**
+             * Top Users
+             * @description Top users by activity
+             */
+            top_users?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
+         * ConversationUpdate
+         * @description Schema for updating conversation information.
+         */
+        ConversationUpdate: {
+            /**
+             * Title
+             * @description New title
+             */
+            title?: string | null;
+            /**
+             * Is Active
+             * @description New active status
+             */
+            is_active?: boolean | null;
+            /**
+             * Metainfo
+             * @description Updated metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** ConversationsOverview */
+        ConversationsOverview: {
+            /**
+             * Total
+             * @description Total conversations
+             */
+            total: number;
+        };
+        /** DBPerformanceEntry */
+        DBPerformanceEntry: {
+            /**
+             * Schemaname
+             * @description Schema name
+             */
+            schemaname?: string | null;
+            /**
+             * Tablename
+             * @description Table name
+             */
+            tablename?: string | null;
+            /**
+             * Total Operations
+             * @description Total operations
+             */
+            total_operations?: number | null;
+            /**
+             * Live Tuples
+             * @description Live tuples
+             */
+            live_tuples?: number | null;
+            /**
+             * Dead Tuples
+             * @description Dead tuples
+             */
+            dead_tuples?: number | null;
+        };
+        /** DailyStat */
+        DailyStat: {
+            /**
+             * Date
+             * @description Date
+             */
+            date: string;
+            /**
+             * Messages
+             * @description Messages on that date
+             */
+            messages: number;
+        };
+        /** DailyTrend */
+        DailyTrend: {
+            /**
+             * Date
+             * @description Date
+             */
+            date: string;
+            /**
+             * New Users
+             * @description New users
+             */
+            new_users: number;
+            /**
+             * New Documents
+             * @description New documents
+             */
+            new_documents: number;
+            /**
+             * Messages
+             * @description Messages
+             */
+            messages: number;
+        };
+        /**
+         * DatabaseAnalysisResponse
+         * @description Database analysis response schema.
+         */
+        DatabaseAnalysisResponse: {
+            /**
+             * Success
+             * @description Operation success status
+             */
+            success: boolean;
+            /**
+             * Table Stats
+             * @description Table statistics
+             */
+            table_stats: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Index Analysis
+             * @description Index analysis
+             */
+            index_analysis: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Performance Insights
+             * @description Performance insights
+             */
+            performance_insights: {
+                [key: string]: unknown;
+            };
+            /**
+             * Recommendations
+             * @description Optimization recommendations
+             */
+            recommendations?: string[];
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Analysis timestamp
+             */
             timestamp?: string;
         };
-        UserResponse: {
-            /** Format: uuid */
-            id?: string;
-            username?: string;
-            /** Format: email */
-            email?: string;
-            is_active?: boolean;
-            is_superuser?: boolean;
-            /** Format: date-time */
-            created_at?: string;
+        /** DatabaseBackupResult */
+        DatabaseBackupResult: {
+            /**
+             * Output File
+             * @description Path to backup file created
+             */
+            output_file: string;
+            /**
+             * File Size
+             * @description Size of backup file
+             */
+            file_size: string;
+            /**
+             * Schema Only
+             * @description Whether only schema was backed up
+             */
+            schema_only: boolean;
         };
-        LoginRequest: {
+        /** DatabaseDowngradeResult */
+        DatabaseDowngradeResult: {
+            /**
+             * Output
+             * @description Output from alembic downgrade command
+             */
+            output: string;
+            /**
+             * Revision
+             * @description Target revision
+             */
+            revision: string;
+        };
+        /**
+         * DatabaseHealthData
+         * @description Database health check data.
+         */
+        DatabaseHealthData: {
+            /**
+             * Status
+             * @description Database connection status
+             */
+            status: string;
+            /**
+             * Message
+             * @description Health status message
+             */
+            message: string;
+            /**
+             * Version
+             * @description Database version
+             */
+            version?: string | null;
+            /**
+             * Connection Pool Size
+             * @description Connection pool size
+             */
+            connection_pool_size?: number | null;
+            /**
+             * Active Connections
+             * @description Active connections
+             */
+            active_connections?: number | null;
+            /**
+             * Tables
+             * @description Available tables
+             */
+            tables?: string[] | null;
+            /**
+             * Missing Tables
+             * @description Missing required tables
+             */
+            missing_tables?: string[] | null;
+            /**
+             * Response Time Ms
+             * @description Database response time in milliseconds
+             */
+            response_time_ms?: number | null;
+        };
+        /**
+         * DatabaseMigrationsResponse
+         * @description Database migrations response schema.
+         */
+        DatabaseMigrationsResponse: {
+            /**
+             * Success
+             * @description Operation success status
+             */
+            success: boolean;
+            /**
+             * Applied Migrations
+             * @description Applied migrations
+             */
+            applied_migrations: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Pending Migrations
+             * @description Pending migrations
+             */
+            pending_migrations: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Migration Status
+             * @description Overall migration status
+             */
+            migration_status: string;
+            /**
+             * Last Migration
+             * @description Last migration
+             */
+            last_migration?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Query timestamp
+             */
+            timestamp?: string;
+        };
+        /**
+         * DatabaseQueryResponse
+         * @description Database query execution response schema.
+         */
+        DatabaseQueryResponse: {
+            /**
+             * Success
+             * @description Query execution success status
+             */
+            success: boolean;
+            /**
+             * Query
+             * @description Executed query
+             */
+            query: string;
+            /**
+             * Result Type
+             * @description Type of query result
+             */
+            result_type: string;
+            /**
+             * Rows Affected
+             * @description Number of rows affected
+             */
+            rows_affected?: number | null;
+            /**
+             * Execution Time Ms
+             * @description Query execution time in milliseconds
+             */
+            execution_time_ms: number;
+            /**
+             * Results
+             * @description Query results
+             */
+            results?: {
+                [key: string]: unknown;
+            }[] | null;
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Execution timestamp
+             */
+            timestamp?: string;
+        };
+        /** DatabaseRestoreResult */
+        DatabaseRestoreResult: {
+            /**
+             * Message
+             * @description Status message
+             */
+            message: string;
+            /**
+             * Backup File
+             * @description Restored backup file path
+             */
+            backup_file: string;
+        };
+        /**
+         * DatabaseStatusResponse
+         * @description Database status response schema.
+         */
+        DatabaseStatusResponse: {
+            /**
+             * Success
+             * @description Operation success status
+             */
+            success: boolean;
+            /**
+             * Connection Status
+             * @description Database connection status
+             */
+            connection_status: string;
+            /**
+             * Version Info
+             * @description Database version information
+             */
+            version_info: {
+                [key: string]: unknown;
+            };
+            /**
+             * Schema Info
+             * @description Schema information
+             */
+            schema_info: {
+                [key: string]: unknown;
+            };
+            /**
+             * Performance Metrics
+             * @description Performance metrics
+             */
+            performance_metrics: {
+                [key: string]: unknown;
+            };
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Status check timestamp
+             */
+            timestamp?: string;
+        };
+        /**
+         * DatabaseTablesResponse
+         * @description Database tables response schema.
+         */
+        DatabaseTablesResponse: {
+            /**
+             * Success
+             * @description Operation success status
+             */
+            success: boolean;
+            /**
+             * Tables
+             * @description List of database tables
+             */
+            tables: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Total Tables
+             * @description Total number of tables
+             */
+            total_tables: number;
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Query timestamp
+             */
+            timestamp?: string;
+        };
+        /** DatabaseUpgradeResult */
+        DatabaseUpgradeResult: {
+            /**
+             * Output
+             * @description Output from alembic upgrade command
+             */
+            output: string;
+            /**
+             * Revision
+             * @description Target revision
+             */
+            revision: string;
+        };
+        /**
+         * DetailedHealthCheckPayload
+         * @description Comprehensive health check payload.
+         */
+        DetailedHealthCheckPayload: {
+            /** @description App info */
+            application: components["schemas"]["ApplicationHealthData"];
+            /** @description Database health */
+            database: components["schemas"]["DatabaseHealthData"];
+            /** @description Cache health */
+            cache: components["schemas"]["CacheHealthData"];
+            /** @description OpenAI health */
+            openai: components["schemas"]["OpenAIHealthData"];
+            /** @description FastMCP health */
+            fastmcp: components["schemas"]["FastMCPHealthData"];
+            /**
+             * Overall Status
+             * @description Overall system status
+             */
+            overall_status: string;
+        };
+        /** DetailedUserAnalyticsPayload */
+        DetailedUserAnalyticsPayload: {
+            /**
+             * Top By Messages
+             * @description Top users by messages
+             */
+            top_by_messages?: components["schemas"]["TopUser"][] | null;
+            /**
+             * Top By Documents
+             * @description Top users by documents
+             */
+            top_by_documents?: components["schemas"]["TopUser"][] | null;
+            /**
+             * Top By Conversations
+             * @description Top users by conversations
+             */
+            top_by_conversations?: components["schemas"]["TopUser"][] | null;
+        };
+        /**
+         * DocumentChunkResponse
+         * @description Schema for document chunk response data.
+         * @example {
+         *       "chunk_index": 0,
+         *       "content": "Machine learning is a subset of artificial intelligence...",
+         *       "created_at": "2025-07-14T03:47:30Z",
+         *       "document_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+         *       "document_title": "Machine Learning Guide",
+         *       "end_char": 500,
+         *       "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+         *       "metainfo": {
+         *         "section": "introduction"
+         *       },
+         *       "similarity_score": 0.95,
+         *       "start_char": 0,
+         *       "token_count": 120
+         *     }
+         */
+        DocumentChunkResponse: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Chunk ID
+             */
+            id: string;
+            /**
+             * Content
+             * @description Chunk text content
+             */
+            content: string;
+            /**
+             * Chunk Index
+             * @description Chunk index in document
+             */
+            chunk_index: number;
+            /**
+             * Start Char
+             * @description Start character position
+             */
+            start_char: number;
+            /**
+             * End Char
+             * @description End character position
+             */
+            end_char: number;
+            /**
+             * Token Count
+             * @description Number of tokens
+             */
+            token_count: number;
+            /**
+             * Document Id
+             * Format: uuid
+             * @description Parent document ID
+             */
+            document_id: string;
+            /**
+             * Document Title
+             * @description Document title
+             */
+            document_title?: string | null;
+            /**
+             * Similarity Score
+             * @description Similarity score (for search)
+             */
+            similarity_score?: number | null;
+            /**
+             * Metainfo
+             * @description Additional metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
+        };
+        /**
+         * DocumentFileTypeStats
+         * @description File type statistics.
+         */
+        DocumentFileTypeStats: {
+            /**
+             * Extension
+             * @description File extension
+             */
+            extension: string;
+            /**
+             * Count
+             * @description Number of files with this extension
+             */
+            count: number;
+            /**
+             * Total Size
+             * @description Total size of files with this extension
+             */
+            total_size: number;
+        };
+        /** DocumentProcessingPerformance */
+        DocumentProcessingPerformance: {
+            /**
+             * Total Documents
+             * @description Total documents
+             */
+            total_documents: number;
+            /**
+             * Completed
+             * @description Completed documents
+             */
+            completed: number;
+            /**
+             * Failed
+             * @description Failed documents
+             */
+            failed: number;
+            /**
+             * Processing
+             * @description Processing documents
+             */
+            processing: number;
+            /**
+             * Success Rate
+             * @description Success rate (%)
+             */
+            success_rate: number;
+            /**
+             * Failure Rate
+             * @description Failure rate (%)
+             */
+            failure_rate: number;
+        };
+        /**
+         * DocumentRecentActivity
+         * @description Recent document activity metrics.
+         */
+        DocumentRecentActivity: {
+            /**
+             * Uploads Last 7 Days
+             * @description Number of uploads in last 7 days
+             */
+            uploads_last_7_days: number;
+            /**
+             * Processed Last 7 Days
+             * @description Number of processed documents in last 7 days
+             */
+            processed_last_7_days: number;
+        };
+        /**
+         * DocumentResponse
+         * @description Schema for document response data.
+         * @example {
+         *       "chunk_count": 25,
+         *       "created_at": "2025-07-14T03:47:30Z",
+         *       "file_size": 2048576,
+         *       "file_type": "pdf",
+         *       "filename": "ml_guide.pdf",
+         *       "id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+         *       "metainfo": {
+         *         "language": "en",
+         *         "pages": 50
+         *       },
+         *       "mime_type": "application/pdf",
+         *       "owner_id": "4b40c3d9-208c-49ed-bd96-31c0b971e318",
+         *       "processing_status": "completed",
+         *       "title": "Machine Learning Guide",
+         *       "updated_at": "2025-07-14T03:47:30Z"
+         *     }
+         */
+        DocumentResponse: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Document ID
+             */
+            id: string;
+            /**
+             * Title
+             * @description Document title
+             */
+            title: string;
+            /**
+             * Filename
+             * @description Original filename
+             */
+            filename: string;
+            /**
+             * File Type
+             * @description File type/extension
+             */
+            file_type: string;
+            /**
+             * File Size
+             * @description File size in bytes
+             */
+            file_size: number;
+            /**
+             * Mime Type
+             * @description MIME type
+             */
+            mime_type?: string | null;
+            /**
+             * Processing Status
+             * @description Processing status
+             */
+            processing_status: string;
+            /**
+             * Owner Id
+             * Format: uuid
+             * @description Owner user ID
+             */
+            owner_id: string;
+            /**
+             * Metainfo
+             * @description Additional metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Chunk Count
+             * @description Number of chunks
+             * @default 0
+             */
+            chunk_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Upload timestamp
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updated_at: string;
+        };
+        /**
+         * DocumentSearchCriteria
+         * @description Search criteria used for the document search.
+         */
+        DocumentSearchCriteria: {
+            /**
+             * Query
+             * @description Search query
+             */
+            query: string;
+            /**
+             * File Types
+             * @description File type filters
+             */
+            file_types?: string | null;
+            /**
+             * Status Filter
+             * @description Status filter
+             */
+            status_filter?: string | null;
+            /**
+             * User Filter
+             * @description User filter
+             */
+            user_filter?: string | null;
+            /**
+             * Date From
+             * @description Start date filter
+             */
+            date_from?: string | null;
+            /**
+             * Date To
+             * @description End date filter
+             */
+            date_to?: string | null;
+            /**
+             * Min Size
+             * @description Minimum file size filter
+             */
+            min_size?: number | null;
+            /**
+             * Max Size
+             * @description Maximum file size filter
+             */
+            max_size?: number | null;
+            /**
+             * Limit
+             * @description Maximum number of results
+             */
+            limit: number;
+        };
+        /**
+         * DocumentSearchRequest
+         * @description Schema for document search requests.
+         * @example {
+         *       "algorithm": "hybrid",
+         *       "document_ids": [
+         *         "4b40c3d9-208c-49ed-bd96-31c0b971e318"
+         *       ],
+         *       "file_types": [
+         *         "pdf",
+         *         "docx"
+         *       ],
+         *       "limit": 10,
+         *       "query": "machine learning algorithms",
+         *       "threshold": 0.8
+         *     }
+         */
+        DocumentSearchRequest: {
+            /**
+             * Page
+             * @description Page number
+             * @default 1
+             */
+            page: number;
+            /**
+             * Per Page
+             * @description Items per page
+             * @default 10
+             */
+            per_page: number;
+            /**
+             * Sort By
+             * @description Field to sort by
+             */
+            sort_by?: string | null;
+            /**
+             * Sort Order
+             * @description Sort order: asc or desc
+             * @default asc
+             */
+            sort_order: string | null;
+            /**
+             * Total
+             * @description Total number of items
+             */
+            total?: number | null;
+            /**
+             * Query
+             * @description Search query string
+             */
+            query?: string | null;
+            /**
+             * Algorithm
+             * @description Search algorithm to use
+             * @default hybrid
+             */
+            algorithm: string | null;
+            /**
+             * Threshold
+             * @description Threshold to use
+             * @default 0.7
+             */
+            threshold: number | null;
+            /**
+             * Filters
+             * @description Additional search filters
+             */
+            filters?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Document Ids
+             * @description Specific document IDs to search
+             */
+            document_ids?: string[] | null;
+            /**
+             * File Types
+             * @description File types to include
+             */
+            file_types?: string[] | null;
+        };
+        /**
+         * DocumentSearchResponse
+         * @description Response schema for document search.
+         */
+        DocumentSearchResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Results
+             * @description Search results
+             */
+            results: components["schemas"]["DocumentChunkResponse"][];
+            /**
+             * Query
+             * @description Original search query
+             */
+            query: string;
+            /**
+             * Algorithm
+             * @description Search algorithm used
+             */
+            algorithm: string;
+            /**
+             * Total Results
+             * @description Total number of results
+             */
+            total_results: number;
+            /**
+             * Search Time Ms
+             * @description Search time in milliseconds
+             */
+            search_time_ms: number;
+        };
+        /**
+         * DocumentSearchResult
+         * @description Individual document search result.
+         */
+        DocumentSearchResult: {
+            /**
+             * Id
+             * @description Document ID
+             */
+            id: string;
+            /**
+             * Title
+             * @description Document title
+             */
+            title: string;
+            /**
+             * File Name
+             * @description Original file name
+             */
+            file_name: string;
+            /**
+             * File Size
+             * @description File size in bytes
+             */
+            file_size: number;
+            /**
+             * Status
+             * @description Document processing status
+             */
+            status: string;
+            /**
+             * Created At
+             * @description Document creation timestamp
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * @description Last update timestamp
+             */
+            updated_at?: string | null;
+            /** @description Document owner information */
+            user: components["schemas"]["DocumentUserInfo"];
+            /**
+             * Error Message
+             * @description Error message if processing failed
+             */
+            error_message?: string | null;
+        };
+        /**
+         * DocumentStatisticsData
+         * @description Document statistics data model.
+         */
+        DocumentStatisticsData: {
+            /**
+             * Counts By Status
+             * @description Document counts by status
+             */
+            counts_by_status?: {
+                [key: string]: number;
+            };
+            /**
+             * Total Documents
+             * @description Total number of documents
+             */
+            total_documents: number;
+            /** @description Storage usage statistics */
+            storage: components["schemas"]["DocumentStorageStats"];
+            /**
+             * File Types
+             * @description File type distribution
+             */
+            file_types?: components["schemas"]["DocumentFileTypeStats"][];
+            /** @description Processing statistics */
+            processing: components["schemas"]["shared__schemas__document_responses__DocumentProcessingStats"];
+            /** @description Recent activity metrics */
+            recent_activity: components["schemas"]["DocumentRecentActivity"];
+            /**
+             * Top Uploaders
+             * @description Top document uploaders
+             */
+            top_uploaders?: components["schemas"]["DocumentTopUser"][];
+            /**
+             * Timestamp
+             * @description Statistics timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * DocumentStorageStats
+         * @description Document storage statistics.
+         */
+        DocumentStorageStats: {
+            /**
+             * Total Size Bytes
+             * @description Total storage used in bytes
+             */
+            total_size_bytes: number;
+            /**
+             * Total Size Mb
+             * @description Total storage used in MB
+             */
+            total_size_mb: number;
+            /**
+             * Avg File Size Bytes
+             * @description Average file size in bytes
+             */
+            avg_file_size_bytes: number;
+        };
+        /**
+         * DocumentTopUser
+         * @description Top document uploader information.
+         */
+        DocumentTopUser: {
+            /**
+             * Username
+             * @description Username
+             */
             username: string;
+            /**
+             * Document Count
+             * @description Number of documents uploaded
+             */
+            document_count: number;
+            /**
+             * Total Size Bytes
+             * @description Total size of uploaded documents
+             */
+            total_size_bytes: number;
+        };
+        /**
+         * DocumentUpdate
+         * @description Schema for document updates.
+         * @example {
+         *       "metainfo": {
+         *         "category": "AI/ML",
+         *         "difficulty": "intermediate"
+         *       },
+         *       "title": "Updated ML Guide"
+         *     }
+         */
+        DocumentUpdate: {
+            /**
+             * Title
+             * @description New title
+             */
+            title?: string | null;
+            /**
+             * Metainfo
+             * @description Updated metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * DocumentUploadResponse
+         * @description Schema for document upload response with enhanced features.
+         */
+        DocumentUploadResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /** @description Uploaded document information */
+            document: components["schemas"]["DocumentResponse"];
+            /**
+             * Task Id
+             * @description Background processing task ID
+             */
+            task_id?: string | null;
+            /**
+             * Auto Processing
+             * @description Whether auto-processing was enabled
+             * @default false
+             */
+            auto_processing: boolean;
+        };
+        /**
+         * DocumentUserInfo
+         * @description User information for document responses.
+         */
+        DocumentUserInfo: {
+            /**
+             * Username
+             * @description Username of the document owner
+             */
+            username: string;
+            /**
+             * Email
+             * @description Email of the document owner
+             */
+            email: string;
+        };
+        /** DocumentsOverview */
+        DocumentsOverview: {
+            /**
+             * Total
+             * @description Total documents
+             */
+            total: number;
+            /**
+             * Processed
+             * @description Processed documents
+             */
+            processed: number;
+            /**
+             * Processing Rate
+             * @description Document processing rate (%)
+             */
+            processing_rate: number;
+        };
+        /**
+         * ExportInfo
+         * @description Export operation information.
+         */
+        ExportInfo: {
+            /**
+             * Format
+             * @description Export format used
+             */
+            format: string;
+            /**
+             * Exported At
+             * @description Export timestamp
+             */
+            exported_at: string;
+            /**
+             * Message Count
+             * @description Number of messages exported
+             */
+            message_count: number;
+            /**
+             * Includes Metadata
+             * @description Whether metadata was included
+             */
+            includes_metadata: boolean;
+        };
+        /**
+         * FastMCPHealthData
+         * @description FastMCP service health data.
+         */
+        FastMCPHealthData: {
+            /**
+             * Status
+             * @description FastMCP service status
+             */
+            status: string;
+            /**
+             * Message
+             * @description Health status message
+             */
+            message: string;
+            /**
+             * Enabled
+             * @description Whether MCP is enabled in configuration
+             */
+            enabled: boolean;
+            /**
+             * Available
+             * @description Whether FastMCP library is available
+             */
+            available?: boolean | null;
+            /**
+             * Registry
+             * @description Registry statistics and information
+             */
+            registry?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Connected Servers
+             * @description Number of successfully connected servers
+             */
+            connected_servers?: number | null;
+            /**
+             * Enabled Servers
+             * @description Number of enabled servers
+             */
+            enabled_servers?: number | null;
+            /**
+             * Total Servers
+             * @description Total number of configured servers
+             */
+            total_servers?: number | null;
+            /**
+             * Initialized
+             * @description Whether service is properly initialized
+             */
+            initialized?: boolean | null;
+            /**
+             * Server Status
+             * @description Individual server status information
+             */
+            server_status?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Tools Count
+             * @description Number of available tools
+             */
+            tools_count?: number | null;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * ImportConversationResult
+         * @description Result of importing a conversation.
+         */
+        ImportConversationResult: {
+            /**
+             * Conversation Id
+             * @description ID of the imported conversation
+             */
+            conversation_id: string;
+            /**
+             * Conversation Title
+             * @description Title of the imported conversation
+             */
+            conversation_title: string;
+            /**
+             * Imported Messages
+             * @description Number of messages imported
+             */
+            imported_messages: number;
+            /**
+             * Total Messages
+             * @description Total messages in import file
+             */
+            total_messages: number;
+            /**
+             * Errors
+             * @description Import errors
+             */
+            errors?: string[];
+        };
+        /**
+         * LLMProfileCreate
+         * @description Create LLM profile request model.
+         */
+        LLMProfileCreate: {
+            /**
+             * Name
+             * @description Unique profile name
+             */
+            name: string;
+            /**
+             * Title
+             * @description Human-readable title
+             */
+            title: string;
+            /**
+             * Description
+             * @description Profile description
+             */
+            description?: string | null;
+            /**
+             * Model Name
+             * @description OpenAI model name
+             */
+            model_name: string;
+            /**
+             * Parameters
+             * @description Model parameters dictionary
+             */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Is Default
+             * @description Whether profile is the default
+             * @default true
+             */
+            is_default: boolean;
+        };
+        /**
+         * LLMProfileResponse
+         * @description LLM profile registry response model.
+         */
+        LLMProfileResponse: {
+            /**
+             * Name
+             * @description Unique profile name
+             */
+            name: string;
+            /**
+             * Title
+             * @description Human-readable title
+             */
+            title: string;
+            /**
+             * Description
+             * @description Profile description
+             */
+            description?: string | null;
+            /**
+             * Model Name
+             * @description OpenAI model name
+             */
+            model_name: string;
+            /**
+             * Parameters
+             * @description Model parameters dictionary
+             */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /**
+             * Is Default
+             * @description Whether this is the default profile
+             * @default false
+             */
+            is_default: boolean;
+            /**
+             * Is Active
+             * @description Whether profile is active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Usage Count
+             * @description How many times used
+             * @default 0
+             */
+            usage_count: number;
+            /**
+             * Last Used At
+             * @description Last usage timestamp
+             */
+            last_used_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updated_at: string;
+        };
+        /**
+         * LLMProfileStatisticsData
+         * @description LLM Profile statistics data.
+         */
+        LLMProfileStatisticsData: {
+            /**
+             * Total Profiles
+             * @description Total number of profiles
+             */
+            total_profiles: number;
+            /**
+             * Active Profiles
+             * @description Number of active profiles
+             */
+            active_profiles: number;
+            /**
+             * Default Profile
+             * @description Name of default profile
+             */
+            default_profile: string;
+            /**
+             * Most Used
+             * @description Most frequently used profiles
+             */
+            most_used?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Recently Used
+             * @description Most frequently used profiles
+             */
+            recently_used?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
+         * LLMProfileUpdate
+         * @description Update LLM profile request model.
+         */
+        LLMProfileUpdate: {
+            /**
+             * Title
+             * @description Human-readable title
+             */
+            title?: string | null;
+            /**
+             * Description
+             * @description Profile description
+             */
+            description?: string | null;
+            /**
+             * Model Name
+             * @description OpenAI model name
+             */
+            model_name?: string | null;
+            /**
+             * Parameters
+             * @description Model parameters dictionary
+             */
+            parameters?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Is Active
+             * @description Whether profile is active
+             */
+            is_active?: boolean | null;
+        };
+        /**
+         * LivenessPayload
+         * @description Liveness status payload.
+         */
+        LivenessPayload: {
+            /**
+             * Status
+             * @description Liveness status
+             */
+            status: string;
+        };
+        /**
+         * LoginRequest
+         * @description Schema for secure user login request with flexible authentication methods.
+         *
+         *     Validates user login credentials supporting both username and email-based
+         *     authentication with comprehensive input validation and security controls.
+         *     Implements field-level validation to ensure data integrity and prevent
+         *     authentication-related security vulnerabilities.
+         *
+         *     Authentication Methods:
+         *         - Username-based authentication with alphanumeric validation
+         *         - Email-based authentication with format verification
+         *         - Flexible login identifier field accepting both formats
+         *         - Case-insensitive email matching for user convenience
+         *         - Secure credential handling and validation
+         *
+         *     Security Features:
+         *         - Password field with minimum security requirements
+         *         - Input length validation to prevent buffer overflow attacks
+         *         - Field sanitization to prevent injection vulnerabilities
+         *         - Comprehensive validation error reporting for monitoring
+         *         - Protection against credential stuffing and brute force attacks
+         *
+         *     Field Validation:
+         *         - username: 3-50 characters, supports username or email format
+         *         - password: 8-100 characters, enforces minimum security length
+         *         - Automatic input trimming and normalization
+         *         - Character encoding validation and sanitization
+         *         - Cross-field validation for consistency and security
+         *
+         *     Use Cases:
+         *         - Web application user authentication and login workflows
+         *         - Mobile application authentication with flexible identifier support
+         *         - API authentication for automated systems and integrations
+         *         - Administrative login with enhanced security requirements
+         *         - Multi-tenant authentication with user identifier flexibility
+         *
+         *     Security Considerations:
+         *         - Password fields are never logged or stored in plain text
+         *         - Input validation prevents SQL injection and XSS attacks
+         *         - Rate limiting integration for brute force protection
+         *         - Secure credential transmission and handling protocols
+         *         - Comprehensive audit logging for security monitoring
+         *
+         *     Example:
+         *         # Username-based login
+         *         login_data = LoginRequest(
+         *             username="john_doe",
+         *             password="SecurePassword123!"
+         *         )
+         *
+         *         # Email-based login
+         *         login_data = LoginRequest(
+         *             username="john@example.com",
+         *             password="SecurePassword123!"
+         *         )
+         * @example {
+         *       "password": "SecurePass123",
+         *       "username": "johndoe"
+         *     }
+         */
+        LoginRequest: {
+            /**
+             * Username
+             * @description Username or email
+             */
+            username: string;
+            /**
+             * Password
+             * @description Password
+             */
             password: string;
         };
+        /**
+         * MCPServerCreateSchema
+         * @description Schema for creating a new MCP server.
+         */
+        MCPServerCreateSchema: {
+            /**
+             * Name
+             * @description Unique name for the MCP server
+             */
+            name: string;
+            /**
+             * Url
+             * @description Connection URL for the server
+             */
+            url: string;
+            /**
+             * Description
+             * @description Optional description of the server
+             */
+            description?: string | null;
+            /**
+             * Transport
+             * @description Transport protocol (http, stdio, etc.)
+             * @default http
+             */
+            transport: string;
+            /**
+             * Timeout
+             * @description Connection timeout in seconds
+             * @default 30
+             */
+            timeout: number;
+            /**
+             * Config
+             * @description Additional server configuration
+             */
+            config?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Is Enabled
+             * @description Whether the server is enabled
+             * @default true
+             */
+            is_enabled: boolean;
+        };
+        /**
+         * MCPServerSchema
+         * @description Schema for MCP server responses.
+         */
+        MCPServerSchema: {
+            /** Id */
+            id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Updated At */
+            updated_at?: string | null;
+            /**
+             * Name
+             * @description Server name
+             */
+            name: string;
+            /**
+             * Url
+             * @description Connection URL
+             */
+            url: string;
+            /**
+             * Description
+             * @description Server description
+             */
+            description?: string | null;
+            /**
+             * Transport
+             * @description Transport protocol
+             */
+            transport: string;
+            /**
+             * Timeout
+             * @description Connection timeout in seconds
+             */
+            timeout: number;
+            /**
+             * Config
+             * @description Server configuration
+             */
+            config?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Is Enabled
+             * @description Whether the server is enabled
+             */
+            is_enabled: boolean;
+            /**
+             * Is Connected
+             * @description Current connection status
+             */
+            is_connected: boolean;
+            /**
+             * Last Connected At
+             * @description Last successful connection time
+             */
+            last_connected_at?: string | null;
+            /**
+             * Connection Errors
+             * @description Number of recent connection errors
+             */
+            connection_errors: number;
+            /**
+             * Tools Count
+             * @description Number of tools from this server
+             */
+            tools_count?: number | null;
+        };
+        /**
+         * MCPServerUpdateSchema
+         * @description Schema for updating an MCP server.
+         */
+        MCPServerUpdateSchema: {
+            /**
+             * Url
+             * @description New connection URL
+             */
+            url?: string | null;
+            /**
+             * Description
+             * @description New description
+             */
+            description?: string | null;
+            /**
+             * Transport
+             * @description New transport protocol
+             */
+            transport?: string | null;
+            /**
+             * Timeout
+             * @description New timeout in seconds
+             */
+            timeout?: number | null;
+            /**
+             * Config
+             * @description New configuration
+             */
+            config?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Is Enabled
+             * @description New enabled status
+             */
+            is_enabled?: boolean | null;
+        };
+        /**
+         * MCPToolResponse
+         * @description Schema for MCP tool responses.
+         */
+        MCPToolResponse: {
+            /** Id */
+            id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Updated At */
+            updated_at?: string | null;
+            /**
+             * Name
+             * @description Full tool name
+             */
+            name: string;
+            /**
+             * Original Name
+             * @description Original tool name from server
+             */
+            original_name: string;
+            /**
+             * Description
+             * @description Tool description
+             */
+            description?: string | null;
+            /**
+             * Parameters
+             * @description Tool parameters schema
+             */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Is Enabled
+             * @description Whether the tool is enabled
+             */
+            is_enabled: boolean;
+            /**
+             * Usage Count
+             * @description Total usage count
+             * @default 0
+             */
+            usage_count: number;
+            /**
+             * Last Used At
+             * @description Last usage timestamp
+             */
+            last_used_at?: string | null;
+            /**
+             * Success Count
+             * @description Successful executions count
+             * @default 0
+             */
+            success_count: number;
+            /**
+             * Error Count
+             * @description Failed executions count
+             * @default 0
+             */
+            error_count: number;
+            /**
+             * Success Rate
+             * @description Success rate percentage
+             * @default 0
+             */
+            success_rate: number;
+            /**
+             * Average Duration Ms
+             * @description Average execution duration in ms
+             */
+            average_duration_ms?: number | null;
+            /** @description Associated MCP server */
+            server: components["schemas"]["MCPServerSchema"];
+        };
+        /**
+         * MCPToolUsageStatsSchema
+         * @description Schema for tool usage statistics.
+         */
+        MCPToolUsageStatsSchema: {
+            /**
+             * Tool Name
+             * @description Tool name
+             */
+            tool_name: string;
+            /**
+             * Server Name
+             * @description Server name
+             */
+            server_name: string;
+            /**
+             * Usage Count
+             * @description Total usage count
+             */
+            usage_count: number;
+            /**
+             * Success Count
+             * @description Successful executions
+             */
+            success_count: number;
+            /**
+             * Error Count
+             * @description Failed executions
+             */
+            error_count: number;
+            /**
+             * Success Rate
+             * @description Success rate percentage
+             */
+            success_rate: number;
+            /**
+             * Average Duration Ms
+             * @description Average duration in ms
+             */
+            average_duration_ms?: number | null;
+            /**
+             * Last Used At
+             * @description Last usage time
+             */
+            last_used_at?: string | null;
+        };
+        /**
+         * MCPToolsResponse
+         * @description Response schema for simple MCP tools list.
+         */
+        MCPToolsResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             * @default true
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Response message
+             */
+            message: string;
+            /**
+             * Data
+             * @description List of MCP tools
+             */
+            data: components["schemas"]["MCPToolResponse"][];
+        };
+        /**
+         * MessageResponse
+         * @description Schema for message response data.
+         */
+        MessageResponse: {
+            /**
+             * Role
+             * @description Message role
+             */
+            role: string;
+            /**
+             * Content
+             * @description Message content
+             */
+            content: string;
+            /**
+             * Id
+             * Format: uuid
+             * @description Message ID
+             */
+            id: string;
+            /**
+             * Conversation Id
+             * Format: uuid
+             * @description Parent conversation ID
+             */
+            conversation_id: string;
+            /**
+             * Token Count
+             * @description Number of tokens
+             * @default 0
+             */
+            token_count: number;
+            /**
+             * Tool Calls
+             * @description Tool calls made
+             */
+            tool_calls?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Tool Call Results
+             * @description Tool call results
+             */
+            tool_call_results?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Metainfo
+             * @description Additional metainfo
+             */
+            metainfo?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
+        };
+        /**
+         * OpenAIHealthData
+         * @description OpenAI service health data.
+         */
+        OpenAIHealthData: {
+            /**
+             * Status
+             * @description OpenAI service status
+             */
+            status: string;
+            /**
+             * Message
+             * @description Health status message
+             */
+            message: string;
+            /**
+             * Configured
+             * @description Whether API key is configured
+             * @default false
+             */
+            configured: boolean;
+            /**
+             * Models Available
+             * @description Whether required models are accessible
+             */
+            models_available?: boolean | null;
+            /**
+             * Chat Model
+             * @description Available chat model information
+             */
+            chat_model?: string | null;
+            /**
+             * Embedding Model
+             * @description Available embedding model information
+             */
+            embedding_model?: string | null;
+        };
+        /** PaginatedResponse[ConversationResponse] */
+        PaginatedResponse_ConversationResponse_: {
+            /**
+             * Items
+             * @description List of paginated items
+             */
+            items?: unknown[];
+            /** @description Pagination parameters */
+            pagination: components["schemas"]["PaginationParams"];
+        };
+        /** PaginatedResponse[LLMProfileResponse] */
+        PaginatedResponse_LLMProfileResponse_: {
+            /**
+             * Items
+             * @description List of paginated items
+             */
+            items?: unknown[];
+            /** @description Pagination parameters */
+            pagination: components["schemas"]["PaginationParams"];
+        };
+        /** PaginatedResponse[PromptResponse] */
+        PaginatedResponse_PromptResponse_: {
+            /**
+             * Items
+             * @description List of paginated items
+             */
+            items?: unknown[];
+            /** @description Pagination parameters */
+            pagination: components["schemas"]["PaginationParams"];
+        };
+        /** PaginatedResponse[UserResponse] */
+        PaginatedResponse_UserResponse_: {
+            /**
+             * Items
+             * @description List of paginated items
+             */
+            items?: unknown[];
+            /** @description Pagination parameters */
+            pagination: components["schemas"]["PaginationParams"];
+        };
+        /**
+         * PaginationParams
+         * @description Query parameters for pagination.
+         */
+        PaginationParams: {
+            /**
+             * Page
+             * @description Page number
+             * @default 1
+             */
+            page: number;
+            /**
+             * Per Page
+             * @description Items per page
+             * @default 10
+             */
+            per_page: number;
+            /**
+             * Sort By
+             * @description Field to sort by
+             */
+            sort_by?: string | null;
+            /**
+             * Sort Order
+             * @description Sort order: asc or desc
+             * @default asc
+             */
+            sort_order: string | null;
+            /**
+             * Total
+             * @description Total number of items
+             */
+            total?: number | null;
+        };
+        /**
+         * PasswordResetConfirm
+         * @description Schema for password reset confirmation with comprehensive validation and security.
+         *
+         *     Handles password reset completion workflow with secure token validation and
+         *     new password strength verification. Implements comprehensive security controls
+         *     for account recovery operations and password change enforcement.
+         *
+         *     Reset Completion:
+         *         - Secure reset token validation and verification
+         *         - New password strength validation with complexity requirements
+         *         - Single-use token consumption to prevent replay attacks
+         *         - Administrative oversight and security monitoring
+         *         - Comprehensive audit logging for compliance and security
+         *
+         *     Token Validation:
+         *         - Cryptographically secure token verification
+         *         - Time-limited token expiration for security window control
+         *         - Single-use token invalidation after successful reset
+         *         - Protection against token tampering and manipulation
+         *         - Administrative token override capabilities for emergency recovery
+         *
+         *     Password Security:
+         *         - Industry-standard password complexity requirements
+         *         - Multi-criteria validation for robust password security
+         *         - Protection against weak passwords and common attack vectors
+         *         - Password history integration to prevent immediate reuse
+         *         - Secure password hashing and storage after validation
+         *
+         *     Security Features:
+         *         - Token authenticity verification through cryptographic validation
+         *         - Password strength enforcement with multiple security criteria
+         *         - Protection against token replay and password reset abuse
+         *         - Administrative oversight for sensitive account operations
+         *         - Comprehensive security logging for monitoring and analysis
+         *
+         *     Reset Process Flow:
+         *         - User receives secure reset token through verified communication channel
+         *         - User submits token and new password through secure interface
+         *         - System validates token authenticity and expiration
+         *         - New password validated against security requirements
+         *         - Password updated and token invalidated upon successful completion
+         *
+         *     Administrative Controls:
+         *         - Manual reset processing for enhanced security oversight
+         *         - Administrative approval for high-privilege account resets
+         *         - Security team involvement for sensitive account operations
+         *         - Comprehensive audit trail for compliance and investigation
+         *         - Integration with security monitoring and alerting systems
+         *
+         *     Use Cases:
+         *         - User completion of password reset workflow for account recovery
+         *         - Administrative password reset for user account management
+         *         - Security-driven password changes for compromised accounts
+         *         - Emergency account recovery with administrative oversight
+         *         - Compliance-driven password updates for policy enforcement
+         *
+         *     Validation Requirements:
+         *         - Reset token must be valid, unexpired, and unused
+         *         - New password must meet complexity requirements (uppercase, lowercase, number)
+         *         - New password must be different from previous passwords (if history enabled)
+         *         - Password length must meet minimum security requirements (8+ characters)
+         *         - Administrative approval may be required for sensitive accounts
+         *
+         *     Example:
+         *         reset_confirm = PasswordResetConfirm(
+         *             token="secure_reset_token_here",
+         *             new_password="NewSecurePassword123!"
+         *         )
+         * @example {
+         *       "new_password": "NewSecurePass123",
+         *       "token": "reset_token_here"
+         *     }
+         */
+        PasswordResetConfirm: {
+            /**
+             * Token
+             * @description Password reset token
+             */
+            token: string;
+            /**
+             * New Password
+             * @description New password
+             */
+            new_password: string;
+        };
+        /**
+         * PasswordResetRequest
+         * @description Schema for password reset request initiation with comprehensive email validation.
+         *
+         *     Handles password reset workflow initiation by validating user email address
+         *     and triggering secure password reset process. Implements proper email
+         *     validation and security controls for account recovery operations.
+         *
+         *     Reset Process:
+         *         - Email address validation for account identification
+         *         - Secure reset token generation and management
+         *         - Email-based reset workflow with time-limited tokens
+         *         - Administrative oversight and security monitoring
+         *         - Protection against password reset abuse and attacks
+         *
+         *     Email Validation:
+         *         - Proper email format validation with domain verification
+         *         - Email address normalization for consistent processing
+         *         - Account existence verification before reset initiation
+         *         - Protection against email enumeration attacks
+         *         - Rate limiting for reset request frequency control
+         *
+         *     Security Features:
+         *         - Time-limited reset tokens for security and usability
+         *         - Secure token generation with cryptographic randomness
+         *         - Single-use token validation to prevent replay attacks
+         *         - Administrative logging for security monitoring and audit
+         *         - Protection against automated reset request flooding
+         *
+         *     Reset Workflow:
+         *         - User initiates reset with email address submission
+         *         - System validates email and generates secure reset token
+         *         - Email notification sent with reset instructions and token
+         *         - User follows reset link to complete password change
+         *         - Token invalidation after successful password reset
+         *
+         *     Use Cases:
+         *         - User-initiated password recovery for forgotten passwords
+         *         - Administrative password reset for user account management
+         *         - Security-driven password reset for compromised accounts
+         *         - Emergency account recovery for locked or inaccessible accounts
+         *         - Compliance-driven password reset for policy enforcement
+         *
+         *     Administrative Controls:
+         *         - Manual password reset processing for enhanced security
+         *         - Administrative approval for sensitive account operations
+         *         - Comprehensive audit logging for compliance and monitoring
+         *         - Integration with helpdesk and support ticketing systems
+         *         - Security team oversight for high-privilege account resets
+         *
+         *     Protection Mechanisms:
+         *         - Rate limiting to prevent reset request flooding
+         *         - Email validation to prevent invalid or malicious requests
+         *         - Token expiration to limit exposure window
+         *         - Administrative oversight for enhanced security control
+         *         - Comprehensive logging for security analysis and investigation
+         *
+         *     Example:
+         *         reset_request = PasswordResetRequest(
+         *             email="user@example.com"
+         *         )
+         * @example {
+         *       "email": "john@example.com"
+         *     }
+         */
+        PasswordResetRequest: {
+            /**
+             * Email
+             * Format: email
+             * @description Email address for password reset
+             */
+            email: string;
+        };
+        /**
+         * PerformanceMetricsPayload
+         * @description Performance metrics payload.
+         */
+        PerformanceMetricsPayload: {
+            /**
+             * Performance
+             * @description Performance metrics
+             */
+            performance: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ProcessingConfigResponse
+         * @description Response schema for processing configuration.
+         */
+        ProcessingConfigResponse: {
+            /**
+             * Message
+             * @description Status message
+             */
+            message: string;
+            /**
+             * Config
+             * @description Processing configuration dictionary
+             */
+            config: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ProcessingStatusResponse
+         * @description Enhanced schema for document processing status with background task information.
+         */
+        ProcessingStatusResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Document Id
+             * Format: uuid
+             * @description Document ID
+             */
+            document_id: string;
+            /**
+             * Status
+             * @description Current processing status
+             */
+            status: string;
+            /**
+             * Chunk Count
+             * @description Number of chunks created
+             * @default 0
+             */
+            chunk_count: number;
+            /**
+             * Processing Time
+             * @description Processing time in seconds
+             */
+            processing_time?: number | null;
+            /**
+             * Error Message
+             * @description Error message if failed
+             */
+            error_message?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Document creation time
+             */
+            created_at: string;
+            /**
+             * Task Id
+             * @description Background task ID
+             */
+            task_id?: string | null;
+            /**
+             * Task Status
+             * @description Background task status
+             */
+            task_status?: string | null;
+            /**
+             * Progress
+             * @description Processing progress (0-1)
+             */
+            progress?: number | null;
+            /**
+             * Task Created At
+             * @description Task creation time
+             */
+            task_created_at?: string | null;
+            /**
+             * Task Started At
+             * @description Task start time
+             */
+            task_started_at?: string | null;
+            /**
+             * Task Error
+             * @description Task error message
+             */
+            task_error?: string | null;
+        };
+        /**
+         * PromptCategoriesData
+         * @description Prompt categories and tags data.
+         */
+        PromptCategoriesData: {
+            /**
+             * Categories
+             * @description Available prompt categories
+             */
+            categories?: string[];
+            /**
+             * Tags
+             * @description Available prompt tags
+             */
+            tags?: string[];
+        };
+        /**
+         * PromptCreate
+         * @description Create prompt request model.
+         */
+        PromptCreate: {
+            /**
+             * Name
+             * @description Unique prompt name
+             */
+            name: string;
+            /**
+             * Title
+             * @description Human-readable title
+             */
+            title: string;
+            /**
+             * Description
+             * @description Prompt description
+             */
+            description?: string | null;
+            /**
+             * Category
+             * @description Prompt category
+             */
+            category?: string | null;
+            /**
+             * Content
+             * @description Prompt template content
+             */
+            content: string;
+            /**
+             * Variables
+             * @description Template variables
+             */
+            variables?: string[] | null;
+            /**
+             * Tags
+             * @description Tags for categorization
+             */
+            tags?: string[] | null;
+            /**
+             * Is Default
+             * @description Whether prompt is the default
+             * @default true
+             */
+            is_default: boolean;
+        };
+        /**
+         * PromptResponse
+         * @description Prompt registry response model.
+         */
+        PromptResponse: {
+            /**
+             * Name
+             * @description Unique prompt name
+             */
+            name: string;
+            /**
+             * Title
+             * @description Human-readable title
+             */
+            title: string;
+            /**
+             * Description
+             * @description Prompt description
+             */
+            description?: string | null;
+            /**
+             * Category
+             * @description Prompt category
+             */
+            category?: string | null;
+            /**
+             * Content
+             * @description Prompt template content
+             */
+            content: string;
+            /**
+             * Variables
+             * @description Template variables
+             */
+            variables?: string[] | null;
+            /**
+             * Tags
+             * @description Tags for categorization
+             */
+            tags?: string[] | null;
+            /**
+             * Is Active
+             * @description Whether prompt is active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Is Default
+             * @description Whether this is the default prompt
+             * @default false
+             */
+            is_default: boolean;
+            /**
+             * Usage Count
+             * @description How many times used
+             * @default 0
+             */
+            usage_count: number;
+            /**
+             * Last Used At
+             * @description Last usage timestamp
+             */
+            last_used_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updated_at: string;
+        };
+        /**
+         * PromptStatisticsData
+         * @description Prompt statistics data.
+         */
+        PromptStatisticsData: {
+            /**
+             * Total Prompts
+             * @description Total number of prompts
+             */
+            total_prompts: number;
+            /**
+             * Active Prompts
+             * @description Number of active prompts
+             */
+            active_prompts: number;
+            /**
+             * Default Prompt
+             * @description Name of default prompt
+             */
+            default_prompt: string | null;
+            /**
+             * Usage Stats
+             * @description Usage statistics
+             */
+            usage_stats?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Most Used
+             * @description Most frequently used prompts
+             */
+            most_used?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Recently Used
+             * @description Most frequently used prompts
+             */
+            recently_used?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Categories
+             * @description Category breakdown
+             */
+            categories?: string[];
+            /**
+             * Total Tags
+             * @description Total number of tags
+             */
+            total_tags: number;
+        };
+        /**
+         * PromptUpdate
+         * @description Update prompt request model.
+         */
+        PromptUpdate: {
+            /**
+             * Title
+             * @description Human-readable title
+             */
+            title?: string | null;
+            /**
+             * Description
+             * @description Prompt description
+             */
+            description?: string | null;
+            /**
+             * Category
+             * @description Prompt category
+             */
+            category?: string | null;
+            /**
+             * Content
+             * @description Prompt template content
+             */
+            content?: string | null;
+            /**
+             * Variables
+             * @description Template variables
+             */
+            variables?: string[] | null;
+            /**
+             * Tags
+             * @description Tags for categorization
+             */
+            tags?: string[] | null;
+            /**
+             * Is Active
+             * @description Whether prompt is active
+             */
+            is_active?: boolean | null;
+        };
+        /**
+         * QueueInfo
+         * @description Queue information model.
+         */
+        QueueInfo: {
+            /**
+             * Name
+             * @description Queue name
+             */
+            name: string;
+            /**
+             * Active
+             * @description Number of active tasks
+             */
+            active: number;
+            /**
+             * Reserved
+             * @description Number of reserved tasks
+             */
+            reserved: number;
+            /**
+             * Scheduled
+             * @description Number of scheduled tasks
+             */
+            scheduled: number;
+            /**
+             * Tasks
+             * @description List of tasks in queue
+             */
+            tasks?: components["schemas"]["TaskInfo"][];
+        };
+        /**
+         * QueueStatusData
+         * @description Queue status data model.
+         */
+        QueueStatusData: {
+            /**
+             * Queues
+             * @description List of queue information
+             */
+            queues?: components["schemas"]["QueueInfo"][];
+            /**
+             * Total Queues
+             * @description Total number of queues
+             */
+            total_queues: number;
+            /**
+             * Filtered By
+             * @description Queue filter applied
+             */
+            filtered_by?: string | null;
+            /**
+             * Timestamp
+             * @description Status timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * QueueStatusResponse
+         * @description Response schema for document processing queue status.
+         */
+        QueueStatusResponse: {
+            /**
+             * Success
+             * @description Whether the request was successful
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Human-readable message
+             */
+            message: string;
+            /**
+             * Timestamp
+             * @description When the response was generated
+             */
+            timestamp?: string | null;
+            /**
+             * Queue Size
+             * @description Number of items in queue
+             */
+            queue_size: number;
+            /**
+             * Active Tasks
+             * @description Number of currently active tasks
+             */
+            active_tasks: number;
+            /**
+             * Max Concurrent Tasks
+             * @description Maximum concurrent tasks allowed
+             */
+            max_concurrent_tasks: number;
+            /**
+             * Completed Tasks
+             * @description Number of completed tasks
+             */
+            completed_tasks: number;
+            /**
+             * Worker Running
+             * @description Whether the worker is currently running
+             */
+            worker_running: boolean;
+        };
+        /**
+         * ReadinessComponentsPayload
+         * @description Payload for readiness check.
+         */
+        ReadinessComponentsPayload: {
+            /**
+             * Status
+             * @description Readiness status
+             */
+            status: string;
+            /**
+             * Components
+             * @description Readiness details
+             */
+            components: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * RegisterRequest
+         * @description Schema for comprehensive user registration with advanced validation and security.
+         *
+         *     Handles new user account creation with extensive validation, security controls,
+         *     and data integrity enforcement. Implements industry-standard security practices
+         *     for user registration including password complexity requirements, username
+         *     format validation, and comprehensive input sanitization.
+         *
+         *     Registration Fields:
+         *         - username: Unique alphanumeric identifier with format restrictions
+         *         - email: Valid email address with domain verification
+         *         - password: Strong password meeting complexity requirements
+         *         - full_name: Optional display name for user personalization
+         *
+         *     Security Validation:
+         *         - Username format validation (alphanumeric, underscore, hyphen only)
+         *         - Password strength validation with multiple security requirements
+         *         - Email format validation with proper domain checking
+         *         - Input sanitization to prevent injection attacks
+         *         - Field length validation for security and database constraints
+         *
+         *     Password Requirements:
+         *         - Minimum 8 characters for basic security
+         *         - At least one uppercase letter for complexity
+         *         - At least one lowercase letter for character diversity
+         *         - At least one number for enhanced security
+         *         - Additional special character support for maximum security
+         *
+         *     Username Restrictions:
+         *         - Alphanumeric characters (a-z, A-Z, 0-9) for compatibility
+         *         - Underscores (_) and hyphens (-) for readability
+         *         - No special characters that could cause parsing issues
+         *         - Length restrictions (3-50 characters) for practical use
+         *         - Case-sensitive validation for unique identification
+         *
+         *     Registration Process:
+         *         - Comprehensive field validation before account creation
+         *         - Duplicate username and email checking during validation
+         *         - Secure password hashing after validation success
+         *         - Account activation workflow integration support
+         *         - Audit logging for registration security monitoring
+         *
+         *     Use Cases:
+         *         - New user account creation in web and mobile applications
+         *         - Administrative user provisioning and management
+         *         - Bulk user import with validation and security controls
+         *         - Self-service registration with automated verification
+         *         - Multi-tenant user registration with organization association
+         *
+         *     Security Features:
+         *         - Protection against common registration attacks and vulnerabilities
+         *         - Input validation to prevent SQL injection and XSS attacks
+         *         - Password strength enforcement to prevent weak credentials
+         *         - Email validation to ensure account recovery capability
+         *         - Comprehensive error reporting for security monitoring
+         *
+         *     Validation Errors:
+         *         - Clear error messages for field validation failures
+         *         - Security-focused error reporting without information disclosure
+         *         - Field-specific validation with detailed feedback
+         *         - Client-friendly error formatting for user experience
+         *         - Administrative logging for security analysis and monitoring
+         *
+         *     Example:
+         *         registration_data = RegisterRequest(
+         *             username="john_doe",
+         *             email="john@example.com",
+         *             password="SecurePassword123!",
+         *             full_name="John Doe"
+         *         )
+         * @example {
+         *       "email": "john@example.com",
+         *       "full_name": "John Doe",
+         *       "password": "SecurePass123",
+         *       "username": "johndoe"
+         *     }
+         */
+        RegisterRequest: {
+            /**
+             * Username
+             * @description Unique username
+             */
+            username: string;
+            /**
+             * Email
+             * Format: email
+             * @description Valid email address
+             */
+            email: string;
+            /**
+             * Password
+             * @description Strong password
+             */
+            password: string;
+            /**
+             * Full Name
+             * @description Full display name
+             */
+            full_name?: string | null;
+        };
+        /**
+         * RegistryStatsResponse
+         * @description Registry statistics response schema.
+         */
+        RegistryStatsResponse: {
+            /**
+             * Success
+             * @description Operation success status
+             */
+            success: boolean;
+            /**
+             * Message
+             * @description Status message
+             */
+            message: string;
+            /**
+             * Data
+             * @description Registry statistics data
+             */
+            data: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * SearchSuggestionData
+         * @description Search suggestions data.
+         */
+        SearchSuggestionData: {
+            /**
+             * Query
+             * @description Original query that suggestions are based on
+             */
+            query: string;
+            /**
+             * Suggestions
+             * @description List of search suggestions
+             */
+            suggestions?: string[];
+        };
+        /**
+         * ServicesHealthPayload
+         * @description External services health payload.
+         */
+        ServicesHealthPayload: {
+            /** @description OpenAI health */
+            openai: components["schemas"]["OpenAIHealthData"];
+            /** @description FastMCP health */
+            fastmcp: components["schemas"]["FastMCPHealthData"];
+        };
+        /** SystemHealthScore */
+        SystemHealthScore: {
+            /**
+             * Score
+             * @description Overall health score
+             */
+            score: number;
+            /**
+             * Factors
+             * @description Health factors breakdown
+             */
+            factors: {
+                [key: string]: unknown;
+            };
+        };
+        /** SystemMetricsInfo */
+        SystemMetricsInfo: {
+            /**
+             * Timestamp
+             * @description Timestamp
+             */
+            timestamp: string;
+            /**
+             * Health Status
+             * @description Health status
+             */
+            health_status: string;
+        };
+        /**
+         * SystemMetricsPayload
+         * @description System metrics and resource utilization.
+         */
+        SystemMetricsPayload: {
+            /**
+             * System
+             * @description System metrics (typed below)
+             */
+            system: {
+                [key: string]: unknown;
+            };
+            /**
+             * Application
+             * @description App metrics (typed below)
+             */
+            application: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * TaskInfo
+         * @description Individual task information model.
+         */
+        TaskInfo: {
+            /**
+             * Id
+             * @description Task identifier
+             */
+            id?: string | null;
+            /**
+             * Name
+             * @description Task name
+             */
+            name?: string | null;
+            /**
+             * Args
+             * @description Task arguments
+             */
+            args?: unknown[];
+            /**
+             * Kwargs
+             * @description Task keyword arguments
+             */
+            kwargs?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Worker
+             * @description Assigned worker
+             */
+            worker: string;
+            /**
+             * Status
+             * @description Task status
+             */
+            status: string;
+        };
+        /**
+         * TaskMonitoringData
+         * @description Task monitoring data model.
+         */
+        TaskMonitoringData: {
+            /**
+             * System Status
+             * @description System status information
+             */
+            system_status: {
+                [key: string]: unknown;
+            };
+            /** @description Active tasks summary */
+            active_tasks: components["schemas"]["TasksSummary"];
+            /** @description Workers summary */
+            workers: components["schemas"]["WorkersSummary"];
+            /**
+             * Recent Performance
+             * @description Recent performance metrics
+             */
+            recent_performance: {
+                [key: string]: unknown;
+            };
+            /**
+             * Timestamp
+             * @description Monitoring timestamp
+             */
+            timestamp: string;
+            /**
+             * Refresh Interval
+             * @description Suggested refresh interval in seconds
+             * @default 30
+             */
+            refresh_interval: number;
+        };
+        /**
+         * TaskStatisticsData
+         * @description Task statistics data model.
+         */
+        TaskStatisticsData: {
+            /**
+             * Period Hours
+             * @description Analysis period in hours
+             */
+            period_hours: number;
+            /**
+             * Start Time
+             * @description Analysis period start timestamp
+             */
+            start_time: string;
+            /** @description Document processing statistics */
+            document_processing: components["schemas"]["shared__schemas__task_responses__DocumentProcessingStats"];
+            /**
+             * Recent Errors
+             * @description Sample of recent error messages
+             */
+            recent_errors?: string[];
+            /**
+             * Timestamp
+             * @description Statistics timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * TaskSystemStatusData
+         * @description Task system status data model.
+         */
+        TaskSystemStatusData: {
+            /**
+             * Broker Status
+             * @description Message broker connectivity status
+             */
+            broker_status: string;
+            /**
+             * Active Workers
+             * @description Number of active workers
+             */
+            active_workers: number;
+            /**
+             * Active Tasks
+             * @description Number of currently active tasks
+             */
+            active_tasks: number;
+            /**
+             * Reserved Tasks
+             * @description Number of reserved tasks in queue
+             */
+            reserved_tasks: number;
+            /**
+             * System Status
+             * @description Overall system health status
+             */
+            system_status: string;
+            /**
+             * Timestamp
+             * @description Status timestamp
+             */
+            timestamp: string;
+            /**
+             * Error
+             * @description Error message if status unavailable
+             */
+            error?: string | null;
+        };
+        /**
+         * TasksSummary
+         * @description Summary of active tasks for monitoring.
+         */
+        TasksSummary: {
+            /**
+             * Count
+             * @description Number of active tasks
+             */
+            count: number;
+            /**
+             * Workers Busy
+             * @description Number of workers with active tasks
+             */
+            workers_busy: number;
+        };
+        /**
+         * Token
+         * @description Schema for JWT token response with comprehensive security metadata and expiration handling.
+         *
+         *     Represents JWT access token response structure with essential security metadata
+         *     including token type specification, expiration information, and proper formatting
+         *     for client-side token management and authentication workflows.
+         *
+         *     Token Components:
+         *         - access_token: Cryptographically signed JWT token for authentication
+         *         - token_type: Token type specification (bearer) for HTTP Authorization header
+         *         - expires_in: Token expiration time in seconds for client-side management
+         *
+         *     JWT Token Features:
+         *         - Cryptographically signed for integrity and authenticity verification
+         *         - Stateless authentication without server-side session storage
+         *         - Embedded user claims and permissions for authorization
+         *         - Configurable expiration for security and session management
+         *         - Standard format compatible with OAuth 2.0 and OpenID Connect
+         *
+         *     Security Metadata:
+         *         - Bearer token type for standardized HTTP Authorization header usage
+         *         - Expiration time for automatic token invalidation and renewal
+         *         - Secure token generation with cryptographic signing algorithms
+         *         - User identity and role information embedded in token claims
+         *         - Protection against token replay and unauthorized access attempts
+         *
+         *     Client Integration:
+         *         - Standard Authorization header format: "Bearer {access_token}"
+         *         - Automatic expiration handling for seamless token renewal
+         *         - Client-side token storage with appropriate security measures
+         *         - Token validation and refresh workflow integration
+         *         - Cross-platform compatibility for web and mobile applications
+         *
+         *     Token Lifecycle:
+         *         - Secure generation during successful authentication
+         *         - Configurable expiration for balance between security and usability
+         *         - Refresh token support for extended session management
+         *         - Automatic invalidation on logout or security events
+         *         - Revocation capabilities for security incident response
+         *
+         *     Use Cases:
+         *         - API authentication and authorization for protected endpoints
+         *         - Single sign-on (SSO) integration and cross-service authentication
+         *         - Mobile application authentication with offline capability
+         *         - Microservice authentication and service-to-service communication
+         *         - Administrative authentication with enhanced security requirements
+         *
+         *     Security Considerations:
+         *         - Secure token transmission over HTTPS connections only
+         *         - Client-side secure storage to prevent token theft
+         *         - Token expiration enforcement for limited session duration
+         *         - Protection against cross-site scripting (XSS) and token exposure
+         *         - Proper token validation and signature verification
+         *
+         *     Expiration Management:
+         *         - Short-lived tokens for enhanced security (typically 15-60 minutes)
+         *         - Refresh token mechanism for seamless user experience
+         *         - Automatic token renewal before expiration
+         *         - Grace period handling for clock synchronization issues
+         *         - Token blacklisting support for immediate invalidation
+         *
+         *     Example:
+         *         token_response = Token(
+         *             access_token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+         *             token_type="bearer",
+         *             expires_in=1800  # 30 minutes
+         *         )
+         *
+         *         # Client usage:
+         *         # Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+         * @example {
+         *       "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+         *       "expires_in": 1800,
+         *       "token_type": "bearer"
+         *     }
+         */
         Token: {
-            access_token?: string;
-            token_type?: string;
+            /**
+             * Access Token
+             * @description JWT access token
+             */
+            access_token: string;
+            /**
+             * Token Type
+             * @description Token type
+             * @default bearer
+             */
+            token_type: string;
+            /**
+             * Expires In
+             * @description Token expiration in seconds
+             */
+            expires_in: number;
+        };
+        /**
+         * ToolCallResult
+         * @description Schema for individual tool call result.
+         */
+        ToolCallResult: {
+            /**
+             * Tool Call Id
+             * @description ID of the tool call
+             */
+            tool_call_id: string;
+            /**
+             * Tool Name
+             * @description Name of the tool that was called
+             */
+            tool_name: string;
+            /**
+             * Success
+             * @description Whether the tool call was successful
+             */
+            success: boolean;
+            /**
+             * Content
+             * @description Tool result content
+             */
+            content?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Error
+             * @description Error message if tool call failed
+             */
+            error?: string | null;
+            /**
+             * Provider
+             * @description Tool provider (fastmcp, openai, etc.)
+             */
+            provider?: string | null;
+            /**
+             * Execution Time Ms
+             * @description Execution time in milliseconds
+             */
+            execution_time_ms?: number | null;
+        };
+        /**
+         * ToolCallSummary
+         * @description Schema for tool call execution summary.
+         */
+        ToolCallSummary: {
+            /**
+             * Total Calls
+             * @description Total number of tool calls made
+             */
+            total_calls: number;
+            /**
+             * Successful Calls
+             * @description Number of successful tool calls
+             */
+            successful_calls: number;
+            /**
+             * Failed Calls
+             * @description Number of failed tool calls
+             */
+            failed_calls: number;
+            /**
+             * Total Execution Time Ms
+             * @description Total execution time in milliseconds
+             */
+            total_execution_time_ms: number;
+            /**
+             * Results
+             * @description Individual tool call results
+             */
+            results?: components["schemas"]["ToolCallResult"][];
+        };
+        /**
+         * ToolHandlingMode
+         * @description Enum for different tool call result handling modes.
+         *
+         *     - RETURN_RESULTS: Return tool call results as content without further AI processing
+         *     - COMPLETE_WITH_RESULTS: Feed tool results back to AI for final completion
+         * @enum {string}
+         */
+        ToolHandlingMode: "return_results" | "complete_with_results";
+        /** TopUser */
+        TopUser: {
+            /**
+             * Username
+             * @description Username
+             */
+            username: string;
+            /**
+             * Email
+             * @description Email
+             */
+            email: string;
+            /**
+             * Count
+             * @description Metric count
+             */
+            count: number;
+        };
+        /** TrendSummary */
+        TrendSummary: {
+            /**
+             * Total New Users
+             * @description Total new users
+             */
+            total_new_users: number;
+            /**
+             * Total New Documents
+             * @description Total new documents
+             */
+            total_new_documents: number;
+            /**
+             * Total Messages
+             * @description Total messages
+             */
+            total_messages: number;
+            /**
+             * Weekly Growth Rate
+             * @description Weekly growth rate (%)
+             */
+            weekly_growth_rate: number;
+        };
+        /** UsageMetrics */
+        UsageMetrics: {
+            /**
+             * New Users
+             * @description New users
+             */
+            new_users: number;
+            /**
+             * New Documents
+             * @description New documents
+             */
+            new_documents: number;
+            /**
+             * New Conversations
+             * @description New conversations
+             */
+            new_conversations: number;
+            /**
+             * Total Messages
+             * @description Total messages
+             */
+            total_messages: number;
+            /**
+             * Avg Messages Per Day
+             * @description Average messages per day
+             */
+            avg_messages_per_day: number;
+        };
+        /**
+         * UserPasswordUpdate
+         * @description Schema for secure password change operations with comprehensive validation and verification.
+         *
+         *     Handles secure password change workflows with current password verification and
+         *     new password strength validation. Implements multi-factor security validation
+         *     to ensure authorized password changes and protection against unauthorized
+         *     account access and password modification attempts.
+         *
+         *     Password Change Security:
+         *         - Current password verification for authorization
+         *         - New password strength validation with complexity requirements
+         *         - Secure password handling without exposure in logs or storage
+         *         - Protection against unauthorized password modification attempts
+         *         - Comprehensive security validation for password change operations
+         *
+         *     Validation Process:
+         *         - Current password verification to confirm user identity and authorization
+         *         - New password strength validation with industry-standard requirements
+         *         - Password change authorization and security verification
+         *         - Audit logging for password change operations and security monitoring
+         *         - Protection against password change abuse and security vulnerabilities
+         *
+         *     Security Requirements:
+         *         - Current password must be provided and verified for authorization
+         *         - New password must meet complexity requirements (uppercase, lowercase, digits)
+         *         - Password change operations logged for security monitoring and compliance
+         *         - Protection against brute force password change attempts
+         *         - Secure password transmission and handling throughout the process
+         *
+         *     Password Strength Validation:
+         *         - Minimum 8 characters for baseline security protection
+         *         - Character complexity requirements for enhanced security
+         *         - Protection against weak password selection during changes
+         *         - Consistent security standards with account creation requirements
+         *         - Comprehensive validation feedback for user guidance
+         *
+         *     Use Cases:
+         *         - User-initiated password changes for security maintenance
+         *         - Password updates following security incidents or policy requirements
+         *         - Administrative password changes with proper authorization
+         *         - Security-driven password rotation and compliance requirements
+         *         - Password recovery completion with secure verification
+         *
+         *     Security Benefits:
+         *         - Protection against unauthorized password modification
+         *         - Verification of user identity before password changes
+         *         - Enforcement of strong password requirements during changes
+         *         - Comprehensive audit trail for password change operations
+         *         - Integration with security monitoring and incident response systems
+         *
+         *     Example:
+         *         password_change = UserPasswordUpdate(
+         *             current_password="CurrentPassword123!",
+         *             new_password="NewSecurePassword456!"
+         *         )
+         */
+        UserPasswordUpdate: {
+            /**
+             * Current Password
+             * @description Current password
+             */
+            current_password: string;
+            /**
+             * New Password
+             * @description New password
+             */
+            new_password: string;
+        };
+        /**
+         * UserResponse
+         * @description Schema for comprehensive user API responses with complete profile information.
+         *
+         *     Provides complete user profile information for API responses including account
+         *     metadata, status information, and audit timestamps. Implements custom JSON
+         *     serialization for proper UUID and datetime handling with frontend-compatible
+         *     formatting and comprehensive user data presentation.
+         *
+         *     Response Information:
+         *         - Complete user profile with all public information
+         *         - Account status and privilege information
+         *         - Creation timestamp for audit and tracking purposes
+         *         - Unique identifier for entity correlation and reference
+         *         - Custom JSON serialization for proper type conversion
+         *
+         *     User Metadata:
+         *         - id: Unique UUID identifier for user entity correlation
+         *         - is_active: Account status for access control and lifecycle management
+         *         - is_superuser: Administrative privilege indicator for authorization
+         *         - created_at: Account creation timestamp for audit and analytics
+         *         - Inherited fields: username, email, full_name from UserBase
+         *
+         *     Security Considerations:
+         *         - Password field excluded from all response schemas for security
+         *         - Sensitive information filtered for appropriate access levels
+         *         - Account status information for access control decisions
+         *         - Administrative privilege information for role-based authorization
+         *         - Audit timestamps for security monitoring and compliance
+         *
+         *     JSON Serialization:
+         *         - UUID fields converted to string representation for API compatibility
+         *         - Datetime fields converted to ISO format with timezone indicators
+         *         - Custom serialization for frontend compatibility and integration
+         *         - Consistent field formatting across all API responses
+         *         - Support for nested object serialization with proper type conversion
+         *
+         *     Use Cases:
+         *         - User profile display in web and mobile applications
+         *         - API responses for user management and administrative operations
+         *         - User directory and search result formatting
+         *         - Authentication response with user information
+         *         - Administrative dashboards and user analytics
+         *
+         *     Access Control Integration:
+         *         - Account status checking for access control decisions
+         *         - Administrative privilege verification for authorization
+         *         - User information for role-based access control systems
+         *         - Integration with authentication and authorization middleware
+         *         - Support for multi-tenant access control and user isolation
+         *
+         *     Example:
+         *         user_response = UserResponse(
+         *             id=uuid.uuid4(),
+         *             username="john_doe",
+         *             email="john@example.com",
+         *             full_name="John Doe",
+         *             is_active=True,
+         *             is_superuser=False,
+         *             created_at=datetime.now()
+         *         )
+         *         json_str = user_response.model_dump_json()  # Properly formatted JSON
+         */
+        UserResponse: {
+            /**
+             * Username
+             * @description Unique username
+             */
+            username: string;
+            /**
+             * Email
+             * Format: email
+             * @description User email address
+             */
+            email: string;
+            /**
+             * Full Name
+             * @description User's full name
+             */
+            full_name?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique user identifier
+             */
+            id: string;
+            /**
+             * Is Active
+             * @description Whether the user account is active
+             */
+            is_active: boolean;
+            /**
+             * Is Superuser
+             * @description Whether the user has admin privileges
+             */
+            is_superuser: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             * @description When the user account was created
+             */
+            created_at: string;
+        };
+        /**
+         * UserStatsResponse
+         * @description Response schema for comprehensive user statistics and analytics reporting.
+         *
+         *     Provides detailed user analytics and system statistics for administrative
+         *     dashboards, monitoring, and reporting purposes. Implements comprehensive
+         *     user metrics with temporal analysis and custom JSON serialization for
+         *     proper datetime handling and frontend integration.
+         *
+         *     Statistical Categories:
+         *         - User count statistics by status and privilege level
+         *         - Temporal user creation analysis (daily, weekly, monthly)
+         *         - Account status distribution for user lifecycle insights
+         *         - Administrative user statistics for system oversight
+         *         - Real-time statistics with timestamp for data freshness
+         *
+         *     User Metrics:
+         *         - total_users: Complete user count for system capacity analysis
+         *         - active_users: Active account count for engagement metrics
+         *         - inactive_users: Inactive account count for lifecycle management
+         *         - superusers: Administrative user count for security oversight
+         *         - Temporal creation metrics for growth analysis and trending
+         *
+         *     Analytics Features:
+         *         - Time-based user creation analysis for growth tracking
+         *         - Account status distribution for user lifecycle insights
+         *         - Administrative metrics for security and compliance monitoring
+         *         - Real-time statistics with automatic timestamp generation
+         *         - Custom JSON serialization for proper datetime handling
+         *
+         *     Use Cases:
+         *         - Administrative dashboards and executive reporting
+         *         - User analytics and system monitoring interfaces
+         *         - Capacity planning and resource allocation analysis
+         *         - User growth tracking and business intelligence
+         *         - Compliance reporting and user activity monitoring
+         *
+         *     Temporal Analysis:
+         *         - users_created_today: Daily user registration tracking
+         *         - users_created_this_week: Weekly user growth analysis
+         *         - users_created_this_month: Monthly user acquisition metrics
+         *         - last_updated: Statistics freshness and calculation timestamp
+         *         - Historical trending and growth pattern analysis
+         *
+         *     Example:
+         *         stats = UserStatsResponse(
+         *             total_users=1500,
+         *             active_users=1350,
+         *             inactive_users=150,
+         *             superusers=25,
+         *             users_created_today=12,
+         *             users_created_this_week=89,
+         *             users_created_this_month=284
+         *         )
+         */
+        UserStatsResponse: {
+            /**
+             * Total Users
+             * @description Total number of users
+             */
+            total_users: number;
+            /**
+             * Active Users
+             * @description Number of active users
+             */
+            active_users: number;
+            /**
+             * Inactive Users
+             * @description Number of inactive users
+             */
+            inactive_users: number;
+            /**
+             * Superusers
+             * @description Number of superusers
+             */
+            superusers: number;
+        };
+        /**
+         * UserUpdate
+         * @description Schema for selective user profile updates with comprehensive field validation.
+         *
+         *     Handles partial user profile updates with optional field modifications, validation,
+         *     and security controls. Implements selective field updates allowing users and
+         *     administrators to modify specific profile information while maintaining data
+         *     integrity and security requirements.
+         *
+         *     Update Capabilities:
+         *         - Selective field updates with optional field validation
+         *         - Email address modification with format verification
+         *         - Full name updates with length and content validation
+         *         - Account status management for administrative control
+         *         - Partial update support for efficient profile management
+         *
+         *     Field Update Options:
+         *         - email: Email address modification with uniqueness validation
+         *         - full_name: Display name updates with length restrictions
+         *         - is_active: Account status control for administrative management
+         *         - Optional fields allow selective updates without affecting other data
+         *         - Validation applies only to provided fields for flexibility
+         *
+         *     Security Features:
+         *         - Input validation and sanitization for security protection
+         *         - Field-level validation for data integrity maintenance
+         *         - Access control integration for administrative operations
+         *         - Audit trail support for profile modification tracking
+         *         - Protection against unauthorized profile modifications
+         *
+         *     Administrative Controls:
+         *         - Account activation and deactivation through is_active field
+         *         - Administrative oversight for sensitive profile modifications
+         *         - Role-based access control for update operation authorization
+         *         - Comprehensive logging for profile modification audit trails
+         *         - Integration with user management and administrative systems
+         *
+         *     Use Cases:
+         *         - User profile self-service updates and modifications
+         *         - Administrative user management and account control
+         *         - Bulk user profile updates with selective field modification
+         *         - Account status management for user lifecycle control
+         *         - Integration with user preference and settings management
+         *
+         *     Validation Benefits:
+         *         - Ensures data integrity during partial profile updates
+         *         - Maintains email format and uniqueness requirements
+         *         - Enforces field length limits for security and consistency
+         *         - Provides flexible update options without rigid requirements
+         *         - Supports incremental profile enhancement and modification
+         *
+         *     Example:
+         *         # Update only email address
+         *         update_data = UserUpdate(email="new_email@example.com")
+         *
+         *         # Update multiple fields
+         *         update_data = UserUpdate(
+         *             email="updated@example.com",
+         *             full_name="Updated Name",
+         *             is_active=True
+         *         )
+         */
+        UserUpdate: {
+            /**
+             * Email
+             * @description New email address
+             */
+            email?: string | null;
+            /**
+             * Full Name
+             * @description Updated full name
+             */
+            full_name?: string | null;
+            /**
+             * Is Active
+             * @description Whether user is active
+             */
+            is_active?: boolean | null;
+        };
+        /** UsersOverview */
+        UsersOverview: {
+            /**
+             * Total
+             * @description Total users
+             */
+            total: number;
+            /**
+             * Active
+             * @description Active users
+             */
+            active: number;
+            /**
+             * Activity Rate
+             * @description User activity rate (%)
+             */
+            activity_rate: number;
+        };
+        /** VacuumResult */
+        VacuumResult: {
+            /**
+             * Message
+             * @description Status message
+             */
+            message: string;
+            /**
+             * Analyze
+             * @description Whether ANALYZE was run after VACUUM
+             */
+            analyze: boolean;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+        /**
+         * WorkerInfo
+         * @description Individual worker information model.
+         */
+        WorkerInfo: {
+            /**
+             * Name
+             * @description Worker name/hostname
+             */
+            name: string;
+            /**
+             * Status
+             * @description Worker status
+             */
+            status: string;
+            /**
+             * Pool
+             * @description Worker pool implementation type
+             */
+            pool: string;
+            /**
+             * Processes
+             * @description Number of worker processes
+             */
+            processes: number;
+            /**
+             * Max Concurrency
+             * @description Maximum concurrent task capacity
+             */
+            max_concurrency: number;
+            /**
+             * Current Load
+             * @description Current task execution load
+             */
+            current_load: number;
+            /**
+             * Broker Transport
+             * @description Message broker transport mechanism
+             */
+            broker_transport: string;
+            /**
+             * Prefetch Count
+             * @description Task prefetch multiplier setting
+             */
+            prefetch_count: number;
+            /**
+             * Last Heartbeat
+             * @description Most recent worker heartbeat timestamp
+             */
+            last_heartbeat: string;
+        };
+        /**
+         * WorkerStatusData
+         * @description Worker status data model.
+         */
+        WorkerStatusData: {
+            /**
+             * Workers
+             * @description List of worker information
+             */
+            workers?: components["schemas"]["WorkerInfo"][];
+            /**
+             * Total Workers
+             * @description Total number of workers
+             */
+            total_workers: number;
+            /**
+             * Online Workers
+             * @description Number of online workers
+             */
+            online_workers: number;
+            /**
+             * Timestamp
+             * @description Status timestamp
+             */
+            timestamp: string;
+        };
+        /**
+         * WorkersSummary
+         * @description Summary of workers for monitoring.
+         */
+        WorkersSummary: {
+            /**
+             * Total
+             * @description Total number of workers
+             */
+            total: number;
+            /**
+             * Online
+             * @description Number of online workers
+             */
+            online: number;
+        };
+        /**
+         * DocumentProcessingStats
+         * @description Document processing statistics.
+         */
+        shared__schemas__document_responses__DocumentProcessingStats: {
+            /**
+             * Success Rate
+             * @description Processing success rate percentage
+             */
+            success_rate: number;
+            /**
+             * Avg Processing Time Seconds
+             * @description Average processing time in seconds
+             */
+            avg_processing_time_seconds: number;
+            /**
+             * Total Processed
+             * @description Total number of processed documents
+             */
+            total_processed: number;
+        };
+        /**
+         * DocumentProcessingStats
+         * @description Document processing statistics model.
+         */
+        shared__schemas__task_responses__DocumentProcessingStats: {
+            /**
+             * Total
+             * @description Total number of documents
+             */
+            total: number;
+            /**
+             * Completed
+             * @description Number of successfully completed documents
+             */
+            completed: number;
+            /**
+             * Failed
+             * @description Number of documents that failed processing
+             */
+            failed: number;
+            /**
+             * Processing
+             * @description Number of documents currently being processed
+             */
+            processing: number;
+            /**
+             * Success Rate
+             * @description Percentage of successful processing operations
+             */
+            success_rate: number;
+            /**
+             * Failure Rate
+             * @description Percentage of failed processing operations
+             */
+            failure_rate: number;
+            /**
+             * Avg Processing Time Seconds
+             * @description Average processing duration
+             */
+            avg_processing_time_seconds: number;
         };
     };
     responses: never;
@@ -743,4 +8407,3587 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    get_system_overview_api_v1_analytics_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AnalyticsOverviewPayload_"];
+                };
+            };
+        };
+    };
+    get_usage_statistics_api_v1_analytics_usage_get: {
+        parameters: {
+            query?: {
+                /** @description Time period: 1d, 7d, 30d, 90d */
+                period?: string;
+                /** @description Include detailed breakdown */
+                detailed?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AnalyticsUsagePayload_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_performance_metrics_api_v1_analytics_performance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AnalyticsPerformancePayload_"];
+                };
+            };
+        };
+    };
+    get_user_analytics_api_v1_analytics_users_get: {
+        parameters: {
+            query?: {
+                /** @description Metric to analyze: messages, documents, conversations */
+                metric?: string;
+                /** @description Number of top users to return */
+                top?: number;
+                /** @description Time period: 7d, 30d, 90d */
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AnalyticsUserAnalyticsPayload_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_usage_trends_api_v1_analytics_trends_get: {
+        parameters: {
+            query?: {
+                /** @description Number of days to analyze */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AnalyticsTrendsPayload_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_analytics_report_api_v1_analytics_export_report_post: {
+        parameters: {
+            query?: {
+                /** @description Include detailed breakdowns */
+                include_details?: boolean;
+                /** @description Export format: json */
+                format?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AnalyticsExportPayload_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_Token_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+        };
+    };
+    refresh_token_api_v1_auth_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_Token_"];
+                };
+            };
+        };
+    };
+    request_password_reset_api_v1_auth_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_password_reset_api_v1_auth_password_reset_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_conversations_api_v1_conversations__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                active_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PaginatedResponse_ConversationResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_conversation_api_v1_conversations__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ConversationResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_conversation_api_v1_conversations_byid__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ConversationResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_conversation_api_v1_conversations_byid__conversation_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ConversationResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_conversation_api_v1_conversations_byid__conversation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_messages_api_v1_conversations_byid__conversation_id__messages_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_List_MessageResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_api_v1_conversations_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ChatResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_stream_api_v1_conversations_chat_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_conversation_statistics_api_v1_conversations_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ConversationStatsData_"];
+                };
+            };
+        };
+    };
+    get_registry_stats_api_v1_conversations_registry_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_RegistryStatsResponse_"];
+                };
+            };
+        };
+    };
+    export_conversation_api_v1_conversations_byid__conversation_id__export_get: {
+        parameters: {
+            query?: {
+                /** @description Export format: json, txt, csv */
+                format?: string;
+                /** @description Include conversation metadata */
+                include_metadata?: boolean;
+            };
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ConversationExportData_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_conversation_api_v1_conversations_import_post: {
+        parameters: {
+            query?: {
+                /** @description Override conversation title */
+                title?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_conversation_api_v1_conversations_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ImportConversationResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_conversations_api_v1_conversations_archive_post: {
+        parameters: {
+            query?: {
+                /** @description Archive conversations older than X days */
+                older_than_days?: number;
+                /** @description Archive only inactive conversations */
+                inactive_only?: boolean;
+                /** @description Perform dry run without actually archiving */
+                dry_run?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_Union_ArchivePreviewResponse__ArchiveConversationsResult__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_conversations_and_messages_api_v1_conversations_search_get: {
+        parameters: {
+            query: {
+                /** @description Search query */
+                query: string;
+                /** @description Search within message content */
+                search_messages?: boolean;
+                /** @description Username to filter by */
+                user_filter?: string | null;
+                /** @description Start date (YYYY-MM-DD) */
+                date_from?: string | null;
+                /** @description End date (YYYY-MM-DD) */
+                date_to?: string | null;
+                /** @description Search only active conversations */
+                active_only?: boolean;
+                /** @description Maximum number of results */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ConversationSearchData_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    initialize_database_api_v1_database_init_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_BaseModelSchema_"];
+                };
+            };
+        };
+    };
+    get_database_status_api_v1_database_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseStatusResponse_"];
+                };
+            };
+        };
+    };
+    list_database_tables_api_v1_database_tables_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseTablesResponse_"];
+                };
+            };
+        };
+    };
+    get_migration_status_api_v1_database_migrations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseMigrationsResponse_"];
+                };
+            };
+        };
+    };
+    upgrade_database_api_v1_database_upgrade_post: {
+        parameters: {
+            query?: {
+                /** @description Target revision (default: head) */
+                revision?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseUpgradeResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downgrade_database_api_v1_database_downgrade_post: {
+        parameters: {
+            query: {
+                /** @description Target revision to downgrade to */
+                revision: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseDowngradeResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_database_backup_api_v1_database_backup_post: {
+        parameters: {
+            query?: {
+                /** @description Output file path (auto-generated if not provided) */
+                output_file?: string | null;
+                /** @description Backup schema only (no data) */
+                schema_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseBackupResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_database_api_v1_database_restore_post: {
+        parameters: {
+            query: {
+                /** @description Backup file path to restore from */
+                backup_file: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseRestoreResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vacuum_database_api_v1_database_vacuum_post: {
+        parameters: {
+            query?: {
+                /** @description Run ANALYZE after VACUUM */
+                analyze?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_VacuumResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_database_api_v1_database_analyze_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseAnalysisResponse_"];
+                };
+            };
+        };
+    };
+    execute_custom_query_api_v1_database_query_post: {
+        parameters: {
+            query: {
+                /** @description SQL query to execute */
+                query: string;
+                /** @description Result limit for SELECT queries */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseQueryResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_document_api_v1_documents_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_documents_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DocumentUploadResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_documents_api_v1_documents__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                file_type?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_List_DocumentResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_document_api_v1_documents_byid__document_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DocumentResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_document_api_v1_documents_byid__document_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DocumentResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_document_api_v1_documents_byid__document_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_processing_status_api_v1_documents_byid__document_id__status_get: {
+        parameters: {
+            query?: {
+                /** @description Optional task ID for background processing details */
+                task_id?: string | null;
+            };
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ProcessingStatusResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reprocess_document_api_v1_documents_byid__document_id__reprocess_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_document_api_v1_documents_byid__document_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_document_processing_api_v1_documents_byid__document_id__process_post: {
+        parameters: {
+            query?: {
+                /** @description Processing priority (1=highest, 10=lowest) */
+                priority?: number;
+            };
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_BackgroundTaskResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_processing_config_api_v1_documents_processing_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ProcessingConfigResponse_"];
+                };
+            };
+        };
+    };
+    get_queue_status_api_v1_documents_queue_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_QueueStatusResponse_"];
+                };
+            };
+        };
+    };
+    cleanup_documents_api_v1_documentscleanup_post: {
+        parameters: {
+            query?: {
+                /** @description Status to filter by: failed, completed, processing */
+                status_filter?: string | null;
+                /** @description Remove documents older than X days */
+                older_than_days?: number;
+                /** @description Perform dry run without actually deleting */
+                dry_run?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_document_statistics_api_v1_documents_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DocumentStatisticsData_"];
+                };
+            };
+        };
+    };
+    bulk_reprocess_documents_api_v1_documents_bulk_reprocess_post: {
+        parameters: {
+            query?: {
+                /** @description Status to filter by: failed, completed */
+                status_filter?: string;
+                /** @description Maximum number of documents to reprocess */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_BulkReprocessResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    advanced_document_search_api_v1_documents_search_advanced_get: {
+        parameters: {
+            query: {
+                /** @description Search query */
+                query: string;
+                /** @description Comma-separated file extensions (e.g., pdf,docx) */
+                file_types?: string | null;
+                /** @description Status filter: completed, failed, processing */
+                status_filter?: string | null;
+                /** @description Username to filter by */
+                user_filter?: string | null;
+                /** @description Start date (YYYY-MM-DD) */
+                date_from?: string | null;
+                /** @description End date (YYYY-MM-DD) */
+                date_to?: string | null;
+                /** @description Minimum file size in bytes */
+                min_size?: number | null;
+                /** @description Maximum file size in bytes */
+                max_size?: number | null;
+                /** @description Maximum number of results */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_AdvancedSearchData_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    basic_health_check_api_v1_health__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ApplicationHealthData_"];
+                };
+            };
+        };
+    };
+    detailed_health_check_api_v1_health_detailed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DetailedHealthCheckPayload_"];
+                };
+            };
+        };
+    };
+    database_health_check_api_v1_health_database_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DatabaseHealthData_"];
+                };
+            };
+        };
+    };
+    services_health_check_api_v1_health_services_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ServicesHealthPayload_"];
+                };
+            };
+        };
+    };
+    get_system_metrics_api_v1_health_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_SystemMetricsPayload_"];
+                };
+            };
+        };
+    };
+    readiness_check_api_v1_health_readiness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ReadinessComponentsPayload_"];
+                };
+            };
+        };
+    };
+    get_performance_metrics_api_v1_health_performance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PerformanceMetricsPayload_"];
+                };
+            };
+        };
+    };
+    liveness_check_api_v1_health_liveness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_LivenessPayload_"];
+                };
+            };
+        };
+    };
+    list_servers_api_v1_mcp_servers_get: {
+        parameters: {
+            query?: {
+                /** @description Show only enabled servers */
+                enabled_only?: boolean;
+                /** @description Show only connected servers */
+                connected_only?: boolean;
+                /** @description Include detailed information */
+                detailed?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_List_MCPServerSchema__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_server_api_v1_mcp_servers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MCPServerCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_MCPServerSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_server_api_v1_mcp_servers_byname__server_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_MCPServerSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_server_api_v1_mcp_servers_byname__server_name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_server_api_v1_mcp_servers_byname__server_name__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MCPServerUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_MCPServerSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tools_api_v1_mcp_tools_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by server name */
+                server?: string | null;
+                /** @description Show only enabled tools */
+                enabled_only?: boolean;
+                /** @description Include detailed information */
+                detailed?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_List_MCPToolResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_tool_api_v1_mcp_tools_byname__tool_name__enable_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tool_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_tool_api_v1_mcp_tools_byname__tool_name__disable_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tool_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_mcp_stats_api_v1_mcp_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_MCPToolUsageStatsSchema_"];
+                };
+            };
+        };
+    };
+    get_tool_details_api_v1_mcp_tools_byname__tool_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tool_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_MCPToolsResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_tool_api_v1_mcp_tools_byname__tool_name__test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tool_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                } | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_mcp_api_v1_mcp_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+        };
+    };
+    list_profiles_api_v1_profiles__get: {
+        parameters: {
+            query?: {
+                /** @description Show only active profiles */
+                active_only?: boolean;
+                /** @description Search in profiles */
+                search?: string | null;
+                /** @description Page number */
+                page?: number;
+                /** @description Items per page */
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PaginatedResponse_LLMProfileResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_profile_api_v1_profiles__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMProfileCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_LLMProfileResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_details_api_v1_profiles_byname__profile_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_LLMProfileResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_profile_api_v1_profiles_byname__profile_name__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_LLMProfileResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_profile_api_v1_profiles_byname__profile_name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_default_profile_api_v1_profiles_byname__profile_name__set_default_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_BaseResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_default_profile_api_v1_profiles_default_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_LLMProfileResponse_"];
+                };
+            };
+        };
+    };
+    activate_profile_api_v1_profiles_byname__profile_name__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_profile_api_v1_profiles_byname__profile_name__deactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_stats_api_v1_profiles_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_LLMProfileStatisticsData_"];
+                };
+            };
+        };
+    };
+    validate_parameters_api_v1_profiles_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_prompts_api_v1_prompts__get: {
+        parameters: {
+            query?: {
+                /** @description Show only active prompts */
+                active_only?: boolean;
+                /** @description Filter by category */
+                category?: string | null;
+                /** @description Search in prompts */
+                search?: string | null;
+                /** @description Page number */
+                page?: number;
+                /** @description Items per page */
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PaginatedResponse_PromptResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_prompt_api_v1_prompts__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PromptResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_prompt_details_api_v1_prompts_byname__prompt_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PromptResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_prompt_api_v1_prompts_byname__prompt_name__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PromptResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_prompt_api_v1_prompts_byname__prompt_name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_prompt_api_v1_prompts_byname__prompt_name__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_prompt_api_v1_prompts_byname__prompt_name__deactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_categories_api_v1_prompts_categories__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PromptCategoriesData_"];
+                };
+            };
+        };
+    };
+    set_default_prompt_api_v1_prompts_byname__prompt_name__set_default_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_prompt_stats_api_v1_prompts_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PromptStatisticsData_"];
+                };
+            };
+        };
+    };
+    search_documents_api_v1_search__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_DocumentSearchResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    find_similar_chunks_api_v1_search_similar_byid__chunk_id__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                chunk_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_search_suggestions_api_v1_search_suggestions_get: {
+        parameters: {
+            query: {
+                query: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_SearchSuggestionData_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_task_system_status_api_v1_tasks_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_TaskSystemStatusData_"];
+                };
+            };
+        };
+    };
+    get_workers_info_api_v1_tasks_workers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_WorkerStatusData_"];
+                };
+            };
+        };
+    };
+    get_queue_info_api_v1_tasks_queue_get: {
+        parameters: {
+            query?: {
+                /** @description Specific queue to check */
+                queue_name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_QueueStatusData_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_active_tasks_api_v1_tasks_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_ActiveTasksData_"];
+                };
+            };
+        };
+    };
+    schedule_task_api_v1_tasks_schedule_post: {
+        parameters: {
+            query: {
+                /** @description Name of the task to schedule */
+                task_name: string;
+                /** @description JSON array of task arguments */
+                args?: string;
+                /** @description JSON object of task keyword arguments */
+                kwargs?: string;
+                /** @description Delay in seconds before execution */
+                countdown?: number | null;
+                /** @description Queue to send the task to */
+                queue?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_failed_tasks_api_v1_tasks_retry_failed_post: {
+        parameters: {
+            query?: {
+                /** @description Specific task name to retry (optional) */
+                task_name?: string | null;
+                /** @description Maximum number of tasks to retry */
+                max_retries?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_queue_api_v1_tasks_purge_post: {
+        parameters: {
+            query?: {
+                /** @description Queue name to purge */
+                queue_name?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_task_statistics_api_v1_tasks_stats_get: {
+        parameters: {
+            query?: {
+                /** @description Period in hours for statistics */
+                period_hours?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_TaskStatisticsData_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_monitoring_data_api_v1_tasks_monitor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_TaskMonitoringData_"];
+                };
+            };
+        };
+    };
+    get_my_profile_api_v1_users_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserResponse_"];
+                };
+            };
+        };
+    };
+    update_my_profile_api_v1_users_me_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_password_api_v1_users_me_change_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPasswordUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_password_reset_api_v1_users_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_password_reset_api_v1_users_password_reset_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_users__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                active_only?: boolean;
+                superuser_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_PaginatedResponse_UserResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_byid_api_v1_users_byid__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user_api_v1_users_byid__user_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_user_api_v1_users_byid__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_byname_api_v1_users_byname__user_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    promote_user_to_superuser_api_v1_users_byid__user_id__promote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    demote_user_from_superuser_api_v1_users_byid__user_id__demote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_user_account_api_v1_users_byid__user_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_user_account_api_v1_users_byid__user_id__deactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_reset_user_password_api_v1_users_byid__user_id__reset_password_post: {
+        parameters: {
+            query: {
+                /** @description New password */
+                new_password: string;
+            };
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_statistics_api_v1_users_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse_UserStatsResponse_"];
+                };
+            };
+        };
+    };
+}
