@@ -350,7 +350,7 @@ function DocumentDetails({ document, open, onClose }: DocumentDetailsProps): Rea
                 document.status === 'failed' ? 'error' :
                 document.status === 'processing' ? 'warning' : 'default'
               }
-              label={document.status.toUpperCase()}
+              label={document.status ? document.status.toUpperCase() : 'UNKNOWN'}
             />
           </Box>
           
@@ -548,7 +548,7 @@ export default function DocumentsPage(): React.ReactElement {
               document.status === 'failed' ? 'error' :
               document.status === 'processing' ? 'warning' : 'default'
             }
-            label={document.status.toUpperCase()}
+            label={document.status ? document.status.toUpperCase() : 'UNKNOWN'}
           />
           {document.status === 'processing' && document.processing_progress !== undefined && (
             <LinearProgress 

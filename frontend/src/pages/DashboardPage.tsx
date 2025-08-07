@@ -398,7 +398,7 @@ function SystemHealthOverview(): React.ReactElement {
     );
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'healthy':
         return <SuccessIcon color="success" />;
@@ -409,6 +409,11 @@ function SystemHealthOverview(): React.ReactElement {
     }
   };
 
+  // Safely get status with fallback
+  const safeStatus = health?.status || 'unknown';
+  const safeChecks = health?.checks || {};
+  const safeUptime = health?.uptime || 0;
+
   return (
     <Card>
       <CardContent>
@@ -418,10 +423,10 @@ function SystemHealthOverview(): React.ReactElement {
 
         <Stack spacing={2}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            {getStatusIcon(health.status)}
+            {getStatusIcon(health?.status)}
             <StatusChip
-              status={health.status === 'healthy' ? 'success' : health.status === 'degraded' ? 'warning' : 'error'}
-              label={health.status.toUpperCase()}
+              status={safeStatus === 'healthy' ? 'success' : safeStatus === 'degraded' ? 'warning' : 'error'}
+              label={safeStatus.toUpperCase()}
             />
           </Stack>
 
@@ -430,12 +435,12 @@ function SystemHealthOverview(): React.ReactElement {
               Service Status
             </Typography>
             <Stack spacing={1}>
-              {Object.entries(health.checks).map(([service, check]) => (
+              {Object.entries(safeChecks).map(([service, check]) => (
                 <Stack key={service} direction="row" alignItems="center" justifyContent="space-between">
                   <Typography variant="body2">{service}</Typography>
                   <StatusChip
-                    status={check.status === 'healthy' ? 'success' : check.status === 'degraded' ? 'warning' : 'error'}
-                    label={check.status}
+                    status={(check as any)?.status === 'healthy' ? 'success' : (check as any)?.status === 'degraded' ? 'warning' : 'error'}
+                    label={(check as any)?.status || 'unknown'}
                     showIcon={false}
                   />
                 </Stack>
@@ -444,7 +449,7 @@ function SystemHealthOverview(): React.ReactElement {
           </Box>
 
           <Typography variant="caption" color="text.secondary">
-            Uptime: {Math.floor(health.uptime / 3600)}h {Math.floor((health.uptime % 3600) / 60)}m
+            Uptime: {Math.floor(safeUptime / 3600)}h {Math.floor((safeUptime % 3600) / 60)}m
           </Typography>
         </Stack>
       </CardContent>
