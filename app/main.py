@@ -4,21 +4,6 @@ This module creates and configures the enterprise-grade FastAPI application with
 necessary middleware, exception handlers, API routes, and application lifecycle management
 for the AI Chatbot Platform.
 """
-- RESTful API design with consistent patterns and standards
-- Comprehensive OpenAPI documentation with schema validation
-- API versioning and backwards compatibility management
-- Request/response validation with detailed error reporting
-- Content negotiation and serialization with multiple formats
-- Integration with external APIs and microservices architecture
-
-Use Cases:
-- Production deployment in cloud environments with auto-scaling and load balancing
-- Development and testing environments with debugging and monitoring capabilities
-- Microservices architecture with service discovery and communication
-- API gateway integration with routing and traffic management
-- Container orchestration with Kubernetes and Docker deployment
-- CI/CD pipeline integration with automated testing and deployment
-"""
 
 from contextlib import asynccontextmanager
 from typing import Any, Dict

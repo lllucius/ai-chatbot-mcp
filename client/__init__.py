@@ -1,18 +1,9 @@
-"""
-AI Chatbot Platform Client Library and SDK.
+"""AI Chatbot Platform Client Library and SDK.
 
 This package provides comprehensive client-side functionality for the AI Chatbot Platform,
 including a powerful Python SDK for programmatic access and an interactive terminal-based
-client for direct user interaction. The client library enables seamless integration with
-the platform's API services and provides both development and production-ready tools.
-
-The package consists of two main components:
-1. AI Chatbot SDK - A comprehensive async Python library for API integration
-2. Interactive Terminal Client - A feature-rich CLI for direct platform interaction
-
-Key Features:
-    - Comprehensive async API client with full platform coverage
-    - Interactive terminal-based chatbot client with rich formatting
+client for seamless integration with the platform's API services.
+"""
     - Unified configuration management across all client components
     - Secure authentication and session management
     - Real-time streaming support for conversations and long-running operations

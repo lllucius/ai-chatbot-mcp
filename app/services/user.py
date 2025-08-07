@@ -1,33 +1,8 @@
-"""
-User service for comprehensive user management and profile operations.
+"""User service for comprehensive user management and profile operations.
 
 This service provides enterprise-grade user management functionality including CRUD
-operations, profile management, password operations, user analytics, and administrative
-controls. Implements advanced user lifecycle management with comprehensive validation,
-security controls, and audit logging for production-ready user management workflows.
-
-Key Features:
-- Comprehensive user profile management with embedded statistics and analytics
-- Secure password change operations with current password verification
-- Advanced user listing with flexible filtering, sorting, and pagination
-- User deletion with cascading cleanup and data integrity protection
-- System-wide user analytics and metrics for business intelligence
-- Administrative user creation with role and permission management
-
-User Management Capabilities:
-- User account creation with validation and conflict detection
-- Profile retrieval with embedded activity statistics and engagement metrics
-- User information updates with field-level validation and security controls
-- Password management with secure hashing and verification workflows
-- Account status management including activation and deactivation
-- User search and filtering with multiple criteria and performance optimization
-
-Security Features:
-- Password verification using secure comparison to prevent timing attacks
-- Input validation and sanitization to prevent injection attacks and data corruption
-- Comprehensive audit logging for user operations and security monitoring
-- Permission-based access control for administrative operations
-- Data integrity protection with proper transaction handling and rollback
+operations, profile management, password operations, and administrative controls.
+"""
 - Privacy protection with secure data handling and selective information exposure
 
 Administrative Operations:
