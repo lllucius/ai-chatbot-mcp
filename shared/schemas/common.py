@@ -3,48 +3,6 @@
 This module provides foundational schemas and standardized response formats using
 modern Pydantic V2 features with advanced validation and consistent API response structures.
 """
-- PaginationParams: Comprehensive pagination parameters with sorting and calculations
-- SearchParams: Advanced search parameters with algorithm selection and filtering
-- PaginatedResponse: Generic paginated response with type safety and metadata
-- Offset and limit calculations for database query optimization
-- Flexible sorting and ordering with validation and constraints
-
-Administrative Schemas:
-- DatabaseStatusResponse: Database administration and management information
-- DatabaseTablesResponse: Table listing and metadata for database operations
-- DatabaseMigrationsResponse: Migration status and history for schema management
-- DatabaseAnalysisResponse: Performance analysis and optimization recommendations
-- DatabaseQueryResponse: Custom query execution results and metrics
-
-File and Bulk Operations:
-- FileUploadResponse: File upload confirmation with metadata and validation
-- BulkOperationResponse: Bulk operation results with success and failure tracking
-- TokenResponse: JWT token information with expiration and security metadata
-- MetricsResponse: System metrics collection and performance monitoring
-- ConfigurationResponse: Application configuration and feature flags
-
-Use Cases:
-- Consistent API response formatting across all endpoints
-- Health monitoring and system diagnostics for operational oversight
-- Pagination support for large datasets and user interfaces
-- Error handling and validation reporting for user experience
-- Administrative operations with comprehensive status reporting
-- File upload and bulk operations with progress tracking
-
-Type Safety and Validation:
-- Generic type variables for type-safe pagination and responses
-- Comprehensive field validation with Pydantic V2 features
-- Custom JSON serialization for datetime and complex type handling
-- Input validation and sanitization for security and data integrity
-- Business rule enforcement through schema validation and constraints
-
-Security and Compliance:
-- Structured error reporting without sensitive information exposure
-- Input validation to prevent injection attacks and malicious data
-- Secure token handling with proper expiration and metadata
-- Audit-friendly response formats for compliance and monitoring
-- Data privacy controls for sensitive information handling
-"""
 
 import json
 from datetime import datetime, timezone
@@ -587,13 +545,6 @@ class SearchParams(PaginationParams):
     Combines pagination functionality with search algorithm selection and
     result limiting. Supports multiple search algorithms including vector,
     text, hybrid, and MMR (Maximum Marginal Relevance) approaches.
-
-    Attributes:
-        query: Search query string (1-500 characters)
-        algorithm: Search algorithm type (vector/text/hybrid/mmr)
-        threshold: Similarity threshold
-        filters: Additional search filters
-
     """
 
     query: Optional[str] = Field(

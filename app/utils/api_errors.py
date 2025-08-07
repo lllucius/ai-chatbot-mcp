@@ -1,5 +1,4 @@
-"""
-Common error handling utilities and decorators for API endpoints.
+"""Common error handling utilities and decorators for API endpoints.
 
 This module provides standardized error handling patterns to eliminate
 duplication across API endpoints and ensure consistent error responses.
@@ -50,6 +49,7 @@ def handle_api_errors(
         async def create_user_endpoint(user_data):
             # API endpoint implementation
             pass
+
     """
 
     def decorator(func: Callable) -> Callable:
@@ -220,8 +220,7 @@ def _format_error_response(
     include_details: bool = False,
     details: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """
-    Format consistent error response structure.
+    """Format consistent error response structure.
 
     Args:
         message: Human-readable error message
@@ -231,6 +230,7 @@ def _format_error_response(
 
     Returns:
         dict: Formatted error response
+
     """
     response = {
         "success": False,
@@ -268,6 +268,7 @@ def create_success_response(
             data={"user_id": 123},
             message="User created successfully"
         )
+
     """
     response = {
         "success": True,
@@ -303,5 +304,6 @@ def log_api_call(operation: str, **kwargs):
             execution_time=0.025,
             success=True
         )
+
     """
     logger.info(f"API call: {operation}", extra={"operation": operation, **kwargs})

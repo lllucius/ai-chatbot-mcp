@@ -13,27 +13,37 @@ from .admin_responses import utcnow
 
 
 class DatabaseUpgradeResult(BaseModel):
+    """Database upgrade operation result."""
+
     output: str = Field(..., description="Output from alembic upgrade command")
     revision: str = Field(..., description="Target revision")
 
 
 class DatabaseDowngradeResult(BaseModel):
+    """Database downgrade operation result."""
+
     output: str = Field(..., description="Output from alembic downgrade command")
     revision: str = Field(..., description="Target revision")
 
 
 class DatabaseBackupResult(BaseModel):
+    """Database backup operation result."""
+
     output_file: str = Field(..., description="Path to backup file created")
     file_size: str = Field(..., description="Size of backup file")
     schema_only: bool = Field(..., description="Whether only schema was backed up")
 
 
 class DatabaseRestoreResult(BaseModel):
+    """Database restore operation result."""
+
     message: str = Field(..., description="Status message")
     backup_file: str = Field(..., description="Restored backup file path")
 
 
 class VacuumResult(BaseModel):
+    """Database vacuum operation result."""
+
     message: str = Field(..., description="Status message")
     analyze: bool = Field(..., description="Whether ANALYZE was run after VACUUM")
 

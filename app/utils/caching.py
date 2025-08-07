@@ -1,5 +1,4 @@
-"""
-Simple in-memory caching utilities for performance optimization.
+"""Simple in-memory caching utilities for performance optimization.
 
 This module provides basic caching functionality for embeddings, API responses,
 and other frequently accessed data.
@@ -16,20 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleCache:
-    """
-    Thread-safe in-memory cache with TTL support.
+    """Thread-safe in-memory cache with TTL support.
 
     This is a simple implementation for basic caching needs.
     For production use, consider Redis or similar.
     """
 
     def __init__(self, default_ttl: int = 3600, max_size: int = 1000):
-        """
-        Initialize cache.
+        """Initialize cache.
 
         Args:
             default_ttl: Default time-to-live in seconds
             max_size: Maximum number of items to cache
+
         """
         self._cache: Dict[str, Dict[str, Any]] = {}
         self._lock = asyncio.Lock()
@@ -126,8 +124,7 @@ search_result_cache = SimpleCache(default_ttl=600, max_size=2000)  # 10 minute T
 
 
 def make_cache_key(*args, **kwargs) -> str:
-    """
-    Create a cache key from arguments.
+    """Create a cache key from arguments.
 
     Args:
         *args: Positional arguments
@@ -135,6 +132,7 @@ def make_cache_key(*args, **kwargs) -> str:
 
     Returns:
         str: SHA256 hash of the arguments
+
     """
     # Convert all arguments to strings and sort kwargs for consistency
     key_parts = [str(arg) for arg in args]
@@ -150,6 +148,7 @@ async def cached_function(cache: SimpleCache, ttl: Optional[int] = None):
     Args:
         cache: Cache instance to use
         ttl: Time-to-live override
+
     """
 
     def decorator(func):

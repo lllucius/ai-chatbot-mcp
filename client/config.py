@@ -128,31 +128,31 @@ class ClientConfig(BaseSettings):
 
     @property
     def effective_debug(self) -> bool:
-        """
-        Get effective debug mode considering both app and client settings.
+        """Get effective debug mode considering both app and client settings.
 
         Returns:
             bool: True if either app debug or client debug mode is enabled
+
         """
         return self.debug or self.client_debug_mode
 
     @property
     def is_development(self) -> bool:
-        """
-        Check if running in development mode.
+        """Check if running in development mode.
 
         Returns:
             bool: True if in development mode
+
         """
         return self.debug
 
     @property
     def is_production(self) -> bool:
-        """
-        Check if running in production mode.
+        """Check if running in production mode.
 
         Returns:
             bool: True if in production mode
+
         """
         return not self.debug
 
@@ -162,8 +162,7 @@ ChatbotConfig = ClientConfig
 
 
 def load_config(config_file: Optional[str] = None) -> ClientConfig:
-    """
-    Load configuration from environment variables and optional config file.
+    """Load configuration from environment variables and optional config file.
 
     Args:
         config_file: Optional path to configuration file (.env format)
@@ -178,6 +177,7 @@ def load_config(config_file: Optional[str] = None) -> ClientConfig:
         'http://localhost:8000'
         >>> print(config.client_username)
         None
+
     """
     if config_file and Path(config_file).exists():
         return ClientConfig(_env_file=config_file)
@@ -185,8 +185,7 @@ def load_config(config_file: Optional[str] = None) -> ClientConfig:
 
 
 def get_config_dir() -> Path:
-    """
-    Get the configuration directory for storing user settings.
+    """Get the configuration directory for storing user settings.
 
     Creates the directory if it doesn't exist.
 
@@ -197,6 +196,7 @@ def get_config_dir() -> Path:
         >>> config_dir = get_config_dir()
         >>> print(config_dir)
         /home/user/.config/ai-chatbot
+
     """
     config_dir = Path.home() / ".config" / "ai-chatbot"
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -204,8 +204,7 @@ def get_config_dir() -> Path:
 
 
 def get_default_token_file() -> str:
-    """
-    Get the default token file path for storing authentication tokens.
+    """Get the default token file path for storing authentication tokens.
 
     Returns:
         str: Full path to the default token file
@@ -214,13 +213,13 @@ def get_default_token_file() -> str:
         >>> token_file = get_default_token_file()
         >>> print(token_file)
         /home/user/.config/ai-chatbot/token
+
     """
     return str(get_config_dir() / "token")
 
 
 def get_default_backup_dir() -> str:
-    """
-    Get the default conversation backup directory.
+    """Get the default conversation backup directory.
 
     Creates the directory if it doesn't exist.
 
@@ -231,6 +230,7 @@ def get_default_backup_dir() -> str:
         >>> backup_dir = get_default_backup_dir()
         >>> print(backup_dir)
         /home/user/.config/ai-chatbot/conversations
+
     """
     backup_dir = get_config_dir() / "conversations"
     backup_dir.mkdir(parents=True, exist_ok=True)

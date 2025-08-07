@@ -1,5 +1,4 @@
-"""
-FastAPI dependencies for authentication, authorization, and service injection.
+"""FastAPI dependencies for authentication, authorization, and service injection.
 
 This module provides comprehensive reusable dependencies for FastAPI endpoints
 including user authentication, authorization checks, service injection, and
@@ -98,8 +97,7 @@ async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
-    """
-    Get current user if authenticated, None otherwise.
+    """Get current user if authenticated, None otherwise.
 
     This dependency allows endpoints to work with both authenticated
     and unauthenticated users.
@@ -110,6 +108,7 @@ async def get_current_user_optional(
 
     Returns:
         Optional[User]: Current user or None if not authenticated
+
     """
     if not credentials:
         return None
@@ -135,8 +134,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """
-    Get current authenticated user.
+    """Get current authenticated user.
 
     This dependency requires a valid JWT token and returns the current user.
     Raises HTTP 401 if authentication fails.
@@ -150,6 +148,7 @@ async def get_current_user(
 
     Raises:
         HTTPException: If authentication fails
+
     """
     try:
         auth_service = AuthService(db)
@@ -190,8 +189,7 @@ async def get_current_user(
 
 
 async def get_current_superuser(current_user: User = Depends(get_current_user)) -> User:
-    """
-    Get current user and verify superuser privileges.
+    """Get current user and verify superuser privileges.
 
     This dependency requires authentication and superuser privileges.
     Raises HTTP 403 if user is not a superuser.
@@ -204,6 +202,7 @@ async def get_current_superuser(current_user: User = Depends(get_current_user)) 
 
     Raises:
         HTTPException: If user is not a superuser
+
     """
     if not current_user.is_superuser:
         raise HTTPException(

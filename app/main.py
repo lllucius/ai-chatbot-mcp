@@ -52,8 +52,7 @@ logger = get_component_logger("main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Application lifespan manager for startup and shutdown procedures.
+    """Application lifespan manager for startup and shutdown procedures.
 
     Manages the complete lifecycle of the FastAPI application including
     database initialization, background service startup, monitoring systems,
@@ -83,6 +82,7 @@ async def lifespan(app: FastAPI):
     Note:
         Non-critical service failures are logged but don't prevent application startup.
         Background processor initialization is considered critical and will fail startup.
+
     """
     # Startup
     logger.info("Starting AI Chatbot Platform...")
@@ -155,8 +155,7 @@ app = FastAPI(
 
 # Custom OpenAPI schema
 def custom_openapi():
-    """
-    Generate custom OpenAPI schema with enhanced documentation and security.
+    """Generate custom OpenAPI schema with enhanced documentation and security.
 
     Creates a customized OpenAPI schema that includes additional branding,
     security scheme definitions, and enhanced API documentation for better
@@ -174,6 +173,7 @@ def custom_openapi():
     Note:
         The schema is cached after first generation to improve performance.
         Changes to the schema require application restart to take effect.
+
     """
     if app.openapi_schema:
         return app.openapi_schema

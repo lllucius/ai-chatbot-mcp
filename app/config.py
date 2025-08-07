@@ -14,8 +14,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """
-    Application settings with environment variable support.
+    """Application settings with environment variable support.
 
     All settings can be overridden using environment variables.
     For nested settings, use double underscores (e.g., DATABASE__URL).
@@ -218,8 +217,7 @@ class Settings(BaseSettings):
     @field_validator("allowed_headers", mode="before")
     @classmethod
     def parse_cors_headers(cls, v):
-        """
-        Parse CORS headers from string or list format.
+        """Parse CORS headers from string or list format.
 
         Handles multiple input formats for CORS headers configuration:
         - String with comma-separated values: "Content-Type,Authorization"
@@ -240,6 +238,7 @@ class Settings(BaseSettings):
             ["*"]
             >>> parse_cors_headers("")
             ["*"]
+
         """
         if isinstance(v, str):
             if not v.strip():

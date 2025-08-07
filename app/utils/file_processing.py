@@ -1,5 +1,4 @@
-"""
-File processing utilities for document content extraction using unstructured.
+"""File processing utilities for document content extraction using unstructured.
 
 This module provides functions for extracting text content from various
 file formats using the unstructured library for unified document processing
@@ -31,12 +30,12 @@ class FileProcessor:
     """
 
     def __init__(self, max_file_size: int = 50 * 1024 * 1024, chunk_size: int = 8192):
-        """
-        Initialize file processor with unstructured backend.
+        """Initialize file processor with unstructured backend.
 
         Args:
             max_file_size: Maximum file size to process (50MB default)
             chunk_size: Chunk size for streaming operations (8KB default)
+
         """
         self.max_file_size = max_file_size
         self.chunk_size = chunk_size
@@ -98,8 +97,7 @@ class FileProcessor:
             raise DocumentError("File is empty")
 
     async def extract_text(self, file_path: str, file_type: str) -> str:
-        """
-        Extract text content from a file using unstructured library.
+        """Extract text content from a file using unstructured library.
 
         Args:
             file_path: Path to the file
@@ -111,6 +109,7 @@ class FileProcessor:
         Raises:
             DocumentError: If extraction fails
             ValidationError: If file type not supported
+
         """
         # Validate file
         self._validate_file(file_path)
@@ -178,8 +177,7 @@ class FileProcessor:
     async def extract_text_streaming(
         self, file_path: str, file_type: str
     ) -> AsyncIterator[str]:
-        """
-        Extract text content from a file using streaming for large files.
+        """Extract text content from a file using streaming for large files.
 
         Args:
             file_path: Path to the file
@@ -191,6 +189,7 @@ class FileProcessor:
         Raises:
             DocumentError: If extraction fails
             ValidationError: If file type not supported
+
         """
         # Validate file
         self._validate_file(file_path)
@@ -236,6 +235,7 @@ class FileProcessor:
 
         Returns:
             str: Extracted text content
+
         """
         try:
             # Check file size before loading
@@ -280,8 +280,7 @@ class FileProcessor:
     async def extract_chunks(
         self, file_path: str, file_type: str, max_characters: int = 1000
     ) -> List[Dict[str, Any]]:
-        """
-        Extract structured chunks from a document using unstructured's chunking.
+        """Extract structured chunks from a document using unstructured's chunking.
 
         Args:
             file_path: Path to the file
@@ -294,6 +293,7 @@ class FileProcessor:
         Raises:
             DocumentError: If extraction fails
             ValidationError: If file type not supported
+
         """
         # Validate file
         self._validate_file(file_path)
@@ -353,14 +353,14 @@ class FileProcessor:
             raise DocumentError(f"Chunk extraction failed: {e}")
 
     def get_file_info(self, file_path: str) -> Dict[str, Any]:
-        """
-        Get file information and metadata.
+        """Get file information and metadata.
 
         Args:
             file_path: Path to the file
 
         Returns:
             dict: File information
+
         """
         try:
             file_path_obj = Path(file_path)
@@ -387,8 +387,7 @@ class FileProcessor:
             return {"filename": Path(file_path).name, "error": str(e)}
 
     def validate_file(self, file_path: str, max_size: int = 10485760) -> bool:
-        """
-        Validate file for processing.
+        """Validate file for processing.
 
         Args:
             file_path: Path to the file
@@ -399,6 +398,7 @@ class FileProcessor:
 
         Raises:
             ValidationError: If file is invalid
+
         """
         file_path_obj = Path(file_path)
 

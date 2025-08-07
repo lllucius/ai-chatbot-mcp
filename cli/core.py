@@ -1,78 +1,8 @@
-"""
-Core CLI commands for authentication, configuration, and system management.
+"""Core CLI commands for authentication, configuration, and system management.
 
 This module implements the foundational CLI commands that provide user authentication,
-system configuration management, health monitoring, and version information. These
-commands form the core functionality required for all other CLI operations and
-administrative tasks.
-
-The module uses AsyncTyper for modern async command handling and Rich for beautiful
-terminal output with progress indicators, panels, and formatted displays. All commands
-include comprehensive error handling and user feedback.
-
-Key Commands:
-    - login: User authentication with secure token management
-    - logout: Session termination and token cleanup
-    - whoami: Current user information and session status
-    - config: Configuration management and environment setup
-    - health: System health checks and connectivity testing
-    - version: Version information and build details
-
-Architecture Features:
-    - Async command processing for non-blocking operations
-    - Rich terminal interface with colors and formatting
-    - Secure credential handling with masked input
-    - Comprehensive error handling and user feedback
-    - Modular command structure for maintainability
-
-Security Features:
-    - Secure password input with masking
-    - JWT token-based authentication
-    - Automatic token validation and refresh
-    - Secure token storage with proper file permissions
-    - Session management and cleanup
-
-Performance Optimizations:
-    - Async operations for improved responsiveness
-    - Efficient API communication patterns
-    - Minimal startup overhead
-    - Fast command execution and feedback
-    - Optimized token validation
-
-Use Cases:
-    - Initial CLI setup and authentication
-    - Session management for development workflows
-    - System health monitoring and diagnostics
-    - Configuration validation and troubleshooting
-    - User account management and verification
-
-Example Usage:
-    ```bash
-    # Authenticate with the platform
-    ai-chatbot login --username admin
-
-    # Check current user and session
-    ai-chatbot whoami
-
-    # View system health and connectivity
-    ai-chatbot health
-
-    # Display version and build information
-    ai-chatbot version
-
-    # Manage configuration settings
-    ai-chatbot config show
-    ai-chatbot config set api_timeout 30
-
-    # Logout and cleanup
-    ai-chatbot logout
-    ```
-
-Integration:
-    - Works with all other CLI modules for authentication
-    - Integrates with CI/CD pipelines for automated operations
-    - Supports development and production environments
-    - Compatible with monitoring and alerting systems
+system configuration management, health monitoring, and version information for
+all CLI operations and administrative tasks.
 """
 
 import os
@@ -104,8 +34,7 @@ async def login(
         True, "--save-token/--no-save-token", help="Save authentication token"
     ),
 ):
-    """
-    Authenticate with the AI Chatbot Platform API and manage session tokens.
+    """Authenticate with the AI Chatbot Platform API and manage session tokens.
 
     Performs user authentication against the platform's authentication system,
     obtaining a JWT token for subsequent API operations. The command supports
@@ -153,6 +82,7 @@ async def login(
 
     Raises:
         SystemExit: On authentication failure or network errors
+
     """
     try:
         cli_manager = await get_cli_manager()
@@ -182,8 +112,7 @@ async def login(
 
 @core_app.async_command()
 async def logout():
-    """
-    Terminate current session and remove stored authentication tokens.
+    """Terminate current session and remove stored authentication tokens.
 
     Performs a secure logout operation by invalidating the current session
     on the server and removing all stored authentication tokens from local
@@ -224,6 +153,7 @@ async def logout():
         This command can be safely executed multiple times without error,
         even if no active session exists. It will always ensure clean
         authentication state.
+
     """
     try:
         cli_manager = await get_cli_manager()

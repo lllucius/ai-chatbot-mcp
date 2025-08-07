@@ -1,5 +1,4 @@
-"""
-Prompt management commands for the AI Chatbot Platform CLI.
+"""Prompt management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive prompt template management functionality
 through async operations and the AI Chatbot SDK. It enables developers and

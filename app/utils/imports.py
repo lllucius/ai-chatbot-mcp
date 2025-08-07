@@ -1,5 +1,4 @@
-"""
-Import organization standards and utilities for the AI Chatbot Platform.
+"""Import organization standards and utilities for the AI Chatbot Platform.
 
 This module defines import organization standards to ensure consistency
 across all Python files in the project. It provides guidelines for
@@ -81,14 +80,14 @@ THIRD_PARTY_MODULES = {
 
 
 def organize_imports(imports: List[str]) -> List[str]:
-    """
-    Organize imports according to project standards.
+    """Organize imports according to project standards.
 
     Args:
         imports: List of import statements
 
     Returns:
         List[str]: Organized import statements
+
     """
     standard_imports = []
     third_party_imports = []
@@ -122,14 +121,14 @@ def organize_imports(imports: List[str]) -> List[str]:
 
 
 def validate_import_order(file_path: str) -> List[str]:
-    """
-    Validate import organization in a Python file.
+    """Validate import organization in a Python file.
 
     Args:
         file_path: Path to Python file to validate
 
     Returns:
         List[str]: List of violations found
+
     """
     violations = []
 
