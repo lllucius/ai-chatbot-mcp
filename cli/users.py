@@ -76,7 +76,6 @@ Integration:
 
 import traceback
 from typing import Optional
-from uuid import UUID
 
 from async_typer import AsyncTyper
 from typer import Argument, Option
@@ -299,8 +298,11 @@ async def show(
         sdk = await get_sdk()
         user = None
         try:
-            user = await sdk.users.get_byid(UUID(username_or_id))
+            # Try parsing as integer ID first
+            user_id = int(username_or_id)
+            user = await sdk.users.get_byid(user_id)
         except ValueError:
+            # If not an integer, treat as username
             user = await sdk.users.get_byname(username_or_id)
 
         user_info = {

@@ -63,9 +63,7 @@ Use Cases:
 - Multi-tenant user management with proper isolation
 """
 
-import uuid
-
-# Import datetime utilities directly since we moved from app/
+import json
 from datetime import datetime
 from typing import List, Optional
 
@@ -601,7 +599,7 @@ class UserResponse(UserBase):
 
     Example:
         user_response = UserResponse(
-            id=uuid.uuid4(),
+            id=123,
             username="john_doe",
             email="john@example.com",
             full_name="John Doe",
@@ -613,15 +611,15 @@ class UserResponse(UserBase):
 
     """
 
-    id: uuid.UUID = Field(..., description="Unique user identifier")
+    id: int = Field(..., description="Unique user identifier")
     is_active: bool = Field(..., description="Whether the user account is active")
     is_superuser: bool = Field(..., description="Whether the user has admin privileges")
     created_at: datetime = Field(..., description="When the user account was created")
 
     def model_dump_json(self, **kwargs):
-        """Serialize model with comprehensive UUID and datetime handling for user responses.
+        """Serialize model with comprehensive ID and datetime handling for user responses.
 
-        Converts UUID and datetime fields to appropriate string representations for JSON
+        Converts datetime fields to appropriate string representations for JSON
         compatibility and frontend integration. Provides consistent formatting for user
         response data across all API endpoints with proper type conversion.
 
@@ -629,17 +627,17 @@ class UserResponse(UserBase):
             **kwargs: Additional arguments passed to model_dump for serialization control
 
         Returns:
-            str: JSON string with properly formatted UUID and datetime fields
+            str: JSON string with properly formatted datetime fields
 
         Serialization Features:
-            - UUID to string conversion for API compatibility and frontend integration
+            - Integer ID preserved in its original format for API compatibility
             - Datetime to ISO format conversion with timezone indicators
             - Consistent field formatting for all user response data
             - Frontend-compatible JSON structure for web and mobile applications
             - Support for nested object serialization with proper type handling
 
         Field Conversion:
-            - id: UUID converted to standard string representation
+            - id: Integer preserved in original format
             - created_at: Datetime converted to ISO format with 'Z' suffix
             - updated_at: Datetime converted to ISO format if present
             - Other fields: Preserved in their original format
@@ -652,21 +650,16 @@ class UserResponse(UserBase):
             - Integration with external systems requiring JSON format
 
         Example:
-            user = UserResponse(id=uuid.uuid4(), username="john", ...)
+            user = UserResponse(id=123, username="john", ...)
             json_output = user.model_dump_json()
-            # Result: {"id": "12345678-1234-5678-9012-123456789012",
-            #          "created_at": "2024-01-01T12:00:00Z", ...}
+            # Result: {"id": 123, "created_at": "2024-01-01T12:00:00Z", ...}
 
         """
         data = self.model_dump(**kwargs)
-        if "id" in data and data["id"] is not None:
-            if isinstance(data["id"], uuid.UUID):
-                data["id"] = str(data["id"])
         for field_name in ["created_at", "updated_at"]:
             if field_name in data and data[field_name] is not None:
                 if isinstance(data[field_name], datetime):
                     data[field_name] = data[field_name].isoformat() + "Z"
-        import json
 
         return json.dumps(data)
 

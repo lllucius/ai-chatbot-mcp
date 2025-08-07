@@ -57,7 +57,6 @@ Data Integrity:
 import logging
 from datetime import timedelta
 from typing import Any, Dict, List, Tuple
-from uuid import UUID
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -295,17 +294,17 @@ class UserService(BaseService):
             await self.db.rollback()
             raise ValidationError(f"User creation failed: {e}")
 
-    async def get_user_profile(self, user_id_or_username: UUID | str) -> User:
+    async def get_user_profile(self, user_id_or_username: int | str) -> User:
         """
         Get comprehensive user profile with embedded statistics.
 
-        Accepts either a UUID (for user.id lookup) or a string (for user.username lookup).
+        Accepts either an integer (for user.id lookup) or a string (for user.username lookup).
         Retrieves detailed user information including profile data and calculated statistics
         such as document count, conversation count, and total messages. This method provides
         a complete view of user activity and engagement.
 
         Args:
-            user_id_or_username: UUID for user ID lookup or string for username lookup
+            user_id_or_username: Integer for user ID lookup or string for username lookup
 
         Returns:
             User: Complete user profile with embedded statistics including:
@@ -332,8 +331,8 @@ class UserService(BaseService):
         try:
             await self._ensure_db_session()
 
-            # Determine whether input is UUID or string
-            if isinstance(user_id_or_username, UUID):
+            # Determine whether input is integer or string
+            if isinstance(user_id_or_username, int):
                 user_query = select(User).where(User.id == user_id_or_username)
             elif isinstance(user_id_or_username, str):
                 user_query = select(User).where(User.username == user_id_or_username)
@@ -388,7 +387,7 @@ class UserService(BaseService):
             self._log_operation_error(operation, e, identifier=identifier)
             raise
 
-    async def update_user(self, user_id: UUID, user_update: UserUpdate) -> User:
+    async def update_user(self, user_id: int, user_update: UserUpdate) -> User:
         """
         Update user profile information with validation.
 
@@ -489,7 +488,7 @@ class UserService(BaseService):
             raise
 
     async def change_password(
-        self, user_id: UUID, current_password: str, new_password: str
+        self, user_id: int, current_password: str, new_password: str
     ) -> bool:
         """
         Change user password with security verification.
@@ -611,7 +610,7 @@ class UserService(BaseService):
 
         return list(users), total
 
-    async def delete_user(self, user_id: UUID) -> bool:
+    async def delete_user(self, user_id: int) -> bool:
         """
         Delete a user and all associated data.
 
@@ -638,7 +637,7 @@ class UserService(BaseService):
         logger.info(f"User deleted: {user.username}")
         return True
 
-    async def get_user_by_id(self, user_id: UUID) -> User:
+    async def get_user_by_id(self, user_id: int) -> User:
         """
         Get user by ID.
 
@@ -659,7 +658,7 @@ class UserService(BaseService):
 
         return user
 
-    async def update_user_password(self, user_id: UUID, new_password: str) -> None:
+    async def update_user_password(self, user_id: int, new_password: str) -> None:
         """
         Update user password (admin operation).
 

@@ -5,11 +5,9 @@ in the AI chatbot platform, including user relationships, message tracking,
 and conversation metadata.
 """
 
-import uuid
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from sqlalchemy import JSON, Boolean, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import JSON, BigInteger, Boolean, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import BaseModelDB
@@ -25,7 +23,7 @@ class Conversation(BaseModelDB):
         title (Mapped[Optional[str]]): Conversation title for identification.
         is_active (Mapped[bool]): Whether the conversation is active.
         message_count (Mapped[int]): Cached count of messages in conversation.
-        user_id (Mapped[uuid.UUID]): Foreign key to conversation owner.
+        user_id (Mapped[int]): Foreign key to conversation owner.
         metainfo (Mapped[Optional[Dict[str, Any]]]): JSON metadata storage.
         messages (relationship): One-to-many relationship with Message entities.
         user (relationship): Many-to-one relationship with User entity.
@@ -39,8 +37,8 @@ class Conversation(BaseModelDB):
         Boolean, default=True, nullable=False, index=True
     )
     message_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -80,7 +78,7 @@ class Message(BaseModelDB):
         role (Mapped[str]): Message role identifier (user, assistant, system).
         content (Mapped[str]): The actual message text content.
         token_count (Mapped[int]): Number of tokens in the message for usage tracking.
-        conversation_id (Mapped[uuid.UUID]): Foreign key to parent conversation.
+        conversation_id (Mapped[int]): Foreign key to parent conversation.
         tool_calls (Mapped[Optional[Dict[str, Any]]]): JSON data for tool calls.
         tool_call_results (Mapped[Optional[Dict[str, Any]]]): JSON data for tool results.
         metainfo (Mapped[Optional[Dict[str, Any]]]): Additional message metadata.
@@ -93,8 +91,8 @@ class Message(BaseModelDB):
     role: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    conversation_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    conversation_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("conversations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

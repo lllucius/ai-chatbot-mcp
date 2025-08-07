@@ -271,7 +271,7 @@ Key models:
 
 This SDK is synchronized with the current API and supports:
 - Modern Pydantic V2 models
-- UUID-based identifiers
+- Integer-based identifiers
 - Registry-based features (prompts, profiles, tools)
 - Enhanced chat features with tool calling
 - Comprehensive error handling

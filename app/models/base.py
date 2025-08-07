@@ -1,19 +1,17 @@
 """Base database models and mixins for common functionality.
 
 This module provides foundation classes for all database models including:
-- BaseModelDB: Core database model with UUID primary keys and timestamps
-- UUIDMixin: UUID primary key generation
+- BaseModelDB: Core database model with BIGSERIAL primary keys and timestamps
+- BigSerialMixin: BIGSERIAL primary key generation
 - TimestampMixin: Automatic timestamp tracking
 
 All models inherit from these base classes to ensure consistent behavior,
 proper indexing, and audit trail capabilities.
 """
 
-import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import BigInteger, DateTime, text
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -42,27 +40,27 @@ class TimestampMixin:
     )
 
 
-class UUIDMixin:
-    """Provide UUID primary key generation for global uniqueness.
+class BigSerialMixin:
+    """Provide BIGSERIAL primary key generation for auto-incrementing IDs.
 
     Attributes:
-        id (Mapped[uuid.UUID]): Primary key with UUID4 generation.
+        id (Mapped[int]): Primary key with auto-incrementing BIGSERIAL.
 
     """
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True,
-        default=uuid.uuid4,
+        autoincrement=True,
         doc="Unique identifier for the record",
     )
 
 
-class BaseModelDB(DeclarativeBase, UUIDMixin, TimestampMixin):
-    """Base database model providing UUID primary keys and timestamp tracking.
+class BaseModelDB(DeclarativeBase, BigSerialMixin, TimestampMixin):
+    """Base database model providing BIGSERIAL primary keys and timestamp tracking.
 
-    Combines UUIDMixin and TimestampMixin to provide a foundation for all database
-    entities with automatic UUID primary key generation, timestamp tracking, and
+    Combines BigSerialMixin and TimestampMixin to provide a foundation for all database
+    entities with automatic BIGSERIAL primary key generation, timestamp tracking, and
     intelligent table name generation from class names.
     """
 
