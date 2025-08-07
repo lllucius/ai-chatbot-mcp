@@ -1,5 +1,4 @@
-"""
-Search service for comprehensive document retrieval and similarity search.
+"""Search service for comprehensive document retrieval and similarity search.
 
 This service provides advanced search capabilities for the AI chatbot platform
 including multiple search algorithms, caching optimization, and performance
@@ -60,6 +59,7 @@ class LRUCache:
 
         Args:
             capacity: Maximum number of items to store in cache.
+
         """
         self.cache: Dict[str, Tuple[float, List[float]]] = {}
         self.order: List[str] = []
@@ -73,6 +73,7 @@ class LRUCache:
 
         Returns:
             Cached value or None if not found.
+
         """
         if key in self.cache:
             self.order.remove(key)
@@ -86,6 +87,7 @@ class LRUCache:
         Args:
             key: Cache key to store.
             value: Value to cache.
+
         """
         if key in self.cache:
             self.order.remove(key)
@@ -100,40 +102,19 @@ embedding_cache = LRUCache(capacity=256)
 
 
 class SearchService(BaseService):
-    """
-    Service for comprehensive document search and retrieval operations.
+    """Service for comprehensive document search and retrieval operations.
 
     This service extends BaseService to provide advanced search capabilities
     including vector similarity search, text search, hybrid algorithms, and
-    Maximum Marginal Relevance (MMR) with enhanced caching, logging, and
-    performance optimization.
-
-    Search Algorithms:
-    - Vector Search: Pure semantic similarity using embeddings with PGVector
-    - Text Search: Traditional full-text search with PostgreSQL GIN indexing
-    - Hybrid Search: Weighted combination of vector and text search results
-    - MMR Search: Maximum Marginal Relevance for diverse result sets
-
-    Performance Features:
-    - LRU caching for query embeddings to reduce API calls
-    - Optimized database queries with proper indexing
-    - Configurable similarity thresholds and result limits
-    - User-based access control and security filtering
-
-    Responsibilities:
-    - Query embedding generation with caching optimization
-    - Multi-algorithm search execution with result ranking
-    - Search result formatting and metadata enrichment
-    - Performance monitoring and query optimization
-    - User access control and security enforcement
+    Maximum Marginal Relevance (MMR) with enhanced caching and optimization.
     """
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize search service with embedding capabilities.
+        """Initialize search service with embedding capabilities.
 
         Args:
             db: Database session for search operations
+
         """
         super().__init__(db, "search_service")
         self.embedding_service = EmbeddingService(db)
@@ -144,6 +125,7 @@ class SearchService(BaseService):
 
         Returns:
             True if BM25 is supported, False otherwise.
+
         """
         # Only check once
         if self.bm25_supported is not None:
@@ -190,14 +172,14 @@ class SearchService(BaseService):
     async def search_documents(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Search documents using the specified algorithm.
+        """Search documents using the specified algorithm.
 
         Args:
             request: Search request parameters
             user_id: User ID for access control
         Returns:
             List[DocumentChunkResponse]: Search results with metadata and similarity scores
+
         """
         try:
             if request.algorithm == "vector":
@@ -217,8 +199,7 @@ class SearchService(BaseService):
     async def _vector_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Vector similarity search using PGVector ivfflat index.
+        """Vector similarity search using PGVector ivfflat index.
 
         - Uses pre-filtering on user_id and other filters for index efficiency.
         - Returns similarity_score for each result.
@@ -297,8 +278,7 @@ class SearchService(BaseService):
     async def _text_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Full-text search using Postgres GIN index and tsvector column.
+        """Full-text search using Postgres GIN index and tsvector column.
 
         - Uses plainto_tsquery and tsvector column (content_tsv) for performance.
         - Uses BM25 ranking (if pg_bm25 is installed), else fallback to ts_rank_cd.
@@ -368,8 +348,7 @@ class SearchService(BaseService):
     async def _hybrid_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Hybrid search: combine normalized vector and text scores.
+        """Hybrid search: combine normalized vector and text scores.
 
         - Each result contains the method(s) that matched and their scores.
         - Score normalization/calibration to [0, 1].
@@ -404,8 +383,7 @@ class SearchService(BaseService):
     async def _mmr_search(
         self, request: DocumentSearchRequest, user_id: UUID
     ) -> List[DocumentChunkResponse]:
-        """
-        Maximum Marginal Relevance (MMR) for diverse, relevant results.
+        """Maximum Marginal Relevance (MMR) for diverse, relevant results.
 
         - Use cosine similarity between embeddings for diversity.
         - Returns results with method metadata.
@@ -470,8 +448,7 @@ class SearchService(BaseService):
         return dot / (norm1 * norm2)
 
     def _calculate_text_similarity(self, query: str, content: str) -> float:
-        """
-        Calculate simple text similarity score (Jaccard).
+        """Calculate simple text similarity score (Jaccard).
 
         Used as a fallback for diversity in MMR if embeddings are missing.
         """
@@ -488,8 +465,7 @@ class SearchService(BaseService):
     async def get_similar_chunks(
         self, chunk_id: int, user_id: UUID, limit: int = 5
     ) -> List[DocumentChunkResponse]:
-        """
-        Find chunks similar to a given chunk using vector ANN search.
+        """Find chunks similar to a given chunk using vector ANN search.
 
         Args:
             chunk_id: Reference chunk ID
@@ -497,6 +473,7 @@ class SearchService(BaseService):
             limit: Maximum results to return
         Returns:
             List[DocumentChunkResponse]: Similar chunks
+
         """
         try:
             chunk_result = await self.db.execute(

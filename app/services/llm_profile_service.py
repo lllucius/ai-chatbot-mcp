@@ -1,5 +1,4 @@
-"""
-LLM Profile service for managing LLM parameter configurations.
+"""LLM Profile service for managing LLM parameter configurations.
 
 This service provides functionality to manage LLM parameter profiles,
 track their usage, and support default profile handling.
@@ -20,11 +19,11 @@ class LLMProfileService(BaseService):
     """Service for managing LLM parameter profiles and their usage with dependency injection."""
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize LLM profile service with database session.
+        """Initialize LLM profile service with database session.
 
         Args:
             db: Database session for LLM profile operations
+
         """
         super().__init__(db, "llm_profile_service")
 

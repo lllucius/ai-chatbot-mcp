@@ -1,5 +1,4 @@
-"""
-Base service class with common functionality for enterprise service architecture.
+"""Base service class with common functionality for enterprise service architecture.
 
 This module provides the foundational BaseService class that implements common
 patterns, utilities, and infrastructure used across all service classes in the
@@ -68,109 +67,55 @@ ModelType = TypeVar("ModelType")
 
 
 class BaseService:
-    """
-    Base service class with common functionality for enterprise service architecture.
+    """Base service class with common functionality for enterprise service architecture.
 
     This base class provides foundational infrastructure used across all service
-    classes in the AI Chatbot Platform. Implements common patterns for database
-    management, structured logging, error handling, and operation tracking to
-    ensure consistent service architecture and eliminate code duplication across
-    the application.
-
-    Service Infrastructure:
-    - Standardized database session management with async connectivity and transaction control
-    - Comprehensive structured logging with consistent format and audit trails
-    - Common operation lifecycle tracking with start, success, and error states
-    - Database connection validation and reliability management
-    - Performance monitoring and metrics collection for operational visibility
-    - Integration support for external monitoring and observability systems
-
-    Logging Capabilities:
-    - Structured logging with consistent metadata and context capture
-    - Operation lifecycle tracking for debugging and performance analysis
-    - Security audit logging for compliance and monitoring requirements
-    - Error tracking and exception handling with comprehensive context
-    - Performance metrics and timing information for optimization
-    - Integration with external logging systems and alerting mechanisms
-
-    Database Management:
-    - Async database session handling with proper connection lifecycle
-    - Transaction control and rollback handling for data integrity
-    - Connection validation and reconnection logic for service reliability
-    - Database error handling and recovery mechanisms
-    - Query optimization and performance monitoring capabilities
-    - Support for connection pooling and resource management
-
-    Attributes:
-        db: Async database session for service operations with transaction support
-        logger: Structured logger instance for comprehensive service logging
-        _logger_name: Service-specific logger name for identification and filtering
-
-    Use Cases:
-        - Foundation for all business logic services in the application
-        - Standardized service architecture for consistent patterns and infrastructure
-        - Common base for authentication, user management, and data services
-        - Integration foundation for external service communication and APIs
-        - Framework for testing, mocking, and service isolation in development
-
-    Example:
-        class UserService(BaseService):
-            def __init__(self, db: AsyncSession):
-                super().__init__(db, "user_service")
-
-            async def get_user(self, user_id: UUID) -> User:
-                self._log_operation_start("get_user", user_id=str(user_id))
-                try:
-                    # Service logic here
-                    self._log_operation_success("get_user", user_id=str(user_id))
-                    return user
-                except Exception as e:
-                    self._log_operation_error("get_user", e, user_id=str(user_id))
-                    raise
+    classes in the AI Chatbot Platform, implementing common patterns for database
+    management, structured logging, error handling, and operation tracking.
     """
 
     def __init__(self, db: AsyncSession, logger_name: Optional[str] = None):
-        """
-        Initialize base service.
+        """Initialize base service.
 
         Args:
             db: Database session for service operations
             logger_name: Optional custom logger name, defaults to class name
+
         """
         self.db = db
         self._logger_name = logger_name or self.__class__.__name__.lower()
         self.logger = StructuredLogger(self._logger_name)
 
     def _log_operation_start(self, operation: str, **kwargs):
-        """
-        Log the start of a service operation.
+        """Log the start of a service operation.
 
         Args:
             operation: Name of the operation being started
             **kwargs: Additional context data for logging
+
         """
         self.logger.info(f"Starting {operation}", operation=operation, **kwargs)
 
     def _log_operation_success(self, operation: str, **kwargs):
-        """
-        Log successful completion of a service operation.
+        """Log successful completion of a service operation.
 
         Args:
             operation: Name of the operation that completed
             **kwargs: Additional context data for logging
+
         """
         self.logger.info(
             f"Completed {operation}", operation=operation, status="success", **kwargs
         )
 
     def _log_operation_error(self, operation: str, error: Exception, **kwargs):
-        """
-        Log error during service operation.
+        """Log error during service operation.
 
         Args:
             operation: Name of the operation that failed
             error: Exception that occurred
             **kwargs: Additional context data for logging
+
         """
         self.logger.error(
             f"Failed {operation}: {str(error)}",
@@ -182,8 +127,7 @@ class BaseService:
         )
 
     async def _ensure_db_session(self):
-        """
-        Ensure database session is available and valid.
+        """Ensure database session is available and valid.
 
         This method can be extended by subclasses to add additional
         database session validation or setup logic.
@@ -196,8 +140,7 @@ class BaseService:
     def _validate_input(
         self, input_data: dict, required_fields: Optional[List[str]] = None
     ) -> dict:
-        """
-        Validate input data for service operations.
+        """Validate input data for service operations.
 
         Args:
             input_data: Data to validate
@@ -208,6 +151,7 @@ class BaseService:
 
         Raises:
             ValueError: If validation fails
+
         """
         if required_fields:
             missing_fields = [
@@ -226,8 +170,7 @@ class BaseService:
         entity_id: UUID,
         error_message: Optional[str] = None,
     ) -> ModelType:
-        """
-        Get an entity by ID with standardized error handling.
+        """Get an entity by ID with standardized error handling.
 
         Args:
             model: SQLAlchemy model class
@@ -239,6 +182,7 @@ class BaseService:
 
         Raises:
             NotFoundError: If entity not found
+
         """
         result = await self.db.execute(select(model).where(model.id == entity_id))
         entity = result.scalar_one_or_none()
@@ -258,8 +202,7 @@ class BaseService:
         field_value: Any,
         error_message: Optional[str] = None,
     ) -> ModelType:
-        """
-        Get an entity by a specific field with standardized error handling.
+        """Get an entity by a specific field with standardized error handling.
 
         Args:
             model: SQLAlchemy model class
@@ -272,6 +215,7 @@ class BaseService:
 
         Raises:
             NotFoundError: If entity not found
+
         """
         field = getattr(model, field_name)
         result = await self.db.execute(select(model).where(field == field_value))
@@ -294,8 +238,7 @@ class BaseService:
         size: int = 20,
         order_by: Any = None,
     ) -> tuple[List[ModelType], int]:
-        """
-        List entities with filters and pagination.
+        """List entities with filters and pagination.
 
         Args:
             model: SQLAlchemy model class
@@ -306,6 +249,7 @@ class BaseService:
 
         Returns:
             Tuple of (entities list, total count)
+
         """
         # Build base query
         query = select(model)
@@ -342,8 +286,7 @@ class BaseService:
         page: int = 1,
         size: int = 20,
     ) -> tuple[List[ModelType], int]:
-        """
-        Search entities across multiple fields.
+        """Search entities across multiple fields.
 
         Args:
             model: SQLAlchemy model class
@@ -355,6 +298,7 @@ class BaseService:
 
         Returns:
             Tuple of (entities list, total count)
+
         """
         search_conditions = []
         search_pattern = f"%{search_term}%"
@@ -379,8 +323,7 @@ class BaseService:
     async def _update_entity(
         self, entity: ModelType, update_data: Dict[str, Any], exclude_none: bool = True
     ) -> ModelType:
-        """
-        Update an entity with provided data.
+        """Update an entity with provided data.
 
         Args:
             entity: Entity to update
@@ -389,6 +332,7 @@ class BaseService:
 
         Returns:
             Updated entity
+
         """
         for field, value in update_data.items():
             if exclude_none and value is None:
@@ -401,14 +345,14 @@ class BaseService:
         return entity
 
     async def _delete_entity(self, entity: ModelType) -> bool:
-        """
-        Delete an entity.
+        """Delete an entity.
 
         Args:
             entity: Entity to delete
 
         Returns:
             True if deleted successfully
+
         """
         await self.db.delete(entity)
         await self.db.commit()
@@ -417,8 +361,7 @@ class BaseService:
     async def _bulk_update(
         self, model: Type[ModelType], filters: List[Any], update_data: Dict[str, Any]
     ) -> int:
-        """
-        Perform bulk update on entities matching filters.
+        """Perform bulk update on entities matching filters.
 
         Args:
             model: SQLAlchemy model class
@@ -427,6 +370,7 @@ class BaseService:
 
         Returns:
             Number of updated records
+
         """
         query = update(model).values(**update_data)
         if filters:

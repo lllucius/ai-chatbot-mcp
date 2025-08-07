@@ -1,32 +1,8 @@
 """User service for comprehensive user management and profile operations.
 
 This service provides enterprise-grade user management functionality including CRUD
-operations, profile management, password operations, and administrative controls.
-"""
-- Privacy protection with secure data handling and selective information exposure
-
-Administrative Operations:
-- User listing with pagination and filtering for management interfaces
-- Bulk user operations with batch processing and error handling
-- User statistics and analytics for system monitoring and business intelligence
-- Account management including activation, deactivation, and role assignment
-- Data export and reporting capabilities for compliance and analysis
-- Integration with external systems for user provisioning and synchronization
-
-Use Cases:
-- User registration and onboarding workflows in web and mobile applications
-- Profile management and self-service account operations
-- Administrative user management and system administration
-- User analytics and engagement monitoring for business intelligence
-- Compliance reporting and audit trail management
-- Integration with external identity providers and user management systems
-
-Data Integrity:
-- Comprehensive validation for all user data fields and business rules
-- Transactional operations with proper rollback handling for data consistency
-- Foreign key constraint handling for related data and cascading operations
-- Duplicate detection and conflict resolution for user uniqueness
-- Data sanitization and normalization for consistent storage and retrieval
+operations, profile management, password operations, and administrative controls
+with privacy protection and secure data handling.
 """
 
 import logging
@@ -50,98 +26,22 @@ logger = logging.getLogger(__name__)
 
 
 class UserService(BaseService):
-    """
-    Service for comprehensive user management and profile operations.
+    """Service for comprehensive user management and profile operations.
 
     This service extends BaseService to provide enterprise-grade user management
     functionality including CRUD operations, profile management, analytics generation,
-    and administrative controls. Implements advanced user lifecycle management with
-    comprehensive validation, security controls, and audit logging for production
-    environments.
-
-    User Management Capabilities:
-    - User account creation with comprehensive validation and conflict detection
-    - Profile retrieval with embedded activity statistics and engagement metrics
-    - User information updates with field-level validation and security controls
-    - Password management with secure verification and complexity requirements
-    - Account status management including activation, deactivation, and role assignment
-    - User search and filtering with multiple criteria and performance optimization
-
-    Security Features:
-    - Secure password hashing using industry-standard bcrypt algorithms
-    - Password verification with protection against timing attacks
-    - Input validation and sanitization to prevent injection attacks
-    - Comprehensive audit logging for user operations and security monitoring
-    - Permission-based access control for administrative operations
-    - Data integrity protection with proper transaction handling
-
-    Administrative Operations:
-    - User listing with pagination, filtering, and sorting capabilities
-    - Bulk user operations with batch processing and error handling
-    - User statistics and analytics for system monitoring and business intelligence
-    - Account management including role assignment and permission control
-    - Data export and reporting capabilities for compliance and analysis
-    - Integration support for external systems and identity providers
-
-    Responsibilities:
-    - User profile retrieval with comprehensive statistics and activity metrics
-    - User information updates with validation and business rule enforcement
-    - Password change operations with security verification and complexity validation
-    - User listing with flexible filtering, sorting, and pagination for management
-    - User deletion with proper cleanup and cascading data integrity protection
-    - System-wide user analytics and reporting for operational monitoring
-
-    Use Cases:
-    - User registration and onboarding workflows in web and mobile applications
-    - Profile management and self-service account operations for end users
-    - Administrative user management and system administration interfaces
-    - User analytics and engagement monitoring for business intelligence
-    - Compliance reporting and audit trail management for regulatory requirements
-    - Integration with external identity providers and user management systems
-
-    Example:
-        user_service = UserService(db_session)
-
-        # Create new user account
-        user = await user_service.create_user("john_doe", "john@example.com", "password")
-
-        # Get user profile with statistics
-        profile = await user_service.get_user_profile(user.id)
-
-        # Update user information
-        await user_service.update_user(user.id, UserUpdate(full_name="John Doe"))
-
-        # List users with pagination
-        users = await user_service.list_users(skip=0, limit=10)
+    and administrative controls with comprehensive validation and security.
     """
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize user service with database session and operational configuration.
+        """Initialize user service with database session and operational configuration.
 
         Sets up the user service with database connectivity and logging capabilities
-        for comprehensive user management operations. Initializes service-specific
-        configuration and monitoring for user lifecycle management workflows.
+        for comprehensive user management operations.
 
         Args:
-            db: Database session for user operations, profile management,
-                and analytics with proper transaction handling and rollback support
+            db: Database session for user operations and analytics
 
-        Security Notes:
-            - Database session configured with proper isolation and security controls
-            - Structured logging initialized for audit trails and security monitoring
-            - Service configuration follows principle of least privilege
-            - Transaction handling ensures data integrity and consistency
-
-        Use Cases:
-            - Service initialization in user management API endpoints
-            - Dependency injection for user-related application components
-            - Setup for user administration and profile management workflows
-            - Integration with FastAPI dependency injection and session management
-
-        Example:
-            user_service = UserService(db_session)
-            # Service ready for user management operations with full configuration
         """
         super().__init__(db, "user_service")
 
@@ -153,69 +53,24 @@ class UserService(BaseService):
         full_name: str = None,
         is_superuser: bool = False,
     ) -> User:
-        """
-        Create a new user account with comprehensive validation and security controls.
+        """Create a new user account with comprehensive validation and security controls.
 
         Creates a new user account with secure password hashing, uniqueness validation,
-        and comprehensive conflict detection. Implements robust validation to prevent
-        duplicate accounts and ensure data integrity with proper error handling and
-        audit logging for administrative user creation workflows.
+        and comprehensive conflict detection for administrative user creation workflows.
 
         Args:
-            username: Unique username for the user account with validation for
-                     character restrictions, length limits, and uniqueness
-            email: User's email address with format validation and uniqueness checking
-            password: Plain text password that will be securely hashed using bcrypt
-                     with configurable work factor for enhanced security
-            full_name: Optional full name for profile display and user identification
-            is_superuser: Whether the user should have superuser privileges for
-                         administrative operations and system management
+            username: Unique username for the user account
+            email: User's email address with format validation
+            password: Plain text password that will be securely hashed
+            full_name: Optional full name for profile display
+            is_superuser: Whether the user should have superuser privileges
 
         Returns:
-            User: Newly created user object containing the following properties:
-                - id: Unique UUID identifier for the user account
-                - username: Validated and sanitized username for login
-                - email: Validated email address for account management
-                - full_name: Optional full name for profile display
-                - is_active: Account status set to True for immediate access
-                - is_superuser: Administrative privilege flag
-                - created_at: Timestamp of account creation for audit tracking
-                - hashed_password: Securely hashed password using bcrypt
+            User: Newly created user object with secure password hash
 
         Raises:
-            ValidationError: Raised in the following scenarios:
-                - Username already exists in the system (case-insensitive check)
-                - Email address already registered to another account
-                - Invalid email format or domain validation failure
-                - Password doesn't meet security complexity requirements
-                - Username contains invalid characters or exceeds length limits
-                - User creation data fails schema validation or business rules
-                - Database constraint violations or transaction failures
+            ValidationError: If username/email already exists or validation fails
 
-        Security Notes:
-            - Password is hashed using bcrypt with configurable work factor for security
-            - Username and email uniqueness validation prevents account conflicts
-            - Input sanitization prevents injection attacks and data corruption
-            - Audit logging captures user creation attempts for security monitoring
-            - Administrative privilege assignment follows principle of least privilege
-            - Database transactions ensure data consistency and rollback on failures
-
-        Use Cases:
-            - Administrative user creation for enterprise and organizational accounts
-            - Bulk user import processes with validation and conflict resolution
-            - User provisioning for integration with external systems and services
-            - Account creation workflows with role and permission assignment
-            - System user creation for automated processes and service accounts
-
-        Example:
-            user = await user_service.create_user(
-                username="admin_user",
-                email="admin@example.com",
-                password="SecureAdminPass123!",
-                full_name="Administrator",
-                is_superuser=True
-            )
-            # Returns User object with secure password hash and admin privileges
         """
         operation = "create_user"
         self._log_operation_start(operation, username=username, email=email)
@@ -270,8 +125,7 @@ class UserService(BaseService):
             raise ValidationError(f"User creation failed: {e}")
 
     async def get_user_profile(self, user_id_or_username: int | str) -> User:
-        """
-        Get comprehensive user profile with embedded statistics.
+        """Get comprehensive user profile with embedded statistics.
 
         Accepts either an integer (for user.id lookup) or a string (for user.username lookup).
         Retrieves detailed user information including profile data and calculated statistics
@@ -298,6 +152,7 @@ class UserService(BaseService):
             >>> print(f"User {profile.username} has {profile.document_count} documents")
             >>> profile = await user_service.get_user_profile("johndoe")
             >>> print(f"User {profile.username} has {profile.document_count} documents")
+
         """
         operation = "get_user_profile"
         identifier = str(user_id_or_username)
@@ -363,8 +218,7 @@ class UserService(BaseService):
             raise
 
     async def update_user(self, user_id: int, user_update: UserUpdate) -> User:
-        """
-        Update user profile information with validation.
+        """Update user profile information with validation.
 
         Updates user profile fields with comprehensive validation including
         email uniqueness checks and proper error handling. Only non-None
@@ -386,6 +240,7 @@ class UserService(BaseService):
             >>> update_data = UserUpdate(email="new@example.com", full_name="New Name")
             >>> updated_user = await user_service.update_user(user_id, update_data)
             >>> print(f"Updated user email to: {updated_user.email}")
+
         """
         operation = "update_user"
         update_fields = {
@@ -465,8 +320,7 @@ class UserService(BaseService):
     async def change_password(
         self, user_id: int, current_password: str, new_password: str
     ) -> bool:
-        """
-        Change user password with security verification.
+        """Change user password with security verification.
 
         Securely updates user password after verifying the current password.
         This method implements proper security practices including current
@@ -496,6 +350,7 @@ class UserService(BaseService):
             ...     user_id, "old_password", "new_secure_password123"
             ... )
             >>> print(f"Password change: {'successful' if success else 'failed'}")
+
         """
         operation = "change_password"
         self._log_operation_start(operation, user_id=str(user_id))
@@ -546,8 +401,7 @@ class UserService(BaseService):
         active_only: bool = False,
         superuser_only: bool = False,
     ) -> Tuple[List[User], int]:
-        """
-        List users with pagination and filtering.
+        """List users with pagination and filtering.
 
         Args:
             page: Page number (1-based)
@@ -557,6 +411,7 @@ class UserService(BaseService):
 
         Returns:
             Tuple[List[User], int]: List of users and total count
+
         """
         # Build filters
         filters = []
@@ -586,8 +441,7 @@ class UserService(BaseService):
         return list(users), total
 
     async def delete_user(self, user_id: int) -> bool:
-        """
-        Delete a user and all associated data.
+        """Delete a user and all associated data.
 
         Args:
             user_id: User ID to delete
@@ -597,6 +451,7 @@ class UserService(BaseService):
 
         Raises:
             NotFoundError: If user not found
+
         """
         # Get user
         user_result = await self.db.execute(select(User).where(User.id == user_id))
@@ -613,8 +468,7 @@ class UserService(BaseService):
         return True
 
     async def get_user_by_id(self, user_id: int) -> User:
-        """
-        Get user by ID.
+        """Get user by ID.
 
         Args:
             user_id: User ID to retrieve
@@ -624,6 +478,7 @@ class UserService(BaseService):
 
         Raises:
             NotFoundError: If user not found
+
         """
         user_result = await self.db.execute(select(User).where(User.id == user_id))
         user = user_result.scalar_one_or_none()
@@ -634,8 +489,7 @@ class UserService(BaseService):
         return user
 
     async def update_user_password(self, user_id: int, new_password: str) -> None:
-        """
-        Update user password (admin operation).
+        """Update user password (admin operation).
 
         Args:
             user_id: User ID to update password for
@@ -643,6 +497,7 @@ class UserService(BaseService):
 
         Raises:
             NotFoundError: If user not found
+
         """
         user = await self.get_user_by_id(user_id)
 
@@ -656,11 +511,11 @@ class UserService(BaseService):
         logger.info(f"Password updated for user: {user.username}")
 
     async def request_password_reset(self, email: str) -> None:
-        """
-        Request password reset for user.
+        """Request password reset for user.
 
         Args:
             email: Email address for password reset
+
         """
         # Check if user exists
         result = await self.db.execute(select(User).where(User.email == email))
@@ -680,12 +535,12 @@ class UserService(BaseService):
         # of requiring administrative intervention for password resets
 
     async def confirm_password_reset(self, token: str, new_password: str) -> None:
-        """
-        Confirm password reset with token.
+        """Confirm password reset with token.
 
         Args:
             token: Password reset token
             new_password: New password to set
+
         """
         # In a real implementation, this would validate the token and update the password
         # For now, we'll require administrative processing as per current design
@@ -699,11 +554,11 @@ class UserService(BaseService):
         # This maintains the security model established in the auth API
 
     async def get_user_statistics(self) -> Dict[str, Any]:
-        """
-        Get system-wide user statistics.
+        """Get system-wide user statistics.
 
         Returns:
             dict: User statistics
+
         """
         # Total users
         total_result = await self.db.execute(select(func.count(User.id)))

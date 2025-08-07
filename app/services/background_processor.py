@@ -1,22 +1,8 @@
-"""
-Background processing service for document processing and embedding generation.
+"""Background processing service for document processing and embedding generation.
 
-This service provides asynchronous background processing capabilities for:
-- Document text extraction and preprocessing
-- Embedding generation for document chunks
-- Progress tracking and status updates
-- Error handling and retry mechanisms
-- Queue management for processing tasks
-
-Key Features:
-- Async task processing with concurrency control
-- Progress tracking and status updates
-- Error handling with retry logic
-- Memory-efficient processing of large documents
-- Configurable processing parameters
-- Comprehensive logging and monitoring
-
-Current Date: 2025-01-20
+This service provides asynchronous background processing capabilities for document
+text extraction and preprocessing, embedding generation for document chunks, with
+progress tracking, error handling, and retry mechanisms.
 """
 
 import asyncio
@@ -72,6 +58,7 @@ class ProcessingTask:
             priority: Task priority (lower numbers = higher priority).
             max_retries: Maximum number of retry attempts.
             retry_delay: Delay in seconds between retries.
+
         """
         self.task_id = task_id
         self.document_id = document_id
@@ -93,8 +80,7 @@ class ProcessingTask:
 
 
 class BackgroundProcessor(BaseService):
-    """
-    Background processing service for document processing and embedding generation.
+    """Background processing service for document processing and embedding generation.
 
     This service manages asynchronous processing of documents including text extraction,
     chunking, preprocessing, and embedding generation. It provides progress tracking,
@@ -107,8 +93,7 @@ class BackgroundProcessor(BaseService):
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
     ):
-        """
-        Initialize the background processor.
+        """Initialize the background processor.
 
         Each task will create its own isolated database session to ensure
         proper isolation and avoid session leakage between concurrent tasks.
@@ -117,6 +102,7 @@ class BackgroundProcessor(BaseService):
             max_concurrent_tasks: Maximum number of concurrent processing tasks
             chunk_size: Default chunk size for text processing
             chunk_overlap: Default chunk overlap for text processing
+
         """
         # Initialize without a database session since each task creates its own
         self._logger_name = "background_processor"
@@ -201,8 +187,7 @@ class BackgroundProcessor(BaseService):
         priority: int = 5,
         processing_config: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """
-        Queue a document for background processing.
+        """Queue a document for background processing.
 
         Args:
             document_id: Document ID to process
@@ -211,6 +196,7 @@ class BackgroundProcessor(BaseService):
 
         Returns:
             str: Task ID for tracking
+
         """
         task_id = str(uuid.uuid4())
 
@@ -233,14 +219,14 @@ class BackgroundProcessor(BaseService):
         return task_id
 
     async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get the status of a background task.
+        """Get the status of a background task.
 
         Args:
             task_id: Task ID to check
 
         Returns:
             Optional[Dict[str, Any]]: Task status information or None if not found
+
         """
         task = self.active_tasks.get(task_id)
         if not task:
@@ -270,14 +256,14 @@ class BackgroundProcessor(BaseService):
         }
 
     async def cancel_task(self, task_id: str) -> bool:
-        """
-        Cancel a background task.
+        """Cancel a background task.
 
         Args:
             task_id: Task ID to cancel
 
         Returns:
             bool: True if task was cancelled, False if not found
+
         """
         task = self.active_tasks.get(task_id)
         if not task:
@@ -319,14 +305,14 @@ class BackgroundProcessor(BaseService):
         logger.info("Background processor worker stopped")
 
     async def _process_task(self, task: ProcessingTask):
-        """
-        Process a single task with its own isolated database session.
+        """Process a single task with its own isolated database session.
 
         Each task gets a fresh database session to ensure complete isolation
         between concurrent tasks and prevent session leakage or stale connections.
 
         Args:
             task: Task to process
+
         """
         from ..database import AsyncSessionLocal
         
@@ -376,12 +362,12 @@ class BackgroundProcessor(BaseService):
             self.active_tasks.pop(task.task_id, None)
 
     async def _process_document_task(self, task: ProcessingTask, db):
-        """
-        Process a document processing task.
+        """Process a document processing task.
 
         Args:
             task: Document processing task
             db: AsyncSession for database operations
+
         """
         # Get document
         result = await db.execute(
@@ -541,13 +527,13 @@ class BackgroundProcessor(BaseService):
             raise
 
     async def _handle_task_error(self, task: ProcessingTask, error: Exception, db=None):
-        """
-        Handle task processing error with retry logic.
+        """Handle task processing error with retry logic.
 
         Args:
             task: Failed task
             error: Exception that occurred
             db: Optionally, the AsyncSession for error handling DB updates
+
         """
         task.retries += 1
         task.error_message = str(error)
@@ -599,11 +585,11 @@ class BackgroundProcessor(BaseService):
             )
 
     async def get_queue_status(self) -> Dict[str, Any]:
-        """
-        Get the current status of the task queue.
+        """Get the current status of the task queue.
 
         Returns:
             Dict[str, Any]: Queue status information
+
         """
         return {
             "queue_size": self.task_queue.qsize(),
@@ -615,11 +601,11 @@ class BackgroundProcessor(BaseService):
         }
 
     async def cleanup_completed_tasks(self, max_age_hours: int = 24):
-        """
-        Clean up old completed task results.
+        """Clean up old completed task results.
 
         Args:
             max_age_hours: Maximum age of completed tasks to keep (in hours)
+
         """
         cutoff_time = datetime.utcnow().timestamp() - (max_age_hours * 3600)
 
@@ -641,14 +627,14 @@ _background_processor: Optional[BackgroundProcessor] = None
 
 
 async def get_background_processor() -> BackgroundProcessor:
-    """
-    Get the global background processor instance.
+    """Get the global background processor instance.
 
     Each task will create its own isolated database session for processing,
     so no database session needs to be passed to the processor.
 
     Returns:
         BackgroundProcessor: Global processor instance
+
     """
     global _background_processor
 

@@ -1,9 +1,7 @@
-"""
-Services package for business logic components.
+"""Services package for business logic components.
 
 This package provides services for authentication, user management,
 document processing, search, conversations, and external integrations.
-
 """
 
 from .auth import AuthService

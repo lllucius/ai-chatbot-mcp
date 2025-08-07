@@ -2,33 +2,7 @@
 
 This service provides enterprise-grade authentication functionality including secure
 user registration, multi-factor authentication support, and comprehensive JWT token
-lifecycle management.
-"""
-- Last login tracking for security monitoring and user analytics
-- Multi-layer validation for registration conflict detection
-
-Token Management:
-- JWT access token generation with configurable expiration times
-- Bearer token type specification for standard HTTP authentication
-- Token verification with comprehensive error handling and security validation
-- Payload extraction and validation for user identification
-- Integration with authentication middleware and authorization systems
-- Secure token refresh mechanisms for extended session management
-
-Use Cases:
-- User registration and onboarding workflows in web and mobile applications
-- Secure login processing for both username and email-based authentication
-- API authentication with JWT token-based security for microservices
-- Session management and user state tracking across application components
-- Security audit logging and monitoring for compliance and threat detection
-- Integration with external authentication providers and identity management systems
-
-Error Handling:
-- Structured exception handling with specific error types for different failure modes
-- Comprehensive validation error reporting for registration and authentication failures
-- Security-focused error messages that don't leak sensitive information
-- Audit logging of authentication failures for security monitoring
-- Graceful degradation and error recovery for service availability
+lifecycle management with secure token generation and validation.
 """
 
 import logging
@@ -53,94 +27,22 @@ logger = logging.getLogger(__name__)
 
 
 class AuthService(BaseService):
-    """
-    Authentication service for comprehensive user management and JWT token operations.
+    """Authentication service for comprehensive user management and JWT token operations.
 
     This service extends BaseService to provide enterprise-grade authentication functionality
     including secure user registration, multi-identifier authentication, JWT token lifecycle
-    management, and comprehensive security monitoring. Implements advanced security patterns
-    with protection against common authentication vulnerabilities and robust audit logging.
-
-    Security Features:
-    - Advanced password hashing with bcrypt and configurable work factors for enhanced security
-    - JWT token generation with secure algorithms (HS256/RS256) and proper expiration handling
-    - Protection against timing attacks in user lookup and password verification operations
-    - Comprehensive security event logging for audit trails and compliance monitoring
-    - Input validation and sanitization to prevent injection attacks and data corruption
-    - Account status validation including active/inactive user management and access control
-
-    Authentication Capabilities:
-    - Username-based authentication with case-insensitive lookup and validation
-    - Email-based authentication with proper format validation and domain verification
-    - Flexible identifier support allowing username or email for seamless login experience
-    - Multi-layer validation for registration conflict detection and user uniqueness
-    - Last login tracking for security monitoring and user analytics
-    - Account lockout and security controls for brute force attack protection
-
-    Token Management:
-    - JWT access token generation with configurable expiration times and security metadata
-    - Bearer token type specification for standard HTTP authentication compliance
-    - Token verification with comprehensive error handling and security validation
-    - Payload extraction and validation for secure user identification
-    - Integration with authentication middleware and authorization systems
-    - Token refresh mechanisms for extended session management and user experience
-
-    Responsibilities:
-    - User registration with comprehensive validation and conflict detection
-    - User authentication with multiple identifier support and security controls
-    - JWT token creation, verification, and lifecycle management
-    - User lookup operations by username, email, and unique identifiers
-    - Security event logging and monitoring for audit trails and compliance
-    - Password security validation and management with industry best practices
-
-    Use Cases:
-    - User registration and onboarding workflows in web and mobile applications
-    - Secure login processing for both username and email-based authentication
-    - API authentication with JWT token-based security for microservices architecture
-    - Session management and user state tracking across distributed application components
-    - Security audit logging and monitoring for compliance and threat detection
-    - Integration with external authentication providers and identity management systems
-
-    Example:
-        auth_service = AuthService(db_session)
-
-        # Register new user
-        user = await auth_service.register_user(register_data)
-
-        # Authenticate user and get token
-        token = await auth_service.authenticate_user("username", "password")
-
-        # Verify token and get username
-        username = auth_service.verify_token(token.access_token)
+    management, and comprehensive security monitoring with robust audit logging.
     """
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize authentication service with database session and security configuration.
+        """Initialize authentication service with database session and security configuration.
 
         Sets up the authentication service with database connectivity, JWT configuration,
-        and security parameters from application settings. Initializes logging and
-        security monitoring capabilities for comprehensive authentication operations.
+        and security parameters from application settings.
 
         Args:
-            db: Database session for authentication operations, user management,
-                and security event logging with proper transaction handling
+            db: Database session for authentication operations and user management
 
-        Security Notes:
-            - Configures JWT secret key and algorithm from secure application settings
-            - Sets up token expiration parameters for security and user experience balance
-            - Initializes structured logging for security audit trails and monitoring
-            - Establishes secure database session handling for authentication operations
-
-        Use Cases:
-            - Service initialization in authentication middleware and API endpoints
-            - Dependency injection for authentication-required application components
-            - Setup for user registration and login workflow processing
-            - Integration with FastAPI dependency injection and session management
-
-        Example:
-            auth_service = AuthService(db_session)
-            # Service ready for authentication operations with full security configuration
         """
         super().__init__(db, "auth_service")
 
@@ -150,8 +52,7 @@ class AuthService(BaseService):
         self.access_token_expire_minutes = settings.access_token_expire_minutes
 
     async def register_user(self, user_data: RegisterRequest) -> User:
-        """
-        Register a new user account with comprehensive validation and security checks.
+        """Register a new user account with comprehensive validation and security checks.
 
         Creates a new user account with secure password hashing, uniqueness validation,
         and comprehensive conflict detection. Implements robust validation to prevent
@@ -205,6 +106,7 @@ class AuthService(BaseService):
             )
             user = await auth_service.register_user(register_data)
             # Returns User object with secure password hash and unique identifiers
+
         """
         try:
             # Check if username already exists
@@ -243,8 +145,7 @@ class AuthService(BaseService):
             raise ValidationError(f"Registration failed: {e}")
 
     async def authenticate_user(self, username: str, password: str) -> Token:
-        """
-        Authenticate user with username/email and password, returning JWT token.
+        """Authenticate user with username/email and password, returning JWT token.
 
         Performs comprehensive user authentication with support for both username and
         email-based login. Implements security best practices including password
@@ -298,6 +199,7 @@ class AuthService(BaseService):
 
             # Use token for API requests
             headers = {"Authorization": f"Bearer {token.access_token}"}
+
         """
         try:
             # Get user by username or email
@@ -332,8 +234,7 @@ class AuthService(BaseService):
             raise AuthenticationError("Authentication failed")
 
     def create_access_token(self, data: Dict[str, Any]) -> Token:
-        """
-        Create JWT access token with secure configuration and expiration handling.
+        """Create JWT access token with secure configuration and expiration handling.
 
         Generates a signed JWT access token with configurable expiration time and
         secure algorithm selection. Implements proper token structure with standard
@@ -378,6 +279,7 @@ class AuthService(BaseService):
 
             # Token automatically expires after configured time
             print(f"Token expires in {token.expires_in} seconds")
+
         """
         to_encode = data.copy()
         expire = utcnow() + timedelta(minutes=self.access_token_expire_minutes)
@@ -392,8 +294,7 @@ class AuthService(BaseService):
         )
 
     def verify_token(self, token: str) -> Optional[str]:
-        """
-        Verify JWT token integrity and extract username for authentication.
+        """Verify JWT token integrity and extract username for authentication.
 
         Validates JWT token signature, expiration, and format to ensure token
         authenticity and integrity. Extracts user identification information
@@ -441,6 +342,7 @@ class AuthService(BaseService):
             else:
                 # Token invalid, require authentication
                 raise AuthenticationError("Invalid or expired token")
+
         """
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
@@ -453,8 +355,7 @@ class AuthService(BaseService):
             return None
 
     async def get_user_by_username(self, username: str) -> Optional[User]:
-        """
-        Retrieve user account by username with case-insensitive matching.
+        """Retrieve user account by username with case-insensitive matching.
 
         Performs efficient database lookup to find user account by username
         with proper case handling and optimized query execution. Implements
@@ -491,13 +392,13 @@ class AuthService(BaseService):
                 print(f"Found user: {user.email}")
             else:
                 print("User not found")
+
         """
         result = await self.db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
 
     async def get_user_by_email(self, email: str) -> Optional[User]:
-        """
-        Retrieve user account by email address with validation and security.
+        """Retrieve user account by email address with validation and security.
 
         Performs efficient database lookup to find user account by email address
         with proper format validation and optimized query execution. Implements
@@ -535,13 +436,13 @@ class AuthService(BaseService):
                 print(f"Found user: {user.username}")
             else:
                 print("Email not registered")
+
         """
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
-        """
-        Retrieve user account by unique identifier with validation and security.
+        """Retrieve user account by unique identifier with validation and security.
 
         Performs efficient database lookup to find user account by integer ID with
         proper identifier validation and optimized query execution. Implements
@@ -580,6 +481,7 @@ class AuthService(BaseService):
                 print(f"Found user: {user.username} ({user.email})")
             else:
                 print("User ID not found")
+
         """
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()

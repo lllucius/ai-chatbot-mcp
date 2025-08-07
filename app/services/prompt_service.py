@@ -1,5 +1,4 @@
-"""
-Prompt service for managing prompts and their usage.
+"""Prompt service for managing prompts and their usage.
 
 This service provides functionality to manage prompts,
 track their usage, and support default prompt handling.
@@ -20,11 +19,11 @@ class PromptService(BaseService):
     """Service for managing prompts and their usage with dependency injection."""
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize prompt service with database session.
+        """Initialize prompt service with database session.
 
         Args:
             db: Database session for prompt operations
+
         """
         super().__init__(db, "prompt_service")
 

@@ -409,8 +409,7 @@ async def get_conversation_stats(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ) -> APIResponse[ConversationStats]:
-    """
-    Get conversation statistics for the current user with registry insights.
+    """Get conversation statistics for the current user with registry insights.
 
     Returns statistics about the user's conversations and messages, plus
     insights from prompt and profile registries.
@@ -432,8 +431,7 @@ async def get_registry_stats(
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ) -> APIResponse[RegistryStatsResponse]:
-    """
-    Get registry statistics showing prompt, profile, and tool usage.
+    """Get registry statistics showing prompt, profile, and tool usage.
 
     Returns comprehensive statistics about registry usage including:
     - Active prompts and most used prompts

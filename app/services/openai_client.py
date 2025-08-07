@@ -1,5 +1,4 @@
-"""
-OpenAI API client with tool integration.
+"""OpenAI API client with tool integration.
 
 This service provides a wrapper around the OpenAI API with enhanced
 functionality including tool calling via ToolExecutor (now dependency-injected).
@@ -27,8 +26,7 @@ logger = get_api_logger("openai_client")
 
 
 class OpenAIClient:
-    """
-    OpenAI API client with tool integration.
+    """OpenAI API client with tool integration.
 
     This client provides methods for chat completions, embeddings,
     and content moderation with automatic tool calling capabilities.
@@ -58,11 +56,11 @@ class OpenAIClient:
 
     @handle_api_errors("Model validation failed")
     async def validate_model_availability(self) -> bool:
-        """
-        Validate that the configured models are available.
+        """Validate that the configured models are available.
 
         Returns:
             bool: True if models are available
+
         """
         try:
             await self.client.chat.completions.create(
@@ -97,14 +95,14 @@ class OpenAIClient:
             return False
 
     def count_tokens(self, text: str) -> int:
-        """
-        Count tokens in a text string.
+        """Count tokens in a text string.
 
         Args:
             text: Text string to count tokens for
 
         Returns:
             int: Number of tokens in the text
+
         """
         if not text:
             return 0
@@ -117,14 +115,14 @@ class OpenAIClient:
         return len(text.split()) + len(text) // 4
 
     def count_messages_tokens(self, messages: List[Dict[str, Any]]) -> int:
-        """
-        Count tokens in a list of chat messages.
+        """Count tokens in a list of chat messages.
 
         Args:
             messages: List of message dictionaries with role, content, etc.
 
         Returns:
             int: Total number of tokens in all messages
+
         """
         total_tokens = 0
         for message in messages:
@@ -151,8 +149,7 @@ class OpenAIClient:
         tool_handling_mode: ToolHandlingMode = ToolHandlingMode.COMPLETE_WITH_RESULTS,
         max_retries: int = 3,
     ) -> Dict[str, Any]:
-        """
-        Create a chat completion with flexible tool call handling.
+        """Create a chat completion with flexible tool call handling.
 
         Args:
             messages: List of messages
@@ -167,6 +164,7 @@ class OpenAIClient:
 
         Returns:
             dict: Chat completion response with usage information and tool results
+
         """
         final_tools = tools or []
 
@@ -278,8 +276,7 @@ class OpenAIClient:
         tool_handling_mode: ToolHandlingMode = ToolHandlingMode.COMPLETE_WITH_RESULTS,
         max_retries: int = 3,
     ):
-        """
-        Create a streaming chat completion with tool call handling.
+        """Create a streaming chat completion with tool call handling.
 
         Args:
             messages: List of messages
@@ -292,6 +289,7 @@ class OpenAIClient:
 
         Yields:
             dict: Streaming response chunks with content or tool call results
+
         """
         final_tools = tools or []
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
@@ -542,6 +540,7 @@ class OpenAIClient:
 
         Returns:
             List of float values representing the embedding.
+
         """
         if not text or not text.strip():
             raise ValueError("Text cannot be empty")
@@ -587,6 +586,7 @@ class OpenAIClient:
 
         Returns:
             List of embeddings, one for each input text.
+
         """
         if not texts:
             return []
@@ -613,6 +613,7 @@ class OpenAIClient:
 
         Returns:
             Dictionary containing moderation results.
+
         """
 
         @tool_operation(cache_ttl=600, log_details=True)
@@ -634,6 +635,7 @@ class OpenAIClient:
 
         Returns:
             Dictionary containing health check results.
+
         """
 
         @tool_operation(enable_caching=False, log_details=False)

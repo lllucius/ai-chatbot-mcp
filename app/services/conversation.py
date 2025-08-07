@@ -2,12 +2,7 @@
 
 This service provides complete conversation lifecycle management including chat
 session creation, message handling, AI model integration, and RAG (Retrieval
-Augmented Generation) capabilities.
-"""
-- Embedding services for semantic understanding
-- Tool calling capabilities through MCP integration
-- Token usage tracking and optimization
-
+Augmented Generation) capabilities with embedding services and tool calling.
 """
 
 import logging
@@ -41,42 +36,19 @@ logger = logging.getLogger(__name__)
 
 
 class ConversationService(BaseService):
-    """
-    Service for comprehensive conversation and AI chat operations.
+    """Service for comprehensive conversation and AI chat operations.
 
     This service extends BaseService to provide conversation-specific functionality
     including chat session management, AI model integration, RAG capabilities,
     and tool calling with enhanced logging and context management.
-
-    AI Capabilities:
-    - Multi-turn conversations with context preservation
-    - Integration with OpenAI GPT models for intelligent responses
-    - RAG (Retrieval Augmented Generation) with document search
-    - Tool calling through ToolExecutor integration
-    - Token usage optimization and tracking
-    - Response quality monitoring and analytics
-
-    Tool Integration:
-    - Uses tool calling instead of manual tool management
-    - Automatic tool availability and execution through OpenAI client
-    - Proper tool call result handling and user feedback
-    - Complete tool calling implementation (no TODOs remaining)
-
-    Responsibilities:
-    - Conversation lifecycle management (create, update, archive)
-    - Message processing and storage with metadata
-    - AI model orchestration and response generation
-    - Document search integration for context enhancement
-    - Usage analytics and performance monitoring
-    - Error handling and recovery for AI operations
     """
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize conversation service with AI and search components.
+        """Initialize conversation service with AI and search components.
 
         Args:
             db: Database session for conversation operations
+
         """
         super().__init__(db, "conversation_service")
 
@@ -91,8 +63,7 @@ class ConversationService(BaseService):
     async def create_conversation(
         self, request: ConversationCreate, user_id: UUID
     ) -> Conversation:
-        """
-        Create a new conversation.
+        """Create a new conversation.
 
         Args:
             request: Conversation creation data
@@ -100,6 +71,7 @@ class ConversationService(BaseService):
 
         Returns:
             Conversation: Created conversation object
+
         """
         try:
             conversation = Conversation(
@@ -123,8 +95,7 @@ class ConversationService(BaseService):
     async def get_conversation(
         self, conversation_id: UUID, user_id: UUID
     ) -> Conversation:
-        """
-        Get conversation by ID.
+        """Get conversation by ID.
 
         Args:
             conversation_id: Conversation ID
@@ -135,6 +106,7 @@ class ConversationService(BaseService):
 
         Raises:
             NotFoundError: If conversation not found or access denied
+
         """
         result = await self.db.execute(
             select(Conversation).where(
@@ -153,8 +125,7 @@ class ConversationService(BaseService):
     async def list_conversations(
         self, user_id: UUID, page: int = 1, size: int = 20, active_only: bool = True
     ) -> Tuple[List[Conversation], int]:
-        """
-        List conversations for a user with pagination.
+        """List conversations for a user with pagination.
 
         Args:
             user_id: User ID
@@ -164,6 +135,7 @@ class ConversationService(BaseService):
 
         Returns:
             Tuple[List[Conversation], int]: List of conversations and total count
+
         """
         # Build filters
         filters = [Conversation.user_id == user_id]
@@ -192,8 +164,7 @@ class ConversationService(BaseService):
     async def update_conversation(
         self, conversation_id: UUID, request: ConversationUpdate, user_id: UUID
     ) -> Conversation:
-        """
-        Update conversation metainfo.
+        """Update conversation metainfo.
 
         Args:
             conversation_id: Conversation ID
@@ -202,6 +173,7 @@ class ConversationService(BaseService):
 
         Returns:
             Conversation: Updated conversation object
+
         """
         conversation = await self.get_conversation(conversation_id, user_id)
 
@@ -220,8 +192,7 @@ class ConversationService(BaseService):
         return conversation
 
     async def delete_conversation(self, conversation_id: UUID, user_id: UUID) -> bool:
-        """
-        Delete conversation and all messages.
+        """Delete conversation and all messages.
 
         Args:
             conversation_id: Conversation ID
@@ -229,6 +200,7 @@ class ConversationService(BaseService):
 
         Returns:
             bool: True if deleted successfully
+
         """
         conversation = await self.get_conversation(conversation_id, user_id)
 
@@ -241,8 +213,7 @@ class ConversationService(BaseService):
     async def get_messages(
         self, conversation_id: UUID, user_id: UUID, page: int = 1, size: int = 50
     ) -> Tuple[List[Message], int]:
-        """
-        Get messages in a conversation.
+        """Get messages in a conversation.
 
         Args:
             conversation_id: Conversation ID
@@ -252,6 +223,7 @@ class ConversationService(BaseService):
 
         Returns:
             Tuple[List[Message], int]: List of messages and total count
+
         """
         # Verify conversation access
         await self.get_conversation(conversation_id, user_id)
@@ -278,8 +250,7 @@ class ConversationService(BaseService):
         return list(messages), total
 
     async def process_chat(self, request: ChatRequest, user_id: UUID) -> Dict[str, Any]:
-        """
-        Process chat request and generate AI response.
+        """Process chat request and generate AI response.
 
         Args:
             request: Chat request data
@@ -287,6 +258,7 @@ class ConversationService(BaseService):
 
         Returns:
             dict: Chat response data including AI message and conversation
+
         """
         try:
             # Get or create conversation
@@ -446,8 +418,7 @@ class ConversationService(BaseService):
     async def process_chat_stream(
         self, request: ChatRequest, user_id: UUID
     ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Process chat request and generate streaming AI response.
+        """Process chat request and generate streaming AI response.
 
         Args:
             request: Chat request data
@@ -458,6 +429,7 @@ class ConversationService(BaseService):
 
         Returns:
             AsyncGenerator[Dict[str, Any], None]: Async generator of stream events
+
         """
         try:
             # Get or create conversation
@@ -737,14 +709,14 @@ class ConversationService(BaseService):
     def _create_tool_call_summary(
         self, tool_calls_executed: List[Dict[str, Any]]
     ) -> ToolCallSummary:
-        """
-        Create a tool call summary from executed tool calls.
+        """Create a tool call summary from executed tool calls.
 
         Args:
             tool_calls_executed: List of executed tool call results
 
         Returns:
             ToolCallSummary: Summary of tool call execution
+
         """
         if not tool_calls_executed:
             return ToolCallSummary(
@@ -787,14 +759,14 @@ class ConversationService(BaseService):
         )
 
     async def get_user_stats(self, user_id: UUID) -> Dict[str, Any]:
-        """
-        Get conversation statistics for a user with registry insights.
+        """Get conversation statistics for a user with registry insights.
 
         Args:
             user_id: User ID
 
         Returns:
             dict: User conversation statistics with registry information
+
         """
         # Get basic conversation stats
         # Total conversations
