@@ -1,5 +1,4 @@
-"""
-API versioning strategy and utilities.
+"""API versioning strategy and utilities.
 
 This module provides a comprehensive API versioning strategy to ensure
 backward compatibility and smooth transitions between API versions.
@@ -143,6 +142,7 @@ def version(min_version: APIVersion, max_version: Optional[APIVersion] = None):
     Args:
         min_version: Minimum API version required
         max_version: Maximum API version supported (optional)
+
     """
 
     def decorator(func):
@@ -153,6 +153,7 @@ def version(min_version: APIVersion, max_version: Optional[APIVersion] = None):
 
         Returns:
             function: The same function with version metadata attached
+
         """
         func._api_min_version = min_version
         func._api_max_version = max_version

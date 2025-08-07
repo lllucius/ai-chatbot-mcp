@@ -37,8 +37,7 @@ async def create(
     ),
     superuser: bool = Option(False, "--superuser", help="Create as superuser"),
 ):
-    """
-    Create a new user account with comprehensive validation and security setup.
+    """Create a new user account with comprehensive validation and security setup.
 
     Creates a new user account in the AI Chatbot Platform with full validation,
     security controls, and proper initialization. The command handles password
@@ -89,6 +88,7 @@ async def create(
 
     Raises:
         SystemExit: On validation errors, authentication failures, or creation conflicts
+
     """
     try:
         sdk = await get_sdk()

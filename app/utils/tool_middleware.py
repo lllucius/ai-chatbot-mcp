@@ -1,5 +1,4 @@
-"""
-Centralized retry and caching utilities for tool operations.
+"""Centralized retry and caching utilities for tool operations.
 
 This module provides decorators and utilities for consistent retry logic,
 caching behavior, and error handling across tool operations.
@@ -44,6 +43,7 @@ def with_retry(config: Optional[RetryConfig] = None, log_attempts: bool = True):
         async def call_external_api():
             # API call implementation
             pass
+
     """
     if config is None:
         config = RetryConfig()
@@ -145,6 +145,7 @@ def with_tool_caching(
         async def expensive_tool_operation(param1, param2):
             # Expensive operation implementation
             pass
+
     """
 
     def decorator(func: Callable) -> Callable:
@@ -238,6 +239,7 @@ def with_structured_logging(
 
     Returns:
         Decorator function that adds structured logging
+
     """
     if sensitive_params is None:
         sensitive_params = ["password", "token", "key", "secret"]
@@ -341,6 +343,7 @@ def tool_operation(
         async def my_tool_function():
             # Implementation
             pass
+
     """
 
     def decorator(func: Callable) -> Callable:

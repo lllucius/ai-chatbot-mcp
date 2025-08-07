@@ -1,5 +1,4 @@
-"""
-Text processing utilities for document chunking and analysis.
+"""Text processing utilities for document chunking and analysis.
 
 This module provides functions for text cleaning, chunking,
 token counting, and other text processing operations with
@@ -30,8 +29,7 @@ class TextChunk:
 
 
 class TextProcessor:
-    """
-    Optimized text processing utilities for document analysis and chunking.
+    """Optimized text processing utilities for document analysis and chunking.
 
     This class provides methods for cleaning text, creating chunks with
     streaming support and memory optimization for large documents.
@@ -40,13 +38,13 @@ class TextProcessor:
     def __init__(
         self, chunk_size: int = 1000, chunk_overlap: int = 200, max_memory_mb: int = 500
     ):
-        """
-        Initialize text processor.
+        """Initialize text processor.
 
         Args:
             chunk_size: Target size for text chunks
             chunk_overlap: Overlap between consecutive chunks
             max_memory_mb: Maximum memory usage in MB before optimization
+
         """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -70,8 +68,7 @@ class TextProcessor:
     async def create_chunks_streaming(
         self, text: str, metainfo: Optional[Dict[str, Any]] = None
     ) -> AsyncIterator[TextChunk]:
-        """
-        Create text chunks with streaming support for memory optimization.
+        """Create text chunks with streaming support for memory optimization.
 
         Args:
             text: Input text to chunk
@@ -82,6 +79,7 @@ class TextProcessor:
 
         Raises:
             MemoryError: If memory usage becomes too high
+
         """
         if not text or not text.strip():
             return
@@ -132,14 +130,14 @@ class TextProcessor:
             await asyncio.sleep(0)
 
     def clean_text(self, text: str) -> str:
-        """
-        Clean and normalize text content.
+        """Clean and normalize text content.
 
         Args:
             text: Raw text to clean
 
         Returns:
             str: Cleaned text
+
         """
         if not text:
             return ""
@@ -161,8 +159,7 @@ class TextProcessor:
     def create_chunks(
         self, text: str, metainfo: Optional[Dict[str, Any]] = None
     ) -> List[TextChunk]:
-        """
-        Split text into overlapping chunks.
+        """Split text into overlapping chunks.
 
         Args:
             text: Text to chunk
@@ -170,6 +167,7 @@ class TextProcessor:
 
         Returns:
             List[TextChunk]: List of text chunks
+
         """
         if not text or not text.strip():
             return []
@@ -215,8 +213,7 @@ class TextProcessor:
         return chunks
 
     def _find_break_point(self, text: str, start_pos: int, end_pos: int) -> int:
-        """
-        Find optimal break point for text chunking.
+        """Find optimal break point for text chunking.
 
         Args:
             text: Full text
@@ -225,6 +222,7 @@ class TextProcessor:
 
         Returns:
             int: Optimal break point
+
         """
         # Look for sentence boundaries first
         search_start = max(start_pos, end_pos - 200)
@@ -274,8 +272,7 @@ class TextProcessor:
         return end_pos
 
     def extract_keywords(self, text: str, max_keywords: int = 10) -> List[str]:
-        """
-        Extract keywords from text using simple frequency analysis.
+        """Extract keywords from text using simple frequency analysis.
 
         Args:
             text: Text to analyze
@@ -283,6 +280,7 @@ class TextProcessor:
 
         Returns:
             List[str]: List of keywords
+
         """
         if not text:
             return []
@@ -377,8 +375,7 @@ class TextProcessor:
         return [word for word, freq in sorted_words[:max_keywords]]
 
     def estimate_reading_time(self, text: str, words_per_minute: int = 200) -> int:
-        """
-        Estimate reading time for text.
+        """Estimate reading time for text.
 
         Args:
             text: Text to analyze
@@ -386,6 +383,7 @@ class TextProcessor:
 
         Returns:
             int: Estimated reading time in minutes
+
         """
         if not text:
             return 0
@@ -395,14 +393,14 @@ class TextProcessor:
         return reading_time
 
     def get_text_statistics(self, text: str) -> Dict[str, Any]:
-        """
-        Get comprehensive text statistics.
+        """Get comprehensive text statistics.
 
         Args:
             text: Text to analyze
 
         Returns:
             dict: Text statistics
+
         """
         if not text:
             return {
@@ -444,8 +442,7 @@ class TextProcessor:
     def truncate_text(
         self, text: str, max_length: int, preserve_words: bool = True
     ) -> str:
-        """
-        Truncate text to specified length.
+        """Truncate text to specified length.
 
         Args:
             text: Text to truncate
@@ -454,6 +451,7 @@ class TextProcessor:
 
         Returns:
             str: Truncated text
+
         """
         if not text or len(text) <= max_length:
             return text

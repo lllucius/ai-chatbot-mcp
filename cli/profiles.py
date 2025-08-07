@@ -1,5 +1,4 @@
-"""
-LLM parameter profile management commands for the AI Chatbot Platform CLI.
+"""LLM parameter profile management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive management of Large Language Model (LLM)
 parameter profiles through async operations and the AI Chatbot SDK. It enables

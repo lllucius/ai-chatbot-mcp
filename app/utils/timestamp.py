@@ -46,8 +46,7 @@ from typing import Union
 
 
 def utcnow() -> datetime:
-    """
-    Get current UTC datetime with timezone awareness and enterprise precision.
+    """Get current UTC datetime with timezone awareness and enterprise precision.
 
     Provides the current UTC datetime with timezone information for consistent
     timestamp generation across global deployments. Ensures all application
@@ -78,13 +77,13 @@ def utcnow() -> datetime:
     Example:
         current_time = utcnow()
         # Returns: datetime(2023, 12, 1, 15, 30, 45, 123456, tzinfo=timezone.utc)
+
     """
     return datetime.now(timezone.utc)
 
 
 def get_current_timestamp() -> str:
-    """
-    Generate current timestamp as standardized ISO 8601 string for enterprise integration.
+    """Generate current timestamp as standardized ISO 8601 string for enterprise integration.
 
     Creates a standardized ISO 8601 formatted timestamp string with UTC timezone
     indication for consistent API responses, logging, and external system integration.
@@ -115,13 +114,13 @@ def get_current_timestamp() -> str:
     Example:
         timestamp = get_current_timestamp()
         # Returns: "2023-12-01T15:30:45.123456+00:00"
+
     """
     return utcnow().isoformat()
 
 
 def to_utc(dt: Union[datetime, str]) -> datetime:
-    """
-    Convert datetime or ISO string to UTC datetime.
+    """Convert datetime or ISO string to UTC datetime.
 
     Args:
         dt: Datetime object or ISO string to convert
@@ -131,6 +130,7 @@ def to_utc(dt: Union[datetime, str]) -> datetime:
 
     Raises:
         ValueError: If string cannot be parsed
+
     """
     if isinstance(dt, str):
         # Parse ISO format string
@@ -151,8 +151,7 @@ def to_utc(dt: Union[datetime, str]) -> datetime:
 
 
 def format_timestamp(dt: datetime, include_microseconds: bool = False) -> str:
-    """
-    Format datetime as ISO 8601 string.
+    """Format datetime as ISO 8601 string.
 
     Args:
         dt: Datetime to format
@@ -160,6 +159,7 @@ def format_timestamp(dt: datetime, include_microseconds: bool = False) -> str:
 
     Returns:
         str: Formatted timestamp string
+
     """
     if include_microseconds:
         return dt.isoformat()
@@ -169,8 +169,7 @@ def format_timestamp(dt: datetime, include_microseconds: bool = False) -> str:
 
 
 def timestamp_diff_seconds(dt1: datetime, dt2: datetime) -> float:
-    """
-    Calculate difference between two timestamps in seconds.
+    """Calculate difference between two timestamps in seconds.
 
     Args:
         dt1: First datetime (later time)
@@ -178,13 +177,13 @@ def timestamp_diff_seconds(dt1: datetime, dt2: datetime) -> float:
 
     Returns:
         float: Difference in seconds (positive if dt1 > dt2)
+
     """
     return (dt1 - dt2).total_seconds()
 
 
 def is_recent(dt: datetime, max_age_seconds: int = 300) -> bool:
-    """
-    Check if datetime is recent (within max_age_seconds from now).
+    """Check if datetime is recent (within max_age_seconds from now).
 
     Args:
         dt: Datetime to check
@@ -192,6 +191,7 @@ def is_recent(dt: datetime, max_age_seconds: int = 300) -> bool:
 
     Returns:
         bool: True if datetime is recent
+
     """
     now = utcnow()
     age_seconds = timestamp_diff_seconds(now, dt)

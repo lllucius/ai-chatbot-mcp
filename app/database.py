@@ -1,5 +1,4 @@
-"""
-Database configuration and session management with enterprise-grade features.
+"""Database configuration and session management with enterprise-grade features.
 
 This module provides comprehensive async database connection management, session
 creation, connection pooling, and database initialization utilities for the AI
@@ -126,11 +125,11 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Dependency to get database session with improved error handling.
+    """Dependency to get database session with improved error handling.
 
     Yields:
         AsyncSession: Database session for request scope
+
     """
     session = None
     try:
@@ -190,11 +189,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def health_check_db() -> bool:
-    """
-    Check database connectivity and health.
+    """Check database connectivity and health.
 
     Returns:
         bool: True if database is healthy
+
     """
     try:
         async with AsyncSessionLocal() as session:
@@ -219,14 +218,14 @@ async def health_check_db() -> bool:
 
 
 async def init_db(with_default_data: bool = True) -> None:
-    """
-    Initialize database and create all tables with retry logic.
+    """Initialize database and create all tables with retry logic.
 
     This function creates all tables and enables pgvector extension for PostgreSQL.
     Optionally initializes default data.
 
     Args:
         with_default_data: Whether to create default prompts, profiles, and servers
+
     """
     max_retries = 3
     for attempt in range(max_retries):

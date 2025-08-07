@@ -1,5 +1,4 @@
-"""
-Document management commands for the AI Chatbot Platform CLI.
+"""Document management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive document processing and management functionality
 through async operations and the AI Chatbot SDK. It enables users to upload,

@@ -1,5 +1,4 @@
-"""
-Security utilities for password hashing and validation.
+"""Security utilities for password hashing and validation.
 
 This module provides functions for secure password handling,
 token generation, and other security-related operations.
@@ -19,14 +18,14 @@ SCRYPT_DKLEN = 64  # Length of derived key
 
 
 def get_password_hash(password: str) -> str:
-    """
-    Hash a password using scrypt.
+    """Hash a password using scrypt.
 
     Args:
         password: Plain text password to hash
 
     Returns:
         str: Base64-encoded salt + hash for storage
+
     """
     salt = secrets.token_bytes(16)
     key = hashlib.scrypt(
@@ -43,8 +42,7 @@ def get_password_hash(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verify a password against its scrypt hash.
+    """Verify a password against its scrypt hash.
 
     Args:
         plain_password: Plain text password to verify
@@ -52,6 +50,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
     Returns:
         bool: True if password matches hash
+
     """
     try:
         decoded = base64.b64decode(hashed_password.encode("utf-8"))
@@ -71,14 +70,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def generate_random_password(length: int = 12) -> str:
-    """
-    Generate a random password.
+    """Generate a random password.
 
     Args:
         length: Length of password to generate
 
     Returns:
         str: Random password
+
     """
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
     password = "".join(secrets.choice(alphabet) for _ in range(length))
@@ -86,26 +85,26 @@ def generate_random_password(length: int = 12) -> str:
 
 
 def generate_secret_key(length: int = 32) -> str:
-    """
-    Generate a random secret key.
+    """Generate a random secret key.
 
     Args:
         length: Length of secret key in bytes
 
     Returns:
         str: Random secret key as hex string
+
     """
     return secrets.token_hex(length)
 
 
 def generate_token(length: int = 32) -> str:
-    """
-    Generate a random token.
+    """Generate a random token.
 
     Args:
         length: Length of token in bytes
 
     Returns:
         str: Random token as URL-safe string
+
     """
     return secrets.token_urlsafe(length)
