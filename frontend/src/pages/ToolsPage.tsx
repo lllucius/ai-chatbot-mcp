@@ -265,7 +265,7 @@ function ServerCard({
                   server.status === 'connected' ? 'success' :
                   server.status === 'error' ? 'error' : 'warning'
                 }
-                label={server.status.toUpperCase()}
+                label={server.status ? server.status.toUpperCase() : 'UNKNOWN'}
                 showIcon={false}
               />
             </Stack>

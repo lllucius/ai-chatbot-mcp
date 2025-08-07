@@ -289,7 +289,7 @@ export function useDocumentStatus(documentId: string) {
     enabled: !!documentId && sdkService.isAuthenticated(),
     refetchInterval: (data) => {
       // Poll every 2 seconds if document is still processing
-      const status = data?.status;
+      const status = data?.data?.status;
       return status === 'processing' ? 2000 : false;
     },
   });
