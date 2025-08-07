@@ -69,27 +69,37 @@ class AnalyticsExportResponse(BaseModelSchema):
 
 
 class SystemHealthScore(BaseModel):
+    """System health score calculation."""
+
     score: float = Field(..., description="Overall health score")
     factors: dict = Field(..., description="Health factors breakdown")
 
 
 class UsersOverview(BaseModel):
+    """User statistics overview."""
+
     total: int = Field(..., description="Total users")
     active: int = Field(..., description="Active users")
     activity_rate: float = Field(..., description="User activity rate (%)")
 
 
 class DocumentsOverview(BaseModel):
+    """Document statistics overview."""
+
     total: int = Field(..., description="Total documents")
     processed: int = Field(..., description="Processed documents")
     processing_rate: float = Field(..., description="Document processing rate (%)")
 
 
 class ConversationsOverview(BaseModel):
+    """Conversation statistics overview."""
+
     total: int = Field(..., description="Total conversations")
 
 
 class AnalyticsOverviewPayload(BaseModel):
+    """Analytics overview data payload."""
+
     users: UsersOverview = Field(..., description="User stats")
     documents: DocumentsOverview = Field(..., description="Document stats")
     conversations: ConversationsOverview = Field(..., description="Conversation stats")
@@ -98,6 +108,8 @@ class AnalyticsOverviewPayload(BaseModel):
 
 
 class UsageMetrics(BaseModel):
+    """Usage metrics data structure."""
+
     new_users: int = Field(..., description="New users")
     new_documents: int = Field(..., description="New documents")
     new_conversations: int = Field(..., description="New conversations")
@@ -106,11 +118,15 @@ class UsageMetrics(BaseModel):
 
 
 class DailyStat(BaseModel):
+    """Daily statistics entry."""
+
     date: str = Field(..., description="Date")
     messages: int = Field(..., description="Messages on that date")
 
 
 class AnalyticsUsagePayload(BaseModel):
+    """Analytics usage data payload."""
+
     period: str = Field(..., description="Period string")
     start_date: str = Field(..., description="Period start date")
     end_date: str = Field(..., description="Period end date")
@@ -121,6 +137,8 @@ class AnalyticsUsagePayload(BaseModel):
 
 
 class DocumentProcessingPerformance(BaseModel):
+    """Document processing performance metrics."""
+
     total_documents: int = Field(..., description="Total documents")
     completed: int = Field(..., description="Completed documents")
     failed: int = Field(..., description="Failed documents")
@@ -130,6 +148,8 @@ class DocumentProcessingPerformance(BaseModel):
 
 
 class DBPerformanceEntry(BaseModel):
+    """Database performance statistics entry."""
+
     schemaname: Optional[str] = Field(None, description="Schema name")
     tablename: Optional[str] = Field(None, description="Table name")
     total_operations: Optional[int] = Field(None, description="Total operations")
@@ -138,11 +158,15 @@ class DBPerformanceEntry(BaseModel):
 
 
 class SystemMetricsInfo(BaseModel):
+    """System metrics information."""
+
     timestamp: str = Field(..., description="Timestamp")
     health_status: str = Field(..., description="Health status")
 
 
 class AnalyticsPerformancePayload(BaseModel):
+    """Analytics performance data payload."""
+
     document_processing: DocumentProcessingPerformance = Field(
         ..., description="Document processing stats"
     )
@@ -153,12 +177,16 @@ class AnalyticsPerformancePayload(BaseModel):
 
 
 class TopUser(BaseModel):
+    """Top user statistics entry."""
+
     username: str = Field(..., description="Username")
     email: str = Field(..., description="Email")
     count: int = Field(..., description="Metric count")
 
 
 class AnalyticsUserAnalyticsPayload(BaseModel):
+    """User analytics data payload."""
+
     metric: str = Field(..., description="Metric analyzed")
     period: str = Field(..., description="Period")
     top_users: List[TopUser] = Field(..., description="Top users")
@@ -167,6 +195,8 @@ class AnalyticsUserAnalyticsPayload(BaseModel):
 
 
 class DailyTrend(BaseModel):
+    """Daily trend statistics entry."""
+
     date: str = Field(..., description="Date")
     new_users: int = Field(..., description="New users")
     new_documents: int = Field(..., description="New documents")
@@ -174,6 +204,8 @@ class DailyTrend(BaseModel):
 
 
 class TrendSummary(BaseModel):
+    """Trend analysis summary."""
+
     total_new_users: int = Field(..., description="Total new users")
     total_new_documents: int = Field(..., description="Total new documents")
     total_messages: int = Field(..., description="Total messages")
@@ -181,6 +213,8 @@ class TrendSummary(BaseModel):
 
 
 class AnalyticsTrendsPayload(BaseModel):
+    """Analytics trends data payload."""
+
     period_days: int = Field(..., description="Period days")
     daily_trends: List[DailyTrend] = Field(..., description="Daily trends")
     summary: TrendSummary = Field(..., description="Summary")
@@ -188,6 +222,8 @@ class AnalyticsTrendsPayload(BaseModel):
 
 
 class DetailedUserAnalyticsPayload(BaseModel):
+    """Detailed user analytics data payload."""
+
     top_by_messages: Optional[List[TopUser]] = Field(
         None, description="Top users by messages"
     )
@@ -200,6 +236,8 @@ class DetailedUserAnalyticsPayload(BaseModel):
 
 
 class AnalyticsExportPayload(BaseModel):
+    """Complete analytics export data payload."""
+
     report_metadata: dict = Field(..., description="Report metadata")
     system_overview: AnalyticsOverviewPayload = Field(
         ..., description="System overview"

@@ -134,6 +134,8 @@ class DocumentStatisticsData(BaseModel):
 
 
 class CleanupPreviewItem(BaseModelSchema):
+    """Document cleanup preview item."""
+
     id: str
     title: str
     status: str
@@ -142,6 +144,8 @@ class CleanupPreviewItem(BaseModelSchema):
 
 
 class CleanupDryRunResponse(BaseModelSchema):
+    """Document cleanup dry run results."""
+
     total_count: int
     preview: List[CleanupPreviewItem]
     total_size_bytes: int
@@ -149,6 +153,8 @@ class CleanupDryRunResponse(BaseModelSchema):
 
 
 class CleanupDeletedResponse(BaseModelSchema):
+    """Document cleanup deletion results."""
+
     deleted_count: int
     deleted_size_bytes: int
     errors: List[str]
@@ -156,6 +162,8 @@ class CleanupDeletedResponse(BaseModelSchema):
 
 
 class BulkReprocessResponse(BaseModelSchema):
+    """Bulk document reprocessing results."""
+
     reprocessed_count: int
     total_found: int
     errors: List[str]
