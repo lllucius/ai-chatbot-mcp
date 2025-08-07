@@ -37,7 +37,6 @@ from ..services.embedding import EmbeddingService
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
-from ..database import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +103,6 @@ class BackgroundProcessor(BaseService):
 
     def __init__(
         self,
-        db,  # This db is no longer used for per-task operations
         max_concurrent_tasks: int = 3,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
@@ -112,13 +110,16 @@ class BackgroundProcessor(BaseService):
         """
         Initialize the background processor.
 
+        Each task will create its own isolated database session to ensure
+        proper isolation and avoid session leakage between concurrent tasks.
+
         Args:
-            db: Database session (unused for per-task operations)
             max_concurrent_tasks: Maximum number of concurrent processing tasks
             chunk_size: Default chunk size for text processing
             chunk_overlap: Default chunk overlap for text processing
         """
-        super().__init__(db, "background_processor")  # keep for base ops if needed
+        # Initialize without a database session since each task creates its own
+        self._logger_name = "background_processor"
         self.max_concurrent_tasks = max_concurrent_tasks
         self.processing_semaphore = asyncio.Semaphore(max_concurrent_tasks)
 
@@ -136,6 +137,30 @@ class BackgroundProcessor(BaseService):
         # Worker task
         self._worker_task: Optional[asyncio.Task] = None
         self._shutdown_event = asyncio.Event()
+
+    def _log_operation_start(self, operation: str, **kwargs):
+        """Log the start of a service operation."""
+        logger.info(f"Starting {operation}", extra={"operation": operation, **kwargs})
+
+    def _log_operation_success(self, operation: str, **kwargs):
+        """Log successful completion of a service operation."""
+        logger.info(
+            f"Completed {operation}",
+            extra={"operation": operation, "status": "success", **kwargs},
+        )
+
+    def _log_operation_error(self, operation: str, error: Exception, **kwargs):
+        """Log error during service operation."""
+        logger.error(
+            f"Failed {operation}: {str(error)}",
+            extra={
+                "operation": operation,
+                "status": "error",
+                "error_type": type(error).__name__,
+                "error_message": str(error),
+                **kwargs,
+            },
+        )
 
     async def start(self):
         """Start the background processing worker."""
@@ -295,55 +320,60 @@ class BackgroundProcessor(BaseService):
 
     async def _process_task(self, task: ProcessingTask):
         """
-        Process a single task.
+        Process a single task with its own isolated database session.
+
+        Each task gets a fresh database session to ensure complete isolation
+        between concurrent tasks and prevent session leakage or stale connections.
 
         Args:
             task: Task to process
         """
+        from ..database import AsyncSessionLocal
+        
         operation = f"process_task_{task.task_type}"
 
-        # Each task gets its own DB session using a context manager
-        # get_db is an async generator, so we use async for and break after first yield
-        async for db in get_db():
-            try:
-                task.status = TaskStatus.PROCESSING
-                task.started_at = datetime.utcnow()
+        # Create a fresh database session for this task
+        db = AsyncSessionLocal()
+        try:
+            task.status = TaskStatus.PROCESSING
+            task.started_at = datetime.utcnow()
 
-                self._log_operation_start(
-                    operation,
-                    task_id=task.task_id,
-                    document_id=str(task.document_id),
-                    task_type=task.task_type,
-                )
+            self._log_operation_start(
+                operation,
+                task_id=task.task_id,
+                document_id=str(task.document_id),
+                task_type=task.task_type,
+            )
 
-                if task.task_type == "process_document":
-                    await self._process_document_task(task, db)
-                else:
-                    raise ValueError(f"Unknown task type: {task.task_type}")
+            if task.task_type == "process_document":
+                await self._process_document_task(task, db)
+            else:
+                raise ValueError(f"Unknown task type: {task.task_type}")
 
-                task.status = TaskStatus.COMPLETED
-                task.completed_at = datetime.utcnow()
-                task.progress = 1.0
+            task.status = TaskStatus.COMPLETED
+            task.completed_at = datetime.utcnow()
+            task.progress = 1.0
 
-                # Store result
-                self.task_results[task.task_id] = {
-                    "status": TaskStatus.COMPLETED,
-                    "completed_at": task.completed_at,
-                }
+            # Store result
+            self.task_results[task.task_id] = {
+                "status": TaskStatus.COMPLETED,
+                "completed_at": task.completed_at,
+            }
 
-                self._log_operation_success(
-                    operation,
-                    task_id=task.task_id,
-                    document_id=str(task.document_id),
-                    processing_time=time.time() - task.started_at.timestamp(),
-                )
+            self._log_operation_success(
+                operation,
+                task_id=task.task_id,
+                document_id=str(task.document_id),
+                processing_time=time.time() - task.started_at.timestamp(),
+            )
 
-            except Exception as e:
-                await self._handle_task_error(task, e, db)
-            finally:
-                # Remove from active tasks
-                self.active_tasks.pop(task.task_id, None)
-            break  # Only use the first session from get_db()
+        except Exception as e:
+            await self._handle_task_error(task, e, db)
+        finally:
+            # Always close the database session to prevent leakage
+            await db.close()
+            # Remove from active tasks
+            self.active_tasks.pop(task.task_id, None)
 
     async def _process_document_task(self, task: ProcessingTask, db):
         """
@@ -610,12 +640,12 @@ class BackgroundProcessor(BaseService):
 _background_processor: Optional[BackgroundProcessor] = None
 
 
-async def get_background_processor(db) -> BackgroundProcessor:
+async def get_background_processor() -> BackgroundProcessor:
     """
     Get the global background processor instance.
 
-    Args:
-        db: Database session (unused for per-task operations)
+    Each task will create its own isolated database session for processing,
+    so no database session needs to be passed to the processor.
 
     Returns:
         BackgroundProcessor: Global processor instance
@@ -623,7 +653,7 @@ async def get_background_processor(db) -> BackgroundProcessor:
     global _background_processor
 
     if _background_processor is None:
-        _background_processor = BackgroundProcessor(db)
+        _background_processor = BackgroundProcessor()
         await _background_processor.start()
 
     return _background_processor

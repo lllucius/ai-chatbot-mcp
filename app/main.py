@@ -163,11 +163,9 @@ async def lifespan(app: FastAPI):
 
         # Start background document processor
         try:
-            from .database import AsyncSessionLocal
             from .services.background_processor import get_background_processor
 
-            async with AsyncSessionLocal() as db:
-                await get_background_processor(db)
+            await get_background_processor()
             logger.info("Background document processor initialized and started")
         except Exception as e:
             logger.error(f"Background document processor initialization failed: {e}")
