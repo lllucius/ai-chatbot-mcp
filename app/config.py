@@ -1,58 +1,8 @@
-"""
-Configuration management using Pydantic Settings with enterprise-grade features.
+"""Configuration management using Pydantic Settings with enterprise-grade features.
 
 This module provides centralized configuration management for the AI Chatbot Platform
-with comprehensive environment variable support, type validation, security controls,
-and configuration best practices. Implements secure configuration patterns with
-validation, sanitization, and operational flexibility for production deployments.
-
-Configuration Architecture:
-- Pydantic Settings for type-safe configuration with automatic validation
-- Environment variable support with flexible naming and nested configuration
-- Configuration file loading with multiple formats and secure defaults
-- Runtime configuration validation with detailed error reporting
-- Configuration inheritance and override patterns for different environments
-- Integration with container orchestration and cloud deployment platforms
-
-Security Features:
-- Secure secret management with proper validation and complexity requirements
-- Environment-specific configuration isolation for development, staging, and production
-- Configuration sanitization to prevent injection attacks and data leakage
-- Validation of security-critical parameters with proper constraints
-- Secure defaults with production-ready security settings
-- Integration with external secret management systems and key vaults
-
-Environment Support:
-- Development environment configuration with debugging and development tools
-- Staging environment configuration with production-like settings and monitoring
-- Production environment configuration with security and performance optimization
-- Testing environment configuration with isolated resources and test data
-- Docker and container configuration with environment variable injection
-- Cloud deployment configuration with platform-specific optimizations
-
-Configuration Categories:
-- Application settings with metadata, versioning, and operational parameters
-- Security configuration with authentication, authorization, and encryption settings
-- Database configuration with connection management and performance tuning
-- External service integration with API keys, endpoints, and timeout settings
-- Performance configuration with caching, rate limiting, and resource management
-- Monitoring and logging configuration with observability and audit settings
-
-Validation Features:
-- Type validation with proper type checking and conversion
-- Range validation for numeric parameters with minimum and maximum constraints
-- Format validation for URLs, emails, and other structured data
-- Custom validators for business logic and security requirements
-- Configuration completeness checking with required parameter validation
-- Runtime configuration updates with validation and error handling
-
-Use Cases:
-- Production deployment with secure configuration management and validation
-- Development environment setup with flexible configuration and debugging
-- Container orchestration with environment variable injection and validation
-- CI/CD pipeline integration with environment-specific configuration
-- Cloud deployment with platform-specific configuration and secrets management
-- Configuration management across multiple environments and deployment targets
+with comprehensive environment variable support, type validation, and security controls
+for production deployments.
 """
 
 import logging
