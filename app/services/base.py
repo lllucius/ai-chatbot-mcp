@@ -55,7 +55,6 @@ Service Patterns:
 """
 
 from typing import Any, Dict, List, Optional, Type, TypeVar
-from uuid import UUID
 
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -167,7 +166,7 @@ class BaseService:
     async def _get_by_id(
         self,
         model: Type[ModelType],
-        entity_id: UUID,
+        entity_id: int,
         error_message: Optional[str] = None,
     ) -> ModelType:
         """Get an entity by ID with standardized error handling.

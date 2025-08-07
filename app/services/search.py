@@ -34,7 +34,6 @@ API Endpoints Integration:
 import logging
 from time import time
 from typing import Dict, List, Optional, Tuple
-from uuid import UUID
 
 from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -170,7 +169,7 @@ class SearchService(BaseService):
         return embedding
 
     async def search_documents(
-        self, request: DocumentSearchRequest, user_id: UUID
+        self, request: DocumentSearchRequest, user_id: int
     ) -> List[DocumentChunkResponse]:
         """Search documents using the specified algorithm.
 
@@ -197,7 +196,7 @@ class SearchService(BaseService):
             raise SearchError(f"Search operation failed: {e}")
 
     async def _vector_search(
-        self, request: DocumentSearchRequest, user_id: UUID
+        self, request: DocumentSearchRequest, user_id: int
     ) -> List[DocumentChunkResponse]:
         """Vector similarity search using PGVector ivfflat index.
 
@@ -276,7 +275,7 @@ class SearchService(BaseService):
         return results
 
     async def _text_search(
-        self, request: DocumentSearchRequest, user_id: UUID
+        self, request: DocumentSearchRequest, user_id: int
     ) -> List[DocumentChunkResponse]:
         """Full-text search using Postgres GIN index and tsvector column.
 
@@ -346,7 +345,7 @@ class SearchService(BaseService):
         return results[: request.limit]
 
     async def _hybrid_search(
-        self, request: DocumentSearchRequest, user_id: UUID
+        self, request: DocumentSearchRequest, user_id: int
     ) -> List[DocumentChunkResponse]:
         """Hybrid search: combine normalized vector and text scores.
 
@@ -381,7 +380,7 @@ class SearchService(BaseService):
         return filtered_results[: request.limit]
 
     async def _mmr_search(
-        self, request: DocumentSearchRequest, user_id: UUID
+        self, request: DocumentSearchRequest, user_id: int
     ) -> List[DocumentChunkResponse]:
         """Maximum Marginal Relevance (MMR) for diverse, relevant results.
 
@@ -463,7 +462,7 @@ class SearchService(BaseService):
         return intersection / union
 
     async def get_similar_chunks(
-        self, chunk_id: int, user_id: UUID, limit: int = 5
+        self, chunk_id: int, user_id: int, limit: int = 5
     ) -> List[DocumentChunkResponse]:
         """Find chunks similar to a given chunk using vector ANN search.
 
