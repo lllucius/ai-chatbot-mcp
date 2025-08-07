@@ -2,12 +2,7 @@
 
 This service provides complete conversation lifecycle management including chat
 session creation, message handling, AI model integration, and RAG (Retrieval
-Augmented Generation) capabilities.
-"""
-- Embedding services for semantic understanding
-- Tool calling capabilities through MCP integration
-- Token usage tracking and optimization
-
+Augmented Generation) capabilities with embedding services and tool calling.
 """
 
 import logging

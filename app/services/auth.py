@@ -2,33 +2,7 @@
 
 This service provides enterprise-grade authentication functionality including secure
 user registration, multi-factor authentication support, and comprehensive JWT token
-lifecycle management.
-"""
-- Last login tracking for security monitoring and user analytics
-- Multi-layer validation for registration conflict detection
-
-Token Management:
-- JWT access token generation with configurable expiration times
-- Bearer token type specification for standard HTTP authentication
-- Token verification with comprehensive error handling and security validation
-- Payload extraction and validation for user identification
-- Integration with authentication middleware and authorization systems
-- Secure token refresh mechanisms for extended session management
-
-Use Cases:
-- User registration and onboarding workflows in web and mobile applications
-- Secure login processing for both username and email-based authentication
-- API authentication with JWT token-based security for microservices
-- Session management and user state tracking across application components
-- Security audit logging and monitoring for compliance and threat detection
-- Integration with external authentication providers and identity management systems
-
-Error Handling:
-- Structured exception handling with specific error types for different failure modes
-- Comprehensive validation error reporting for registration and authentication failures
-- Security-focused error messages that don't leak sensitive information
-- Audit logging of authentication failures for security monitoring
-- Graceful degradation and error recovery for service availability
+lifecycle management with secure token generation and validation.
 """
 
 import logging
