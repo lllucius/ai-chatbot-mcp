@@ -173,6 +173,35 @@ export function useDeleteConversation() {
   });
 }
 
+/**
+ * Hook to get messages for a conversation (alias)
+ */
+export function useConversationMessages(conversationId: string, page = 1, size = 50) {
+  return useMessages(conversationId, page, size);
+}
+
+/**
+ * Hook to update a conversation
+ */
+export function useUpdateConversation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ conversationId, data }: { 
+      conversationId: string; 
+      data: { title?: string; [key: string]: any } 
+    }) => sdkService.getSdk().conversations.update(conversationId, data),
+    onSuccess: (data, variables) => {
+      // Invalidate the specific conversation
+      queryClient.invalidateQueries({ 
+        queryKey: ['conversation', variables.conversationId] 
+      });
+      // Also invalidate conversations list
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+  });
+}
+
 // =============================================================================
 // Document Hooks
 // =============================================================================
@@ -236,6 +265,21 @@ export function useDeleteDocument() {
 }
 
 /**
+ * Hook to reprocess a document
+ */
+export function useReprocessDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (documentId: string) => sdkService.getSdk().documents.reprocess(documentId),
+    onSuccess: () => {
+      // Invalidate documents list and the specific document
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    },
+  });
+}
+
+/**
  * Hook to get document processing status
  */
 export function useDocumentStatus(documentId: string) {
@@ -245,7 +289,7 @@ export function useDocumentStatus(documentId: string) {
     enabled: !!documentId && sdkService.isAuthenticated(),
     refetchInterval: (data) => {
       // Poll every 2 seconds if document is still processing
-      const status = (data?.data as any)?.status;
+      const status = data?.status;
       return status === 'processing' ? 2000 : false;
     },
   });
@@ -313,6 +357,28 @@ export function useSystemMetrics() {
   });
 }
 
+/**
+ * Hook to get detailed system health status
+ */
+export function useSystemHealth() {
+  return useQuery({
+    queryKey: ['system', 'health'],
+    queryFn: () => sdkService.getDetailedHealth(),
+    refetchInterval: 30000, // Check every 30 seconds
+  });
+}
+
+/**
+ * Hook to get system statistics
+ */
+export function useSystemStats() {
+  return useQuery({
+    queryKey: ['system', 'stats'],
+    queryFn: () => sdkService.getAnalyticsOverview(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
 // =============================================================================
 // Analytics Hooks
 // =============================================================================
@@ -336,6 +402,28 @@ export function useUsageAnalytics(period?: string) {
     queryKey: ['analytics', 'usage', period],
     queryFn: () => sdkService.getUsageAnalytics(period),
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+/**
+ * Hook to get user statistics
+ */
+export function useUserStats(page = 1, size = 20) {
+  return useQuery({
+    queryKey: ['analytics', 'users', { page, size }],
+    queryFn: () => sdkService.getAnalyticsOverview(), // Fallback to overview for now
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+/**
+ * Hook to get performance metrics
+ */
+export function usePerformanceMetrics() {
+  return useQuery({
+    queryKey: ['analytics', 'performance'],
+    queryFn: () => sdkService.getPerformanceAnalytics(),
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
@@ -460,6 +548,51 @@ export function useDeleteProfile() {
 }
 
 /**
+ * Hook to create LLM profile (alias)
+ */
+export function useCreateLlmProfile() {
+  return useCreateProfile();
+}
+
+/**
+ * Hook to update LLM profile
+ */
+export function useUpdateLlmProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ profileName, data }: { 
+      profileName: string; 
+      data: { name?: string; description?: string; model?: string; parameters?: Record<string, any> } 
+    }) => sdkService.getSdk().profiles.update(profileName, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete LLM profile (alias)
+ */
+export function useDeleteLlmProfile() {
+  return useDeleteProfile();
+}
+
+/**
+ * Hook to set default LLM profile
+ */
+export function useSetDefaultLlmProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (profileName: string) => sdkService.getSdk().profiles.setDefault(profileName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    },
+  });
+}
+
+/**
  * Hook to get prompts
  */
 export function usePrompts() {
@@ -505,6 +638,51 @@ export function useDeletePrompt() {
 }
 
 /**
+ * Hook to create prompt template (alias)
+ */
+export function useCreatePromptTemplate() {
+  return useCreatePrompt();
+}
+
+/**
+ * Hook to update prompt template
+ */
+export function useUpdatePromptTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ promptName, data }: { 
+      promptName: string; 
+      data: { name?: string; description?: string; template?: string; category?: string } 
+    }) => sdkService.getSdk().prompts.update(promptName, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete prompt template (alias)
+ */
+export function useDeletePromptTemplate() {
+  return useDeletePrompt();
+}
+
+/**
+ * Hook to set default prompt template
+ */
+export function useSetDefaultPromptTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (promptName: string) => sdkService.getSdk().prompts.setDefault(promptName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+    },
+  });
+}
+
+/**
  * Hook to get prompt categories
  */
 export function usePromptCategories() {
@@ -513,6 +691,13 @@ export function usePromptCategories() {
     queryFn: () => sdkService.getPromptCategories(),
     staleTime: 1000 * 60 * 30, // 30 minutes
   });
+}
+
+/**
+ * Hook to get prompt templates (alias)
+ */
+export function usePromptTemplates() {
+  return usePrompts();
 }
 
 // =============================================================================
@@ -550,4 +735,96 @@ export function useChangePassword() {
     mutationFn: (data: { current_password: string; new_password: string }) =>
       sdkService.changePassword(data),
   });
+}
+
+// =============================================================================
+// Search Hooks (Additional)
+// =============================================================================
+
+/**
+ * Hook for document search (alias)
+ */
+export function useSearchDocuments() {
+  return useDocumentSearch();
+}
+
+/**
+ * Hook for search suggestions
+ */
+export function useSearchSuggestions() {
+  return useMutation({
+    mutationFn: (query: string) => sdkService.getSdk().search.getSuggestions({ query }),
+  });
+}
+
+// =============================================================================
+// Tool Management Hooks
+// =============================================================================
+
+/**
+ * Hook to get tool statistics
+ */
+export function useToolStats() {
+  return useQuery({
+    queryKey: ['tools', 'stats'],
+    queryFn: () => sdkService.getMcpStats(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+/**
+ * Hook to update MCP server
+ */
+export function useUpdateMcpServer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ serverName, data }: { 
+      serverName: string; 
+      data: { enabled?: boolean; [key: string]: any } 
+    }) => sdkService.getSdk().mcp.updateServer(serverName, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mcp', 'servers'] });
+    },
+  });
+}
+
+/**
+ * Hook to toggle tool
+ */
+export function useToggleTool() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ toolName, enabled }: { toolName: string; enabled: boolean }) => 
+      sdkService.getSdk().mcp.toggleTool(toolName, enabled),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mcp', 'tools'] });
+    },
+  });
+}
+
+// =============================================================================
+// Enhanced Validation Hooks (for Demo)
+// =============================================================================
+
+/**
+ * Hook for enhanced basic health (for validation demo)
+ */
+export function useEnhancedBasicHealth() {
+  return useHealth();
+}
+
+/**
+ * Hook for enhanced detailed health (for validation demo)
+ */
+export function useEnhancedDetailedHealth() {
+  return useSystemHealth();
+}
+
+/**
+ * Hook for enhanced current user (for validation demo)
+ */
+export function useEnhancedCurrentUser() {
+  return useCurrentUser();
 }
