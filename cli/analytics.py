@@ -1,23 +1,9 @@
-"""
-Analytics and reporting commands for the AI Chatbot Platform CLI.
+"""Analytics and reporting commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive analytics and business intelligence functionality
-through async operations and the AI Chatbot SDK. It enables administrators, analysts,
-and stakeholders to access detailed platform metrics, generate reports, and monitor
-system performance and user engagement.
-
-The module implements enterprise-grade analytics patterns including real-time
-dashboards, historical reporting, and customizable metrics visualization. All
-analytics operations integrate seamlessly with the platform's data processing
-and business intelligence systems.
-
-Key Features:
-    - Real-time analytics dashboards and overviews
-    - Historical data analysis and trending
-    - User engagement and behavior analytics
-    - Performance monitoring and system metrics
-    - Custom report generation and export
-    - Automated alerting and threshold monitoring
+through async operations and the AI Chatbot SDK for accessing platform metrics
+and generating reports.
+"""
 
 Analytics Domains:
     - Platform Overview: High-level system metrics and KPIs

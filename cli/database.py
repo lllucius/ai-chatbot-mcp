@@ -1,23 +1,9 @@
-"""
-Database management commands for the AI Chatbot Platform CLI.
+"""Database management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive database administration functionality through
-async operations and the AI Chatbot SDK. It enables database administrators and
-system operators to manage database schemas, migrations, backups, and maintenance
-operations with enterprise-grade reliability and security.
-
-The module implements production-ready database management patterns including
-automated migrations, backup and recovery, performance monitoring, and maintenance
-scheduling. All operations include comprehensive logging and error handling for
-operational safety.
-
-Key Features:
-    - Database schema management and migrations
-    - Backup and recovery operations
-    - Performance monitoring and optimization
-    - Maintenance and cleanup operations
-    - Connection pool management
-    - Query performance analysis
+async operations and the AI Chatbot SDK for managing database schemas, migrations,
+and maintenance operations.
+"""
 
 Migration Management:
     - Automated schema migrations with rollback support

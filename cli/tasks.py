@@ -1,33 +1,9 @@
-"""
-Background task management commands for the AI Chatbot Platform CLI.
+"""Background task management commands for the AI Chatbot Platform CLI.
 
 This module provides comprehensive management of background tasks and job queues
-through async operations and the AI Chatbot SDK. It enables administrators and
-developers to monitor, control, and optimize background processing systems
-including Celery workers and task queues.
-
-Background tasks handle asynchronous operations such as document processing,
-email notifications, data exports, and other long-running operations that
-should not block the main application. This module provides tools for managing
-these tasks effectively in production environments.
-
-Key Features:
-    - Task queue monitoring and status reporting
-    - Worker management and scaling operations
-    - Task scheduling and cron job management
-    - Performance monitoring and optimization
-    - Error tracking and retry management
-    - Resource utilization and capacity planning
-
-Queue Management:
-    - Real-time queue status and backlog monitoring
-    - Task prioritization and scheduling
-    - Dead letter queue management
-    - Queue cleanup and maintenance operations
-    - Performance metrics and throughput analysis
-
-Worker Operations:
-    - Worker status monitoring and health checks
+through async operations and the AI Chatbot SDK for monitoring and controlling
+background processing systems.
+"""
     - Dynamic worker scaling and load balancing
     - Worker restart and recovery operations
     - Resource utilization tracking
