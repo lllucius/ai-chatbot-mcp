@@ -37,6 +37,20 @@ import {
 } from '../../hooks/api';
 
 /**
+ * Custom hook for handling validation errors
+ */
+function useValidationErrorHandler() {
+  return (error: any, operation: string) => {
+    console.error(`Validation error in ${operation}:`, error);
+    return {
+      hasError: true,
+      message: error?.message || 'Unknown validation error',
+      details: error
+    };
+  };
+}
+
+/**
  * Demo component for OpenAPI validation features
  */
 export function OpenApiValidationDemo(): React.ReactElement {
