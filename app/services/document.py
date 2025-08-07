@@ -304,7 +304,7 @@ class DocumentService(BaseService):
                 raise ValidationError("Document has already been processed")
 
             # Get background processor
-            background_processor = await get_background_processor(self.db)
+            background_processor = await get_background_processor()
 
             # Queue document for background processing
             task_id = await background_processor.queue_document_processing(
@@ -360,7 +360,7 @@ class DocumentService(BaseService):
 
             # Add background task information if available
             if task_id:
-                background_processor = await get_background_processor(self.db)
+                background_processor = await get_background_processor()
                 task_status = await background_processor.get_task_status(task_id)
                 if task_status:
                     status_info.update(

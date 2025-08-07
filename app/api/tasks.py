@@ -380,7 +380,7 @@ async def retry_failed_tasks(
         # Get background processor
         from ..services.background_processor import get_background_processor
 
-        processor = get_background_processor()
+        processor = await get_background_processor()
 
         for doc in failed_documents:
             try:
@@ -389,9 +389,9 @@ async def retry_failed_tasks(
                 doc.error_message = None
 
                 # Schedule reprocessing
-                task_result = await processor.process_document_async(doc.id, priority=5)
+                task_id = await processor.queue_document_processing(doc.id, priority=5)
 
-                if task_result:
+                if task_id:
                     retried_count += 1
                 else:
                     errors.append(f"Failed to schedule retry for document {doc.id}")

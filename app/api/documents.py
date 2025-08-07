@@ -393,7 +393,7 @@ async def get_queue_status(
 ) -> APIResponse[QueueStatusResponse]:
     """Get background processing queue status."""
     log_api_call("get_queue_status", user_id=str(user.id))
-    background_processor = await get_background_processor(db)
+    background_processor = await get_background_processor()
     queue_status = await background_processor.get_queue_status()
 
     payload = QueueStatusResponse(
