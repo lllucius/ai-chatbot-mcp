@@ -75,7 +75,6 @@ Integration:
 """
 
 from typing import Optional
-from uuid import UUID
 
 from async_typer import AsyncTyper
 from typer import Argument, Option
@@ -181,7 +180,7 @@ async def show(
     """Show conversation details."""
     try:
         sdk = await get_sdk()
-        conv = await sdk.conversations.get(UUID(conversation_id))
+        conv = await sdk.conversations.get(int(conversation_id))
         if conv:
             conv_details = {
                 "ID": str(conv.id),
@@ -207,9 +206,8 @@ async def export(
     """Export a conversation to a file."""
     try:
         sdk = await get_sdk()
-        from uuid import UUID
 
-        data = await sdk.admin.export_conversation(UUID(conversation_id))
+        data = await sdk.admin.export_conversation(int(conversation_id))
         import json
 
         filename = output or f"conversation_{conversation_id}.json"

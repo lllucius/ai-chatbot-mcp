@@ -4,12 +4,10 @@ This module defines the MCPTool model for managing tools provided by MCP servers
 their configuration, and usage analytics.
 """
 
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import JSON, Boolean, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import JSON, BigInteger, Boolean, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import BaseModelDB
@@ -27,7 +25,7 @@ class MCPTool(BaseModelDB):
     Attributes:
         name (Mapped[str]): Full name of the tool (server_toolname).
         original_name (Mapped[str]): Original tool name from the server.
-        server_id (Mapped[uuid.UUID]): Foreign key to the MCP server.
+        server_id (Mapped[int]): Foreign key to the MCP server.
         description (Mapped[Optional[str]]): Tool description.
         parameters (Mapped[Optional[dict]]): Tool parameters schema.
         is_enabled (Mapped[bool]): Whether the tool is enabled.
@@ -52,8 +50,8 @@ class MCPTool(BaseModelDB):
     original_name: Mapped[str] = mapped_column(
         String(100), nullable=False, doc="Original tool name from the server"
     )
-    server_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    server_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("mcp_servers.id"),
         nullable=False,
         doc="Foreign key to the MCP server",

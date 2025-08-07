@@ -580,6 +580,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- - messages (individual chat messages)
 ```
 
+All tables use auto-incrementing BIGSERIAL primary keys for optimal performance and scalability.
+
 ### Search Algorithms
 
 The platform supports multiple search algorithms:

@@ -7,7 +7,7 @@ are completely separate from SQLAlchemy database models for clean architecture.
 
 Key Features:
 - Modern Pydantic V2 configuration with optimized performance settings
-- Automatic UUID and datetime serialization for consistent API responses
+- Automatic integer ID and datetime serialization for consistent API responses
 - Flexible schema inheritance hierarchy for different use cases
 - ORM integration support for seamless SQLAlchemy model conversion
 - Advanced validation and assignment handling for data integrity
@@ -16,8 +16,8 @@ Key Features:
 Schema Hierarchy:
 - BaseSchema: Foundation class with core Pydantic V2 configuration
 - TimestampMixin: Provides timestamp fields and JSON serialization
-- UUIDMixin: Provides UUID field and JSON serialization
-- BaseModelSchema: Complete base combining UUID and timestamp functionality
+- IdMixin: Provides ID field and JSON serialization
+- BaseModelSchema: Complete base combining ID and timestamp functionality
 
 Configuration Features:
 - from_attributes: Enables ORM mode for SQLAlchemy model integration
@@ -27,7 +27,7 @@ Configuration Features:
 - extra="ignore": Accepts but ignores extra input fields for robustness
 
 Serialization Capabilities:
-- Automatic UUID to string conversion for JSON compatibility
+- Automatic integer ID serialization for JSON compatibility
 - ISO format datetime serialization with timezone indicators
 - Custom JSON dumping with proper type handling
 - Consistent field naming and format across all API responses
@@ -56,7 +56,6 @@ Security Features:
 """
 
 import json
-import uuid
 from datetime import datetime
 from typing import Optional
 
@@ -176,24 +175,22 @@ class TimestampMixin(BaseModel):
         return json.dumps(data)
 
 
-class UUIDMixin(BaseModel):
-    """Mixin providing UUID field and JSON serialization for unique identification.
+class IdMixin(BaseModel):
+    """Mixin providing ID field and JSON serialization for unique identification.
 
-    Provides an optional UUID id field with proper JSON serialization for
+    Provides an optional integer id field with proper JSON serialization for
     unique entity identification. Can be mixed into any schema that needs
-    UUID support.
+    ID support.
     """
 
-    id: Optional[uuid.UUID] = None
+    id: Optional[int] = None
 
     def model_dump_json(self, **kwargs):
-        """Serialize model with custom UUID handling."""
+        """Serialize model with custom ID handling."""
         data = self.model_dump(**kwargs)
 
-        # Convert UUID to string
-        if "id" in data and data["id"] is not None:
-            if isinstance(data["id"], uuid.UUID):
-                data["id"] = str(data["id"])
+        # ID is already an integer, no conversion needed
+        # This method is kept for consistency with the interface
 
         return json.dumps(data)
 
@@ -206,55 +203,52 @@ class TimestampSchema(BaseSchema, TimestampMixin):
     and modifications. Implements custom JSON serialization with proper ISO format
     datetime handling for consistent API responses.
 
-    Use this for schemas that need timestamp tracking but not UUID identification.
+    Use this for schemas that need timestamp tracking but not ID identification.
     """
 
     pass
 
 
-class UUIDSchema(BaseSchema, UUIDMixin):
-    """Base schema with UUID identifier field and automatic serialization support.
+class IdSchema(BaseSchema, IdMixin):
+    """Base schema with ID identifier field and automatic serialization support.
 
-    Extends BaseSchema with UUID identifier field management, providing unique
+    Extends BaseSchema with ID identifier field management, providing unique
     identification capabilities for entities with automatic JSON serialization
-    support. Implements custom UUID to string conversion for API compatibility
+    support. Implements standard integer ID handling for API compatibility
     and consistent identifier handling across all endpoints.
 
-    Use this for schemas that need UUID identification but not timestamp tracking.
+    Use this for schemas that need ID identification but not timestamp tracking.
     """
 
     pass
 
 
 class BaseModelSchema(BaseSchema):
-    """Complete foundational schema combining UUID identification and timestamp auditing.
+    """Complete foundational schema combining ID identification and timestamp auditing.
 
-    Comprehensive base schema that merges UUID-based unique identification with
+    Comprehensive base schema that merges integer-based unique identification with
     timestamp-based auditing capabilities, providing the complete foundation for
     entity schemas across the application. Implements advanced JSON serialization
-    with proper handling of both UUID and datetime field types.
+    with proper handling of both ID and datetime field types.
 
     This is the recommended base class for most domain entity schemas that need
     both unique identification and audit trail capabilities.
     """
 
-    id: Optional[uuid.UUID] = None
+    id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     def model_dump_json(self, **kwargs):
-        """Comprehensive JSON serialization with advanced UUID and datetime handling.
+        """Comprehensive JSON serialization with advanced ID and datetime handling.
 
-        Combines UUID to string conversion with datetime to ISO format conversion
+        Combines integer ID handling with datetime to ISO format conversion
         in a single serialization operation, providing complete type handling for
         entity schemas with identification and auditing capabilities.
         """
         data = self.model_dump(**kwargs)
 
-        # Convert UUID to string
-        if "id" in data and data["id"] is not None:
-            if isinstance(data["id"], uuid.UUID):
-                data["id"] = str(data["id"])
+        # ID is already an integer, no conversion needed
 
         # Convert datetime fields to ISO format strings
         for field_name in ["created_at", "updated_at", "deleted_at"]:
