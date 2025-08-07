@@ -3,31 +3,6 @@
 This module provides comprehensive user account management functionality through
 async operations and the AI Chatbot SDK with full validation and security controls.
 """
-    ```bash
-    # Create new user accounts
-    ai-chatbot users create john john@example.com --full-name "John Doe"
-    ai-chatbot users create admin admin@example.com --superuser
-
-    # List and filter users
-    ai-chatbot users list --active-only --page 1 --size 20
-    ai-chatbot users search --query "john" --role user
-
-    # Manage user accounts
-    ai-chatbot users activate user_id
-    ai-chatbot users deactivate user_id
-    ai-chatbot users update user_id --role admin
-
-    # Bulk operations
-    ai-chatbot users import users.csv --validate
-    ai-chatbot users export --format json --active-only
-    ```
-
-Integration:
-    - LDAP/Active Directory synchronization
-    - Single sign-on (SSO) provider integration
-    - HR system integration for automated provisioning
-    - Compliance and audit system integration
-"""
 
 import traceback
 from typing import Optional

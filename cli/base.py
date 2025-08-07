@@ -3,44 +3,6 @@
 This module provides the foundational infrastructure for the command-line interface,
 including authentication management, error handling, output formatting, and SDK integration.
 """
-    - Authentication state management across CLI sessions
-
-Performance Optimizations:
-    - Lazy loading of SDK and configuration
-    - Efficient token validation and caching
-    - Optimized console output with Rich library
-    - Minimal memory footprint for CLI operations
-    - Fast startup time with deferred initialization
-
-Integration Patterns:
-    - Seamless SDK integration for all API operations
-    - Consistent configuration loading from environment
-    - Unified error handling across all CLI commands
-    - Standardized output formatting for all operations
-
-Use Cases:
-    - Authentication management for CLI sessions
-    - Secure API communication setup
-    - Consistent user interface across all commands
-    - Error handling and user feedback
-    - Development workflow automation
-    - Production system administration
-
-Example:
-    ```python
-    # Initialize CLI manager
-    cli_manager = await get_cli_manager()
-
-    # Authenticate user
-    token_data = await cli_manager.login("username", "password")
-    cli_manager.save_token(token_data["access_token"])
-
-    # Display formatted output
-    success_message("Authentication successful")
-    display_rich_table(user_data, "User Information")
-    ```
-
-"""
 
 import json
 import textwrap

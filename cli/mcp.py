@@ -4,58 +4,6 @@ This module provides comprehensive MCP server and tool management functionality
 through async operations and the AI Chatbot SDK for configuring and monitoring
 MCP servers and their associated tools.
 """
-    - Server registration with validation and security checks
-    - Configuration management for connection parameters
-    - Health monitoring and automatic failover capabilities
-    - Version management and compatibility checking
-    - Authentication and authorization setup
-
-Tool Integration:
-    - Automatic tool discovery and registration
-    - Tool capability testing and validation
-    - Permission management and access control
-    - Performance monitoring and usage analytics
-    - Integration with AI model workflows
-
-Security Features:
-    - Secure server communication with encryption
-    - Authentication and authorization management
-    - Access control and permission validation
-    - Audit logging for all MCP operations
-    - Security scanning and vulnerability assessment
-
-Performance Monitoring:
-    - Real-time server health and status monitoring
-    - Tool usage analytics and performance metrics
-    - Error tracking and diagnostic reporting
-    - Capacity planning and resource optimization
-    - Integration with monitoring and alerting systems
-
-Use Cases:
-    - External tool integration for AI models
-    - Third-party service connectivity and management
-    - Custom tool development and deployment
-    - Enterprise system integration and workflow automation
-    - AI model capability extension and enhancement
-
-Example Usage:
-    ```bash
-    # Server management
-    ai-chatbot mcp list-servers --enabled-only
-    ai-chatbot mcp register-server server_config.json
-    ai-chatbot mcp test-server server_id --full-test
-
-    # Tool management
-    ai-chatbot mcp list-tools --server-id server_id
-    ai-chatbot mcp test-tool tool_id --validate
-    ai-chatbot mcp enable-tool tool_id
-
-    # Monitoring and diagnostics
-    ai-chatbot mcp health-check --detailed
-    ai-chatbot mcp server-logs server_id --tail 100
-    ai-chatbot mcp performance-report --date-range 7d
-    ```
-"""
 
 from typing import Optional
 

@@ -4,50 +4,6 @@ This module provides comprehensive management of background tasks and job queues
 through async operations and the AI Chatbot SDK for monitoring and controlling
 background processing systems.
 """
-    - Dynamic worker scaling and load balancing
-    - Worker restart and recovery operations
-    - Resource utilization tracking
-    - Error rate monitoring and alerting
-
-Task Lifecycle:
-    - Task creation and submission
-    - Progress tracking and status updates
-    - Result retrieval and processing
-    - Error handling and retry mechanisms
-    - Task cancellation and cleanup
-
-Performance Monitoring:
-    - Task execution time analysis
-    - Queue throughput and latency metrics
-    - Worker efficiency and utilization rates
-    - Error rate tracking and alerting
-    - Capacity planning and resource optimization
-
-Use Cases:
-    - Document processing and analysis pipelines
-    - Bulk email and notification systems
-    - Data export and report generation
-    - Machine learning model training
-    - System maintenance and cleanup tasks
-
-Example Usage:
-    ```bash
-    # System monitoring
-    ai-chatbot tasks status --detailed
-    ai-chatbot tasks workers --show-inactive
-    ai-chatbot tasks queues --include-metrics
-
-    # Task management
-    ai-chatbot tasks list --status running --limit 20
-    ai-chatbot tasks show task_id --include-logs
-    ai-chatbot tasks cancel task_id --force
-
-    # Performance and optimization
-    ai-chatbot tasks performance --period week
-    ai-chatbot tasks cleanup --older-than 30d
-    ai-chatbot tasks scale-workers --queue default --count 5
-    ```
-"""
 
 from typing import Optional
 
