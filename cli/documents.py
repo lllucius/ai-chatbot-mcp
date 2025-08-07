@@ -95,10 +95,11 @@ async def list(
         resp = await sdk.documents.list(
             page=page, size=size, file_type=file_type, status=status
         )
-        if resp and resp.items:
+        print("REAP", resp)
+        if resp:
             from rich.table import Table
 
-            table = Table(title=f"Documents (Page {resp.pagination.page})")
+            table = Table(title=f"Documents")
             table.add_column("ID", style="cyan")
             table.add_column("Title", style="white")
             table.add_column("File Type", style="blue")
@@ -107,7 +108,7 @@ async def list(
             table.add_column("Owner", style="green")
             table.add_column("Chunks", style="white")
             table.add_column("Uploaded", style="bright_black")
-            for doc in resp.items:
+            for doc in resp:
                 table.add_row(
                     str(doc.id)[:8] + "...",
                     doc.title,

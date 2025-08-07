@@ -30,7 +30,6 @@ from typing import Any, Dict, Optional
 from uuid import UUID
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..models.document import Document, DocumentChunk, FileStatus
@@ -38,6 +37,7 @@ from ..services.embedding import EmbeddingService
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
+from ..database import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ class BackgroundProcessor(BaseService):
 
     def __init__(
         self,
-        db: AsyncSession,
+        db,  # This db is no longer used for per-task operations
         max_concurrent_tasks: int = 3,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
@@ -113,12 +113,12 @@ class BackgroundProcessor(BaseService):
         Initialize the background processor.
 
         Args:
-            db: Database session
+            db: Database session (unused for per-task operations)
             max_concurrent_tasks: Maximum number of concurrent processing tasks
             chunk_size: Default chunk size for text processing
             chunk_overlap: Default chunk overlap for text processing
         """
-        super().__init__(db, "background_processor")
+        super().__init__(db, "background_processor")  # keep for base ops if needed
         self.max_concurrent_tasks = max_concurrent_tasks
         self.processing_semaphore = asyncio.Semaphore(max_concurrent_tasks)
 
@@ -127,12 +127,11 @@ class BackgroundProcessor(BaseService):
         self.active_tasks: Dict[str, ProcessingTask] = {}
         self.task_results: Dict[str, Dict[str, Any]] = {}
 
-        # Processing components
+        # Processing components (stateless/utilities)
         self.file_processor = FileProcessor()
         self.text_processor = TextProcessor(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
-        self.embedding_service = EmbeddingService(db)
 
         # Worker task
         self._worker_task: Optional[asyncio.Task] = None
@@ -303,57 +302,59 @@ class BackgroundProcessor(BaseService):
         """
         operation = f"process_task_{task.task_type}"
 
-        try:
-            task.status = TaskStatus.PROCESSING
-            task.started_at = datetime.utcnow()
+        # Each task gets its own DB session using a context manager
+        # get_db is an async generator, so we use async for and break after first yield
+        async for db in get_db():
+            try:
+                task.status = TaskStatus.PROCESSING
+                task.started_at = datetime.utcnow()
 
-            self._log_operation_start(
-                operation,
-                task_id=task.task_id,
-                document_id=str(task.document_id),
-                task_type=task.task_type,
-            )
+                self._log_operation_start(
+                    operation,
+                    task_id=task.task_id,
+                    document_id=str(task.document_id),
+                    task_type=task.task_type,
+                )
 
-            if task.task_type == "process_document":
-                await self._process_document_task(task)
-            else:
-                raise ValueError(f"Unknown task type: {task.task_type}")
+                if task.task_type == "process_document":
+                    await self._process_document_task(task, db)
+                else:
+                    raise ValueError(f"Unknown task type: {task.task_type}")
 
-            task.status = TaskStatus.COMPLETED
-            task.completed_at = datetime.utcnow()
-            task.progress = 1.0
+                task.status = TaskStatus.COMPLETED
+                task.completed_at = datetime.utcnow()
+                task.progress = 1.0
 
-            # Store result
-            self.task_results[task.task_id] = {
-                "status": TaskStatus.COMPLETED,
-                "completed_at": task.completed_at,
-            }
+                # Store result
+                self.task_results[task.task_id] = {
+                    "status": TaskStatus.COMPLETED,
+                    "completed_at": task.completed_at,
+                }
 
-            self._log_operation_success(
-                operation,
-                task_id=task.task_id,
-                document_id=str(task.document_id),
-                processing_time=time.time() - task.started_at.timestamp(),
-            )
+                self._log_operation_success(
+                    operation,
+                    task_id=task.task_id,
+                    document_id=str(task.document_id),
+                    processing_time=time.time() - task.started_at.timestamp(),
+                )
 
-        except Exception as e:
-            await self._handle_task_error(task, e)
+            except Exception as e:
+                await self._handle_task_error(task, e, db)
+            finally:
+                # Remove from active tasks
+                self.active_tasks.pop(task.task_id, None)
+            break  # Only use the first session from get_db()
 
-        finally:
-            # Remove from active tasks
-            self.active_tasks.pop(task.task_id, None)
-
-    async def _process_document_task(self, task: ProcessingTask):
+    async def _process_document_task(self, task: ProcessingTask, db):
         """
         Process a document processing task.
 
         Args:
             task: Document processing task
+            db: AsyncSession for database operations
         """
-        await self._ensure_db_session()
-
         # Get document
-        result = await self.db.execute(
+        result = await db.execute(
             select(Document).where(Document.id == task.document_id)
         )
         document = result.scalar_one_or_none()
@@ -362,12 +363,12 @@ class BackgroundProcessor(BaseService):
             raise ValueError(f"Document not found: {task.document_id}")
 
         # Update document status
-        await self.db.execute(
+        await db.execute(
             update(Document)
             .where(Document.id == document.id)
             .values(status=FileStatus.PROCESSING)
         )
-        await self.db.commit()
+        await db.commit()
 
         start_time = time.time()
 
@@ -407,9 +408,11 @@ class BackgroundProcessor(BaseService):
             chunk_records = []
             progress_step = 0.5 / len(chunks) if chunks else 0
 
+            embedding_service = EmbeddingService(db)
+
             for i, chunk in enumerate(chunks):
                 # Generate embedding
-                embedding = await self.embedding_service.generate_embedding(
+                embedding = await embedding_service.generate_embedding(
                     chunk.content
                 )
 
@@ -429,7 +432,7 @@ class BackgroundProcessor(BaseService):
                 )
 
                 chunk_records.append(chunk_record)
-                self.db.add(chunk_record)
+                db.add(chunk_record)
 
                 # Update progress
                 task.progress = 0.4 + (i + 1) * progress_step
@@ -443,7 +446,7 @@ class BackgroundProcessor(BaseService):
             processing_time = time.time() - start_time
 
             # Update document with results
-            await self.db.execute(
+            await db.execute(
                 update(Document)
                 .where(Document.id == document.id)
                 .values(
@@ -465,7 +468,7 @@ class BackgroundProcessor(BaseService):
                 )
             )
 
-            await self.db.commit()
+            await db.commit()
             task.progress = 1.0
 
             logger.info(
@@ -488,7 +491,7 @@ class BackgroundProcessor(BaseService):
 
             # Update document status to failed
             try:
-                await self.db.execute(
+                await db.execute(
                     update(Document)
                     .where(Document.id == document.id)
                     .values(
@@ -501,19 +504,20 @@ class BackgroundProcessor(BaseService):
                         },
                     )
                 )
-                await self.db.commit()
+                await db.commit()
             except Exception as db_error:
                 logger.error(f"Failed to update document status to failed: {db_error}")
 
             raise
 
-    async def _handle_task_error(self, task: ProcessingTask, error: Exception):
+    async def _handle_task_error(self, task: ProcessingTask, error: Exception, db=None):
         """
         Handle task processing error with retry logic.
 
         Args:
             task: Failed task
             error: Exception that occurred
+            db: Optionally, the AsyncSession for error handling DB updates
         """
         task.retries += 1
         task.error_message = str(error)
@@ -606,12 +610,12 @@ class BackgroundProcessor(BaseService):
 _background_processor: Optional[BackgroundProcessor] = None
 
 
-async def get_background_processor(db: AsyncSession) -> BackgroundProcessor:
+async def get_background_processor(db) -> BackgroundProcessor:
     """
     Get the global background processor instance.
 
     Args:
-        db: Database session
+        db: Database session (unused for per-task operations)
 
     Returns:
         BackgroundProcessor: Global processor instance
@@ -632,3 +636,4 @@ async def shutdown_background_processor():
     if _background_processor is not None:
         await _background_processor.stop()
         _background_processor = None
+
