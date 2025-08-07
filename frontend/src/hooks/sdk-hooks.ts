@@ -40,6 +40,20 @@ export function useLogin() {
 }
 
 /**
+ * Hook for user registration
+ */
+export function useRegister() {
+  return useMutation({
+    mutationFn: (userData: {
+      username: string;
+      email: string;
+      password: string;
+      full_name?: string;
+    }) => sdkService.getSdk().auth.register(userData),
+  });
+}
+
+/**
  * Hook for user logout
  */
 export function useLogout() {
@@ -325,7 +339,7 @@ export function useUsageAnalytics(period?: string) {
   });
 }
 
-// =============================================================================
+//==========================================================================
 // MCP Hooks
 // =============================================================================
 
@@ -362,6 +376,40 @@ export function useMcpStats() {
   });
 }
 
+/**
+ * Hook to add MCP server
+ */
+export function useAddMcpServer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (serverData: {
+      name: string;
+      url: string;
+      description?: string;
+      enabled?: boolean;
+      transport?: string;
+    }) => sdkService.getSdk().mcp.addServer(serverData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mcp', 'servers'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete MCP server
+ */
+export function useDeleteMcpServer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (serverName: string) => sdkService.getSdk().mcp.removeServer(serverName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mcp', 'servers'] });
+    },
+  });
+}
+
 // =============================================================================
 // Profile & Prompt Hooks
 // =============================================================================
@@ -378,6 +426,40 @@ export function useLlmProfiles() {
 }
 
 /**
+ * Hook to create LLM profile
+ */
+export function useCreateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      description: string;
+      model: string;
+      parameters: Record<string, any>;
+      is_default?: boolean;
+    }) => sdkService.getSdk().profiles.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete LLM profile
+ */
+export function useDeleteProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (profileName: string) => sdkService.getSdk().profiles.delete(profileName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    },
+  });
+}
+
+/**
  * Hook to get prompts
  */
 export function usePrompts() {
@@ -385,6 +467,40 @@ export function usePrompts() {
     queryKey: ['prompts'],
     queryFn: () => sdkService.getPrompts(),
     staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+/**
+ * Hook to create prompt
+ */
+export function useCreatePrompt() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      description: string;
+      template: string;
+      category: string;
+      is_default?: boolean;
+    }) => sdkService.getSdk().prompts.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete prompt
+ */
+export function useDeletePrompt() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (promptName: string) => sdkService.getSdk().prompts.delete(promptName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+    },
   });
 }
 
@@ -417,6 +533,13 @@ export function useUpdateUserProfile() {
       queryClient.invalidateQueries({ queryKey: ['user', 'current'] });
     },
   });
+}
+
+/**
+ * Hook for updating profile (alias for backward compatibility)
+ */
+export function useUpdateProfile() {
+  return useUpdateUserProfile();
 }
 
 /**

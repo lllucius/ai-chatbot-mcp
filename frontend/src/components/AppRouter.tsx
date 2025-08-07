@@ -327,7 +327,7 @@ function UserMenu(): React.ReactElement {
     <>
       <IconButton onClick={handleMenuOpen} sx={{ ml: 2 }}>
         <Avatar sx={{ width: 32, height: 32 }}>
-          {user.full_name.charAt(0).toUpperCase()}
+          {(user.full_name || user.username).charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
 
@@ -346,7 +346,7 @@ function UserMenu(): React.ReactElement {
       >
         <MenuItem disabled>
           <Box>
-            <Typography variant="subtitle2">{user.full_name}</Typography>
+            <Typography variant="subtitle2">{user.full_name || user.username}</Typography>
             <Typography variant="caption" color="text.secondary">
               {user.email}
             </Typography>
