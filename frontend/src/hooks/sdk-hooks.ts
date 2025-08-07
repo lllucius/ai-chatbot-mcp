@@ -265,6 +265,21 @@ export function useDeleteDocument() {
 }
 
 /**
+ * Hook to reprocess a document
+ */
+export function useReprocessDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (documentId: string) => sdkService.getSdk().documents.reprocess(documentId),
+    onSuccess: () => {
+      // Invalidate documents list and the specific document
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    },
+  });
+}
+
+/**
  * Hook to get document processing status
  */
 export function useDocumentStatus(documentId: string) {
@@ -533,6 +548,51 @@ export function useDeleteProfile() {
 }
 
 /**
+ * Hook to create LLM profile (alias)
+ */
+export function useCreateLlmProfile() {
+  return useCreateProfile();
+}
+
+/**
+ * Hook to update LLM profile
+ */
+export function useUpdateLlmProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ profileName, data }: { 
+      profileName: string; 
+      data: { name?: string; description?: string; model?: string; parameters?: Record<string, any> } 
+    }) => sdkService.getSdk().profiles.update(profileName, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete LLM profile (alias)
+ */
+export function useDeleteLlmProfile() {
+  return useDeleteProfile();
+}
+
+/**
+ * Hook to set default LLM profile
+ */
+export function useSetDefaultLlmProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (profileName: string) => sdkService.getSdk().profiles.setDefault(profileName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    },
+  });
+}
+
+/**
  * Hook to get prompts
  */
 export function usePrompts() {
@@ -571,6 +631,51 @@ export function useDeletePrompt() {
 
   return useMutation({
     mutationFn: (promptName: string) => sdkService.getSdk().prompts.delete(promptName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+    },
+  });
+}
+
+/**
+ * Hook to create prompt template (alias)
+ */
+export function useCreatePromptTemplate() {
+  return useCreatePrompt();
+}
+
+/**
+ * Hook to update prompt template
+ */
+export function useUpdatePromptTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ promptName, data }: { 
+      promptName: string; 
+      data: { name?: string; description?: string; template?: string; category?: string } 
+    }) => sdkService.getSdk().prompts.update(promptName, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+    },
+  });
+}
+
+/**
+ * Hook to delete prompt template (alias)
+ */
+export function useDeletePromptTemplate() {
+  return useDeletePrompt();
+}
+
+/**
+ * Hook to set default prompt template
+ */
+export function useSetDefaultPromptTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (promptName: string) => sdkService.getSdk().prompts.setDefault(promptName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prompts'] });
     },
