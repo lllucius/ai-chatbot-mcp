@@ -32,10 +32,9 @@ import {
   useEnhancedBasicHealth,
   useEnhancedDetailedHealth,
   useEnhancedCurrentUser,
-  useEnhancedConversations,
-  useEnhancedCreateConversation,
-  useValidationErrorHandler,
-} from '../../hooks/api-validated';
+  useConversations as useEnhancedConversations,
+  useCreateConversation as useEnhancedCreateConversation,
+} from '../../hooks/api';
 
 /**
  * Demo component for OpenAPI validation features
