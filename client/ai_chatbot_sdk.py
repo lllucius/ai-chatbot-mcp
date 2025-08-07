@@ -119,7 +119,7 @@ Performance Considerations:
 
 from collections.abc import AsyncIterator
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
-from uuid import UUID
+
 
 import httpx
 
@@ -591,11 +591,11 @@ class UsersClient:
         )
         return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
 
-    async def get_byid(self, user_id: UUID) -> UserResponse:
+    async def get_byid(self, user_id: str) -> UserResponse:
         """Get user profile by ID.
 
         Args:
-            user_id: UUID of the user to retrieve.
+            user_id: str of the user to retrieve.
 
         Returns:
             UserResponse: User profile information.
@@ -621,11 +621,11 @@ class UsersClient:
         """
         return await self.sdk._request(f"/api/v1/users/byname/{user_name}", UserResponse)
 
-    async def update(self, user_id: UUID, data: UserUpdate) -> UserResponse:
+    async def update(self, user_id: str, data: UserUpdate) -> UserResponse:
         """Update user profile by ID.
 
         Args:
-            user_id: UUID of the user to update.
+            user_id: str of the user to update.
             data: UserUpdate model with fields to update.
 
         Returns:
@@ -642,11 +642,11 @@ class UsersClient:
             json=data.model_dump(),
         )
 
-    async def delete(self, user_id: UUID) -> BaseResponse:
+    async def delete(self, user_id: str) -> BaseResponse:
         """Delete user account by ID.
 
         Args:
-            user_id: UUID of the user to delete.
+            user_id: str of the user to delete.
 
         Returns:
             BaseResponse: Success/failure status of deletion.
@@ -719,11 +719,11 @@ class DocumentsClient:
             "/api/v1/documents/", DocumentResponse, params=params
         )
 
-    async def get(self, document_id: UUID) -> DocumentResponse:
+    async def get(self, document_id: str) -> DocumentResponse:
         """Get document metadata by ID.
 
         Args:
-            document_id: UUID of the document to retrieve.
+            document_id: str of the document to retrieve.
 
         Returns:
             DocumentResponse: Document metadata and status.
@@ -736,11 +736,11 @@ class DocumentsClient:
             f"/api/v1/documents/byid/{document_id}", DocumentResponse
         )
 
-    async def update(self, document_id: UUID, data: DocumentUpdate) -> DocumentResponse:
+    async def update(self, document_id: str, data: DocumentUpdate) -> DocumentResponse:
         """Update document metadata.
 
         Args:
-            document_id: UUID of the document to update.
+            document_id: str of the document to update.
             data: DocumentUpdate model with fields to update.
 
         Returns:
@@ -757,11 +757,11 @@ class DocumentsClient:
             json=data.model_dump(),
         )
 
-    async def delete(self, document_id: UUID) -> BaseResponse:
+    async def delete(self, document_id: str) -> BaseResponse:
         """Delete document and all associated data.
 
         Args:
-            document_id: UUID of the document to delete.
+            document_id: str of the document to delete.
 
         Returns:
             BaseResponse: Success/failure status of deletion.
@@ -774,11 +774,11 @@ class DocumentsClient:
             f"/api/v1/documents/byid/{document_id}", BaseResponse, method="DELETE"
         )
 
-    async def status(self, document_id: UUID) -> ProcessingStatusResponse:
+    async def status(self, document_id: str) -> ProcessingStatusResponse:
         """Get document processing status and progress.
 
         Args:
-            document_id: UUID of the document to check.
+            document_id: str of the document to check.
 
         Returns:
             ProcessingStatusResponse: Current processing status and progress.
@@ -792,11 +792,11 @@ class DocumentsClient:
             ProcessingStatusResponse,
         )
 
-    async def reprocess(self, document_id: UUID) -> BaseResponse:
+    async def reprocess(self, document_id: str) -> BaseResponse:
         """Reprocess document for chunk generation and embeddings.
 
         Args:
-            document_id: UUID of the document to reprocess.
+            document_id: str of the document to reprocess.
 
         Returns:
             BaseResponse: Success/failure status of reprocessing request.
@@ -811,11 +811,11 @@ class DocumentsClient:
             method="POST",
         )
 
-    async def download(self, document_id: UUID) -> bytes:
+    async def download(self, document_id: str) -> bytes:
         """Download original document file.
 
         Args:
-            document_id: UUID of the document to download.
+            document_id: str of the document to download.
 
         Returns:
             bytes: Binary content of the original document file.
@@ -889,11 +889,11 @@ class ConversationsClient:
             "/api/v1/conversations/", ConversationResponse, params=params
         )
 
-    async def get(self, conversation_id: UUID) -> ConversationResponse:
+    async def get(self, conversation_id: str) -> ConversationResponse:
         """Get conversation metadata by ID.
 
         Args:
-            conversation_id: UUID of the conversation to retrieve.
+            conversation_id: str of the conversation to retrieve.
 
         Returns:
             ConversationResponse: Conversation metadata.
@@ -908,12 +908,12 @@ class ConversationsClient:
         )
 
     async def update(
-        self, conversation_id: UUID, data: ConversationUpdate
+        self, conversation_id: str, data: ConversationUpdate
     ) -> ConversationResponse:
         """Update conversation metadata.
 
         Args:
-            conversation_id: UUID of the conversation to update.
+            conversation_id: str of the conversation to update.
             data: ConversationUpdate model with fields to update.
 
         Returns:
@@ -930,11 +930,11 @@ class ConversationsClient:
             json=data.model_dump(),
         )
 
-    async def delete(self, conversation_id: UUID) -> BaseResponse:
+    async def delete(self, conversation_id: str) -> BaseResponse:
         """Delete conversation and all associated messages.
 
         Args:
-            conversation_id: UUID of the conversation to delete.
+            conversation_id: str of the conversation to delete.
 
         Returns:
             BaseResponse: Success/failure status of deletion.
@@ -950,12 +950,12 @@ class ConversationsClient:
         )
 
     async def messages(
-        self, conversation_id: UUID, page: int = 1, size: int = 50
+        self, conversation_id: str, page: int = 1, size: int = 50
     ) -> PaginatedResponse:
         """Get messages from a conversation with pagination.
 
         Args:
-            conversation_id: UUID of the conversation.
+            conversation_id: str of the conversation.
             page: Page number for pagination (default: 1).
             size: Number of messages per page (default: 50).
 
@@ -1657,7 +1657,7 @@ class AdminClient:
         self.sdk = sdk
 
     # User admin operations
-    async def promote_user(self, user_id: UUID) -> BaseResponse:
+    async def promote_user(self, user_id: str) -> BaseResponse:
         """Promote user to superuser."""
         # Use the user update endpoint to set superuser status
         from shared.schemas.user import UserUpdate
@@ -1666,7 +1666,7 @@ class AdminClient:
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
-    async def demote_user(self, user_id: UUID) -> BaseResponse:
+    async def demote_user(self, user_id: str) -> BaseResponse:
         """Demote user from superuser."""
         # Use the user update endpoint to remove superuser status
         from shared.schemas.user import UserUpdate
@@ -1675,7 +1675,7 @@ class AdminClient:
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
-    async def activate_user(self, user_id: UUID) -> BaseResponse:
+    async def activate_user(self, user_id: str) -> BaseResponse:
         """Activate user account."""
         # Use the user update endpoint to set active status
         from shared.schemas.user import UserUpdate
@@ -1684,7 +1684,7 @@ class AdminClient:
             f"/api/v1/users/byid/{user_id}", BaseResponse, method="PUT", json=update_data.model_dump()
         )
 
-    async def deactivate_user(self, user_id: UUID) -> BaseResponse:
+    async def deactivate_user(self, user_id: str) -> BaseResponse:
         """Deactivate user account."""
         # Use the user update endpoint to remove active status
         from shared.schemas.user import UserUpdate
@@ -1694,7 +1694,7 @@ class AdminClient:
         )
 
     async def reset_user_password(
-        self, user_id: UUID, new_password: Optional[str] = None
+        self, user_id: str, new_password: Optional[str] = None
     ) -> BaseResponse:
         """Reset user password."""
         # Use the actual admin password reset endpoint
@@ -1725,7 +1725,7 @@ class AdminClient:
         )
 
     async def bulk_reprocess_documents(
-        self, document_ids: Optional[List[UUID]] = None
+        self, document_ids: Optional[List[str]] = None
     ) -> BaseResponse:
         """Bulk reprocess documents."""
         # This endpoint doesn't exist yet, so mark as not implemented
@@ -1752,7 +1752,7 @@ class AdminClient:
             "/api/v1/conversations/search", dict, params=params
         )
 
-    async def export_conversation(self, conversation_id: UUID) -> Dict[str, Any]:
+    async def export_conversation(self, conversation_id: str) -> Dict[str, Any]:
         """Export conversation."""
         return await self.sdk._request(
             f"/api/v1/conversations/byid/{conversation_id}/export", dict

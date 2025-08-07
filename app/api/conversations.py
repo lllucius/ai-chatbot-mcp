@@ -4,7 +4,7 @@ import json
 import time
 from datetime import datetime, timedelta
 from typing import List, Optional
-from uuid import UUID
+
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -137,7 +137,7 @@ async def list_conversations(
 @router.get("/byid/{conversation_id}", response_model=APIResponse[ConversationResponse])
 @handle_api_errors("Failed to retrieve conversation")
 async def get_conversation(
-    conversation_id: UUID,
+    conversation_id: str,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ) -> APIResponse[ConversationResponse]:
@@ -162,7 +162,7 @@ async def get_conversation(
 @router.put("/byid/{conversation_id}", response_model=APIResponse[ConversationResponse])
 @handle_api_errors("Failed to update conversation")
 async def update_conversation(
-    conversation_id: UUID,
+    conversation_id: str,
     request: ConversationUpdate,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
@@ -188,7 +188,7 @@ async def update_conversation(
 @router.delete("/byid/{conversation_id}", response_model=APIResponse)
 @handle_api_errors("Failed to delete conversation")
 async def delete_conversation(
-    conversation_id: UUID,
+    conversation_id: str,
     current_user: User = Depends(get_current_user),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ) -> APIResponse:
@@ -222,7 +222,7 @@ async def delete_conversation(
 )
 @handle_api_errors("Failed to retrieve messages")
 async def get_messages(
-    conversation_id: UUID,
+    conversation_id: str,
     page: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
@@ -461,7 +461,7 @@ async def get_registry_stats(
 )
 @handle_api_errors("Failed to export conversation")
 async def export_conversation(
-    conversation_id: UUID,
+    conversation_id: str,
     format: str = Query("json", description="Export format: json, txt, csv"),
     include_metadata: bool = Query(True, description="Include conversation metadata"),
     current_user: User = Depends(get_current_user),

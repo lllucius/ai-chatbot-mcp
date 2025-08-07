@@ -60,7 +60,7 @@ Example Usage:
 """
 
 from typing import Optional
-from uuid import UUID
+
 
 from async_typer import AsyncTyper
 from rich.console import Console
@@ -162,7 +162,7 @@ async def show(
     """Show document details."""
     try:
         sdk = await get_sdk()
-        doc = await sdk.documents.get(UUID(document_id))
+        doc = await sdk.documents.get(str(document_id))
         if doc:
             from rich.panel import Panel
 
@@ -191,7 +191,7 @@ async def status(
     """Show processing status for a document."""
     try:
         sdk = await get_sdk()
-        status = await sdk.documents.status(UUID(document_id))
+        status = await sdk.documents.status(str(document_id))
         if status:
             from rich.panel import Panel
 
@@ -219,7 +219,7 @@ async def reprocess(
     """Reprocess a document."""
     try:
         sdk = await get_sdk()
-        resp = await sdk.documents.reprocess(UUID(document_id))
+        resp = await sdk.documents.reprocess(str(document_id))
         if getattr(resp, "success", False):
             success_message("Document reprocessing started.")
         else:
@@ -243,7 +243,7 @@ async def delete(
         ):
             return
         sdk = await get_sdk()
-        resp = await sdk.documents.delete(UUID(document_id))
+        resp = await sdk.documents.delete(str(document_id))
         if getattr(resp, "success", False):
             success_message("Document deleted successfully.")
         else:

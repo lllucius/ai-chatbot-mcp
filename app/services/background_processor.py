@@ -23,11 +23,10 @@ import asyncio
 import contextlib
 import logging
 import time
-import uuid
+
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
-from uuid import UUID
 
 from sqlalchemy import select, update
 
@@ -35,6 +34,7 @@ from ..config import settings
 from ..models.document import Document, DocumentChunk, FileStatus
 from ..services.embedding import EmbeddingService
 from ..utils.file_processing import FileProcessor
+from ..utils.mlid import generate_mlid
 from ..utils.text_processing import TextProcessor
 from .base import BaseService
 
@@ -57,7 +57,7 @@ class ProcessingTask:
     def __init__(
         self,
         task_id: str,
-        document_id: UUID,
+        document_id: str,
         task_type: str = "process_document",
         priority: int = 5,
         max_retries: int = 3,
@@ -67,7 +67,7 @@ class ProcessingTask:
 
         Args:
             task_id: Unique identifier for the task.
-            document_id: UUID of the document to process.
+            document_id: str of the document to process.
             task_type: Type of processing task to perform.
             priority: Task priority (lower numbers = higher priority).
             max_retries: Maximum number of retry attempts.
@@ -197,7 +197,7 @@ class BackgroundProcessor(BaseService):
 
     async def queue_document_processing(
         self,
-        document_id: UUID,
+        document_id: str,
         priority: int = 5,
         processing_config: Optional[Dict[str, Any]] = None,
     ) -> str:
@@ -212,7 +212,7 @@ class BackgroundProcessor(BaseService):
         Returns:
             str: Task ID for tracking
         """
-        task_id = str(uuid.uuid4())
+        task_id = str(generate_mlid())
 
         task = ProcessingTask(
             task_id=task_id,

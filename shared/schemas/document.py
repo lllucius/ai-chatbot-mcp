@@ -7,7 +7,6 @@ All fields have an explicit 'description' argument.
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -18,14 +17,14 @@ from .common import BaseResponse, SearchParams
 class DocumentResponse(BaseSchema):
     """Schema for document response data."""
 
-    id: UUID = Field(..., description="Document ID")
+    id: str = Field(..., description="Document ID")
     title: str = Field(..., description="Document title")
     filename: str = Field(..., description="Original filename")
     file_type: str = Field(..., description="File type/extension")
     file_size: int = Field(..., description="File size in bytes")
     mime_type: Optional[str] = Field(None, description="MIME type")
     processing_status: str = Field(..., description="Processing status")
-    owner_id: UUID = Field(..., description="Owner user ID")
+    owner_id: str = Field(..., description="Owner user ID")
     metainfo: Optional[Dict[str, Any]] = Field(None, description="Additional metainfo")
     chunk_count: int = Field(0, description="Number of chunks")
     created_at: datetime = Field(..., description="Upload timestamp")
@@ -74,13 +73,13 @@ class DocumentUpdate(BaseSchema):
 class DocumentChunkResponse(BaseSchema):
     """Schema for document chunk response data."""
 
-    id: UUID = Field(..., description="Chunk ID")
+    id: str = Field(..., description="Chunk ID")
     content: str = Field(..., description="Chunk text content")
     chunk_index: int = Field(..., description="Chunk index in document")
     start_char: int = Field(..., description="Start character position")
     end_char: int = Field(..., description="End character position")
     token_count: int = Field(..., description="Number of tokens")
-    document_id: UUID = Field(..., description="Parent document ID")
+    document_id: str = Field(..., description="Parent document ID")
     document_title: Optional[str] = Field(None, description="Document title")
     similarity_score: Optional[float] = Field(
         None, description="Similarity score (for search)"
@@ -112,7 +111,7 @@ class DocumentChunkResponse(BaseSchema):
 class DocumentSearchRequest(SearchParams):
     """Schema for document search requests."""
 
-    document_ids: Optional[List[UUID]] = Field(
+    document_ids: Optional[List[str]] = Field(
         None, description="Specific document IDs to search"
     )
     file_types: Optional[List[str]] = Field(None, description="File types to include")
@@ -156,7 +155,7 @@ class DocumentUploadResponse(BaseSchema):
 class ProcessingStatusResponse(BaseSchema):
     """Enhanced schema for document processing status with background task information."""
 
-    document_id: UUID = Field(..., description="Document ID")
+    document_id: str = Field(..., description="Document ID")
     status: str = Field(..., description="Current processing status")
     chunk_count: int = Field(0, description="Number of chunks created")
     processing_time: Optional[float] = Field(

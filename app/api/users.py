@@ -1,7 +1,5 @@
 """User management API endpoints."""
 
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -180,7 +178,7 @@ async def list_users(
 @router.get("/byid/{user_id}", response_model=APIResponse[UserResponse])
 @handle_api_errors("Failed to retrieve user")
 async def get_user_byid(
-    user_id: UUID,
+    user_id: str,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse[UserResponse]:
@@ -217,7 +215,7 @@ async def get_user_byname(
 @router.put("/byid/{user_id}", response_model=APIResponse[UserResponse])
 @handle_api_errors("User update failed")
 async def update_user(
-    user_id: UUID,
+    user_id: str,
     request: UserUpdate,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
@@ -239,7 +237,7 @@ async def update_user(
 @router.delete("/byid/{user_id}", response_model=APIResponse)
 @handle_api_errors("User deletion failed")
 async def delete_user(
-    user_id: UUID,
+    user_id: str,
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse:
@@ -271,7 +269,7 @@ async def delete_user(
 @router.post("/byid/{user_id}/promote", response_model=APIResponse)
 @handle_api_errors("Failed to promote user")
 async def promote_user_to_superuser(
-    user_id: UUID,
+    user_id: str,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse:
@@ -312,7 +310,7 @@ async def promote_user_to_superuser(
 @router.post("/byid/{user_id}/demote", response_model=APIResponse)
 @handle_api_errors("Failed to demote user")
 async def demote_user_from_superuser(
-    user_id: UUID,
+    user_id: str,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse:
@@ -358,7 +356,7 @@ async def demote_user_from_superuser(
 @router.post("/byid/{user_id}/activate", response_model=APIResponse)
 @handle_api_errors("Failed to activate user")
 async def activate_user_account(
-    user_id: UUID,
+    user_id: str,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse:
@@ -397,7 +395,7 @@ async def activate_user_account(
 @router.post("/byid/{user_id}/deactivate", response_model=APIResponse)
 @handle_api_errors("Failed to deactivate user")
 async def deactivate_user_account(
-    user_id: UUID,
+    user_id: str,
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse:
@@ -443,7 +441,7 @@ async def deactivate_user_account(
 @router.post("/byid/{user_id}/reset-password", response_model=APIResponse)
 @handle_api_errors("Failed to reset password")
 async def admin_reset_user_password(
-    user_id: UUID,
+    user_id: str,
     new_password: str = Query(..., min_length=8, description="New password"),
     current_user: User = Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),

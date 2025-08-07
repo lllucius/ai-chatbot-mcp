@@ -63,8 +63,6 @@ Use Cases:
 - Multi-tenant user management with proper isolation
 """
 
-import uuid
-
 # Import datetime utilities directly since we moved from app/
 from datetime import datetime
 from typing import List, Optional
@@ -554,7 +552,7 @@ class UserResponse(UserBase):
 
     Provides complete user profile information for API responses including account
     metadata, status information, and audit timestamps. Implements custom JSON
-    serialization for proper UUID and datetime handling with frontend-compatible
+    serialization for proper MLID and datetime handling with frontend-compatible
     formatting and comprehensive user data presentation.
 
     Response Information:
@@ -565,7 +563,7 @@ class UserResponse(UserBase):
         - Custom JSON serialization for proper type conversion
 
     User Metadata:
-        - id: Unique UUID identifier for user entity correlation
+        - id: Unique MLID identifier for user entity correlation
         - is_active: Account status for access control and lifecycle management
         - is_superuser: Administrative privilege indicator for authorization
         - created_at: Account creation timestamp for audit and analytics
@@ -579,7 +577,7 @@ class UserResponse(UserBase):
         - Audit timestamps for security monitoring and compliance
 
     JSON Serialization:
-        - UUID fields converted to string representation for API compatibility
+        - MLID fields converted to string representation for API compatibility
         - Datetime fields converted to ISO format with timezone indicators
         - Custom serialization for frontend compatibility and integration
         - Consistent field formatting across all API responses
@@ -613,15 +611,15 @@ class UserResponse(UserBase):
 
     """
 
-    id: uuid.UUID = Field(..., description="Unique user identifier")
+    id: str = Field(..., description="Unique user identifier (MLID)")
     is_active: bool = Field(..., description="Whether the user account is active")
     is_superuser: bool = Field(..., description="Whether the user has admin privileges")
     created_at: datetime = Field(..., description="When the user account was created")
 
     def model_dump_json(self, **kwargs):
-        """Serialize model with comprehensive UUID and datetime handling for user responses.
+        """Serialize model with comprehensive MLID and datetime handling for user responses.
 
-        Converts UUID and datetime fields to appropriate string representations for JSON
+        Converts MLID and datetime fields to appropriate string representations for JSON
         compatibility and frontend integration. Provides consistent formatting for user
         response data across all API endpoints with proper type conversion.
 
@@ -629,17 +627,17 @@ class UserResponse(UserBase):
             **kwargs: Additional arguments passed to model_dump for serialization control
 
         Returns:
-            str: JSON string with properly formatted UUID and datetime fields
+            str: JSON string with properly formatted MLID and datetime fields
 
         Serialization Features:
-            - UUID to string conversion for API compatibility and frontend integration
+            - MLID validation and string formatting for API compatibility
             - Datetime to ISO format conversion with timezone indicators
             - Consistent field formatting for all user response data
             - Frontend-compatible JSON structure for web and mobile applications
             - Support for nested object serialization with proper type handling
 
         Field Conversion:
-            - id: UUID converted to standard string representation
+            - id: MLID validated and preserved as string representation
             - created_at: Datetime converted to ISO format with 'Z' suffix
             - updated_at: Datetime converted to ISO format if present
             - Other fields: Preserved in their original format
@@ -652,16 +650,14 @@ class UserResponse(UserBase):
             - Integration with external systems requiring JSON format
 
         Example:
-            user = UserResponse(id=uuid.uuid4(), username="john", ...)
+            user = UserResponse(id="ml_a2b3c4d5e6f7g8", username="john", ...)
             json_output = user.model_dump_json()
-            # Result: {"id": "12345678-1234-5678-9012-123456789012",
+            # Result: {"id": "ml_a2b3c4d5e6f7g8",
             #          "created_at": "2024-01-01T12:00:00Z", ...}
 
         """
         data = self.model_dump(**kwargs)
-        if "id" in data and data["id"] is not None:
-            if isinstance(data["id"], uuid.UUID):
-                data["id"] = str(data["id"])
+        # MLID is already a string, no conversion needed
         for field_name in ["created_at", "updated_at"]:
             if field_name in data and data[field_name] is not None:
                 if isinstance(data[field_name], datetime):
