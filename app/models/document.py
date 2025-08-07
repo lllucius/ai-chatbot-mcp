@@ -4,7 +4,6 @@ This module defines SQLAlchemy models for document storage and processing,
 including document metadata, processing status, and text chunks for vector search.
 """
 
-import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -12,7 +11,6 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import JSON
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import Float, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import BaseModelDB
@@ -63,7 +61,7 @@ class Document(BaseModelDB):
         chunk_count (Mapped[int]): Number of text chunks created.
         processing_time (Mapped[Optional[float]]): Processing time in seconds.
         error_message (Mapped[Optional[str]]): Error message if processing failed.
-        owner_id (Mapped[uuid.UUID]): ID of user who uploaded the document.
+        owner_id (Mapped[str]): ID of user who uploaded the document.
         owner (relationship): User who uploaded this document.
         chunks (relationship): Text chunks from this document.
 
@@ -132,8 +130,8 @@ class Document(BaseModelDB):
     )
 
     # User association
-    owner_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    owner_id: Mapped[str] = mapped_column(
+        String(17),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         doc="ID of user who uploaded the document",
@@ -194,7 +192,7 @@ class DocumentChunk(BaseModelDB):
         embedding_model (Mapped[Optional[str]]): Model used to generate embedding.
         token_count (Mapped[Optional[int]]): Number of tokens in this chunk.
         language (Mapped[Optional[str]]): Detected language of the chunk.
-        document_id (Mapped[uuid.UUID]): ID of the parent document.
+        document_id (Mapped[str]): ID of the parent document.
         document (relationship): Parent document for this chunk.
 
     """
@@ -239,8 +237,8 @@ class DocumentChunk(BaseModelDB):
     )
 
     # Document association
-    document_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    document_id: Mapped[str] = mapped_column(
+        String(17),
         ForeignKey("documents.id", ondelete="CASCADE"),
         nullable=False,
         doc="ID of the parent document",

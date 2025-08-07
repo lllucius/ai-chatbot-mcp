@@ -1,6 +1,6 @@
 """Database models package for AI Chatbot Platform.
 
-This package provides SQLAlchemy database models with UUID primary keys,
+This package provides SQLAlchemy database models with MLID primary keys,
 timestamp tracking, and comprehensive relationships for the AI Chatbot Platform.
 
 Core Models:
@@ -11,12 +11,12 @@ Core Models:
 - LLMProfile: Language model configuration management
 - Prompt: Prompt template management
 
-All models inherit from BaseModelDB providing UUID primary keys, automatic
+All models inherit from BaseModelDB providing MLID primary keys, automatic
 timestamps, and consistent table naming conventions.
 """
 
 # Import SQLAlchemy base classes only
-from .base import BaseModelDB, TimestampMixin, UUIDMixin
+from .base import BaseModelDB, TimestampMixin, MLIDMixin
 from .conversation import Conversation, Message
 from .document import Document, DocumentChunk
 from .llm_profile import LLMProfile
@@ -33,7 +33,7 @@ __all__ = [
     # Base classes
     "BaseModelDB",
     "TimestampMixin",
-    "UUIDMixin",
+    "MLIDMixin",
     # Models
     "User",
     "Document",

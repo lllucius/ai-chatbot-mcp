@@ -1,21 +1,22 @@
 """Base database models and mixins for common functionality.
 
 This module provides foundation classes for all database models including:
-- BaseModelDB: Core database model with UUID primary keys and timestamps
-- UUIDMixin: UUID primary key generation
+- BaseModelDB: Core database model with MLID primary keys and timestamps
+- MLIDMixin: MLID primary key generation
 - TimestampMixin: Automatic timestamp tracking
 
 All models inherit from these base classes to ensure consistent behavior,
 proper indexing, and audit trail capabilities.
 """
 
-import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from ..utils.mlid import generate_mlid
+from ..utils.mlid_types import MLID
 
 
 class TimestampMixin:
@@ -42,27 +43,27 @@ class TimestampMixin:
     )
 
 
-class UUIDMixin:
-    """Provide UUID primary key generation for global uniqueness.
+class MLIDMixin:
+    """Provide MLID primary key generation for global uniqueness.
 
     Attributes:
-        id (Mapped[uuid.UUID]): Primary key with UUID4 generation.
+        id (Mapped[str]): Primary key with MLID generation.
 
     """
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    id: Mapped[str] = mapped_column(
+        MLID,
         primary_key=True,
-        default=uuid.uuid4,
-        doc="Unique identifier for the record",
+        default=generate_mlid,
+        doc="Unique MLID identifier for the record",
     )
 
 
-class BaseModelDB(DeclarativeBase, UUIDMixin, TimestampMixin):
-    """Base database model providing UUID primary keys and timestamp tracking.
+class BaseModelDB(DeclarativeBase, MLIDMixin, TimestampMixin):
+    """Base database model providing MLID primary keys and timestamp tracking.
 
-    Combines UUIDMixin and TimestampMixin to provide a foundation for all database
-    entities with automatic UUID primary key generation, timestamp tracking, and
+    Combines MLIDMixin and TimestampMixin to provide a foundation for all database
+    entities with automatic MLID primary key generation, timestamp tracking, and
     intelligent table name generation from class names.
     """
 

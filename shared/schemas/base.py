@@ -7,7 +7,7 @@ are completely separate from SQLAlchemy database models for clean architecture.
 
 Key Features:
 - Modern Pydantic V2 configuration with optimized performance settings
-- Automatic UUID and datetime serialization for consistent API responses
+- Automatic MLID and datetime serialization for consistent API responses
 - Flexible schema inheritance hierarchy for different use cases
 - ORM integration support for seamless SQLAlchemy model conversion
 - Advanced validation and assignment handling for data integrity
@@ -16,8 +16,8 @@ Key Features:
 Schema Hierarchy:
 - BaseSchema: Foundation class with core Pydantic V2 configuration
 - TimestampMixin: Provides timestamp fields and JSON serialization
-- UUIDMixin: Provides UUID field and JSON serialization
-- BaseModelSchema: Complete base combining UUID and timestamp functionality
+- MLIDMixin: Provides MLID field and JSON serialization
+- BaseModelSchema: Complete base combining MLID and timestamp functionality
 
 Configuration Features:
 - from_attributes: Enables ORM mode for SQLAlchemy model integration
@@ -27,7 +27,7 @@ Configuration Features:
 - extra="ignore": Accepts but ignores extra input fields for robustness
 
 Serialization Capabilities:
-- Automatic UUID to string conversion for JSON compatibility
+- Automatic MLID validation and serialization for JSON compatibility
 - ISO format datetime serialization with timezone indicators
 - Custom JSON dumping with proper type handling
 - Consistent field naming and format across all API responses
@@ -56,11 +56,12 @@ Security Features:
 """
 
 import json
-import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+
+from app.utils.mlid import is_valid_mlid
 
 
 def serialize_datetime_to_iso(dt: datetime) -> str:
@@ -176,26 +177,23 @@ class TimestampMixin(BaseModel):
         return json.dumps(data)
 
 
-class UUIDMixin(BaseModel):
-    """Mixin providing UUID field and JSON serialization for unique identification.
+class MLIDMixin(BaseModel):
+    """Mixin providing MLID field and JSON serialization for unique identification.
 
-    Provides an optional UUID id field with proper JSON serialization for
+    Provides an optional MLID id field with proper JSON serialization for
     unique entity identification. Can be mixed into any schema that needs
-    UUID support.
+    MLID support.
     """
 
-    id: Optional[uuid.UUID] = None
+    id: Optional[str] = None
 
-    def model_dump_json(self, **kwargs):
-        """Serialize model with custom UUID handling."""
-        data = self.model_dump(**kwargs)
-
-        # Convert UUID to string
-        if "id" in data and data["id"] is not None:
-            if isinstance(data["id"], uuid.UUID):
-                data["id"] = str(data["id"])
-
-        return json.dumps(data)
+    @field_validator('id')
+    @classmethod
+    def validate_mlid(cls, v: Optional[str]) -> Optional[str]:
+        """Validate MLID format."""
+        if v is not None and not is_valid_mlid(v):
+            raise ValueError(f"Invalid MLID format: {v}")
+        return v
 
 
 class TimestampSchema(BaseSchema, TimestampMixin):
@@ -212,49 +210,52 @@ class TimestampSchema(BaseSchema, TimestampMixin):
     pass
 
 
-class UUIDSchema(BaseSchema, UUIDMixin):
-    """Base schema with UUID identifier field and automatic serialization support.
+class MLIDSchema(BaseSchema, MLIDMixin):
+    """Base schema with MLID identifier field and automatic serialization support.
 
-    Extends BaseSchema with UUID identifier field management, providing unique
+    Extends BaseSchema with MLID identifier field management, providing unique
     identification capabilities for entities with automatic JSON serialization
-    support. Implements custom UUID to string conversion for API compatibility
-    and consistent identifier handling across all endpoints.
+    support. Implements MLID validation for API compatibility and consistent
+    identifier handling across all endpoints.
 
-    Use this for schemas that need UUID identification but not timestamp tracking.
+    Use this for schemas that need MLID identification but not timestamp tracking.
     """
 
     pass
 
 
 class BaseModelSchema(BaseSchema):
-    """Complete foundational schema combining UUID identification and timestamp auditing.
+    """Complete foundational schema combining MLID identification and timestamp auditing.
 
-    Comprehensive base schema that merges UUID-based unique identification with
+    Comprehensive base schema that merges MLID-based unique identification with
     timestamp-based auditing capabilities, providing the complete foundation for
     entity schemas across the application. Implements advanced JSON serialization
-    with proper handling of both UUID and datetime field types.
+    with proper handling of both MLID and datetime field types.
 
     This is the recommended base class for most domain entity schemas that need
     both unique identification and audit trail capabilities.
     """
 
-    id: Optional[uuid.UUID] = None
+    id: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    def model_dump_json(self, **kwargs):
-        """Comprehensive JSON serialization with advanced UUID and datetime handling.
+    @field_validator('id')
+    @classmethod
+    def validate_mlid(cls, v: Optional[str]) -> Optional[str]:
+        """Validate MLID format."""
+        if v is not None and not is_valid_mlid(v):
+            raise ValueError(f"Invalid MLID format: {v}")
+        return v
 
-        Combines UUID to string conversion with datetime to ISO format conversion
+    def model_dump_json(self, **kwargs):
+        """Comprehensive JSON serialization with advanced MLID and datetime handling.
+
+        Combines MLID validation with datetime to ISO format conversion
         in a single serialization operation, providing complete type handling for
         entity schemas with identification and auditing capabilities.
         """
         data = self.model_dump(**kwargs)
-
-        # Convert UUID to string
-        if "id" in data and data["id"] is not None:
-            if isinstance(data["id"], uuid.UUID):
-                data["id"] = str(data["id"])
 
         # Convert datetime fields to ISO format strings
         for field_name in ["created_at", "updated_at", "deleted_at"]:
