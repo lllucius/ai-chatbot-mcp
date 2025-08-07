@@ -56,7 +56,6 @@ Service Patterns:
 """
 
 from typing import Any, Dict, List, Optional, Type, TypeVar
-from uuid import UUID
 
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -118,7 +117,7 @@ class BaseService:
             def __init__(self, db: AsyncSession):
                 super().__init__(db, "user_service")
 
-            async def get_user(self, user_id: UUID) -> User:
+            async def get_user(self, user_id: int) -> User:
                 self._log_operation_start("get_user", user_id=str(user_id))
                 try:
                     # Service logic here
@@ -223,7 +222,7 @@ class BaseService:
     async def _get_by_id(
         self,
         model: Type[ModelType],
-        entity_id: UUID,
+        entity_id: int,
         error_message: Optional[str] = None,
     ) -> ModelType:
         """

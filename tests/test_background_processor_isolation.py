@@ -10,7 +10,6 @@ This test verifies that the refactored background processor properly:
 import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 from app.services.background_processor import BackgroundProcessor, ProcessingTask, TaskStatus
 
@@ -62,8 +61,8 @@ class TestBackgroundProcessorIsolation:
         # Mock the document processing
         with patch.object(processor, '_process_document_task', new_callable=AsyncMock) as mock_process:
             task = ProcessingTask(
-                task_id=str(uuid4()),
-                document_id=uuid4(),
+                task_id="task_123",
+                document_id=123,
                 task_type="process_document"
             )
             
@@ -97,13 +96,13 @@ class TestBackgroundProcessorIsolation:
         # Mock the document processing to be quick
         with patch.object(processor, '_process_document_task', new_callable=AsyncMock):
             task1 = ProcessingTask(
-                task_id=str(uuid4()),
-                document_id=uuid4(),
+                task_id="task_123",
+                document_id=123,
                 task_type="process_document"
             )
             task2 = ProcessingTask(
-                task_id=str(uuid4()),
-                document_id=uuid4(),
+                task_id="task_123",
+                document_id=123,
                 task_type="process_document"
             )
             
@@ -134,8 +133,8 @@ class TestBackgroundProcessorIsolation:
             mock_process.side_effect = Exception("Test error")
             
             task = ProcessingTask(
-                task_id=str(uuid4()),
-                document_id=uuid4(),
+                task_id="task_123",
+                document_id=123,
                 task_type="process_document"
             )
             
@@ -164,8 +163,8 @@ class TestBackgroundProcessorIsolation:
             # Mock the error handler
             with patch.object(processor, '_handle_task_error', new_callable=AsyncMock) as mock_error_handler:
                 task = ProcessingTask(
-                    task_id=str(uuid4()),
-                    document_id=uuid4(),
+                    task_id="task_123",
+                    document_id=123,
                     task_type="process_document"
                 )
                 
@@ -181,11 +180,11 @@ class TestBackgroundProcessorIsolation:
     @pytest.mark.asyncio
     async def test_task_status_tracking_isolated(self, processor):
         """Test that task status tracking doesn't interfere between tasks."""
-        task1_id = str(uuid4())
-        task2_id = str(uuid4())
+        task1_id = "task_123"
+        task2_id = "task_456"
         
-        task1 = ProcessingTask(task1_id, uuid4(), "process_document")
-        task2 = ProcessingTask(task2_id, uuid4(), "process_document")
+        task1 = ProcessingTask(task1_id, 123, "process_document")
+        task2 = ProcessingTask(task2_id, 456, "process_document")
         
         # Add tasks to active tasks
         processor.active_tasks[task1_id] = task1

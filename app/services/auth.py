@@ -58,7 +58,6 @@ Error Handling:
 import logging
 from datetime import timedelta
 from typing import Any, Dict, Optional
-from uuid import UUID
 
 from jose import JWTError, jwt
 from sqlalchemy import select
@@ -188,7 +187,7 @@ class AuthService(BaseService):
 
         Returns:
             User: Newly created user object with the following properties:
-                - id: Unique UUID identifier for the user account
+                - id: Unique integer identifier for the user account
                 - username: Validated and sanitized username for login
                 - email: Validated email address for account management
                 - full_name: Optional full name for profile display

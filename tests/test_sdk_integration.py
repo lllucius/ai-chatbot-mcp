@@ -31,7 +31,7 @@ class TestSDKIntegration:
             'message': 'User retrieved successfully',
             'timestamp': '2024-01-01T12:00:00Z',
             'data': {
-                'id': '123e4567-e89b-12d3-a456-426614174000',
+                'id': 123,
                 'username': 'testuser',
                 'email': 'test@example.com',
                 'full_name': 'Test User',
@@ -69,7 +69,7 @@ class TestSDKIntegration:
             'timestamp': '2024-01-01T12:00:00Z',
             'data': [
                 {
-                    'id': '123e4567-e89b-12d3-a456-426614174000',
+                    'id': 123,
                     'username': 'user1',
                     'email': 'user1@example.com',
                     'full_name': 'User One',
@@ -181,9 +181,9 @@ class TestSDKIntegration:
 
         # Simulate conversation response in envelope format
         conversation_data = {
-            'id': '123e4567-e89b-12d3-a456-426614174000',
+            'id': 123,
             'title': 'Test Conversation',
-            'user_id': '456e7890-e89b-12d3-a456-426614174001',
+            'user_id': 456,
             'is_active': True,
             'created_at': '2024-01-01T12:00:00Z',
             'updated_at': '2024-01-01T12:00:00Z'
@@ -194,8 +194,7 @@ class TestSDKIntegration:
             mock_request.return_value = ConversationResponse(**conversation_data)
 
             # Test get conversation
-            from uuid import UUID
-            conversation_id = UUID('123e4567-e89b-12d3-a456-426614174000')
+            conversation_id = 123
             result = await sdk.conversations.get(conversation_id)
 
             # Verify the request was made correctly
@@ -215,14 +214,14 @@ class TestSDKIntegration:
 
         # Simulate document response in envelope format
         document_data = {
-            'id': '123e4567-e89b-12d3-a456-426614174000',
+            'id': 123,
             'filename': 'test.pdf',
             'title': 'Test Document',
             'file_type': 'pdf',
             'file_size': 1024,
             'mime_type': 'application/pdf',
             'processing_status': 'completed',
-            'owner_id': '456e7890-e89b-12d3-a456-426614174001',
+            'owner_id': 456,
             'metainfo': None,
             'chunk_count': 0,
             'created_at': '2024-01-01T12:00:00Z',
@@ -234,8 +233,7 @@ class TestSDKIntegration:
             mock_request.return_value = DocumentResponse(**document_data)
 
             # Test get document
-            from uuid import UUID
-            document_id = UUID('123e4567-e89b-12d3-a456-426614174000')
+            document_id = 123
             result = await sdk.documents.get(document_id)
 
             # Verify the request was made correctly

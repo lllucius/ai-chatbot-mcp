@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 from typing import List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
@@ -152,7 +151,7 @@ async def list_documents(
 @router.get("/byid/{document_id}", response_model=APIResponse[DocumentResponse])
 @handle_api_errors("Failed to retrieve document")
 async def get_document(
-    document_id: UUID,
+    document_id: int,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse[DocumentResponse]:
@@ -185,7 +184,7 @@ async def get_document(
 @router.put("/byid/{document_id}", response_model=APIResponse[DocumentResponse])
 @handle_api_errors("Document update failed")
 async def update_document(
-    document_id: UUID,
+    document_id: int,
     request: DocumentUpdate,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
@@ -208,7 +207,7 @@ async def update_document(
 @router.delete("/byid/{document_id}", response_model=APIResponse)
 @handle_api_errors("Document deletion failed")
 async def delete_document(
-    document_id: UUID,
+    document_id: int,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse:
@@ -235,7 +234,7 @@ async def delete_document(
 )
 @handle_api_errors("Failed to get processing status", log_errors=True)
 async def get_processing_status(
-    document_id: UUID,
+    document_id: int,
     task_id: Optional[str] = Query(
         None, description="Optional task ID for background processing details"
     ),
@@ -283,7 +282,7 @@ async def get_processing_status(
 @router.post("/byid/{document_id}/reprocess", response_model=APIResponse)
 @handle_api_errors("Reprocessing failed for document", log_errors=True)
 async def reprocess_document(
-    document_id: UUID,
+    document_id: int,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ) -> APIResponse:
@@ -304,7 +303,7 @@ async def reprocess_document(
 @router.get("/byid/{document_id}/download")
 @handle_api_errors("Download of document failed", log_errors=True)
 async def download_document(
-    document_id: UUID,
+    document_id: int,
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ) -> FileResponse:
@@ -324,7 +323,7 @@ async def download_document(
 )
 @handle_api_errors("Failed to start document processing", log_errors=True)
 async def start_document_processing(
-    document_id: UUID,
+    document_id: int,
     priority: int = Query(
         default=5, ge=1, le=10, description="Processing priority (1=highest, 10=lowest)"
     ),

@@ -183,7 +183,7 @@ COMMON_PATTERNS = {
     "service": """
 # Standard library imports
 from typing import Any, Dict, List, Optional
-from uuid import UUID
+
 
 # Third-party imports
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -207,7 +207,7 @@ from ..utils.api_errors import handle_api_errors, log_api_call
     "model": """
 # Standard library imports
 from typing import TYPE_CHECKING, List, Optional
-from uuid import UUID
+
 
 # Third-party imports
 from sqlalchemy import Column, String, Boolean
@@ -219,7 +219,7 @@ from .base import BaseModelDB
     "schema": """
 # Standard library imports
 from typing import List, Optional
-from uuid import UUID
+
 
 # Third-party imports
 from pydantic import Field, field_validator
