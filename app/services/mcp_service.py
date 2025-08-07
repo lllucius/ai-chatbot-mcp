@@ -1,18 +1,8 @@
-"""
-MCP service for registry management, FastMCP client proxy, and tool execution.
+"""MCP service for registry management, FastMCP client proxy, and tool execution.
 
-This service provides:
-- Registry CRUD operations for MCP servers and tools (DB layer)
-- FastMCP client proxy logic for tool execution and health checking
-- Tool execution with retry, parallelization, and API response result caching
-- OpenAI-compatible tool schema formatting for integration
-
-Key Features:
-- Single entry point for all MCP tool operations (including bulk/parallel calls)
-- Consistent retry and error handling with configurable retry parameters
-- Improved, comprehensive docstrings at all levels
-
-The service is initialized per-request with an AsyncSession.
+This service provides registry CRUD operations for MCP servers and tools, FastMCP
+client proxy logic for tool execution and health checking, with tool execution
+featuring retry, parallelization, and API response result caching.
 """
 
 import asyncio
@@ -52,8 +42,7 @@ logger = get_api_logger("mcp_service")
 
 
 class MCPService:
-    """
-    MCP service for registry, client proxy, and tool execution.
+    """MCP service for registry, client proxy, and tool execution.
 
     Pass a database session when instantiating. All registry and client operations
     as well as tool execution (with retry, parallelization, caching) are available
@@ -65,6 +54,7 @@ class MCPService:
 
         Args:
             db_session: Database session for MCP operations.
+
         """
         self.db: AsyncSession = db_session
         self.clients: Dict[str, Client] = {}
@@ -82,6 +72,7 @@ class MCPService:
 
         Returns:
             Created server schema.
+
         """
         server = MCPServer(
             name=server_data.name,
@@ -123,6 +114,7 @@ class MCPService:
 
         Returns:
             Server schema if found, None otherwise.
+
         """
         result = await self.db.execute(
             select(MCPServer)
@@ -157,6 +149,7 @@ class MCPService:
 
         Returns:
             List of server schemas.
+
         """
         query = select(MCPServer).options(selectinload(MCPServer.tools))
         if filters:
@@ -231,6 +224,7 @@ class MCPService:
 
         Returns:
             Updated server schema if successful.
+
         """
         server = await self.get_server(name)
         if not server:
@@ -259,6 +253,7 @@ class MCPService:
 
         Returns:
             Updated server schema if successful.
+
         """
         updates = MCPServerUpdateSchema(is_enabled=False)
         return await self.update_server(name, updates)
@@ -290,6 +285,7 @@ class MCPService:
 
         Returns:
             Created tool schema if successful.
+
         """
         server_result = await self.db.execute(
             select(MCPServer).where(MCPServer.name == tool_data.server_name)
@@ -388,6 +384,7 @@ class MCPService:
 
         Returns:
             True if tool was enabled successfully.
+
         """
         result = await self.db.execute(
             update(MCPTool).where(MCPTool.name == tool_name).values(is_enabled=True)
@@ -406,6 +403,7 @@ class MCPService:
 
         Returns:
             True if tool was disabled successfully.
+
         """
         result = await self.db.execute(
             update(MCPTool).where(MCPTool.name == tool_name).values(is_enabled=False)
@@ -428,6 +426,7 @@ class MCPService:
 
         Returns:
             True if usage was recorded successfully.
+
         """
         tool = await self.db.execute(select(MCPTool).where(MCPTool.name == tool_name))
         tool = tool.scalar_one_or_none()
@@ -445,6 +444,7 @@ class MCPService:
 
         Returns:
             Number of records successfully processed.
+
         """
         processed_count = 0
         for record in usage_records:
@@ -473,6 +473,7 @@ class MCPService:
 
         Returns:
             List of tool usage statistics.
+
         """
         query = select(MCPTool).options(selectinload(MCPTool.server))
         if server_name:
@@ -508,6 +509,7 @@ class MCPService:
 
         Returns:
             Discovery result with counts of new and updated tools.
+
         """
         server_result = await self.db.execute(
             select(MCPServer).where(MCPServer.name == server_name)
@@ -589,6 +591,7 @@ class MCPService:
 
         Returns:
             List of discovery results for all servers.
+
         """
         filters = MCPListFiltersSchema(enabled_only=True)
         servers = await self.list_servers(filters)
@@ -701,8 +704,7 @@ class MCPService:
         self,
         request: MCPToolExecutionRequestSchema,
     ) -> MCPToolExecutionResultSchema:
-        """
-        Execute a single tool call (with MCP registry), using FastMCP client proxy.
+        """Execute a single tool call (with MCP registry), using FastMCP client proxy.
 
         Does NOT apply retry or caching logic. For managed execution use 'execute_tool_call'.
         """
@@ -869,8 +871,7 @@ class MCPService:
         use_cache: bool = True,
         cache_ttl: int = 300,
     ) -> Dict[str, Any]:
-        """
-        Execute a single tool call, with retry and API response caching logic.
+        """Execute a single tool call, with retry and API response caching logic.
 
         Args:
             tool_call: Dict with keys: id (str), name (str), arguments (dict)
@@ -880,6 +881,7 @@ class MCPService:
 
         Returns:
             Dict describing the tool execution result (see below).
+
         """
         import time
 
@@ -948,8 +950,7 @@ class MCPService:
         use_cache: bool = True,
         parallel_execution: bool = True,
     ) -> List[Dict[str, Any]]:
-        """
-        Execute multiple tool calls, optionally in parallel, with retry and caching.
+        """Execute multiple tool calls, optionally in parallel, with retry and caching.
 
         Args:
             tool_calls: List of tool call dicts (see 'execute_tool_call')
@@ -959,6 +960,7 @@ class MCPService:
 
         Returns:
             List of result dicts, in the same order as tool_calls
+
         """
         if not tool_calls:
             return []

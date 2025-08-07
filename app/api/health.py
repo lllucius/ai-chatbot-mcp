@@ -402,9 +402,7 @@ async def readiness_check(
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
 ) -> APIResponse[ReadinessComponentsPayload]:
-    """
-    Kubernetes-style readiness probe.
-    """
+    """Kubernetes-style readiness probe."""
     log_api_call("readiness_check")
     try:
         db_health = await _check_database_health(db)

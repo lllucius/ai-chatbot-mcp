@@ -1,27 +1,8 @@
-"""
-Document service for comprehensive file processing and document management.
+"""Document service for comprehensive file processing and document management.
 
 This service provides complete document lifecycle management including file upload,
 content extraction, text processing, chunking, embedding generation, and search
-integration. It supports multiple file formats and implements robust error handling
-for document processing workflows.
-
-Key Features:
-- Multi-format document upload (PDF, DOCX, TXT, MD, RTF)
-- Asynchronous content extraction and text processing
-- Intelligent text chunking with configurable parameters
-- Vector embedding generation for semantic search
-- Document status tracking and lifecycle management
-- Comprehensive metadata handling and storage
-
-Processing Pipeline:
-1. File upload and validation
-2. Content extraction based on file type
-3. Text chunking with overlap for context preservation
-4. Vector embedding generation for each chunk
-5. Database storage with search optimization
-6. Status tracking and error recovery
-
+integration with support for multiple file formats and robust error handling.
 """
 
 import contextlib
@@ -51,8 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class DocumentService(BaseService):
-    """
-    Service for comprehensive document management and processing workflows.
+    """Service for comprehensive document management and processing workflows.
 
     This service extends BaseService to provide document-specific functionality
     including file upload handling, content extraction, text processing, chunking,
@@ -77,11 +57,11 @@ class DocumentService(BaseService):
     """
 
     def __init__(self, db: AsyncSession):
-        """
-        Initialize document service with processing components.
+        """Initialize document service with processing components.
 
         Args:
             db: Database session for document operations
+
         """
         super().__init__(db, "document_service")
 
@@ -96,8 +76,7 @@ class DocumentService(BaseService):
     async def create_document(
         self, file: UploadFile, title: str, user_id: UUID
     ) -> Document:
-        """
-        Create a new document record and initiate processing pipeline.
+        """Create a new document record and initiate processing pipeline.
 
         This method handles the initial document creation phase including file
         validation, storage, and database record creation. The document is marked
@@ -129,6 +108,7 @@ class DocumentService(BaseService):
             ...     upload_file = UploadFile(filename="document.pdf", file=f)
             ...     doc = await document_service.create_document(upload_file, "My PDF", user_id)
             >>> print(f"Created document {doc.id} with status: {doc.status}")
+
         """
         operation = "create_document"
         self._log_operation_start(
@@ -273,8 +253,7 @@ class DocumentService(BaseService):
             raise DocumentError(f"Document creation failed: {e}")
 
     async def start_processing(self, document_id: UUID, priority: int = 5) -> str:
-        """
-        Start background document processing (text extraction and chunking).
+        """Start background document processing (text extraction and chunking).
 
         Args:
             document_id: Document ID to process
@@ -286,6 +265,7 @@ class DocumentService(BaseService):
         Raises:
             NotFoundError: If document not found
             ValidationError: If document is already processing
+
         """
         operation = "start_processing"
 
@@ -329,8 +309,7 @@ class DocumentService(BaseService):
     async def get_processing_status(
         self, document_id: UUID, task_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
-        Get document processing status including background task information.
+        """Get document processing status including background task information.
 
         Args:
             document_id: Document ID
@@ -338,6 +317,7 @@ class DocumentService(BaseService):
 
         Returns:
             Dict[str, Any]: Comprehensive processing status
+
         """
         try:
             await self._ensure_db_session()
@@ -466,8 +446,7 @@ class DocumentService(BaseService):
             raise
 
     async def get_document(self, document_id: UUID, user_id: UUID) -> Document:
-        """
-        Get document by ID with access control.
+        """Get document by ID with access control.
 
         Args:
             document_id: Document ID
@@ -478,6 +457,7 @@ class DocumentService(BaseService):
 
         Raises:
             NotFoundError: If document not found or access denied
+
         """
         result = await self.db.execute(
             select(Document).where(
@@ -506,8 +486,7 @@ class DocumentService(BaseService):
         file_type: Optional[str] = None,
         status_filter: Optional[str] = None,
     ) -> Tuple[List[Document], int]:
-        """
-        List documents for a user with pagination and filtering.
+        """List documents for a user with pagination and filtering.
 
         Args:
             user_id: User ID
@@ -518,6 +497,7 @@ class DocumentService(BaseService):
 
         Returns:
             Tuple[List[Document], int]: List of documents and total count
+
         """
         # Build filters
         filters = [Document.owner_id == user_id]
@@ -550,8 +530,7 @@ class DocumentService(BaseService):
     async def update_document(
         self, document_id: UUID, request: DocumentUpdate, user_id: UUID
     ) -> Document:
-        """
-        Update document metainfo.
+        """Update document metainfo.
 
         Args:
             document_id: Document ID
@@ -560,6 +539,7 @@ class DocumentService(BaseService):
 
         Returns:
             Document: Updated document object
+
         """
         document = await self.get_document(document_id, user_id)
 
@@ -580,8 +560,7 @@ class DocumentService(BaseService):
         return document
 
     async def delete_document(self, document_id: UUID, user_id: UUID) -> bool:
-        """
-        Delete document and all associated data.
+        """Delete document and all associated data.
 
         Args:
             document_id: Document ID
@@ -589,6 +568,7 @@ class DocumentService(BaseService):
 
         Returns:
             bool: True if deleted successfully
+
         """
         document = await self.get_document(document_id, user_id)
 
@@ -607,8 +587,7 @@ class DocumentService(BaseService):
         return True
 
     async def get_status(self, document_id: UUID, user_id: UUID) -> Dict[str, Any]:
-        """
-        Get document processing status and progress.
+        """Get document processing status and progress.
 
         Args:
             document_id: Document ID
@@ -616,6 +595,7 @@ class DocumentService(BaseService):
 
         Returns:
             dict: Processing status information
+
         """
         document = await self.get_document(document_id, user_id)
 
@@ -658,8 +638,7 @@ class DocumentService(BaseService):
         }
 
     async def reprocess_document(self, document_id: UUID, user_id: UUID) -> bool:
-        """
-        Reprocess document (re-extract text and regenerate chunks/embeddings).
+        """Reprocess document (re-extract text and regenerate chunks/embeddings).
 
         Args:
             document_id: Document ID
@@ -667,6 +646,7 @@ class DocumentService(BaseService):
 
         Returns:
             bool: True if reprocessing started successfully
+
         """
         document = await self.get_document(document_id, user_id)
 
@@ -690,8 +670,7 @@ class DocumentService(BaseService):
     async def get_download_info(
         self, document_id: UUID, user_id: UUID
     ) -> Tuple[str, str, str]:
-        """
-        Get document download information.
+        """Get document download information.
 
         Args:
             document_id: Document ID
@@ -699,6 +678,7 @@ class DocumentService(BaseService):
 
         Returns:
             Tuple[str, str, str]: File path, filename, mime type
+
         """
         document = await self.get_document(document_id, user_id)
 

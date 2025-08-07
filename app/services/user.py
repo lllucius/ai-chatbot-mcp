@@ -41,6 +41,7 @@ class UserService(BaseService):
 
         Args:
             db: Database session for user operations and analytics
+
         """
         super().__init__(db, "user_service")
 
@@ -69,6 +70,7 @@ class UserService(BaseService):
 
         Raises:
             ValidationError: If username/email already exists or validation fails
+
         """
         operation = "create_user"
         self._log_operation_start(operation, username=username, email=email)
@@ -123,8 +125,7 @@ class UserService(BaseService):
             raise ValidationError(f"User creation failed: {e}")
 
     async def get_user_profile(self, user_id_or_username: int | str) -> User:
-        """
-        Get comprehensive user profile with embedded statistics.
+        """Get comprehensive user profile with embedded statistics.
 
         Accepts either an integer (for user.id lookup) or a string (for user.username lookup).
         Retrieves detailed user information including profile data and calculated statistics
@@ -151,6 +152,7 @@ class UserService(BaseService):
             >>> print(f"User {profile.username} has {profile.document_count} documents")
             >>> profile = await user_service.get_user_profile("johndoe")
             >>> print(f"User {profile.username} has {profile.document_count} documents")
+
         """
         operation = "get_user_profile"
         identifier = str(user_id_or_username)
@@ -216,8 +218,7 @@ class UserService(BaseService):
             raise
 
     async def update_user(self, user_id: int, user_update: UserUpdate) -> User:
-        """
-        Update user profile information with validation.
+        """Update user profile information with validation.
 
         Updates user profile fields with comprehensive validation including
         email uniqueness checks and proper error handling. Only non-None
@@ -239,6 +240,7 @@ class UserService(BaseService):
             >>> update_data = UserUpdate(email="new@example.com", full_name="New Name")
             >>> updated_user = await user_service.update_user(user_id, update_data)
             >>> print(f"Updated user email to: {updated_user.email}")
+
         """
         operation = "update_user"
         update_fields = {
@@ -318,8 +320,7 @@ class UserService(BaseService):
     async def change_password(
         self, user_id: int, current_password: str, new_password: str
     ) -> bool:
-        """
-        Change user password with security verification.
+        """Change user password with security verification.
 
         Securely updates user password after verifying the current password.
         This method implements proper security practices including current
@@ -349,6 +350,7 @@ class UserService(BaseService):
             ...     user_id, "old_password", "new_secure_password123"
             ... )
             >>> print(f"Password change: {'successful' if success else 'failed'}")
+
         """
         operation = "change_password"
         self._log_operation_start(operation, user_id=str(user_id))
@@ -399,8 +401,7 @@ class UserService(BaseService):
         active_only: bool = False,
         superuser_only: bool = False,
     ) -> Tuple[List[User], int]:
-        """
-        List users with pagination and filtering.
+        """List users with pagination and filtering.
 
         Args:
             page: Page number (1-based)
@@ -410,6 +411,7 @@ class UserService(BaseService):
 
         Returns:
             Tuple[List[User], int]: List of users and total count
+
         """
         # Build filters
         filters = []
@@ -439,8 +441,7 @@ class UserService(BaseService):
         return list(users), total
 
     async def delete_user(self, user_id: int) -> bool:
-        """
-        Delete a user and all associated data.
+        """Delete a user and all associated data.
 
         Args:
             user_id: User ID to delete
@@ -450,6 +451,7 @@ class UserService(BaseService):
 
         Raises:
             NotFoundError: If user not found
+
         """
         # Get user
         user_result = await self.db.execute(select(User).where(User.id == user_id))
@@ -466,8 +468,7 @@ class UserService(BaseService):
         return True
 
     async def get_user_by_id(self, user_id: int) -> User:
-        """
-        Get user by ID.
+        """Get user by ID.
 
         Args:
             user_id: User ID to retrieve
@@ -477,6 +478,7 @@ class UserService(BaseService):
 
         Raises:
             NotFoundError: If user not found
+
         """
         user_result = await self.db.execute(select(User).where(User.id == user_id))
         user = user_result.scalar_one_or_none()
@@ -487,8 +489,7 @@ class UserService(BaseService):
         return user
 
     async def update_user_password(self, user_id: int, new_password: str) -> None:
-        """
-        Update user password (admin operation).
+        """Update user password (admin operation).
 
         Args:
             user_id: User ID to update password for
@@ -496,6 +497,7 @@ class UserService(BaseService):
 
         Raises:
             NotFoundError: If user not found
+
         """
         user = await self.get_user_by_id(user_id)
 
@@ -509,11 +511,11 @@ class UserService(BaseService):
         logger.info(f"Password updated for user: {user.username}")
 
     async def request_password_reset(self, email: str) -> None:
-        """
-        Request password reset for user.
+        """Request password reset for user.
 
         Args:
             email: Email address for password reset
+
         """
         # Check if user exists
         result = await self.db.execute(select(User).where(User.email == email))
@@ -533,12 +535,12 @@ class UserService(BaseService):
         # of requiring administrative intervention for password resets
 
     async def confirm_password_reset(self, token: str, new_password: str) -> None:
-        """
-        Confirm password reset with token.
+        """Confirm password reset with token.
 
         Args:
             token: Password reset token
             new_password: New password to set
+
         """
         # In a real implementation, this would validate the token and update the password
         # For now, we'll require administrative processing as per current design
@@ -552,11 +554,11 @@ class UserService(BaseService):
         # This maintains the security model established in the auth API
 
     async def get_user_statistics(self) -> Dict[str, Any]:
-        """
-        Get system-wide user statistics.
+        """Get system-wide user statistics.
 
         Returns:
             dict: User statistics
+
         """
         # Total users
         total_result = await self.db.execute(select(func.count(User.id)))

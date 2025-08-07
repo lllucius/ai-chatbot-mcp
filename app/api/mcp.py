@@ -261,8 +261,7 @@ async def get_tool_details(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[MCPToolsResponse]:
-    """
-    Get detailed information about a specific MCP tool by name.
+    """Get detailed information about a specific MCP tool by name.
 
     Retrieves comprehensive details about an MCP tool including its schema,
     current status, usage statistics, and configuration parameters.
@@ -294,8 +293,7 @@ async def test_tool(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Test execution of a specific MCP tool with optional parameters.
+    """Test execution of a specific MCP tool with optional parameters.
 
     Executes a test run of the specified tool to verify functionality,
     connectivity, and parameter validation.
