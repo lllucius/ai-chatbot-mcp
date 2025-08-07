@@ -33,6 +33,7 @@ async def timing_middleware(request: Request, call_next) -> Response:
 
     Raises:
         Exception: Logs metric recording failures without affecting request processing
+
     """
     start_time = time.time()
 
@@ -84,6 +85,7 @@ async def validation_middleware(request: Request, call_next) -> Response:
     Raises:
         HTTPException: Raised for validation failures with appropriate status codes
             (400, 413, 415, 422)
+
     """
     return await _validate_request_middleware(request, call_next)
 
@@ -105,5 +107,6 @@ async def rate_limiting_middleware(request: Request, call_next) -> Response:
 
     Raises:
         HTTPException: Raised when rate limits are exceeded (429 Too Many Requests)
+
     """
     return await _rate_limit_middleware(request, call_next)

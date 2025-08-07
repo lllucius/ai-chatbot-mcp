@@ -32,6 +32,7 @@ class RequestMetric:
         timestamp: Unix timestamp when request was processed
         memory_usage: Memory consumption during request processing in MB (optional)
         cpu_usage: CPU utilization percentage during request processing (optional)
+
     """
 
     path: str
@@ -59,6 +60,7 @@ class SystemMetrics:
         disk_used_gb: Current disk usage in gigabytes
         disk_free_gb: Available disk space in gigabytes
         timestamp: Unix timestamp when metrics were captured
+
     """
 
     cpu_percent: float
@@ -80,11 +82,11 @@ class PerformanceMonitor:
     """
 
     def __init__(self, history_size: int = 100):
-        """
-        Initialize performance monitor.
+        """Initialize performance monitor.
 
         Args:
             history_size: Number of historical data points to keep
+
         """
         self.history_size = history_size
         self.metrics_history: Dict[str, deque] = defaultdict(
@@ -293,8 +295,7 @@ def record_request_metric(
     memory_usage: Optional[float] = None,
     cpu_usage: Optional[float] = None,
 ) -> None:
-    """
-    Record a request metric.
+    """Record a request metric.
 
     Args:
         path: Request path
@@ -303,6 +304,7 @@ def record_request_metric(
         duration: Request duration in seconds
         memory_usage: Memory usage during request (optional)
         cpu_usage: CPU usage during request (optional)
+
     """
     metric = RequestMetric(
         path=path,
