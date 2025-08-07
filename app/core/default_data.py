@@ -1,5 +1,4 @@
-"""
-Default data initialization for the AI Chatbot MCP platform.
+"""Default data initialization for the AI Chatbot MCP platform.
 
 This module contains functions to create default prompts, LLM profiles,
 and sample MCP server configurations during database initialization.

@@ -1,5 +1,4 @@
-"""
-Core modules for the AI Chatbot Platform.
+"""Core modules for the AI Chatbot Platform.
 
 This package provides core functionality including exception handling,
 tool execution, and other foundational components.

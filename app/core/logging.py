@@ -1,79 +1,8 @@
-"""
-Unified logging service for the AI Chatbot Platform with comprehensive observability and monitoring.
+"""Unified logging service for the AI Chatbot Platform with comprehensive observability and monitoring.
 
 This module provides a centralized, standardized logging system that consolidates all
 logging functionality into a single service with advanced features for production
-monitoring, debugging, and performance analysis. Implements structured logging,
-contextual information tracking, performance monitoring, and different output formats
-optimized for development and production environments.
-
-Key Features:
-- Unified logging configuration with centralized management and control
-- Structured JSON logging for production with machine-readable format
-- Human-readable colored logging for development with enhanced readability
-- Correlation ID support for request tracing and distributed system monitoring
-- Performance metrics integration with timing and operation tracking
-- Context filters for user identification and operation tracking
-- Standardized loggers for different application components and services
-- Advanced log formatting with timezone awareness and metadata enrichment
-
-Logging Architecture:
-- LoggingService: Central service for unified logging configuration and management
-- StructuredFormatter: JSON formatter for production with comprehensive metadata
-- DevelopmentFormatter: Human-readable formatter with color coding and context
-- ContextFilter: Request and user context injection for correlation and tracking
-- PerformanceLogger: Specialized logging for performance metrics and timing
-- StructuredLogger: Backward-compatible logger with structured data support
-
-Production Features:
-- JSON structured logging for log aggregation and analysis systems
-- Timezone-aware timestamp formatting with UTC standardization
-- Correlation ID propagation for distributed request tracing
-- User context tracking for audit and security monitoring
-- Operation context for business logic and workflow tracking
-- Exception handling with detailed stack trace and context information
-- Performance metrics integration with duration and success tracking
-
-Development Features:
-- Color-coded log levels for enhanced visual debugging
-- Human-readable timestamp and message formatting
-- Context information display for development workflow
-- Debug-level location information (module, function, line)
-- Exception formatting with readable stack traces
-- Real-time log output with immediate feedback
-
-Context Management:
-- Correlation ID generation and propagation for request tracking
-- User context association for audit trails and security monitoring
-- Operation context for business process tracking and analysis
-- Thread-safe context management for concurrent operations
-- Integration with FastAPI middleware for automatic context injection
-- Support for custom context fields and metadata enrichment
-
-Performance Monitoring:
-- Operation timing with microsecond precision and performance analysis
-- Success/failure tracking for reliability monitoring and alerting
-- Context manager integration for automatic timing and logging
-- Performance metrics collection for optimization and capacity planning
-- Integration with monitoring systems for real-time performance analysis
-- Custom performance loggers for specialized monitoring requirements
-
-Use Cases:
-- Application-wide logging standardization and consistency
-- Production monitoring and alerting with structured data
-- Debug logging for development and troubleshooting workflows
-- Performance monitoring and optimization with detailed metrics
-- Security audit trails with user and operation tracking
-- Distributed system request tracing with correlation IDs
-- Integration with log aggregation and analysis platforms
-
-Security and Compliance:
-- Sensitive data filtering and protection in log outputs
-- User activity tracking for audit and compliance requirements
-- Security event logging with detailed context and metadata
-- Access control logging for authorization and permission tracking
-- Data privacy controls for sensitive information handling
-- Compliance-ready log formats for regulatory requirements
+monitoring, debugging, and performance analysis with structured logging support.
 """
 
 import json
@@ -91,8 +20,7 @@ from ..config import settings
 
 
 class StructuredFormatter(logging.Formatter):
-    """
-    Structured JSON formatter for production logging.
+    """Structured JSON formatter for production logging.
 
     Provides consistent structured logging with metadata for monitoring
     and log aggregation systems.
@@ -150,8 +78,7 @@ class StructuredFormatter(logging.Formatter):
 
 
 class DevelopmentFormatter(logging.Formatter):
-    """
-    Human-readable formatter for development logging.
+    """Human-readable formatter for development logging.
 
     Provides colored, readable output for local development with
     essential context information.
@@ -205,8 +132,7 @@ class DevelopmentFormatter(logging.Formatter):
 
 
 class ContextFilter(logging.Filter):
-    """
-    Filter to add contextual information to log records.
+    """Filter to add contextual information to log records.
 
     Adds correlation IDs, user context, and operation context to all log records.
     """
@@ -241,8 +167,7 @@ class ContextFilter(logging.Filter):
 
 
 class PerformanceLogger:
-    """
-    Logger for performance monitoring and metrics.
+    """Logger for performance monitoring and metrics.
 
     Provides easy-to-use decorators and context managers for
     tracking operation performance.
@@ -255,14 +180,14 @@ class PerformanceLogger:
     def log_operation(
         self, operation: str, duration: float, success: bool = True, **kwargs
     ):
-        """
-        Log an operation with performance metrics.
+        """Log an operation with performance metrics.
 
         Args:
             operation: Operation name
             duration: Duration in seconds
             success: Whether operation was successful
             **kwargs: Additional context
+
         """
         extra_fields = {
             "operation": operation,
@@ -282,12 +207,12 @@ class PerformanceLogger:
             )
 
     def time_operation(self, operation: str, **context):
-        """
-        Context manager for timing operations.
+        """Context manager for timing operations.
 
         Args:
             operation: Operation name
             **context: Additional context
+
         """
         return OperationTimer(self, operation, **context)
 
@@ -321,8 +246,7 @@ class OperationTimer:
 
 
 class StructuredLogger:
-    """
-    Structured logger for consistent log formatting.
+    """Structured logger for consistent log formatting.
 
     This class provides methods for logging with structured data
     that can be easily parsed and analyzed. It also includes timing
@@ -332,11 +256,11 @@ class StructuredLogger:
     """
 
     def __init__(self, name: str):
-        """
-        Initialize structured logger.
+        """Initialize structured logger.
 
         Args:
             name: Logger name (typically module or service name)
+
         """
         self.logger = logging.getLogger(name)
         self.name = name
@@ -358,13 +282,13 @@ class StructuredLogger:
         self._log_with_context("debug", message, **kwargs)
 
     def _log_with_context(self, level: str, message: str, **kwargs):
-        """
-        Log message with consistent formatting.
+        """Log message with consistent formatting.
 
         Args:
             level: Log level (info, warning, error, debug)
             message: Primary log message
             **kwargs: Additional structured data
+
         """
         log_method = getattr(self.logger, level)
 
@@ -374,13 +298,13 @@ class StructuredLogger:
             log_method(message)
 
     def log_operation(self, operation: str, status: str = "started", **kwargs):
-        """
-        Log service operations with consistent format.
+        """Log service operations with consistent format.
 
         Args:
             operation: Name of the operation
             status: Status of operation (started, completed, failed)
             **kwargs: Additional context
+
         """
         level = "info" if status != "failed" else "error"
         self._log_with_context(
@@ -393,13 +317,13 @@ class StructuredLogger:
         )
 
     def log_performance(self, operation: str, duration_ms: float, **kwargs):
-        """
-        Log performance metrics for operations.
+        """Log performance metrics for operations.
 
         Args:
             operation: Name of the operation
             duration_ms: Duration in milliseconds
             **kwargs: Additional context
+
         """
         self.info(
             f"Performance metric for {operation}",
@@ -412,8 +336,7 @@ class StructuredLogger:
 
 
 class LoggingService:
-    """
-    Centralized logging service for the application.
+    """Centralized logging service for the application.
 
     This class provides a unified interface for all logging functionality,
     consolidating configuration, context management, and specialized loggers.
@@ -432,8 +355,7 @@ class LoggingService:
         max_bytes: int = 100 * 1024 * 1024,  # 100MB
         backup_count: int = 5,
     ) -> logging.Logger:
-        """
-        Set up standardized logging for the application.
+        """Set up standardized logging for the application.
 
         Args:
             log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -444,6 +366,7 @@ class LoggingService:
 
         Returns:
             logging.Logger: Configured root logger
+
         """
         # Determine configuration from settings
         log_level = log_level or getattr(settings, "log_level", "INFO")
@@ -500,75 +423,75 @@ class LoggingService:
         return root_logger
 
     def get_logger(self, name: str) -> logging.Logger:
-        """
-        Get a logger with standardized configuration.
+        """Get a logger with standardized configuration.
 
         Args:
             name: Logger name (usually __name__)
 
         Returns:
             logging.Logger: Configured logger instance
+
         """
         return logging.getLogger(name)
 
     def get_api_logger(self, endpoint_name: str) -> logging.Logger:
-        """
-        Get a standardized logger for API endpoints.
+        """Get a standardized logger for API endpoints.
 
         Args:
             endpoint_name: Name of the API endpoint
 
         Returns:
             logging.Logger: Configured logger instance
+
         """
         return self.get_logger(f"api.{endpoint_name.lower()}")
 
     def get_service_logger(self, service_name: str) -> logging.Logger:
-        """
-        Get a standardized logger for service classes.
+        """Get a standardized logger for service classes.
 
         Args:
             service_name: Name of the service (typically class name)
 
         Returns:
             logging.Logger: Configured logger instance
+
         """
         return self.get_logger(f"service.{service_name.lower()}")
 
     def get_component_logger(self, component_name: str) -> logging.Logger:
-        """
-        Get a standardized logger for application components.
+        """Get a standardized logger for application components.
 
         Args:
             component_name: Name of the component
 
         Returns:
             logging.Logger: Configured logger instance
+
         """
         return self.get_logger(f"component.{component_name.lower()}")
 
     def get_performance_logger(self, name: str) -> PerformanceLogger:
-        """
-        Get a performance logger for metrics tracking.
+        """Get a performance logger for metrics tracking.
 
         Args:
             name: Logger name
 
         Returns:
             PerformanceLogger: Performance logger instance
+
         """
         logger = self.get_logger(name)
         return PerformanceLogger(logger)
 
     def set_correlation_id(self, correlation_id: Optional[str] = None) -> str:
-        """
-        Set correlation ID for the current context.
+        """Set correlation ID for the current context.
 
         Args:
             correlation_id: Optional correlation ID, generates one if None
 
         Returns:
             str: The correlation ID that was set
+
         """
         if correlation_id is None:
             correlation_id = str(uuid.uuid4())
@@ -579,21 +502,21 @@ class LoggingService:
         return correlation_id
 
     def set_user_context(self, user_id: str):
-        """
-        Set user context for logging.
+        """Set user context for logging.
 
         Args:
             user_id: User ID to associate with log entries
+
         """
         if self._context_filter:
             self._context_filter.set_user_id(user_id)
 
     def set_operation_context(self, operation: str):
-        """
-        Set operation context for logging.
+        """Set operation context for logging.
 
         Args:
             operation: Operation name to associate with log entries
+
         """
         if self._context_filter:
             self._context_filter.set_operation(operation)
@@ -601,14 +524,14 @@ class LoggingService:
     def log_structured(
         self, logger: logging.Logger, level: str, message: str, **kwargs
     ):
-        """
-        Log a message with structured data.
+        """Log a message with structured data.
 
         Args:
             logger: Logger instance to use
             level: Log level (info, warning, error, debug)
             message: Primary log message
             **kwargs: Additional structured data
+
         """
         log_method = getattr(logger, level.lower())
 

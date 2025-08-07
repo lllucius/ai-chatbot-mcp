@@ -33,6 +33,7 @@ class RateLimiter:
         Args:
             max_requests: Maximum number of requests allowed per time window
             time_window: Time window duration in seconds for rate limit calculation
+
         """
         self.max_requests = max_requests
         self.time_window = time_window
@@ -52,6 +53,7 @@ class RateLimiter:
             Tuple containing:
                 - bool: True if request is allowed, False if rate limit exceeded
                 - Optional[int]: Retry-after seconds when rate limit exceeded, None when allowed
+
         """
         async with self._lock:
             current_time = time.time()
@@ -132,6 +134,7 @@ async def rate_limit_middleware(request: Request, call_next):
 
     Raises:
         HTTPException: Raised when rate limits are exceeded (429 Too Many Requests)
+
     """
     # Get client identifier
     client_ip = request.client.host if request.client else "unknown"

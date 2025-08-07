@@ -16,54 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class InputValidator:
-    """
-    Enterprise-grade input validation and sanitization utility class.
+    """Enterprise-grade input validation and sanitization utility class.
 
     Provides comprehensive input validation and sanitization capabilities with
-    advanced pattern recognition, threat detection, and security enforcement.
-    Implements industry-standard security practices with configurable policies,
-    comprehensive logging, and integration with security monitoring systems
-    for complete protection against malicious input and data corruption attacks.
-
-    Key Features:
-    - Multi-pattern validation with regular expressions and semantic analysis
-    - Advanced sanitization algorithms with security-focused data transformation
-    - Comprehensive threat detection with signature-based and behavioral analysis
-    - Configurable validation policies with environment-specific security levels
-    - Performance-optimized validation routines with minimal processing overhead
-    - Extensive logging and monitoring integration for security event tracking
-
-    Security Capabilities:
-    - SQL injection prevention with query structure analysis and pattern detection
-    - Cross-site scripting (XSS) protection with payload sanitization and encoding
-    - File upload security with MIME type validation and content inspection
-    - Directory traversal prevention with path normalization and validation
-    - Command injection protection with shell metacharacter filtering
-    - Encoding attack prevention with Unicode normalization and validation
-
-    Validation Patterns:
-    - Email address validation following RFC standards and security best practices
-    - Username validation with security policies and character restrictions
-    - Filename validation preventing malicious uploads and directory traversal
-    - Content validation with length limits and character encoding verification
-    - JSON structure validation with depth checking and type enforcement
-    - Search query validation with injection prevention and sanitization
-
-    Performance Features:
-    - Compiled regular expressions for optimal pattern matching performance
-    - Memory-efficient algorithms with minimal allocation and garbage collection
-    - Configurable validation depth balancing security with processing speed
-    - Caching mechanisms for frequently validated patterns and content
-    - Optimized string processing with zero-copy operations where possible
-    - Intelligent short-circuiting for early detection and fast rejection
-
-    Use Cases:
-    - API endpoint input validation with comprehensive security enforcement
-    - User registration and profile validation with data integrity assurance
-    - File upload validation with security scanning and type verification
-    - Search functionality protection with injection prevention and sanitization
-    - Content management validation with XSS protection and formatting security
-    - Form processing validation with comprehensive data validation and normalization
+    advanced pattern recognition, threat detection, and security enforcement
+    implementing industry-standard security practices for malicious input protection.
     """
 
     # Common validation patterns
@@ -91,8 +48,7 @@ class InputValidator:
 
     @classmethod
     def validate_email(cls, email: str) -> bool:
-        """
-        Validate email address format with RFC compliance and security best practices.
+        """Validate email address format with RFC compliance and security best practices.
 
         Performs comprehensive email validation including format checking, length
         validation, and security analysis to prevent email-based attacks and
@@ -116,6 +72,7 @@ class InputValidator:
             is_valid = InputValidator.validate_email("user@example.com")
             if not is_valid:
                 raise HTTPException(400, "Invalid email format")
+
         """
         if not email or len(email) > 254:
             return False
@@ -137,8 +94,7 @@ class InputValidator:
 
     @classmethod
     def sanitize_string(cls, text: str, max_length: int = 1000) -> str:
-        """
-        Comprehensive string sanitization with XSS prevention and security encoding.
+        """Comprehensive string sanitization with XSS prevention and security encoding.
 
         Performs advanced string sanitization including HTML entity encoding,
         control character removal, and security-focused data transformation
@@ -172,6 +128,7 @@ class InputValidator:
         Example:
             safe_text = InputValidator.sanitize_string("<script>alert('xss')</script>")
             # Returns: "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+
         """
         if not text:
             return ""
@@ -193,14 +150,14 @@ class InputValidator:
 
     @classmethod
     def check_sql_injection(cls, text: str) -> bool:
-        """
-        Check for potential SQL injection patterns.
+        """Check for potential SQL injection patterns.
 
         Args:
             text: Text to check
 
         Returns:
             bool: True if potential SQL injection detected
+
         """
         if not text:
             return False
@@ -209,14 +166,14 @@ class InputValidator:
 
     @classmethod
     def check_xss(cls, text: str) -> bool:
-        """
-        Check for potential XSS patterns.
+        """Check for potential XSS patterns.
 
         Args:
             text: Text to check
 
         Returns:
             bool: True if potential XSS detected
+
         """
         if not text:
             return False
@@ -227,8 +184,7 @@ class InputValidator:
     def validate_json_payload(
         cls, payload: Dict[str, Any], max_depth: int = 10
     ) -> bool:
-        """
-        Validate JSON payload structure and depth.
+        """Validate JSON payload structure and depth.
 
         Args:
             payload: JSON payload to validate
@@ -236,11 +192,11 @@ class InputValidator:
 
         Returns:
             bool: True if valid
+
         """
 
         def check_depth(obj, current_depth=0):
-            """
-            Recursively check the nesting depth of an object.
+            """Recursively check the nesting depth of an object.
 
             Args:
                 obj: Object to check (dict, list, or primitive)
@@ -248,6 +204,7 @@ class InputValidator:
 
             Returns:
                 bool: True if depth is within limits, False otherwise
+
             """
             if current_depth > max_depth:
                 return False
@@ -262,8 +219,7 @@ class InputValidator:
 
 
 async def validate_request_middleware(request: Request, call_next):
-    """
-    Comprehensive request validation middleware with advanced security enforcement.
+    """Comprehensive request validation middleware with advanced security enforcement.
 
     Provides enterprise-grade request validation including size validation, header
     analysis, and security threat detection with comprehensive protection against
@@ -316,6 +272,7 @@ async def validate_request_middleware(request: Request, call_next):
         # Applied automatically as middleware to all requests
         # Validates request size, headers, and security parameters
         # Blocks malicious requests and logs security events
+
     """
     try:
         # Check request size (basic DoS protection)
@@ -341,8 +298,7 @@ async def validate_request_middleware(request: Request, call_next):
 
 
 def validate_search_query(query: str) -> str:
-    """
-    Validate and sanitize search queries.
+    """Validate and sanitize search queries.
 
     Args:
         query: Search query string
@@ -352,6 +308,7 @@ def validate_search_query(query: str) -> str:
 
     Raises:
         HTTPException: If query contains dangerous patterns
+
     """
     if not query:
         raise HTTPException(status_code=400, detail="Search query cannot be empty")
@@ -375,8 +332,7 @@ def validate_search_query(query: str) -> str:
 def validate_file_upload(
     filename: str, content_type: str, allowed_types: List[str]
 ) -> None:
-    """
-    Validate file upload parameters.
+    """Validate file upload parameters.
 
     Args:
         filename: Name of uploaded file
@@ -385,6 +341,7 @@ def validate_file_upload(
 
     Raises:
         HTTPException: If file validation fails
+
     """
     if not filename:
         raise HTTPException(status_code=400, detail="Filename cannot be empty")
@@ -422,8 +379,7 @@ def validate_file_upload(
 
 
 def validate_message_content(content: str) -> str:
-    """
-    Validate and sanitize message content for chat.
+    """Validate and sanitize message content for chat.
 
     Args:
         content: Message content
@@ -433,6 +389,7 @@ def validate_message_content(content: str) -> str:
 
     Raises:
         HTTPException: If content is invalid
+
     """
     if not content or not content.strip():
         raise HTTPException(status_code=400, detail="Message content cannot be empty")
