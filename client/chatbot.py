@@ -938,8 +938,10 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             users = await self.sdk.users.list()
+            # Users list returns PaginatedResponse with items
+            user_list = getattr(users, 'items', []) or []
             prettify_list(
-                [u.model_dump() for u in users.items],
+                [u.model_dump() if hasattr(u, 'model_dump') else u for u in user_list],
                 columns=[
                     "username",
                     "email",
@@ -977,8 +979,10 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             servers = await self.sdk.mcp.list_servers(detailed=True)
+            # MCP list_servers returns Dict[str, Any] with 'servers' key
+            server_list = servers.get("servers", []) if isinstance(servers, dict) else []
             prettify_list(
-                servers.get("servers", []),
+                server_list,
                 columns=["name", "url", "enabled", "connected", "description"],
                 title="MCP Servers",
             )
@@ -1019,19 +1023,26 @@ class CommandHandler:
         doc_req = DocumentSearchRequest(query=query, limit=5)
         docs = await self.sdk.search.search(doc_req)
         console.print("[bold]Top document matches:[/bold]")
+        # Search returns Dict[str, Any] with 'results' key
+        results = docs.get("results", []) if isinstance(docs, dict) else []
         prettify_list(
-            docs.get("results", []),
+            results,
             columns=["chunk_id", "document_id", "score", "content"],
             title="Document Matches",
         )
         try:
             history = await self.sdk.search.history(limit=50)
-            matches = [m for m in history if query.lower() in str(m).lower()]
-            if matches:
-                console.print("[bold]Conversation history matches:[/bold]")
-                prettify_list(matches, title="History Matches")
-        except Exception:
-            pass
+            # Ensure history is a list before processing
+            if history is not None:
+                history_list = history if isinstance(history, list) else []
+                matches = [m for m in history_list if query.lower() in str(m).lower()]
+                if matches:
+                    console.print("[bold]Conversation history matches:[/bold]")
+                    prettify_list(matches, title="History Matches")
+        except ApiError as e:
+            print_warn(f"Could not search conversation history: {e}")
+        except Exception as e:
+            print_warn(f"Unexpected error searching history: {e}")
 
     async def cmd_prompt(self, args: List[str]) -> None:
         """Handle /prompt command for prompt template management operations."""
@@ -1041,8 +1052,10 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             prompts = await self.sdk.prompts.list_prompts()
+            # Prompts list_prompts returns PaginatedResponse[PromptResponse]
+            prompt_list = getattr(prompts, 'items', []) or []
             prettify_list(
-                prompts.get("prompts", []),
+                [p.model_dump() if hasattr(p, 'model_dump') else p for p in prompt_list],
                 columns=["name", "title", "is_active", "created_at"],
                 title="Prompts",
             )
@@ -1078,9 +1091,10 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             profiles = await self.sdk.profiles.list_profiles()
-            print("type", type(profiles))
+            # Profiles list_profiles returns PaginatedResponse[LLMProfileResponse]
+            profile_list = getattr(profiles, 'items', []) or []
             prettify_list(
-                profiles.get("profiles", []),
+                [p.model_dump() if hasattr(p, 'model_dump') else p for p in profile_list],
                 columns=["name", "title", "is_active", "is_default", "model_name"],
                 title="LLM Profiles",
             )
@@ -1109,8 +1123,10 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             docs = await self.sdk.documents.list()
+            # Documents list returns PaginatedResponse with items
+            doc_list = getattr(docs, 'items', []) or []
             prettify_list(
-                [d.model_dump() for d in docs.items],
+                [d.model_dump() if hasattr(d, 'model_dump') else d for d in doc_list],
                 columns=[
                     "id",
                     "title",
@@ -1370,34 +1386,52 @@ async def chat_loop(
                         Handles various chunk types and displays token stats when complete.
 
                     """
-                    stream = sdk.conversations.chat_stream(chat_req)
-                    usage = None
-                    latency = None
-                    final_content = []
-                    async for chunk in stream:
-                        try:
-                            data = json.loads(chunk)
-                        except Exception:
-                            data = None
-                        if isinstance(data, dict):
-                            if data.get("type") == "content":
-                                content_piece = data.get("content", "")
-                                final_content.append(content_piece)
-                                print(content_piece, end="", flush=True)
-                            elif data.get("type") == "start":
-                                continue
-                            elif data.get("type") == "complete":
-                                resp = data.get("response", {})
-                                usage = resp.get("usage")
-                                latency = None
-                            elif data.get("type") == "end":
-                                continue
-                        else:
-                            print(chunk, end="", flush=True)
-                            final_content.append(str(chunk))
-                    print()
-                    if usage:
-                        display_token_stats(usage, latency)
+                    try:
+                        stream = sdk.conversations.chat_stream(chat_req)
+                        usage = None
+                        latency = None
+                        final_content = []
+                        async for chunk in stream:
+                            try:
+                                data = json.loads(chunk)
+                            except json.JSONDecodeError as e:
+                                # Handle non-JSON chunks gracefully
+                                data = None
+                                print_warn(f"Invalid JSON in stream chunk: {e}")
+                            except Exception as e:
+                                # Handle other JSON parsing errors
+                                data = None
+                                print_warn(f"Error parsing stream chunk: {e}")
+                            
+                            if isinstance(data, dict):
+                                if data.get("type") == "content":
+                                    content_piece = data.get("content", "")
+                                    final_content.append(content_piece)
+                                    print(content_piece, end="", flush=True)
+                                elif data.get("type") == "start":
+                                    continue
+                                elif data.get("type") == "complete":
+                                    resp = data.get("response", {})
+                                    usage = resp.get("usage")
+                                    latency = None
+                                elif data.get("type") == "end":
+                                    continue
+                                elif data.get("type") == "error":
+                                    error_msg = data.get("error", "Unknown streaming error")
+                                    print_error(f"Stream error: {error_msg}")
+                                    break
+                            else:
+                                # Handle non-dict chunks (raw text)
+                                if chunk and chunk.strip():
+                                    print(chunk, end="", flush=True)
+                                    final_content.append(str(chunk))
+                        print()
+                        if usage:
+                            display_token_stats(usage, latency)
+                    except Exception as e:
+                        print_error(f"Streaming error: {e}")
+                        # Re-raise to allow higher level error handling
+                        raise
 
                 await do_stream()
             else:
@@ -1407,12 +1441,23 @@ async def chat_loop(
                     )
 
             if response:
-                ai_msg_raw = response.ai_message.content
-                ai_msg = extract_ai_content(ai_msg_raw)
-                console.print(f"[bold green]AI:[/bold green] {ai_msg}")
-                conversation_id = str(response.conversation.id)
-                settings.last_conversation_id = conversation_id
-                display_token_stats(response.usage, response.response_time_ms)
+                # Safely extract AI message content with null checks
+                if hasattr(response, 'ai_message') and response.ai_message:
+                    ai_msg_raw = getattr(response.ai_message, 'content', '') or ''
+                    ai_msg = extract_ai_content(ai_msg_raw)
+                    console.print(f"[bold green]AI:[/bold green] {ai_msg}")
+                else:
+                    print_warn("No AI message content in response")
+                
+                # Safely extract conversation ID
+                if hasattr(response, 'conversation') and response.conversation:
+                    conversation_id = str(response.conversation.id)
+                    settings.last_conversation_id = conversation_id
+                
+                # Safely display token stats
+                usage = getattr(response, 'usage', None)
+                response_time = getattr(response, 'response_time_ms', None)
+                display_token_stats(usage, response_time)
         except KeyboardInterrupt:
             print_warn("\nInterrupted.")
             break
