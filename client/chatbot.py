@@ -1391,18 +1391,8 @@ async def chat_loop(
                         usage = None
                         latency = None
                         final_content = []
-                        async for chunk in stream:
-                            try:
-                                data = json.loads(chunk)
-                            except json.JSONDecodeError as e:
-                                # Handle non-JSON chunks gracefully
-                                data = None
-                                print_warn(f"Invalid JSON in stream chunk: {e}")
-                            except Exception as e:
-                                # Handle other JSON parsing errors
-                                data = None
-                                print_warn(f"Error parsing stream chunk: {e}")
-                            
+                        async for data in stream:
+                            # SDK now yields parsed dictionaries, no need to parse JSON
                             if isinstance(data, dict):
                                 if data.get("type") == "content":
                                     content_piece = data.get("content", "")
@@ -1421,10 +1411,11 @@ async def chat_loop(
                                     print_error(f"Stream error: {error_msg}")
                                     break
                             else:
-                                # Handle non-dict chunks (raw text)
-                                if chunk and chunk.strip():
-                                    print(chunk, end="", flush=True)
-                                    final_content.append(str(chunk))
+                                # Fallback for unexpected data types
+                                print_warn(f"Unexpected streaming data type: {type(data)}")
+                                if hasattr(data, 'strip') and data.strip():
+                                    print(str(data), end="", flush=True)
+                                    final_content.append(str(data))
                         print()
                         if usage:
                             display_token_stats(usage, latency)

@@ -16,7 +16,7 @@ Key Features:
     - Type-safe operations with Pydantic models and validation
     - Comprehensive error handling with detailed exception information
     - Automatic retry mechanisms with exponential backoff
-    - Streaming support for real-time operations
+    - Streaming support for real-time operations with parsed JSON events
     - Authentication management with automatic token refresh
 
 API Coverage:
@@ -85,9 +85,18 @@ Example Usage:
         # Send message
         chat_request = ChatRequest(
             conversation_id=conversation.id,
-            message="Hello, how can you help me today?"
+            user_message="Hello, how can you help me today?"
         )
         response = await sdk.conversations.chat(chat_request)
+
+        # Stream a conversation (yields parsed event dictionaries)
+        async for event in sdk.conversations.chat_stream(chat_request):
+            if event.get("type") == "content":
+                print(event["content"], end="", flush=True)
+            elif event.get("type") == "complete":
+                print(f"\nResponse complete: {event['response']}")
+            elif event.get("type") == "error":
+                print(f"Error: {event['error']}")
 
         # Search documents
         search_results = await sdk.documents.search(
@@ -122,6 +131,7 @@ from pydantic import ValidationError
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 import httpx
+import json
 
 # Import all schema models from shared package instead of defining locally
 from shared.schemas import (  # Base and common schemas; Conversation schemas; Document schemas; LLM Profile schemas; Prompt schemas; Auth schemas; Search schemas; User schemas
@@ -958,8 +968,21 @@ class ConversationsClient:
             json=data.model_dump(mode="json"),
         )
 
-    async def chat_stream(self, data: ChatRequest) -> AsyncIterator[str]:
-        """Send a message and get streaming AI response."""
+    async def chat_stream(self, data: ChatRequest) -> AsyncIterator[Dict[str, Any]]:
+        """Send a message and get streaming AI response.
+        
+        Yields parsed JSON objects representing streaming events. Each event
+        has a 'type' field indicating the event type:
+        - 'start': Initial response started
+        - 'content': Streaming content chunk  
+        - 'tool_call': Tool execution result
+        - 'complete': Final response with complete data
+        - 'error': Error occurred during processing
+        - 'end': Stream ended
+        
+        Returns:
+            AsyncIterator[Dict[str, Any]]: Parsed streaming event objects
+        """
         url = make_url(self.sdk.base_url, "/api/v1/conversations/chat/stream")
         headers = build_headers(self.sdk.token)
         headers["Accept"] = "text/event-stream"
@@ -989,7 +1012,17 @@ class ConversationsClient:
                     if data_content.strip() == "[DONE]":
                         break
                     if data_content.strip():
-                        yield data_content
+                        try:
+                            # Parse JSON and yield as dictionary
+                            parsed_data = json.loads(data_content)
+                            yield parsed_data
+                        except json.JSONDecodeError as e:
+                            # If JSON parsing fails, yield an error event
+                            yield {
+                                "type": "error",
+                                "error": f"Invalid JSON in stream: {e}",
+                                "raw_content": data_content
+                            }
 
     async def stats(self) -> ConversationStatsResponse:
         """Get conversation statistics."""
