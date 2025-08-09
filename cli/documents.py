@@ -108,12 +108,12 @@ async def list(
             table.add_column("Uploaded", style="bright_black")
             for doc in resp:
                 table.add_row(
-                    str(doc.id)[:8] + "...",
+                    str(doc.id)[:8],
                     doc.title,
                     doc.file_type,
                     format_file_size(doc.file_size),
                     doc.processing_status,
-                    str(doc.owner_id)[:8] + "...",
+                    str(doc.owner_id)[:8],
                     str(doc.chunk_count),
                     format_timestamp(str(doc.created_at)),
                 )

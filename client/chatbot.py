@@ -1078,6 +1078,7 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             profiles = await self.sdk.profiles.list_profiles()
+            print("type", type(profiles))
             prettify_list(
                 profiles.get("profiles", []),
                 columns=["name", "title", "is_active", "is_default", "model_name"],

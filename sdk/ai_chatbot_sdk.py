@@ -118,12 +118,14 @@ Performance Considerations:
 """
 
 from collections.abc import AsyncIterator
+from pydantic import ValidationError
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 import httpx
 
 # Import all schema models from shared package instead of defining locally
 from shared.schemas import (  # Base and common schemas; Conversation schemas; Document schemas; LLM Profile schemas; Prompt schemas; Auth schemas; Search schemas; User schemas
+    APIResponse,
     BaseResponse,
     ChatRequest,
     ChatResponse,
@@ -228,71 +230,48 @@ async def handle_response(
         raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
     json_data = resp.json()
+    try:
+        aresp = APIResponse.model_validate(json_data)
+    except ValidationError:
+        return json_data
 
-    # Check if response is in APIResponse envelope format
-    if isinstance(json_data, dict) and "success" in json_data:
-        # Handle APIResponse envelope format
-        if not json_data.get("success", False):
-            # API returned an error in the envelope
-            error_info = json_data.get("error", {})
-            error_code = error_info.get("code", "UNKNOWN_ERROR")
-            error_message = json_data.get("message", "An error occurred")
-            error_details = error_info.get("details", {})
+    # Handle APIResponse envelope format
+    if not aresp.success:
+       raise ApiError(resp.status_code, aresp.message, url, {})
 
-            # Create a more detailed error body
-            error_body = {
-                "error_code": error_code,
-                "message": error_message,
-                "details": error_details,
-                "timestamp": json_data.get("timestamp")
-            }
-            raise ApiError(resp.status_code, error_message, url, error_body)
+    # Extract the actual data from the envelope
+    data = aresp.data
+    try:
+        presp = PaginatedResponse.model_validate(data)
 
-        # Extract the actual data from the envelope
-        actual_data = json_data.get("data")
-        if actual_data:
-            # Handle paginated responses
-            if "pagination" in actual_data and "items" in actual_data:
-                # Convert each item in the list to the target class
-                if cls:
-                    items = []
-                    for item in actual_data["items"]:
-                        items.append(cls.model_validate(item))
-                else:
-                    items = actual_data["items"]
-
-                pagination = PaginationParams.model_validate(actual_data["pagination"])
-                return PaginatedResponse(
-                    items=items,
-                    pagination=pagination
-                )
-
-            # Handle single object responses
+        try:
+            # Convert each item in the list to the target class
             if cls:
-                if isinstance(actual_data, dict):
-                    return cls(**actual_data)
-                elif isinstance(actual_data, list):
-                    # If we get a list but no pagination meta, it might be a simple list response
-                    return [cls(**item) if isinstance(item, dict) else item for item in actual_data]
-                else:
-                    # For primitive types, return as-is
-                    return actual_data
+                items = []
+                for item in presp.items:
+                    items.append(cls.model_validate(item))
+                presp.items = items
 
-        # Return the raw data if no class specified
-        return actual_data
+            return presp
+        except Exception:
+            raise
+    except ValidationError:
+        pass
+    except:
+        raise
 
-    # Fallback to legacy handling for non-envelope responses
+    # Handle single object responses
     if cls:
-        if "items" in json_data:
-            r = PaginatedResponse(**json_data)
-            items = []
-            for item in r.items:
-                items.append(cls(**item))
-            r.items = items
-            json_data["items"] = items
+        if isinstance(data, dict):
+            return cls(**data)
+        elif isinstance(data, list):
+            # If we get a list but no pagination meta, it might be a simple list response
+            return [cls(**item) if isinstance(item, dict) else item for item in data]
+        else:
+            # For primitive types, return as-is
+            return data
 
-            return r
-        return cls(**json_data)
+    # Return the raw data if no class specified
     return json_data
 
 
