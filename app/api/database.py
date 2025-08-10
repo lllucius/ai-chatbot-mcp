@@ -153,9 +153,9 @@ async def list_database_tables(
             """
         SELECT
             schemaname,
-            tablename,
+            relname,
             n_live_tup as row_count,
-            pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
+            pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)) as size
         FROM pg_stat_user_tables
         ORDER BY n_live_tup DESC
     """
@@ -167,7 +167,7 @@ async def list_database_tables(
         tables.append(
             {
                 "schema": row.schemaname,
-                "name": row.tablename,
+                "name": row.relname,
                 "row_count": row.row_count,
                 "size": row.size,
             }

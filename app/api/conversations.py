@@ -474,7 +474,7 @@ async def export_conversation(
     )
 
     # Get conversation with permission check
-    conversation = await conversation_service.get_conversation(conversation_id)
+    conversation = await conversation_service.get_conversation(conversation_id, current_user.id)
     if not conversation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
@@ -528,8 +528,6 @@ async def export_conversation(
                 content=msg.content,
                 created_at=msg.created_at.isoformat(),
                 tool_calls=msg.tool_calls,
-                tool_call_id=msg.tool_call_id,
-                name=msg.name,
             )
             for msg in messages
         ]
