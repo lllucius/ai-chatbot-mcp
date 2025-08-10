@@ -21,6 +21,7 @@ from ..models.document import Document, DocumentChunk, FileStatus
 from ..services.embedding import EmbeddingService
 from ..utils.file_processing import FileProcessor
 from ..utils.text_processing import TextProcessor
+from ..utils.timestamp import utcnow
 from .base import BaseService
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class ProcessingTask:
         self.retry_delay = retry_delay
         self.retries = 0
         self.status = TaskStatus.QUEUED
-        self.created_at = datetime.utcnow()
+        self.created_at = utcnow()
         self.started_at: Optional[datetime] = None
         self.completed_at: Optional[datetime] = None
         self.error_message: Optional[str] = None
@@ -269,7 +270,7 @@ class BackgroundProcessor(BaseService):
             return False
 
         task.status = TaskStatus.CANCELLED
-        task.completed_at = datetime.utcnow()
+        task.completed_at = utcnow()
 
         # Remove from active tasks
         self.active_tasks.pop(task_id, None)
@@ -321,7 +322,7 @@ class BackgroundProcessor(BaseService):
         db = AsyncSessionLocal()
         try:
             task.status = TaskStatus.PROCESSING
-            task.started_at = datetime.utcnow()
+            task.started_at = utcnow()
 
             self._log_operation_start(
                 operation,
@@ -336,7 +337,7 @@ class BackgroundProcessor(BaseService):
                 raise ValueError(f"Unknown task type: {task.task_type}")
 
             task.status = TaskStatus.COMPLETED
-            task.completed_at = datetime.utcnow()
+            task.completed_at = utcnow()
             task.progress = 1.0
 
             # Store result
@@ -472,7 +473,7 @@ class BackgroundProcessor(BaseService):
                     metainfo={
                         **(document.metainfo or {}),
                         "text_stats": text_stats,
-                        "processing_completed_at": datetime.utcnow().isoformat(),
+                        "processing_completed_at": utcnow().isoformat(),
                         "chunk_count": len(chunks),
                         "processing_config": {
                             "chunk_size": self.text_processor.chunk_size,
@@ -514,7 +515,7 @@ class BackgroundProcessor(BaseService):
                         metainfo={
                             **(document.metainfo or {}),
                             "processing_error": str(e),
-                            "processing_failed_at": datetime.utcnow().isoformat(),
+                            "processing_failed_at": utcnow().isoformat(),
                             "processing_stage": "document_processing",
                         },
                     )
@@ -563,7 +564,7 @@ class BackgroundProcessor(BaseService):
         else:
             # Max retries reached
             task.status = TaskStatus.FAILED
-            task.completed_at = datetime.utcnow()
+            task.completed_at = utcnow()
 
             # Store failed result
             self.task_results[task.task_id] = {
@@ -606,7 +607,7 @@ class BackgroundProcessor(BaseService):
             max_age_hours: Maximum age of completed tasks to keep (in hours)
 
         """
-        cutoff_time = datetime.utcnow().timestamp() - (max_age_hours * 3600)
+        cutoff_time = utcnow().timestamp() - (max_age_hours * 3600)
 
         to_remove = []
         for task_id, result in self.task_results.items():

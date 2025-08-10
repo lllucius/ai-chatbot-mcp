@@ -151,7 +151,7 @@ async def _log_response_content_improved(response: Response, correlation_id: str
     """Log detailed response content with proper streaming and Pydantic model support."""
     from fastapi.responses import StreamingResponse
     from pydantic import BaseModel
-    
+
     response_details = {
         "correlation_id": correlation_id,
         "status_code": response.status_code,
@@ -164,19 +164,19 @@ async def _log_response_content_improved(response: Response, correlation_id: str
         if hasattr(response, 'body') and isinstance(response.body, BaseModel):
             pydantic_data = response.body.model_dump()
             _log_response_with_body(response_details, pydantic_data, "pydantic")
-            
+
         # Handle StreamingResponse
         elif isinstance(response, StreamingResponse):
             response = _handle_streaming_response(response, response_details, correlation_id)
-            
+
         # Handle responses with body_iterator (streaming)
         elif hasattr(response, "body_iterator") and response.body_iterator:
             response = _handle_body_iterator_response(response, response_details, correlation_id)
-            
+
         # Handle regular responses with body
         elif hasattr(response, "body") and response.body:
             await _handle_regular_response_body(response, response_details)
-            
+
         else:
             response_details["body"] = None
             _log_response_simple(response_details)
@@ -196,10 +196,10 @@ def _handle_streaming_response(response: StreamingResponse, response_details: di
         response_details["body"] = "<No body_iterator available>"
         _log_response_simple(response_details)
         return response
-        
+
     original_iterator = response.body_iterator
     accumulated_content = []
-    
+
     async def capture_and_stream():
         """Generator that captures content while streaming without blocking."""
         try:
@@ -215,14 +215,14 @@ def _handle_streaming_response(response: StreamingResponse, response_details: di
             # Schedule logging after streaming completes (non-blocking)
             import asyncio
             asyncio.create_task(_log_accumulated_content_async(accumulated_content, response_details.copy(), correlation_id))
-    
+
     # Replace the iterator with our capturing version
     response.body_iterator = capture_and_stream()
-    
+
     # Log immediate response info (without body content)
     response_details["body"] = "<Streaming in progress - content will be logged after completion>"
     _log_response_simple(response_details, "streaming_started")
-    
+
     return response
 
 
@@ -247,7 +247,7 @@ def _handle_body_iterator_response(response: Response, response_details: dict, c
 
     # Replace with capturing iterator
     response.body_iterator = capture_and_replay()
-    
+
     # Log immediate response info
     response_details["body"] = "<Body iterator in progress - content will be logged after completion>"
     _log_response_simple(response_details, "iterator_started")
@@ -273,12 +273,12 @@ def _process_and_log_body_content(body_bytes: bytes, response_details: dict):
     """Process body content and log with proper formatting."""
     try:
         body_text = body_bytes.decode("utf-8", errors="replace")
-        
+
         # Check if it's SSE data first
         if _is_sse_content(body_text, response_details):
             _log_response_with_sse(response_details, body_text)
             return
-        
+
         # Try to parse as JSON
         try:
             body_json = json.loads(body_text)
@@ -288,7 +288,7 @@ def _process_and_log_body_content(body_bytes: bytes, response_details: dict):
             # Handle as text - use the proper text logging format
             _log_response_with_text(response_details, body_text, "text")
             return
-            
+
     except Exception as e:
         response_details["body"] = f"<Error decoding body: {e}>"
         _log_response_simple(response_details)
@@ -300,7 +300,7 @@ def _is_sse_content(body_text: str, response_details: dict) -> bool:
     content_type = response_details.get("headers", {}).get("content-type", "")
     if "text/event-stream" in content_type.lower():
         return True
-    
+
     # Check for SSE field patterns
     sse_patterns = [
         r'^data:\s',
@@ -309,11 +309,11 @@ def _is_sse_content(body_text: str, response_details: dict) -> bool:
         r'^retry:\s',
         r'^\s*$',  # Empty lines
     ]
-    
+
     lines = body_text.strip().split('\n')
     if len(lines) < 1:
         return False
-    
+
     # Check if most lines match SSE patterns
     matching_lines = 0
     for line in lines:
@@ -321,7 +321,7 @@ def _is_sse_content(body_text: str, response_details: dict) -> bool:
             if re.match(pattern, line):
                 matching_lines += 1
                 break
-    
+
     # If more than 70% of lines match SSE patterns, consider it SSE
     return matching_lines / len(lines) > 0.7
 
@@ -330,20 +330,20 @@ def _log_response_with_sse(response_details: dict, sse_text: str):
     """Log response with pretty-printed SSE data."""
     try:
         parsed_events = _parse_sse_data(sse_text)
-        
+
         # Build the log message
         header_info = json.dumps({
-            k: v for k, v in response_details.items() 
+            k: v for k, v in response_details.items()
             if k not in ['body', 'body_text']
         }, indent=2)
-        
+
         # Format SSE events
         formatted_events = _format_sse_events(parsed_events)
-        
+
         # Truncate if necessary
         if len(formatted_events) > TRUNC_SIZE:
             formatted_events = formatted_events[:TRUNC_SIZE] + f"\n... (truncated from {len(sse_text)} chars)"
-        
+
         log_message = f"""📥 DEBUG RESPONSE DETAILS
 Response Info:
 {header_info}
@@ -362,7 +362,7 @@ Body (SSE - {len(parsed_events)} events):
                 }
             },
         )
-        
+
     except Exception as e:
         # Fallback to text logging
         response_details["body_text"] = sse_text[:TRUNC_SIZE] + ("..." if len(sse_text) > TRUNC_SIZE else "")
@@ -374,12 +374,12 @@ def _parse_sse_data(sse_text: str) -> list:
     """Parse SSE data into structured events."""
     events = []
     current_event = {}
-    
+
     lines = sse_text.split('\n')
-    
+
     for line in lines:
         line = line.rstrip('\r')
-        
+
         if line == '':
             # Empty line indicates end of event
             if current_event:
@@ -395,7 +395,7 @@ def _parse_sse_data(sse_text: str) -> list:
             field, value = line.split(':', 1)
             field = field.strip()
             value = value.strip()
-            
+
             if field == 'data':
                 # Data can be multi-line
                 if 'data' not in current_event:
@@ -408,11 +408,11 @@ def _parse_sse_data(sse_text: str) -> list:
             field = line.strip()
             if field:
                 current_event[field] = ''
-    
+
     # Add final event if exists
     if current_event:
         events.append(current_event)
-    
+
     return events
 
 
@@ -420,12 +420,12 @@ def _format_sse_events(events: list) -> str:
     """Format parsed SSE events for pretty printing."""
     if not events:
         return "<No SSE events found>"
-    
+
     formatted_lines = []
-    
+
     for i, event in enumerate(events):
         formatted_lines.append(f"Event #{i + 1}:")
-        
+
         # Handle different fields
         for field, value in event.items():
             if field == 'data':
@@ -434,12 +434,12 @@ def _format_sse_events(events: list) -> str:
                     data_content = '\n'.join(value)
                 else:
                     data_content = str(value)
-                
+
                 # Try to parse data as JSON for better formatting
                 try:
                     data_json = json.loads(data_content)
                     pretty_data = json.dumps(data_json, indent=4)
-                    formatted_lines.append(f"  data (JSON):")
+                    formatted_lines.append("  data (JSON):")
                     for line in pretty_data.split('\n'):
                         formatted_lines.append(f"    {line}")
                 except json.JSONDecodeError:
@@ -449,9 +449,9 @@ def _format_sse_events(events: list) -> str:
                     formatted_lines.append(f"  comment: {comment}")
             else:
                 formatted_lines.append(f"  {field}: {value}")
-        
+
         formatted_lines.append("")  # Empty line between events
-    
+
     return '\n'.join(formatted_lines)
 
 
@@ -460,7 +460,7 @@ def _log_response_with_body(response_details: dict, body_data, content_type: str
     try:
         # Create the log message with pretty-printed JSON
         pretty_json = json.dumps(body_data, indent=2, ensure_ascii=False)
-        
+
         # Check if we need to truncate
         if len(pretty_json) > TRUNC_SIZE:
             # Try compact format
@@ -471,13 +471,13 @@ def _log_response_with_body(response_details: dict, body_data, content_type: str
                 body_display = _smart_truncate_json(pretty_json, TRUNC_SIZE)
         else:
             body_display = pretty_json
-        
+
         # Build the log message manually to avoid JSON escaping
         header_info = json.dumps({
-            k: v for k, v in response_details.items() 
+            k: v for k, v in response_details.items()
             if k not in ['body', 'body_text']
         }, indent=2)
-        
+
         log_message = f"""📥 DEBUG RESPONSE DETAILS
 Response Info:
 {header_info}
@@ -495,7 +495,7 @@ Body ({content_type}):
                 }
             },
         )
-        
+
     except Exception as e:
         # Fallback to simple logging
         response_details["body"] = f"<Error formatting body: {e}>"
@@ -510,13 +510,13 @@ def _log_response_with_text(response_details: dict, text_content: str, content_t
             display_content = text_content[:TRUNC_SIZE] + f"\n... (truncated from {len(text_content)} chars)"
         else:
             display_content = text_content
-        
+
         # Build the log message manually
         header_info = json.dumps({
-            k: v for k, v in response_details.items() 
+            k: v for k, v in response_details.items()
             if k not in ['body', 'body_text']
         }, indent=2)
-        
+
         log_message = f"""📥 DEBUG RESPONSE DETAILS
 Response Info:
 {header_info}
@@ -534,7 +534,7 @@ Body ({content_type}):
                 }
             },
         )
-        
+
     except Exception as e:
         # Fallback to simple logging
         response_details["body"] = f"<Error formatting text: {e}>"
@@ -558,27 +558,27 @@ def _smart_truncate_json(json_str: str, max_length: int) -> str:
     """Intelligently truncate JSON while trying to maintain validity."""
     if len(json_str) <= max_length:
         return json_str
-    
+
     # Find a good truncation point (end of a complete line if possible)
     truncate_point = max_length - 20  # Leave room for truncation message
-    
+
     # Look for the last complete line break before truncation point
     last_newline = json_str.rfind('\n', 0, truncate_point)
     if last_newline > max_length * 0.7:  # If we found a reasonable newline
         truncate_point = last_newline
-    
+
     truncated = json_str[:truncate_point]
-    
+
     # Add closing braces/brackets if needed to make it more readable
     open_braces = truncated.count('{') - truncated.count('}')
     open_brackets = truncated.count('[') - truncated.count(']')
-    
+
     closing = ''
     if open_brackets > 0:
         closing += ']' * min(open_brackets, 3)
     if open_braces > 0:
         closing += '}' * min(open_braces, 3)
-    
+
     total_chars = len(json_str)
     return f"{truncated}{closing}\n... (truncated from {total_chars} chars)"
 
@@ -588,20 +588,20 @@ async def _log_accumulated_content_async(accumulated_content: list, response_det
     try:
         if accumulated_content:
             full_body = b"".join(accumulated_content)
-            
+
             # Add streaming stats
             response_details["total_chunks"] = len(accumulated_content)
             response_details["total_bytes"] = sum(len(chunk) for chunk in accumulated_content)
-            
+
             # Process and log the body content
             try:
                 body_text = full_body.decode("utf-8", errors="replace")
-                
+
                 # Check if it's SSE data first
                 if _is_sse_content(body_text, response_details):
                     _log_response_with_sse(response_details, body_text)
                     return
-                
+
                 # Try JSON parsing
                 try:
                     body_json = json.loads(body_text)
@@ -614,7 +614,7 @@ async def _log_accumulated_content_async(accumulated_content: list, response_det
         else:
             response_details["body"] = "<Empty stream>"
             _log_response_simple(response_details, "streaming_complete")
-            
+
     except Exception as e:
         logger.error(
             f"Error logging accumulated streaming content: {e}",

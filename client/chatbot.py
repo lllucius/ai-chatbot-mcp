@@ -341,7 +341,7 @@ def save_conversation_to_file(content: str, filename: Optional[str] = None) -> s
     """
     ensure_backup_dir()
     if filename is None:
-        filename = f"conversation_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.txt"
+        filename = f"conversation_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}.txt"
     path = os.path.join(BACKUP_DIR, filename)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -1439,12 +1439,12 @@ async def chat_loop(
                     console.print(f"[bold green]AI:[/bold green] {ai_msg}")
                 else:
                     print_warn("No AI message content in response")
-                
+
                 # Safely extract conversation ID
                 if hasattr(response, 'conversation') and response.conversation:
                     conversation_id = str(response.conversation.id)
                     settings.last_conversation_id = conversation_id
-                
+
                 # Safely display token stats
                 usage = getattr(response, 'usage', None)
                 response_time = getattr(response, 'response_time_ms', None)

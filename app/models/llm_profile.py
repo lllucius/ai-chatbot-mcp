@@ -133,7 +133,7 @@ class LLMProfile(BaseModelDB):
     def record_usage(self):
         """Record a profile usage event."""
         self.usage_count += 1
-        self.last_used_at = datetime.utcnow()
+        self.last_used_at = datetime.now(timezone.utc)
 
     def to_openai_params(self) -> dict:
         """Convert LLM profile to OpenAI API parameters dictionary.

@@ -57,6 +57,7 @@ from ..models.conversation import Conversation, Message
 from ..models.user import User
 from ..services.conversation import ConversationService
 from ..utils.api_errors import handle_api_errors, log_api_call
+from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["conversations"])
 
@@ -499,7 +500,7 @@ async def export_conversation(
 
     export_info = ExportInfo(
         format=format,
-        exported_at=datetime.utcnow().isoformat(),
+        exported_at=utcnow().isoformat(),
         message_count=len(messages),
         includes_metadata=include_metadata,
     )
@@ -699,7 +700,7 @@ async def import_conversation(
         # Create new conversation
         conv_title = title or conversation_data.get(
             "title",
-            f"Imported conversation {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+            f"Imported conversation {utcnow().strftime('%Y-%m-%d %H:%M')}",
         )
 
         conversation_create = ConversationCreate(title=conv_title)
@@ -788,7 +789,7 @@ async def archive_conversations(
     )
 
     try:
-        cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
+        cutoff_date = utcnow() - timedelta(days=older_than_days)
         query = select(Conversation).where(Conversation.created_at < cutoff_date)
 
         if inactive_only:
@@ -1002,7 +1003,7 @@ async def search_conversations_and_messages(
             results=search_results,
             total_found=len(search_results),
             search_criteria=criteria,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=utcnow().isoformat(),
         )
 
         return APIResponse[ConversationSearchData](
@@ -1040,7 +1041,7 @@ async def get_conversation_statistics(
             )
             or 0
         )
-        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        seven_days_ago = utcnow() - timedelta(days=7)
         recent_conversations = (
             await db.scalar(
                 select(func.count(Conversation.id)).where(
@@ -1112,7 +1113,7 @@ async def get_conversation_statistics(
                 users_with_conversations=users_with_conversations,
                 top_users=top_users_list,
             ),
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=utcnow().isoformat(),
         )
 
         return APIResponse[ConversationStatsData](

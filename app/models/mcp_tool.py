@@ -119,7 +119,7 @@ class MCPTool(BaseModelDB):
     def record_usage(self, success: bool, duration_ms: Optional[int] = None):
         """Record a tool usage event."""
         self.usage_count += 1
-        self.last_used_at = datetime.utcnow()
+        self.last_used_at = datetime.now(timezone.utc)
 
         if success:
             self.success_count += 1

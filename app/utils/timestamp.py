@@ -46,39 +46,7 @@ from typing import Union
 
 
 def utcnow() -> datetime:
-    """Get current UTC datetime with timezone awareness and enterprise precision.
-
-    Provides the current UTC datetime with timezone information for consistent
-    timestamp generation across global deployments. Ensures all application
-    timestamps are normalized to UTC for database storage, API responses,
-    and cross-timezone operations with proper timezone handling.
-
-    Returns:
-        datetime: Current UTC datetime with timezone information attached.
-            Includes microsecond precision for high-accuracy timing requirements.
-
-    Security Notes:
-        - Uses system clock for timestamp generation with tamper detection capabilities
-        - Provides consistent timing for security audit trails and compliance logging
-        - Resistant to timezone manipulation and local time zone configuration attacks
-
-    Performance Notes:
-        - Optimized for frequent calls with minimal system overhead
-        - Memory efficient with direct UTC datetime object creation
-        - Compatible with database timezone-aware fields and indexing
-
-    Use Cases:
-        - Database record timestamps ensuring consistent storage and querying
-        - API response generation with standardized timestamp formats
-        - Audit trail creation with precise timing and forensic capabilities
-        - Performance monitoring with accurate timing measurements
-        - Security logging with tamper-resistant timestamp generation
-
-    Example:
-        current_time = utcnow()
-        # Returns: datetime(2023, 12, 1, 15, 30, 45, 123456, tzinfo=timezone.utc)
-
-    """
+    """Get current UTC datetime with timezone awareness and enterprise precision."""
     return datetime.now(timezone.utc)
 
 

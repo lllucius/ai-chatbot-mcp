@@ -43,6 +43,7 @@ from ..models.user import User
 from ..services.background_processor import get_background_processor
 from ..services.document import DocumentService
 from ..utils.api_errors import handle_api_errors, log_api_call
+from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["documents"])
 
@@ -438,7 +439,7 @@ async def cleanup_documents(
     )
 
     # Build query
-    cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
+    cutoff_date = utcnow() - timedelta(days=older_than_days)
     query = select(Document).where(Document.created_at < cutoff_date)
 
     # Apply status filter
@@ -591,7 +592,7 @@ async def get_document_statistics(
     )
 
     # Recent activity (last 7 days)
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    seven_days_ago = utcnow() - timedelta(days=7)
     recent_uploads = (
         await db.scalar(
             select(func.count(Document.id)).where(Document.created_at >= seven_days_ago)
@@ -664,7 +665,7 @@ async def get_document_statistics(
         processing=processing_stats,
         recent_activity=recent_activity,
         top_uploaders=top_users,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
 
     return APIResponse[DocumentStatisticsData](
@@ -905,7 +906,7 @@ async def advanced_document_search(
         results=results,
         total_found=len(results),
         search_criteria=search_criteria,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
 
     return APIResponse[AdvancedSearchData](

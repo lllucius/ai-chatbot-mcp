@@ -73,11 +73,6 @@ from .base import BaseSchema
 from .common import BaseResponse, PaginationParams
 
 
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.utcnow()
-
-
 class UserBase(BaseSchema):
     """Foundation user schema with core fields and comprehensive validation for user management.
 

@@ -86,7 +86,7 @@ class Prompt(BaseModelDB):
     def record_usage(self):
         """Record a prompt usage event."""
         self.usage_count += 1
-        self.last_used_at = datetime.utcnow()
+        self.last_used_at = datetime.now(timezone.utc)
 
     def __repr__(self) -> str:
         """Return string representation of Prompt model."""

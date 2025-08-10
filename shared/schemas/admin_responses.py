@@ -4,16 +4,9 @@ This module contains response schemas for administrative operations, database ma
 and system monitoring that were previously scattered across common.py.
 """
 
-from datetime import datetime, timezone
 from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime with timezone awareness."""
-    return datetime.now(timezone.utc)
-
 
 # --- Search and Export Response Models ---
 

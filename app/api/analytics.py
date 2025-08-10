@@ -1,6 +1,6 @@
 """Analytics and reporting API endpoints."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +32,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..utils.api_errors import handle_api_errors, log_api_call
+from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["analytics"])
 
@@ -94,7 +95,7 @@ async def get_system_overview(
         system_health=SystemHealthScore(
             score=round(health_score, 2), factors=health_factors
         ),
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
 
     return APIResponse[AnalyticsOverviewPayload](
@@ -124,7 +125,7 @@ async def get_usage_statistics(
         )
 
     days = period_map[period]
-    start_date = datetime.utcnow() - timedelta(days=days)
+    start_date = utcnow() - timedelta(days=days)
 
     from sqlalchemy import and_, func, select
 
@@ -169,7 +170,7 @@ async def get_usage_statistics(
     payload = AnalyticsUsagePayload(
         period=period,
         start_date=start_date.isoformat(),
-        end_date=datetime.utcnow().isoformat(),
+        end_date=utcnow().isoformat(),
         metrics=UsageMetrics(
             new_users=new_users or 0,
             new_documents=new_documents or 0,
@@ -257,7 +258,7 @@ async def get_performance_metrics(
         ),
         database_performance=db_performance,
         system_metrics=SystemMetricsInfo(
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=utcnow().isoformat(),
             health_status="operational",
         ),
     )
@@ -291,7 +292,7 @@ async def get_user_analytics(
         )
 
     days = period_map[period]
-    start_date = datetime.utcnow() - timedelta(days=days)
+    start_date = utcnow() - timedelta(days=days)
 
     from sqlalchemy import desc, func, select
 
@@ -359,7 +360,7 @@ async def get_user_analytics(
         period=period,
         top_users=top_users,
         total_returned=len(top_users),
-        generated_at=datetime.utcnow().isoformat(),
+        generated_at=utcnow().isoformat(),
     )
 
     return APIResponse[AnalyticsUserAnalyticsPayload](
@@ -379,7 +380,7 @@ async def get_usage_trends(
     """Get comprehensive usage trends and growth patterns with predictive insights."""
     log_api_call("get_usage_trends", user_id=str(current_user.id), days=days)
 
-    start_date = datetime.utcnow() - timedelta(days=days)
+    start_date = utcnow() - timedelta(days=days)
 
     from sqlalchemy import and_, func, select
 
@@ -451,7 +452,7 @@ async def get_usage_trends(
             total_messages=sum(day.messages for day in daily_trends),
             weekly_growth_rate=round(growth_rate, 2),
         ),
-        generated_at=datetime.utcnow().isoformat(),
+        generated_at=utcnow().isoformat(),
     )
 
     return APIResponse[AnalyticsTrendsPayload](
@@ -508,7 +509,7 @@ async def export_analytics_report(
 
     payload = AnalyticsExportPayload(
         report_metadata={
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": utcnow().isoformat(),
             "generated_by": current_user.username,
             "period": "30 days",
             "format": format,

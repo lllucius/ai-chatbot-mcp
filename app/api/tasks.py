@@ -1,7 +1,7 @@
 """Background task management API endpoints."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -28,6 +28,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser, get_current_user
 from ..models.user import User
 from ..utils.api_errors import handle_api_errors, log_api_call
+from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["tasks"])
 
@@ -96,7 +97,7 @@ async def get_task_system_status(
             if broker_status == "connected" and active_workers > 0
             else "degraded"
         ),
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
     return APIResponse[TaskSystemStatusData](
         success=True,
@@ -148,7 +149,7 @@ async def get_workers_info(
         workers=workers,
         total_workers=len(workers),
         online_workers=len([w for w in workers if w.status == "online"]),
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
     return APIResponse[WorkerStatusData](
         success=True,
@@ -244,7 +245,7 @@ async def get_queue_info(
         queues=queue_infos,
         total_queues=len(queues),
         filtered_by=queue_name,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
     return APIResponse[QueueStatusData](
         success=True,
@@ -285,7 +286,7 @@ async def get_active_tasks(
         active_tasks=all_tasks,
         total_active=len(all_tasks),
         workers_with_tasks=len([w for w, t in active_tasks.items() if t]),
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
     return APIResponse[ActiveTasksData](
         success=True,
@@ -457,7 +458,7 @@ async def get_task_statistics(
         "get_task_statistics", user_id=str(current_user.id), period_hours=period_hours
     )
 
-    start_time = datetime.utcnow() - timedelta(hours=period_hours)
+    start_time = utcnow() - timedelta(hours=period_hours)
 
     from sqlalchemy import and_, func, select
 
@@ -543,7 +544,7 @@ async def get_task_statistics(
         start_time=start_time.isoformat(),
         document_processing=document_processing_stats,
         recent_errors=error_samples,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
     )
     return APIResponse[TaskStatisticsData](
         success=True,
@@ -594,7 +595,7 @@ async def get_monitoring_data(
         active_tasks=active_tasks_summary,
         workers=workers_summary,
         recent_performance=stats_response.data.document_processing.model_dump(),
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=utcnow().isoformat(),
         refresh_interval=30,
     )
     return APIResponse[TaskMonitoringData](

@@ -8,7 +8,6 @@ featuring retry, parallelization, and API response result caching.
 import asyncio
 import json
 import time
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastmcp import Client
@@ -37,6 +36,7 @@ from ..core.exceptions import ExternalServiceError
 from ..core.logging import get_api_logger
 from ..models.mcp_server import MCPServer
 from ..models.mcp_tool import MCPTool
+from ..utils.timestamp import utcnow
 
 logger = get_api_logger("mcp_service")
 
@@ -266,7 +266,7 @@ class MCPService:
             "is_connected": is_connected,
         }
         if is_connected:
-            updates_dict["last_connected_at"] = datetime.utcnow()
+            updates_dict["last_connected_at"] = utcnow()
             updates_dict["connection_errors"] = 0
         elif increment_errors:
             server = await self.get_server(name)

@@ -126,12 +126,12 @@ Performance Considerations:
     - Monitor token expiration and refresh proactively
 """
 
+import json
 from collections.abc import AsyncIterator
-from pydantic import ValidationError
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 import httpx
-import json
+from pydantic import ValidationError
 
 # Import all schema models from shared package instead of defining locally
 from shared.schemas import (  # Base and common schemas; Conversation schemas; Document schemas; LLM Profile schemas; Prompt schemas; Auth schemas; Search schemas; User schemas
@@ -153,7 +153,6 @@ from shared.schemas import (  # Base and common schemas; Conversation schemas; D
     LLMProfileResponse,
     MessageResponse,
     PaginatedResponse,
-    PaginationParams,
     PasswordResetConfirm,
     PasswordResetRequest,
     PerformanceMetricsResponse,
@@ -970,16 +969,16 @@ class ConversationsClient:
 
     async def chat_stream(self, data: ChatRequest) -> AsyncIterator[Dict[str, Any]]:
         """Send a message and get streaming AI response.
-        
+
         Yields parsed JSON objects representing streaming events. Each event
         has a 'type' field indicating the event type:
         - 'start': Initial response started
-        - 'content': Streaming content chunk  
+        - 'content': Streaming content chunk
         - 'tool_call': Tool execution result
         - 'complete': Final response with complete data
         - 'error': Error occurred during processing
         - 'end': Stream ended
-        
+
         Returns:
             AsyncIterator[Dict[str, Any]]: Parsed streaming event objects
         """

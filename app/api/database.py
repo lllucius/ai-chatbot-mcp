@@ -2,7 +2,6 @@
 
 import os
 import subprocess
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -29,6 +28,7 @@ from ..database import get_db
 from ..dependencies import get_current_superuser
 from ..models.user import User
 from ..utils.api_errors import handle_api_errors, log_api_call
+from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["database"])
 
@@ -129,7 +129,7 @@ async def get_database_status(
             "pgvector_installed": pgvector_installed,
         },
         performance_metrics={},
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
     )
     return APIResponse[DatabaseStatusResponse](
         success=True,
@@ -177,7 +177,7 @@ async def list_database_tables(
         success=True,
         tables=tables,
         total_tables=len(tables),
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
     )
     return APIResponse[DatabaseTablesResponse](
         success=True,
@@ -238,7 +238,7 @@ async def get_migration_status(
             if current_revision != "Unknown"
             else None
         ),
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
     )
     return APIResponse[DatabaseMigrationsResponse](
         success=True,
@@ -344,7 +344,7 @@ async def create_database_backup(
     log_api_call("create_database_backup", user_id=str(current_user.id))
 
     if not output_file:
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = utcnow().strftime("%Y%m%d_%H%M%S")
         output_file = f"backup_{timestamp}.sql"
 
     try:
@@ -626,7 +626,7 @@ async def analyze_database(
             "database_statistics": database_stats,
         },
         recommendations=[],  # Could be populated with actual recommendations
-        timestamp=datetime.utcnow(),
+        timestamp=utcnow(),
     )
     return APIResponse[DatabaseAnalysisResponse](
         success=True,
@@ -705,7 +705,7 @@ async def execute_custom_query(
             rows_affected=len(data),
             execution_time_ms=execution_time_ms,
             results=data,
-            timestamp=datetime.utcnow(),
+            timestamp=utcnow(),
         )
         return APIResponse[DatabaseQueryResponse](
             success=True,

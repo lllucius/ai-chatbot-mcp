@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from .base import BaseModelSchema
+from .common import utcnow
 
 
 class MCPServerCreateSchema(BaseModel):
@@ -307,7 +308,7 @@ class MCPConnectionTestSchema(BaseModel):
     )
     error: Optional[str] = Field(None, description="Error message if connection failed")
     tested_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Test timestamp"
+        default_factory=utcnow, description="Test timestamp"
     )
 
 
