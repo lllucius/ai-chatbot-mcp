@@ -239,6 +239,7 @@ async def handle_response(
         raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
     json_data = resp.json()
+    print("DATA", json_data)
     try:
         aresp = APIResponse.model_validate(json_data)
     except ValidationError:

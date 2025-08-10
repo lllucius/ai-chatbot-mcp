@@ -10,17 +10,12 @@ from shared.schemas.document import DocumentSearchRequest, DocumentSearchRespons
 from shared.schemas.search_responses import SearchSuggestionData
 
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, get_search_service
 from ..models.user import User
 from ..services.search import SearchService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["search"])
-
-
-async def get_search_service(db: AsyncSession = Depends(get_db)) -> SearchService:
-    """Get search service instance with database session."""
-    return SearchService(db)
 
 
 @router.post("/", response_model=APIResponse[DocumentSearchResponse])

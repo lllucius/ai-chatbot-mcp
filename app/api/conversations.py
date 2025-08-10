@@ -52,7 +52,7 @@ from shared.schemas.conversation_responses import (
 )
 
 from ..database import AsyncSessionLocal, get_db
-from ..dependencies import get_current_superuser, get_current_user
+from ..dependencies import get_current_superuser, get_current_user, get_conversation_service
 from ..models.conversation import Conversation, Message
 from ..models.user import User
 from ..services.conversation import ConversationService
@@ -60,13 +60,6 @@ from ..utils.api_errors import handle_api_errors, log_api_call
 from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["conversations"])
-
-
-async def get_conversation_service(
-    db: AsyncSession = Depends(get_db),
-) -> ConversationService:
-    """Get conversation service instance with database session."""
-    return ConversationService(db)
 
 
 @router.post("/", response_model=APIResponse[ConversationResponse])

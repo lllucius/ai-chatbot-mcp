@@ -19,17 +19,12 @@ from shared.schemas.llm_profile import (
 )
 
 from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
+from ..dependencies import get_current_superuser, get_current_user, get_profile_service
 from ..models.user import User
 from ..services.llm_profile_service import LLMProfileService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["profiles"])
-
-
-async def get_profile_service(db: AsyncSession = Depends(get_db)) -> LLMProfileService:
-    """Get LLM profile service instance with database session."""
-    return LLMProfileService(db)
 
 
 @router.post("/", response_model=APIResponse[LLMProfileResponse])

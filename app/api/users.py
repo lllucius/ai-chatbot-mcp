@@ -19,18 +19,13 @@ from shared.schemas.user import (
 )
 
 from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
+from ..dependencies import get_current_superuser, get_current_user, get_user_service
 from ..models.user import User
 from ..models.user import User as UserModel
 from ..services.user import UserService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["users"])
-
-
-async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
-    """Get user service instance with database session."""
-    return UserService(db)
 
 
 @router.get("/me", response_model=APIResponse[UserResponse])

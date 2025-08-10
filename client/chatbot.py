@@ -1123,10 +1123,8 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             docs = await self.sdk.documents.list()
-            # Documents list returns PaginatedResponse with items
-            doc_list = getattr(docs, 'items', []) or []
             prettify_list(
-                [d.model_dump() if hasattr(d, 'model_dump') else d for d in doc_list],
+                [d.model_dump() if hasattr(d, 'model_dump') else d for d in docs],
                 columns=[
                     "id",
                     "title",

@@ -7,6 +7,9 @@ modern Pydantic V2 features with advanced validation and consistent API response
 import json
 from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, get_origin, get_args
+from functools import lru_cache
+from pydantic import create_model
 
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -16,6 +19,42 @@ from pydantic import BaseModel, ConfigDict, Field
 def utcnow() -> datetime:
     """Get current UTC datetime with timezone awareness."""
     return datetime.now(timezone.utc)
+
+
+PRIMITIVES = {str, int, float, bool, dict}
+
+@lru_cache
+def api_response(model: Any, *, paginated: bool | None = None) -> type[BaseModel]:
+    """
+    Create a concrete APIResponse type for any model, list, or primitive.
+    
+    - Auto-detect pagination if model is List[...]
+    - Supports primitive types directly in OpenAPI schema (no wrapper field)
+    """
+    origin = get_origin(model)
+    args = get_args(model)
+
+    # Auto-detect pagination
+    if paginated is None:
+        if origin in (list, List) and args:
+            model = args[0]
+            paginated = True
+        else:
+            paginated = False
+
+    # Special handling for primitives to inline in schema
+    if model in PRIMITIVES:
+        # Create a dynamic model that just has __root__ to inline the primitive
+        model = create_model(
+            f"Primitive_{model.__name__.capitalize()}_Root",
+            __root__=(model, ...)
+        )
+
+    if paginated:
+        PaginatedModel = PaginatedResponse[model]  # type: ignore
+        return APIResponse[PaginatedModel]  # type: ignore
+    else:
+        return APIResponse[model]  # type: ignore
 
 
 # Generic type variable for paginated responses

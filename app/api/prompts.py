@@ -10,17 +10,12 @@ from shared.schemas.prompt import PromptCreate, PromptResponse, PromptUpdate
 from shared.schemas.prompt_responses import PromptCategoriesData, PromptStatisticsData
 
 from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
+from ..dependencies import get_current_superuser, get_current_user, get_prompt_service
 from ..models.user import User
 from ..services.prompt_service import PromptService
 from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["prompts"])
-
-
-async def get_prompt_service(db: AsyncSession = Depends(get_db)) -> PromptService:
-    """Get prompt service instance with database session."""
-    return PromptService(db)
 
 
 @router.get("/", response_model=APIResponse[PaginatedResponse[PromptResponse]])
