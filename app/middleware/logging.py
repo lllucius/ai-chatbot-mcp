@@ -12,8 +12,8 @@ import time
 from fastapi import Request, Response
 from fastapi.responses import StreamingResponse
 
-from ..config import settings
-from ..core.logging import get_component_logger
+from app.config import settings
+from app.core.logging import get_component_logger
 
 logger = get_component_logger("middleware.logging")
 
@@ -25,7 +25,7 @@ async def logging_middleware(request: Request, call_next) -> Response:
     start_time = time.time()
 
     # Generate correlation ID for this request
-    from ..core.logging import set_correlation_id
+    from app.core.logging import set_correlation_id
 
     correlation_id = set_correlation_id()
 

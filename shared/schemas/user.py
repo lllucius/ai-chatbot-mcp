@@ -69,8 +69,8 @@ from typing import List, Optional
 
 from pydantic import ConfigDict, EmailStr, Field, field_validator
 
-from .base import BaseSchema
-from .common import BaseResponse, PaginationParams
+from shared.schemas.base import BaseSchema
+from shared.schemas.common import BaseResponse, PaginationParams
 
 
 class UserBase(BaseSchema):

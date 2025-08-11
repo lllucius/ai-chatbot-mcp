@@ -5,7 +5,7 @@ advanced document processing, semantic vector search, and intelligent conversati
 Built with FastAPI, PostgreSQL with PGVector, and OpenAI integration for enterprise deployment.
 """
 
-from .main import app
+from app.main import app
 
 __version__ = "1.0.0"
 __description__ = "Production-grade AI chatbot platform with RAG capabilities"

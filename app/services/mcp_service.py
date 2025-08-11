@@ -16,6 +16,12 @@ from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import settings
+from app.core.exceptions import ExternalServiceError
+from app.core.logging import get_api_logger
+from app.models.mcp_server import MCPServer
+from app.models.mcp_tool import MCPTool
+from app.utils.timestamp import utcnow
 from shared.schemas.mcp import (
     MCPDiscoveryResultSchema,
     MCPHealthStatusSchema,
@@ -30,13 +36,6 @@ from shared.schemas.mcp import (
     MCPToolUpdateSchema,
     MCPToolUsageStatsSchema,
 )
-
-from ..config import settings
-from ..core.exceptions import ExternalServiceError
-from ..core.logging import get_api_logger
-from ..models.mcp_server import MCPServer
-from ..models.mcp_tool import MCPTool
-from ..utils.timestamp import utcnow
 
 logger = get_api_logger("mcp_service")
 

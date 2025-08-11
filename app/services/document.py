@@ -13,19 +13,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import UploadFile
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.core.exceptions import DocumentError, NotFoundError, ValidationError
+from app.models.document import Document, DocumentChunk, FileStatus
+from app.services.background_processor import get_background_processor
+from app.services.base import BaseService
+from app.services.embedding import EmbeddingService
+from app.utils.file_processing import FileProcessor
+from app.utils.text_processing import TextProcessor
 from shared.schemas.document import DocumentUpdate
-
-from ..config import settings
-from ..core.exceptions import DocumentError, NotFoundError, ValidationError
-from ..models.document import Document, DocumentChunk, FileStatus
-from ..services.background_processor import get_background_processor
-from ..services.embedding import EmbeddingService
-from ..utils.file_processing import FileProcessor
-from ..utils.text_processing import TextProcessor
-from .base import BaseService
 
 logger = logging.getLogger(__name__)
 
@@ -568,57 +567,6 @@ class DocumentService(BaseService):
 
         logger.info(f"Document deleted: {document_id}")
         return True
-
-    async def get_status(self, document_id: int, user_id: int) -> Dict[str, Any]:
-        """Get document processing status and progress.
-
-        Args:
-            document_id: Document ID
-            user_id: User ID for access control
-
-        Returns:
-            dict: Processing status information
-
-        """
-        document = await self.get_document(document_id, user_id)
-
-        # Count processed chunks
-        chunks_result = await self.db.execute(
-            select(func.count(DocumentChunk.id)).where(
-                DocumentChunk.document_id == document_id
-            )
-        )
-        chunks_processed = chunks_result.scalar() or 0
-
-        # Estimate total chunks based on file size
-        estimated_chunks = max(
-            1, document.file_size // (settings.default_chunk_size * 4)
-        )
-
-        # Calculate progress
-        if document.status == FileStatus.COMPLETED:
-            progress = 1.0
-        elif document.status == FileStatus.PROCESSING:
-            progress = min(0.9, chunks_processed / estimated_chunks)
-        else:
-            progress = 0.0
-
-        return {
-            "document_id": document_id,
-            "status": document.status,
-            "progress": progress,
-            "chunks_processed": chunks_processed,
-            "total_chunks": (
-                estimated_chunks if document.status != "completed" else chunks_processed
-            ),
-            "error_message": (
-                document.metainfo.get("processing_error") if document.metainfo else None
-            ),
-            "started_at": document.created_at,
-            "completed_at": (
-                document.updated_at if document.status == FileStatus.COMPLETED else None
-            ),
-        }
 
     async def reprocess_document(self, document_id: int, user_id: int) -> bool:
         """Reprocess document (re-extract text and regenerate chunks/embeddings).

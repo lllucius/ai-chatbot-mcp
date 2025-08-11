@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import Field
 
-from .base import BaseSchema
+from shared.schemas.base import BaseSchema
 
 
 class ToolHandlingMode(str, Enum):

@@ -64,7 +64,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import error_message, get_sdk, success_message
+from cli.base import error_message, get_sdk, success_message
 
 profile_app = AsyncTyper(
     help="LLM parameter profile management commands", rich_markup_mode=None
@@ -122,7 +122,7 @@ async def list(
                     }
                 )
 
-            from .base import display_rich_table
+            from cli.base import display_rich_table
 
             display_rich_table(profile_data, f"LLM Profiles ({len(profiles)} total)")
         else:
@@ -153,7 +153,7 @@ async def show(
                 "Updated": str(data.updated_at),
             }
 
-            from .base import display_key_value_pairs
+            from cli.base import display_key_value_pairs
 
             display_key_value_pairs(profile_details, "Profile Details")
     except Exception as e:
@@ -240,7 +240,7 @@ async def remove(
     force: bool = Option(False, "--force", help="Skip confirmation"),
 ):
     """Remove a profile."""
-    from .base import confirm_action
+    from cli.base import confirm_action
 
     try:
         if not force and not confirm_action(

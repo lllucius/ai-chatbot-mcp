@@ -5,28 +5,33 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import get_db
+from app.dependencies import get_current_superuser, get_current_user
+from app.models.user import User
+from app.utils.api_errors import handle_api_errors, log_api_call
+from app.utils.timestamp import utcnow
 from shared.schemas.analytics import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    AnalyticsExportPayload,
+    AnalyticsOverviewPayload,
+    AnalyticsPerformancePayload,
+    AnalyticsTrendsPayload,
+    AnalyticsUsagePayload,
+    AnalyticsUserAnalyticsPayload,
+    ConversationsOverview,
+    DailyStat,
+    DailyTrend,
+    DBPerformanceEntry,
+    DetailedUserAnalyticsPayload,
+    DocumentProcessingPerformance,
+    DocumentsOverview,
+    SystemHealthScore,
+    SystemMetricsInfo,
+    TopUser,
+    TrendSummary,
+    UsageMetrics,
+    UsersOverview,
 )
 from shared.schemas.common import APIResponse
-
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
-from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["analytics"])
 
@@ -42,9 +47,9 @@ async def get_system_overview(
 
     from sqlalchemy import func, select
 
-    from ..models.conversation import Conversation
-    from ..models.document import Document, FileStatus
-    from ..models.user import User as UserModel
+    from app.models.conversation import Conversation
+    from app.models.document import Document, FileStatus
+    from app.models.user import User as UserModel
 
     # Get basic counts
     total_users = await db.scalar(select(func.count(UserModel.id)))
@@ -123,9 +128,9 @@ async def get_usage_statistics(
 
     from sqlalchemy import and_, func, select
 
-    from ..models.conversation import Conversation, Message
-    from ..models.document import Document
-    from ..models.user import User as UserModel
+    from app.models.conversation import Conversation, Message
+    from app.models.document import Document
+    from app.models.user import User as UserModel
 
     # Get usage metrics for the period
     new_users = await db.scalar(
@@ -193,7 +198,7 @@ async def get_performance_metrics(
 
     from sqlalchemy import func, select, text
 
-    from ..models.document import Document, FileStatus
+    from app.models.document import Document, FileStatus
 
     # Document processing performance
     processing_stats = await db.execute(
@@ -290,9 +295,9 @@ async def get_user_analytics(
 
     from sqlalchemy import desc, func, select
 
-    from ..models.conversation import Conversation, Message
-    from ..models.document import Document
-    from ..models.user import User as UserModel
+    from app.models.conversation import Conversation, Message
+    from app.models.document import Document
+    from app.models.user import User as UserModel
 
     if metric == "messages":
         # Top users by message count
@@ -378,9 +383,9 @@ async def get_usage_trends(
 
     from sqlalchemy import and_, func, select
 
-    from ..models.conversation import Message
-    from ..models.document import Document
-    from ..models.user import User as UserModel
+    from app.models.conversation import Message
+    from app.models.document import Document
+    from app.models.user import User as UserModel
 
     # Daily trends
     daily_trends = []

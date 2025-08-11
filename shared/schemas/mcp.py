@@ -10,8 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .base import BaseModelSchema
-from .common import utcnow
+from shared.schemas.base import BaseModelSchema
+from shared.schemas.common import utcnow
 
 
 class MCPServerCreateSchema(BaseModel):

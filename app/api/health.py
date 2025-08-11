@@ -6,30 +6,28 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.database import get_db
+from app.dependencies import get_mcp_service
+from app.middleware.performance import get_performance_stats
+from app.services.mcp_service import MCPService
+from app.utils.api_errors import handle_api_errors, log_api_call
+from app.utils.caching import api_response_cache, embedding_cache, search_result_cache
 from shared.schemas.common import APIResponse
 from shared.schemas.health import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    ApplicationHealthData,
+    CacheHealthData,
+    CacheStats,
+    DatabaseHealthData,
+    DetailedHealthCheckPayload,
+    FastMCPHealthData,
+    LivenessPayload,
+    OpenAIHealthData,
+    PerformanceMetricsPayload,
+    ReadinessComponentsPayload,
+    ServicesHealthPayload,
+    SystemMetricsPayload,
 )
-
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_mcp_service
-from ..middleware.performance import get_performance_stats
-from ..services.mcp_service import MCPService
-from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.caching import api_response_cache, embedding_cache, search_result_cache
 
 logger = logging.getLogger(__name__)
 
@@ -256,7 +254,7 @@ async def _check_database_health(db: AsyncSession) -> DatabaseHealthData:
 async def _check_openai_health() -> OpenAIHealthData:
     """Check OpenAI API service availability and configuration."""
     try:
-        from ..services.openai_client import OpenAIClient
+        from app.services.openai_client import OpenAIClient
 
         if settings.openai_api_key == "your-openai-api-key-here":
             return OpenAIHealthData(

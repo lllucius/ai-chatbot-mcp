@@ -73,9 +73,9 @@ from sqlalchemy import text
 from sqlalchemy.exc import DisconnectionError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from .config import settings
-from .core.default_data import initialize_default_data
-from .models.base import BaseModelDB
+from app.config import settings
+from app.core.default_data import initialize_default_data
+from app.models.base import BaseModelDB
 
 logger = logging.getLogger(__name__)
 

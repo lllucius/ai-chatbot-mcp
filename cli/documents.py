@@ -64,7 +64,7 @@ from async_typer import AsyncTyper
 from rich.console import Console
 from typer import Argument, Option
 
-from .base import (
+from cli.base import (
     error_message,
     format_file_size,
     format_timestamp,
@@ -233,7 +233,7 @@ async def delete(
     force: bool = Option(False, "--force", help="Skip confirmation"),
 ):
     """Delete a document."""
-    from .base import confirm_action
+    from cli.base import confirm_action
 
     try:
         if not force and not confirm_action(

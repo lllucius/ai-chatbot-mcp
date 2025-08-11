@@ -13,7 +13,13 @@ from rich.console import Console
 from rich.table import Table
 from typer import Argument, Option
 
-from .base import error_message, get_sdk, info_message, success_message, warning_message
+from cli.base import (
+    error_message,
+    get_sdk,
+    info_message,
+    success_message,
+    warning_message,
+)
 
 console = Console()
 
@@ -120,7 +126,7 @@ async def remove_server(
     """Remove an MCP server."""
     try:
         if not force:
-            from .base import confirm_action
+            from cli.base import confirm_action
 
             confirmed = confirm_action(
                 f"Are you sure you want to remove MCP server '{name}'?"

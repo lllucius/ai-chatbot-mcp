@@ -12,7 +12,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Option
 
-from .base import (
+from cli.base import (
     error_message,
     get_cli_manager,
     info_message,

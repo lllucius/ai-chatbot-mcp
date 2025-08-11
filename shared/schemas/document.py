@@ -10,8 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from .base import BaseModelSchema, BaseSchema
-from .common import BaseResponse, SearchParams
+from shared.schemas.base import BaseModelSchema, BaseSchema
+from shared.schemas.common import BaseResponse, SearchParams
 
 
 class DocumentResponse(BaseSchema):
@@ -233,20 +233,6 @@ class ProcessingConfigResponse(BaseModel):
     message: str = Field(..., description="Status message")
     config: Dict[str, Any] = Field(
         ..., description="Processing configuration dictionary"
-    )
-
-
-class QueueStatusResponse(BaseResponse):
-    """Response schema for document processing queue status."""
-
-    queue_size: int = Field(..., description="Number of items in queue")
-    active_tasks: int = Field(..., description="Number of currently active tasks")
-    max_concurrent_tasks: int = Field(
-        ..., description="Maximum concurrent tasks allowed"
-    )
-    completed_tasks: int = Field(..., description="Number of completed tasks")
-    worker_running: bool = Field(
-        ..., description="Whether the worker is currently running"
     )
 
 

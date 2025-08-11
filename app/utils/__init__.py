@@ -5,13 +5,13 @@ all aspects of the AI Chatbot Platform including security enforcement, performan
 optimization, error handling, and advanced processing capabilities.
 """
 
-from .security import (
+from app.utils.security import (
     generate_secret_key,
     generate_token,
     get_password_hash,
     verify_password,
 )
-from .text_processing import TextProcessor
+from app.utils.text_processing import TextProcessor
 
 __all__ = [
     "setup_logging",

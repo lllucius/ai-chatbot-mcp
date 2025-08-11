@@ -13,7 +13,7 @@ from typing import Dict, Optional
 
 from fastapi import HTTPException, Request, status
 
-from ..config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import JSON, Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModelDB
+from app.models.base import BaseModelDB
 
 if TYPE_CHECKING:
-    from .mcp_tool import MCPTool
+    from app.models.mcp_tool import MCPTool
 
 
 class MCPServer(BaseModelDB):

@@ -4,28 +4,13 @@ import time
 
 from fastapi import APIRouter, Depends, Query
 
+from app.dependencies import get_current_user, get_search_service
+from app.models.user import User
+from app.services.search import SearchService
+from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.common import APIResponse
 from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
-from shared.schemas.search import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
-)
-
-from ..dependencies import get_current_user, get_search_service
-from ..models.user import User
-from ..services.search import SearchService
-from ..utils.api_errors import handle_api_errors, log_api_call
+from shared.schemas.search import SearchSuggestionData
 
 router = APIRouter(tags=["search"])
 

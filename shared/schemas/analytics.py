@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .base import BaseModelSchema
+from shared.schemas.base import BaseModelSchema
 
 
 class AnalyticsOverviewResponse(BaseModelSchema):

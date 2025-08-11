@@ -10,10 +10,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from sdk.ai_chatbot_sdk import ApiError
-from shared.schemas import RegisterRequest
-
-from .base import (
+from cli.base import (
     display_key_value_pairs,
     error_message,
     format_timestamp,
@@ -21,6 +18,8 @@ from .base import (
     info_message,
     success_message,
 )
+from sdk.ai_chatbot_sdk import ApiError
+from shared.schemas import RegisterRequest
 
 user_app = AsyncTyper(help="User management commands", rich_markup_mode=None)
 
@@ -201,7 +200,7 @@ async def list(
             )
 
         # Display using Rich table formatting
-        from .base import display_rich_table
+        from cli.base import display_rich_table
 
         display_rich_table(
             user_data, f"Users (Page {pagination.page} of {pagination.total} total)"

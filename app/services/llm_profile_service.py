@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError, ValidationError
-from ..models.llm_profile import LLMProfile
-from .base import BaseService
+from app.core.exceptions import NotFoundError, ValidationError
+from app.models.llm_profile import LLMProfile
+from app.services.base import BaseService
 
 
 class LLMProfileService(BaseService):

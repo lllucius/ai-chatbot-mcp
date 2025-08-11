@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .common import utcnow
+from shared.schemas.common import utcnow
 
 
 class DatabaseUpgradeResult(BaseModel):

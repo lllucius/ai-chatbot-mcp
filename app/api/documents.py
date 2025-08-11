@@ -8,36 +8,43 @@ from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import (
-    APIResponse,
-    PaginatedResponse,
-    PaginationParams,
+from app.config import settings
+from app.database import get_db
+from app.dependencies import (
+    get_current_superuser,
+    get_current_user,
+    get_document_service,
 )
+from app.models.document import Document, FileStatus
+from app.models.user import User
+from app.services.background_processor import get_background_processor
+from app.services.document import DocumentService
+from app.utils.api_errors import handle_api_errors, log_api_call
+from app.utils.timestamp import utcnow
+from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
 from shared.schemas.document import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    AdvancedSearchData,
+    BackgroundTaskResponse,
+    BulkReprocessResponse,
+    CleanupDeletedResponse,
+    CleanupDryRunResponse,
+    CleanupPreviewItem,
+    DocumentFileTypeStats,
+    DocumentProcessingStats,
+    DocumentRecentActivity,
+    DocumentResponse,
+    DocumentSearchCriteria,
+    DocumentSearchResult,
+    DocumentStatisticsData,
+    DocumentStorageStats,
+    DocumentTopUser,
+    DocumentUpdate,
+    DocumentUploadResponse,
+    DocumentUserInfo,
+    ProcessingConfigResponse,
+    ProcessingStatusResponse,
+    QueueStatusResponse,
 )
-
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user, get_document_service
-from ..models.document import Document, FileStatus
-from ..models.user import User
-from ..services.background_processor import get_background_processor
-from ..services.document import DocumentService
-from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["documents"])
 

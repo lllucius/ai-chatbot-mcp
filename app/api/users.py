@@ -6,6 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import get_db
+from app.dependencies import get_current_superuser, get_current_user, get_user_service
+from app.models.user import User
+from app.models.user import User as UserModel
+from app.services.user import UserService
+from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.auth import PasswordResetConfirm, PasswordResetRequest
 from shared.schemas.common import (
     APIResponse,
@@ -14,27 +20,11 @@ from shared.schemas.common import (
     PaginationParams,
 )
 from shared.schemas.user import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    UserPasswordUpdate,
+    UserResponse,
+    UserStatsResponse,
+    UserUpdate,
 )
-
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user, get_user_service
-from ..models.user import User
-from ..models.user import User as UserModel
-from ..services.user import UserService
-from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["users"])
 

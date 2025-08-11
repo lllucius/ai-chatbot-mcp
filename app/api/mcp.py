@@ -5,28 +5,21 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import get_db
+from app.dependencies import get_current_superuser, get_mcp_service
+from app.models.user import User
+from app.services.mcp_service import MCPService
+from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.common import APIResponse
 from shared.schemas.mcp import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    MCPListFiltersSchema,
+    MCPServerCreateSchema,
+    MCPServerSchema,
+    MCPServerUpdateSchema,
+    MCPToolResponse,
+    MCPToolsResponse,
+    MCPToolUsageStatsSchema,
 )
-
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_mcp_service
-from ..models.user import User
-from ..services.mcp_service import MCPService
-from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["mcp"])
 

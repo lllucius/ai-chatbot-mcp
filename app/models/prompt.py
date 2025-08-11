@@ -10,7 +10,8 @@ from typing import List, Optional
 from sqlalchemy import JSON, Boolean, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import BaseModelDB
+from app.models.base import BaseModelDB
+from app.utils.timestamp import get_current_timestamp
 
 
 class Prompt(BaseModelDB):
@@ -86,7 +87,7 @@ class Prompt(BaseModelDB):
     def record_usage(self):
         """Record a prompt usage event."""
         self.usage_count += 1
-        self.last_used_at = datetime.now(timezone.utc)
+        self.last_used_at = get_current_timestamp()
 
     def __repr__(self) -> str:
         """Return string representation of Prompt model."""

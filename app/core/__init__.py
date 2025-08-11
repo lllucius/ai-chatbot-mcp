@@ -4,7 +4,7 @@ This package provides core functionality including exception handling,
 tool execution, and other foundational components.
 """
 
-from .exceptions import (
+from app.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
     ChatbotPlatformException,
@@ -14,7 +14,7 @@ from .exceptions import (
     NotFoundError,
     ValidationError,
 )
-from .logging import StructuredLogger, get_logger, setup_logging
+from app.core.logging import StructuredLogger, get_logger, setup_logging
 
 __all__ = [
     "ChatbotPlatformException",

@@ -8,30 +8,26 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.database import get_db
+from app.dependencies import get_current_superuser
+from app.models.user import User
+from app.utils.api_errors import handle_api_errors, log_api_call
+from app.utils.timestamp import utcnow
 from shared.schemas.base import BaseModelSchema
 from shared.schemas.common import APIResponse
 from shared.schemas.database import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    DatabaseAnalysisResponse,
+    DatabaseBackupResult,
+    DatabaseDowngradeResult,
+    DatabaseMigrationsResponse,
+    DatabaseQueryResponse,
+    DatabaseRestoreResult,
+    DatabaseStatusResponse,
+    DatabaseTablesResponse,
+    DatabaseUpgradeResult,
+    VacuumResult,
 )
-
-from ..config import settings
-from ..database import get_db
-from ..dependencies import get_current_superuser
-from ..models.user import User
-from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["database"])
 
@@ -47,8 +43,8 @@ async def initialize_database(
 
     # Import models to ensure they're registered
     # Create all tables
-    from ..database import engine
-    from ..models import base
+    from app.database import engine
+    from app.models import base
 
     async with engine.begin() as conn:
         # Install pgvector extension

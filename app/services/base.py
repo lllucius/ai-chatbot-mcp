@@ -59,8 +59,8 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import NotFoundError
-from ..core.logging import StructuredLogger
+from app.core.exceptions import NotFoundError
+from app.core.logging import StructuredLogger
 
 ModelType = TypeVar("ModelType")
 

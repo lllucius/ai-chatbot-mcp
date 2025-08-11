@@ -39,12 +39,11 @@ from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from app.core.exceptions import NotFoundError, SearchError
+from app.models.document import Document, DocumentChunk
+from app.services.base import BaseService
+from app.services.embedding import EmbeddingService
 from shared.schemas.document import DocumentChunkResponse, DocumentSearchRequest
-
-from ..core.exceptions import NotFoundError, SearchError
-from ..models.document import Document, DocumentChunk
-from ..services.embedding import EmbeddingService
-from .base import BaseService
 
 logger = logging.getLogger(__name__)
 

@@ -65,7 +65,7 @@ from async_typer import AsyncTyper
 from rich.console import Console
 from typer import Argument, Option
 
-from .base import error_message, get_sdk, success_message
+from cli.base import error_message, get_sdk, success_message
 
 console = Console()
 
@@ -93,7 +93,7 @@ async def list():
                     }
                 )
 
-            from .base import display_rich_table
+            from cli.base import display_rich_table
 
             display_rich_table(prompt_data, f"Prompts ({len(prompts)} total)")
     except Exception as e:
@@ -113,7 +113,7 @@ async def show(
             from rich.panel import Panel
             from rich.table import Table
 
-            from .base import format_timestamp
+            from cli.base import format_timestamp
 
             table = Table(title="Prompt Details")
             table.add_column("Field", style="cyan")
@@ -214,7 +214,7 @@ async def remove(
     force: bool = Option(False, "--force", help="Skip confirmation"),
 ):
     """Remove a prompt."""
-    from .base import confirm_action
+    from cli.base import confirm_action
 
     try:
         if not force and not confirm_action(

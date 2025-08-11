@@ -17,7 +17,7 @@ import psutil
 from unstructured.chunking.title import chunk_by_title
 from unstructured.partition.auto import partition
 
-from ..core.exceptions import DocumentError, ValidationError
+from app.core.exceptions import DocumentError, ValidationError
 
 logger = logging.getLogger(__name__)
 

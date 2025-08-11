@@ -10,19 +10,21 @@ import contextlib
 import logging
 import time
 import uuid
-from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from sqlalchemy import select, update
 
-from ..config import settings
-from ..models.document import Document, DocumentChunk, FileStatus
-from ..services.embedding import EmbeddingService
-from ..utils.file_processing import FileProcessor
-from ..utils.text_processing import TextProcessor
-from ..utils.timestamp import utcnow
-from .base import BaseService
+from app.config import settings
+from app.models.document import Document, DocumentChunk, FileStatus
+from app.services.base import BaseService
+from app.services.embedding import EmbeddingService
+from app.utils.file_processing import FileProcessor
+from app.utils.text_processing import TextProcessor
+from app.utils.timestamp import utcnow
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -314,7 +316,7 @@ class BackgroundProcessor(BaseService):
             task: Task to process
 
         """
-        from ..database import AsyncSessionLocal
+        from app.database import AsyncSessionLocal
 
         operation = f"process_task_{task.task_type}"
 

@@ -12,15 +12,14 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import AuthenticationError, NotFoundError, ValidationError
+from app.models.conversation import Conversation
+from app.models.document import Document
+from app.models.user import User
+from app.services.base import BaseService
+from app.utils.security import get_password_hash, verify_password
+from app.utils.timestamp import utcnow
 from shared.schemas.user import UserUpdate
-
-from ..core.exceptions import AuthenticationError, NotFoundError, ValidationError
-from ..models.conversation import Conversation
-from ..models.document import Document
-from ..models.user import User
-from ..utils.security import get_password_hash, verify_password
-from ..utils.timestamp import utcnow
-from .base import BaseService
 
 logger = logging.getLogger(__name__)
 

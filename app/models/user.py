@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import Boolean, DateTime, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModelDB
+from app.models.base import BaseModelDB
 
 if TYPE_CHECKING:
-    from .conversation import Conversation
-    from .document import Document
+    from app.models.conversation import Conversation
+    from app.models.document import Document
 
 
 class User(BaseModelDB):

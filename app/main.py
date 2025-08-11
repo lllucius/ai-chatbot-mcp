@@ -15,7 +15,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 # Import API routers
-from .api import (
+from app.api import (
     analytics_router,
     auth_router,
     conversations_router,
@@ -29,21 +29,21 @@ from .api import (
     tasks_router,
     users_router,
 )
-from .config import settings
-from .core.exceptions import ChatbotPlatformException
-from .core.logging import get_component_logger, setup_logging
-from .database import close_db, init_db
-from .middleware import (
+from app.config import settings
+from app.core.exceptions import ChatbotPlatformException
+from app.core.logging import get_component_logger, setup_logging
+from app.database import close_db, init_db
+from app.middleware import (
     debug_content_middleware,
     logging_middleware,
     rate_limiting_middleware,
     timing_middleware,
     validation_middleware,
 )
-from .middleware.performance import start_system_monitoring
-from .middleware.rate_limiting import start_rate_limiter_cleanup
-from .utils.caching import start_cache_cleanup_task
-from .utils.timestamp import get_current_timestamp
+from app.middleware.performance import start_system_monitoring
+from app.middleware.rate_limiting import start_rate_limiter_cleanup
+from app.utils.caching import start_cache_cleanup_task
+from app.utils.timestamp import get_current_timestamp
 
 # Setup logging
 setup_logging()
@@ -104,7 +104,7 @@ async def lifespan(app: FastAPI):
 
         # Start background document processor
         try:
-            from .services.background_processor import get_background_processor
+            from app.services.background_processor import get_background_processor
 
             await get_background_processor()
             logger.info("Background document processor initialized and started")
@@ -125,7 +125,7 @@ async def lifespan(app: FastAPI):
     try:
         # Shutdown background processor
         try:
-            from .services.background_processor import shutdown_background_processor
+            from app.services.background_processor import shutdown_background_processor
 
             await shutdown_background_processor()
             logger.info("Background document processor shut down")

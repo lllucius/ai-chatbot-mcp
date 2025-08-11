@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions import ValidationError
-from ..models.prompt import Prompt
-from .base import BaseService
+from app.core.exceptions import ValidationError
+from app.models.prompt import Prompt
+from app.services.base import BaseService
 
 
 class PromptService(BaseService):

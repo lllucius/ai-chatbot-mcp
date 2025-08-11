@@ -4,6 +4,14 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.dependencies import (
+    get_current_superuser,
+    get_current_user,
+    get_profile_service,
+)
+from app.models.user import User
+from app.services.llm_profile_service import LLMProfileService
+from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.common import (
     APIResponse,
     BaseResponse,
@@ -11,25 +19,11 @@ from shared.schemas.common import (
     PaginationParams,
 )
 from shared.schemas.llm_profile import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    LLMProfileCreate,
+    LLMProfileResponse,
+    LLMProfileStatisticsData,
+    LLMProfileUpdate,
 )
-
-from ..dependencies import get_current_superuser, get_current_user, get_profile_service
-from ..models.user import User
-from ..services.llm_profile_service import LLMProfileService
-from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["profiles"])
 
@@ -44,7 +38,7 @@ async def create_profile(
     """Create a new LLM parameter profile with validation."""
     log_api_call("create_profile", user_id=current_user.id)
 
-    profile = await prompt_service.create_profile(
+    profile = await profile_service.create_profile(
         name=request.name,
         title=request.title,
         description=request.description,

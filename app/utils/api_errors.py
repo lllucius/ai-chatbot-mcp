@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Optional
 
 from fastapi import HTTPException, status
 
-from ..core.exceptions import (
+from app.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
     ChatbotPlatformException,
@@ -20,8 +20,8 @@ from ..core.exceptions import (
     SearchError,
     ValidationError,
 )
-from ..core.logging import get_api_logger
-from ..utils.timestamp import get_current_timestamp
+from app.core.logging import get_api_logger
+from app.utils.timestamp import get_current_timestamp
 
 logger = get_api_logger("error_handler")
 

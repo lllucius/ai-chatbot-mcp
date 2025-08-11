@@ -10,7 +10,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import error_message, format_timestamp, get_sdk, success_message
+from cli.base import error_message, format_timestamp, get_sdk, success_message
 
 conversation_app = AsyncTyper(
     help="Conversation management commands", rich_markup_mode=None
@@ -49,7 +49,7 @@ async def list(
                     }
                 )
 
-            from .base import display_rich_table
+            from cli.base import display_rich_table
 
             display_rich_table(
                 conv_data, f"Conversations (Page {resp.pagination.page})"
@@ -78,7 +78,7 @@ async def show(
                 "Created": format_timestamp(str(conv.created_at)),
             }
 
-            from .base import display_key_value_pairs
+            from cli.base import display_key_value_pairs
 
             display_key_value_pairs(conv_details, "Conversation Details")
     except Exception as e:

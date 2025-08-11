@@ -15,7 +15,7 @@ import shlex
 import signal
 import sys
 import textwrap
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -32,55 +32,22 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-try:
-    # Try relative imports first (when run as module)
-    from shared.schemas import (
-        ChatRequest,
-        DocumentSearchRequest,
-        LLMProfileCreate,
-        PromptCreate,
-        ToolHandlingMode,
-        UserPasswordUpdate,
-        UserUpdate,
-    )
-except ImportError:
-    # Fall back to absolute imports (when run as script)
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-
-    from shared.schemas import (
-        ChatRequest,
-        DocumentSearchRequest,
-        LLMProfileCreate,
-        PromptCreate,
-        ToolHandlingMode,
-        UserPasswordUpdate,
-        UserUpdate,
-    )
-
-try:
-    # Try relative imports first (when run as module)
-    from .ai_chatbot_sdk import AIChatbotSDK, ApiError
-    from .config import (
-        ClientConfig,
-        get_default_backup_dir,
-        get_default_token_file,
-        load_config,
-    )
-except ImportError:
-    # Fall back to absolute imports (when run as script)
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-
-    from client.config import (
-        ClientConfig,
-        get_default_backup_dir,
-        get_default_token_file,
-        load_config,
-    )
-    from sdk.ai_chatbot_sdk import AIChatbotSDK, ApiError
+from client.ai_chatbot_sdk import AIChatbotSDK, ApiError
+from client.config import (
+    ClientConfig,
+    get_default_backup_dir,
+    get_default_token_file,
+    load_config,
+)
+from shared.schemas import (
+    ChatRequest,
+    DocumentSearchRequest,
+    LLMProfileCreate,
+    PromptCreate,
+    ToolHandlingMode,
+    UserPasswordUpdate,
+    UserUpdate,
+)
 
 console: Console = Console()
 config: ClientConfig = load_config()
@@ -1378,7 +1345,7 @@ async def chat_loop(
 
             if settings.enable_streaming:
 
-                async def do_stream():
+                async def do_stream(chat_req=chat_req):
                     """Handle streaming chat response with real-time output.
 
                     Note:
@@ -1428,7 +1395,7 @@ async def chat_loop(
             else:
                 async with SpinnerContext(spinner_msg, enabled=True):
                     response = await fetch_and_retry_on_auth(
-                        lambda: sdk.conversations.chat(chat_req)
+                        lambda chat_req=chat_req: sdk.conversations.chat(chat_req)
                     )
 
             if response:

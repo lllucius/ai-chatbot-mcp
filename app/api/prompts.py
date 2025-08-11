@@ -4,27 +4,18 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.dependencies import get_current_superuser, get_current_user, get_prompt_service
+from app.models.user import User
+from app.services.prompt_service import PromptService
+from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
 from shared.schemas.prompt import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    PromptCategoriesData,
+    PromptCreate,
+    PromptResponse,
+    PromptStatisticsData,
+    PromptUpdate,
 )
-
-from ..dependencies import get_current_superuser, get_current_user, get_prompt_service
-from ..models.user import User
-from ..services.prompt_service import PromptService
-from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["prompts"])
 

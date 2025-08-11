@@ -10,9 +10,9 @@ from typing import Annotated, Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .base import BaseSchema
-from .common import BaseResponse
-from .tool_calling import ToolCallSummary, ToolHandlingMode
+from shared.schemas.base import BaseSchema
+from shared.schemas.common import BaseResponse
+from shared.schemas.tool_calling import ToolCallSummary, ToolHandlingMode
 
 
 class ConversationBase(BaseSchema):

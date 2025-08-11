@@ -13,14 +13,13 @@ import openai
 import tiktoken
 from openai import AsyncOpenAI
 
+from app.config import settings
+from app.core.logging import get_api_logger
+from app.services.mcp_service import MCPService
+from app.utils.api_errors import handle_api_errors
+from app.utils.caching import embedding_cache, make_cache_key
+from app.utils.tool_middleware import RetryConfig, tool_operation
 from shared.schemas.tool_calling import ToolHandlingMode
-
-from ..config import settings
-from ..core.logging import get_api_logger
-from ..services.mcp_service import MCPService
-from ..utils.api_errors import handle_api_errors
-from ..utils.caching import embedding_cache, make_cache_key
-from ..utils.tool_middleware import RetryConfig, tool_operation
 
 logger = get_api_logger("openai_client")
 

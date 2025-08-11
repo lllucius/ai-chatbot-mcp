@@ -10,7 +10,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from .base import error_message, get_sdk, success_message
+from cli.base import error_message, get_sdk, success_message
 
 tasks_app = AsyncTyper(
     help="Background task management commands", rich_markup_mode=None
@@ -59,7 +59,7 @@ async def workers():
                     }
                 )
 
-            from .base import display_rich_table
+            from cli.base import display_rich_table
 
             display_rich_table(worker_data, f"Celery Workers ({len(workers)} total)")
 
@@ -100,7 +100,7 @@ async def queue(
                     }
                 )
 
-            from .base import display_rich_table
+            from cli.base import display_rich_table
 
             display_rich_table(queue_data, f"Task Queues ({len(queues)} total)")
     except Exception as e:
@@ -132,7 +132,7 @@ async def active():
                     }
                 )
 
-            from .base import display_rich_table
+            from cli.base import display_rich_table
 
             display_rich_table(task_data, f"Active Tasks ({len(active_tasks)} total)")
     except Exception as e:
@@ -209,7 +209,7 @@ async def purge(
     force: bool = Option(False, "--force", help="Skip confirmation"),
 ):
     """Purge all tasks from a queue."""
-    from .base import confirm_action
+    from cli.base import confirm_action
 
     if not force and not confirm_action(
         f"Are you sure you want to purge all tasks from queue '{queue_name}'?"

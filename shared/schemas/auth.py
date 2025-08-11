@@ -65,7 +65,7 @@ from typing import Optional
 
 from pydantic import EmailStr, Field, field_validator
 
-from .base import BaseSchema
+from shared.schemas.base import BaseSchema
 
 
 class LoginRequest(BaseSchema):

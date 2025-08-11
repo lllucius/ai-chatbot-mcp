@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Optional
 
-from ..config import settings
+from app.config import settings
 
 
 class StructuredFormatter(logging.Formatter):

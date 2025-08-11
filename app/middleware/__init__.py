@@ -4,8 +4,12 @@ Provides middleware components for request/response processing, security enforce
 performance monitoring, and logging with comprehensive validation and rate limiting.
 """
 
-from .core import rate_limiting_middleware, timing_middleware, validation_middleware
-from .logging import debug_content_middleware, logging_middleware
+from app.middleware.core import (
+    rate_limiting_middleware,
+    timing_middleware,
+    validation_middleware,
+)
+from app.middleware.logging import debug_content_middleware, logging_middleware
 
 __all__ = [
     "logging_middleware",

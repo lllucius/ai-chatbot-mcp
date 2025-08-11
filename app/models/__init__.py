@@ -16,18 +16,18 @@ timestamps, and consistent table naming conventions.
 """
 
 # Import SQLAlchemy base classes only
-from .base import BaseModelDB, BigSerialMixin, TimestampMixin
-from .conversation import Conversation, Message
-from .document import Document, DocumentChunk
-from .llm_profile import LLMProfile
+from app.models.base import BaseModelDB, BigSerialMixin, TimestampMixin
+from app.models.conversation import Conversation, Message
+from app.models.document import Document, DocumentChunk
+from app.models.llm_profile import LLMProfile
 
 # Import new registry models
-from .mcp_server import MCPServer
-from .mcp_tool import MCPTool
-from .prompt import Prompt
+from app.models.mcp_server import MCPServer
+from app.models.mcp_tool import MCPTool
+from app.models.prompt import Prompt
 
 # Import database models (SQLAlchemy)
-from .user import User
+from app.models.user import User
 
 __all__ = [
     # Base classes

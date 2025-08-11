@@ -10,35 +10,55 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin import RegistryStatsResponse
-from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
-from shared.schemas.conversation import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
-)
-
-from ..database import AsyncSessionLocal, get_db
-from ..dependencies import (
+from app.database import AsyncSessionLocal, get_db
+from app.dependencies import (
     get_conversation_service,
     get_current_superuser,
     get_current_user,
 )
-from ..models.conversation import Conversation, Message
-from ..models.user import User
-from ..services.conversation import ConversationService
-from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.timestamp import utcnow
+from app.models.conversation import Conversation, Message
+from app.models.user import User
+from app.services.conversation import ConversationService
+from app.utils.api_errors import handle_api_errors, log_api_call
+from app.utils.timestamp import utcnow
+from shared.schemas.admin import RegistryStatsResponse
+from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
+from shared.schemas.conversation import (
+    ArchiveConversationsResult,
+    ArchivePreviewItem,
+    ArchivePreviewResponse,
+    ChatRequest,
+    ChatResponse,
+    ConversationCreate,
+    ConversationExportData,
+    ConversationExportDataCSV,
+    ConversationExportDataJSON,
+    ConversationExportDataText,
+    ConversationMetadata,
+    ConversationResponse,
+    ConversationSearchCriteria,
+    ConversationSearchData,
+    ConversationSearchMatchingMessage,
+    ConversationSearchResult,
+    ConversationSearchUserInfo,
+    ConversationStats,
+    ConversationStatsConversations,
+    ConversationStatsData,
+    ConversationStatsMessages,
+    ConversationStatsRecentActivity,
+    ConversationStatsUserEngagement,
+    ConversationUpdate,
+    ExportedMessage,
+    ExportInfo,
+    ImportConversationResult,
+    MessageResponse,
+    StreamCompleteResponse,
+    StreamContentResponse,
+    StreamEndResponse,
+    StreamErrorResponse,
+    StreamStartResponse,
+    StreamToolCallResponse,
+)
 
 router = APIRouter(tags=["conversations"])
 

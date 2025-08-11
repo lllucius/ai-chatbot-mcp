@@ -7,28 +7,27 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import get_db
+from app.dependencies import get_current_superuser, get_current_user
+from app.models.user import User
+from app.utils.api_errors import handle_api_errors, log_api_call
+from app.utils.timestamp import utcnow
 from shared.schemas.common import APIResponse, ErrorResponse
 from shared.schemas.task import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    ActiveTaskInfo,
+    ActiveTasksData,
+    QueueInfo,
+    QueueStatusData,
+    TaskInfo,
+    TaskMonitoringData,
+    TaskProcessingStats,
+    TasksSummary,
+    TaskStatisticsData,
+    TaskSystemStatusData,
+    WorkerInfo,
+    WorkersSummary,
+    WorkerStatusData,
 )
-
-from ..database import get_db
-from ..dependencies import get_current_superuser, get_current_user
-from ..models.user import User
-from ..utils.api_errors import handle_api_errors, log_api_call
-from ..utils.timestamp import utcnow
 
 router = APIRouter(tags=["tasks"])
 
@@ -36,7 +35,7 @@ router = APIRouter(tags=["tasks"])
 def get_celery_app():
     """Get Celery application instance for task management operations."""
     try:
-        from ..core.celery_app import celery_app
+        from app.core.celery_app import celery_app
 
         return celery_app
     except ImportError:
@@ -365,7 +364,7 @@ async def retry_failed_tasks(
     try:
         from sqlalchemy import select
 
-        from ..models.document import Document, FileStatus
+        from app.models.document import Document, FileStatus
 
         # Find failed documents that can be retried
         query = select(Document).where(Document.status == FileStatus.FAILED)
@@ -380,7 +379,7 @@ async def retry_failed_tasks(
         errors = []
 
         # Get background processor
-        from ..services.background_processor import get_background_processor
+        from app.services.background_processor import get_background_processor
 
         processor = await get_background_processor()
 
@@ -462,7 +461,7 @@ async def get_task_statistics(
 
     from sqlalchemy import and_, func, select
 
-    from ..models.document import Document, FileStatus
+    from app.models.document import Document, FileStatus
 
     # Document processing statistics
     total_docs = await db.scalar(
@@ -529,7 +528,7 @@ async def get_task_statistics(
 
     error_samples = [row[0] for row in recent_errors.fetchall()]
 
-    document_processing_stats = DocumentProcessingStats(
+    task_processing_stats = TaskProcessingStats(
         total=total_docs or 0,
         completed=completed_docs or 0,
         failed=failed_docs or 0,
@@ -542,7 +541,7 @@ async def get_task_statistics(
     payload = TaskStatisticsData(
         period_hours=period_hours,
         start_time=start_time.isoformat(),
-        document_processing=document_processing_stats,
+        document_processing=task_processing_stats,
         recent_errors=error_samples,
         timestamp=utcnow().isoformat(),
     )
@@ -571,7 +570,7 @@ async def get_monitoring_data(
     worker_response = await get_workers_info(current_user)
 
     # Get recent statistics (pass database session)
-    from ..database import get_db
+    from app.database import get_db
 
     db_gen = get_db()
     db = await db_gen.__anext__()

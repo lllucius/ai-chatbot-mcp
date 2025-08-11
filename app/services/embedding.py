@@ -62,9 +62,9 @@ import numpy as np
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
-from ..models.document import DocumentChunk
-from ..services.openai_client import OpenAIClient
+from app.config import settings
+from app.models.document import DocumentChunk
+from app.services.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 

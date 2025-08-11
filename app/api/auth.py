@@ -4,28 +4,19 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from app.dependencies import get_auth_service, get_current_user
+from app.models.user import User
+from app.services.auth import AuthService
+from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.auth import (
-    AdvancedSearchResponse,
-    ConversationStatsResponse,
-    DocumentStatsResponse,
-    ProfileStatsResponse,
-    PromptCategoriesResponse,
-    PromptStatsResponse,
-    QueueResponse,
-    RegistryStatsResponse,
-    SearchResponse,
-    TaskMonitorResponse,
-    TaskStatsResponse,
-    TaskStatusResponse,
-    WorkersResponse,
+    LoginRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    RegisterRequest,
+    Token,
 )
 from shared.schemas.common import APIResponse
 from shared.schemas.user import UserResponse
-
-from ..dependencies import get_auth_service, get_current_user
-from ..models.user import User
-from ..services.auth import AuthService
-from ..utils.api_errors import handle_api_errors, log_api_call
 
 router = APIRouter(tags=["authentication"])
 

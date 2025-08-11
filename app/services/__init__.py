@@ -4,16 +4,16 @@ This package provides services for authentication, user management,
 document processing, search, conversations, and external integrations.
 """
 
-from .auth import AuthService
-from .conversation import ConversationService
-from .document import DocumentService
-from .embedding import EmbeddingService
-from .llm_profile_service import LLMProfileService
-from .mcp_service import MCPService
-from .openai_client import OpenAIClient
-from .prompt_service import PromptService
-from .search import SearchService
-from .user import UserService
+from app.services.auth import AuthService
+from app.services.conversation import ConversationService
+from app.services.document import DocumentService
+from app.services.embedding import EmbeddingService
+from app.services.llm_profile_service import LLMProfileService
+from app.services.mcp_service import MCPService
+from app.services.openai_client import OpenAIClient
+from app.services.prompt_service import PromptService
+from app.services.search import SearchService
+from app.services.user import UserService
 
 __all__ = [
     "AuthService",

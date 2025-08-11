@@ -19,10 +19,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModelDB
+from app.models.base import BaseModelDB
+from app.utils.timestamp import get_current_timestamp
 
 if TYPE_CHECKING:
-    from .mcp_server import MCPServer
+    from app.models.mcp_server import MCPServer
 
 
 class MCPTool(BaseModelDB):
@@ -119,7 +120,7 @@ class MCPTool(BaseModelDB):
     def record_usage(self, success: bool, duration_ms: Optional[int] = None):
         """Record a tool usage event."""
         self.usage_count += 1
-        self.last_used_at = datetime.now(timezone.utc)
+        self.last_used_at = get_current_timestamp()
 
         if success:
             self.success_count += 1

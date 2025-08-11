@@ -13,14 +13,13 @@ from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.core.exceptions import AuthenticationError, ValidationError
+from app.models.user import User
+from app.services.base import BaseService
+from app.utils.security import get_password_hash, verify_password
+from app.utils.timestamp import utcnow
 from shared.schemas.auth import RegisterRequest, Token
-
-from ..config import settings
-from ..core.exceptions import AuthenticationError, ValidationError
-from ..models.user import User
-from ..utils.security import get_password_hash, verify_password
-from ..utils.timestamp import utcnow
-from .base import BaseService
 
 logger = logging.getLogger(__name__)
 

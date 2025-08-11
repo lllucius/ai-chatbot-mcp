@@ -26,16 +26,16 @@ Example Import Organization:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     # Local imports - Core
-    from ..config import settings
-    from ..core.exceptions import ValidationError
+    from app.config import settings
+    from app.core.exceptions import ValidationError
 
     # Local imports - Database and models
-    from ..database import get_db
-    from ..models.user import User
+    from app.database import get_db
+    from app.models.user import User
 
     # Local imports - Services
-    from ..services.user import UserService
-    from ..core.logging import get_service_logger
+    from app.services.user import UserService
+    from app.core.logging import get_service_logger
 
     # Local imports - Schemas
     from shared.schemas.user import UserResponse
@@ -187,8 +187,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Local imports
-from ..core.exceptions import NotFoundError, ValidationError
-from .base import BaseService
+from app.core.exceptions import NotFoundError, ValidationError
+from app.utils.base import BaseService
 """,
     "api_endpoint": """
 # Standard library imports
@@ -199,8 +199,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Local imports
-from ..database import get_db
-from ..utils.api_errors import handle_api_errors, log_api_call
+from app.database import get_db
+from app.utils.api_errors import handle_api_errors, log_api_call
 """,
     "model": """
 # Standard library imports
@@ -211,7 +211,7 @@ from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Local imports
-from .base import BaseModelDB
+from app.utils.base import BaseModelDB
 """,
     "schema": """
 # Standard library imports
@@ -221,6 +221,6 @@ from typing import List, Optional
 from pydantic import Field, field_validator
 
 # Local imports
-from .base import BaseSchema
+from app.utils.base import BaseSchema
 """,
 }

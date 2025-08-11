@@ -100,13 +100,6 @@ class QueueStatusData(BaseModel):
     timestamp: str = Field(..., description="Status timestamp")
 
 
-class QueueStatusResponse(BaseModel):
-    """Queue status response schema."""
-
-    success: bool = Field(..., description="Operation success status")
-    data: QueueStatusData = Field(..., description="Queue status data")
-
-
 class ActiveTaskInfo(BaseModel):
     """Active task information model."""
 
@@ -144,7 +137,7 @@ class ActiveTasksResponse(BaseModel):
     data: ActiveTasksData = Field(..., description="Active tasks data")
 
 
-class DocumentProcessingStats(BaseModel):
+class TaskProcessingStats(BaseModel):
     """Document processing statistics model."""
 
     total: int = Field(..., description="Total number of documents")
@@ -171,7 +164,7 @@ class TaskStatisticsData(BaseModel):
 
     period_hours: int = Field(..., description="Analysis period in hours")
     start_time: str = Field(..., description="Analysis period start timestamp")
-    document_processing: DocumentProcessingStats = Field(
+    document_processing: TaskProcessingStats = Field(
         ..., description="Document processing statistics"
     )
     recent_errors: List[str] = Field(

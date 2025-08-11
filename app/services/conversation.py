@@ -11,6 +11,15 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError, ValidationError
+from app.models.conversation import Conversation, Message
+from app.services.base import BaseService
+from app.services.embedding import EmbeddingService
+from app.services.llm_profile_service import LLMProfileService
+from app.services.mcp_service import MCPService
+from app.services.openai_client import OpenAIClient
+from app.services.prompt_service import PromptService
+from app.services.search import SearchService
 from shared.schemas.conversation import (
     ChatRequest,
     ConversationCreate,
@@ -20,16 +29,6 @@ from shared.schemas.conversation import (
 )
 from shared.schemas.document import DocumentSearchRequest
 from shared.schemas.tool_calling import ToolCallResult, ToolCallSummary
-
-from ..core.exceptions import NotFoundError, ValidationError
-from ..models.conversation import Conversation, Message
-from ..services.embedding import EmbeddingService
-from ..services.llm_profile_service import LLMProfileService
-from ..services.mcp_service import MCPService
-from ..services.openai_client import OpenAIClient
-from ..services.prompt_service import PromptService
-from ..services.search import SearchService
-from .base import BaseService
 
 logger = logging.getLogger(__name__)
 
