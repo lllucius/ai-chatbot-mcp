@@ -6,14 +6,22 @@ modern Pydantic V2 features with advanced validation and consistent API response
 
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
-from typing import Any, get_origin, get_args
 from functools import lru_cache
-from pydantic import create_model
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+)
 
 from fastapi import status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, create_model, field_serializer
 
 
 def utcnow() -> datetime:
@@ -27,7 +35,7 @@ PRIMITIVES = {str, int, float, bool, dict}
 def api_response(model: Any, *, paginated: bool | None = None) -> type[BaseModel]:
     """
     Create a concrete APIResponse type for any model, list, or primitive.
-    
+
     - Auto-detect pagination if model is List[...]
     - Supports primitive types directly in OpenAPI schema (no wrapper field)
     """
@@ -542,11 +550,17 @@ class PaginationParams(BaseModel):
 class PaginatedResponse(BaseModel, Generic[T]):
     """Generic paginated response schema."""
 
-    items: List[Any] = Field(
-        default_factory=list, description="List of paginated items"
+    # Changed from List[Any] to List[T] to preserve type information in OpenAPI docs
+    items: List[T] = Field(
+        default_factory=list, description="List of paginated items of specific type"
     )
     pagination: PaginationParams = Field(..., description="Pagination parameters")
 
+    # Add a field serializer to make sure the OpenAPI schema is correctly generated
+    @field_serializer("items")
+    def serialize_items(self, items: List[T], _info):
+        """Ensure proper serialization of items while preserving type information."""
+        return items
 
 class SearchParams(PaginationParams):
     """Search parameters schema extending pagination with search-specific options.

@@ -19,8 +19,8 @@ from .services.auth import AuthService
 from .services.conversation import ConversationService
 from .services.document import DocumentService
 from .services.embedding import EmbeddingService
-from .services.mcp_service import MCPService
 from .services.llm_profile_service import LLMProfileService
+from .services.mcp_service import MCPService
 from .services.prompt_service import PromptService
 from .services.search import SearchService
 from .services.user import UserService

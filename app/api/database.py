@@ -10,17 +10,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.base import BaseModelSchema
 from shared.schemas.common import APIResponse
-from shared.schemas.database_responses import (
-    DatabaseAnalysisResponse,
-    DatabaseBackupResult,
-    DatabaseDowngradeResult,
-    DatabaseMigrationsResponse,
-    DatabaseQueryResponse,
-    DatabaseRestoreResult,
-    DatabaseStatusResponse,
-    DatabaseTablesResponse,
-    DatabaseUpgradeResult,
-    VacuumResult,
+from shared.schemas.database import (
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..config import settings

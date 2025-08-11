@@ -3,13 +3,25 @@
 import time
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import APIResponse
 from shared.schemas.document import DocumentSearchRequest, DocumentSearchResponse
-from shared.schemas.search_responses import SearchSuggestionData
+from shared.schemas.search import (
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
+)
 
-from ..database import get_db
 from ..dependencies import get_current_user, get_search_service
 from ..models.user import User
 from ..services.search import SearchService

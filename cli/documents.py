@@ -112,7 +112,7 @@ async def list(
                     doc.title,
                     doc.file_type,
                     format_file_size(doc.file_size),
-                    doc.processing_status,
+                    doc.status,
                     str(doc.owner_id)[:8],
                     str(doc.chunk_count),
                     format_timestamp(str(doc.created_at)),
@@ -170,7 +170,7 @@ async def show(
                 f"File: [magenta]{doc.filename}[/magenta]\n"
                 f"Type: [blue]{doc.file_type}[/blue]\n"
                 f"Size: [green]{format_file_size(doc.file_size)}[/green]\n"
-                f"Status: [yellow]{doc.processing_status}[/yellow]\n"
+                f"Status: [yellow]{doc.status}[/yellow]\n"
                 f"Owner: [cyan]{doc.owner_id}[/cyan]\n"
                 f"Chunks: [white]{doc.chunk_count}[/white]\n"
                 f"Uploaded: [bright_black]{format_timestamp(str(doc.created_at))}[/bright_black]"

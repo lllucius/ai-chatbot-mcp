@@ -7,19 +7,20 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import APIResponse
-from shared.schemas.health_responses import (
-    ApplicationHealthData,
-    CacheHealthData,
-    CacheStats,
-    DatabaseHealthData,
-    DetailedHealthCheckPayload,
-    FastMCPHealthData,
-    LivenessPayload,
-    OpenAIHealthData,
-    PerformanceMetricsPayload,
-    ReadinessComponentsPayload,
-    ServicesHealthPayload,
-    SystemMetricsPayload,
+from shared.schemas.health import (
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..config import settings

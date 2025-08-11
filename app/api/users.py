@@ -1,5 +1,7 @@
 """User management API endpoints."""
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,10 +14,19 @@ from shared.schemas.common import (
     PaginationParams,
 )
 from shared.schemas.user import (
-    UserPasswordUpdate,
-    UserResponse,
-    UserStatsResponse,
-    UserUpdate,
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..database import get_db
@@ -133,23 +144,21 @@ async def confirm_password_reset(
 async def list_users(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None, description="Search in users"),
     active_only: bool = Query(False),
     superuser_only: bool = Query(False),
     current_user=Depends(get_current_superuser),
     user_service: UserService = Depends(get_user_service),
 ) -> APIResponse[PaginatedResponse[UserResponse]]:
     """List all users with filtering and pagination."""
-    log_api_call(
-        "list_users",
-        user_id=str(current_user.id),
-        page=page,
-        size=size,
-        active_only=active_only,
-        superuser_only=superuser_only,
-    )
+    log_api_call("list_users", user_id=current_user.id)
 
     users, total = await user_service.list_users(
-        page=page, size=size, active_only=active_only, superuser_only=superuser_only
+        active_only=active_only,
+        superuser_only=superuser_only,
+        search=search,
+        page=page,
+        size=size,
     )
 
     user_responses = [UserResponse.model_validate(user) for user in users]

@@ -6,7 +6,7 @@ monitoring, and administration functionality.
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .base import BaseModelSchema
 
@@ -105,3 +105,55 @@ class DocumentStatsResponse(BaseModelSchema):
     timestamp: str = Field(..., description="Response timestamp")
     success: bool = Field(default=True, description="Success status")
     message: str = Field(..., description="Response message")
+
+
+# --- Search and Export Response Models ---
+
+
+class SearchResponse(BaseModel):
+    """Search response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Search operation success status")
+    data: Dict[str, Any] = Field(..., description="Search results data")
+
+    def model_dump_json(self, **kwargs):
+        """Serialize model with standard JSON handling."""
+        data = self.model_dump(**kwargs)
+        import json
+
+        return json.dumps(data)
+
+
+class RegistryStatsResponse(BaseModel):
+    """Registry statistics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    message: str = Field(..., description="Status message")
+    data: Dict[str, Any] = Field(..., description="Registry statistics data")
+
+    def model_dump_json(self, **kwargs):
+        """Serialize model with standard JSON handling."""
+        data = self.model_dump(**kwargs)
+        import json
+
+        return json.dumps(data)
+
+
+class ConversationStatsResponse(BaseModel):
+    """Conversation statistics response schema."""
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    success: bool = Field(..., description="Operation success status")
+    data: Dict[str, Any] = Field(..., description="Conversation statistics data")
+
+    def model_dump_json(self, **kwargs):
+        """Serialize model with standard JSON handling."""
+        data = self.model_dump(**kwargs)
+        import json
+
+        return json.dumps(data)

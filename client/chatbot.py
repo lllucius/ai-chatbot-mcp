@@ -781,8 +781,8 @@ class CommandHandler:
                 await self.cmd_prompt(args)
             elif cmd == "/profile":
                 await self.cmd_profile(args)
-            elif cmd == "/documents":
-                await self.cmd_documents(args)
+            elif cmd == "/document":
+                await self.cmd_document(args)
             elif cmd == "/analytics":
                 await self.cmd_analytics(args)
             elif cmd == "/db":
@@ -828,7 +828,7 @@ class CommandHandler:
         /search <text>          Search documents and conversation history
         /prompt ...             Prompt registry management
         /profile ...            LLM profile registry management
-        /documents ...          Document management
+        /document ...           Document management
         /analytics ...          System analytics
         /db ...                 Database management
         /export ...             Export data (conversations, etc.)
@@ -1115,7 +1115,7 @@ class CommandHandler:
         else:
             print_warn("Unknown profile command.")
 
-    async def cmd_documents(self, args: List[str]) -> None:
+    async def cmd_document(self, args: List[str]) -> None:
         """Handle /documents command for document management operations."""
         if not args:
             print_warn("Usage: /documents <list|show|delete> ...")
@@ -1123,14 +1123,16 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             docs = await self.sdk.documents.list()
+            # Documents list returns PaginatedResponse with items
+            docs_list = getattr(docs, 'items', []) or []
             prettify_list(
-                [d.model_dump() if hasattr(d, 'model_dump') else d for d in docs],
+                [d.model_dump() if hasattr(d, 'model_dump') else d for d in docs_list],
                 columns=[
                     "id",
                     "title",
                     "filename",
                     "file_type",
-                    "processing_status",
+                    "status",
                     "chunk_count",
                 ],
                 title="Documents",

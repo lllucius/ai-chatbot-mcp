@@ -7,13 +7,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import APIResponse
 from shared.schemas.mcp import (
-    MCPListFiltersSchema,
-    MCPServerCreateSchema,
-    MCPServerSchema,
-    MCPServerUpdateSchema,
-    MCPToolResponse,
-    MCPToolsResponse,
-    MCPToolUsageStatsSchema,
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..database import get_db

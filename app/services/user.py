@@ -7,9 +7,9 @@ with privacy protection and secure data handling.
 
 import logging
 from datetime import timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.user import UserUpdate
@@ -398,21 +398,12 @@ class UserService(BaseService):
         self,
         page: int = 1,
         size: int = 20,
+        search: Optional[str] = None,
         active_only: bool = False,
         superuser_only: bool = False,
     ) -> Tuple[List[User], int]:
-        """List users with pagination and filtering.
+        """List users with pagination and filtering."""
 
-        Args:
-            page: Page number (1-based)
-            size: Items per page
-            active_only: Filter to active users only
-            superuser_only: Filter to superusers only
-
-        Returns:
-            Tuple[List[User], int]: List of users and total count
-
-        """
         # Build filters
         filters = []
         if active_only:
@@ -420,25 +411,24 @@ class UserService(BaseService):
         if superuser_only:
             filters.append(User.is_superuser is True)
 
-        # Count total users
-        count_query = select(func.count(User.id))
-        if filters:
-            count_query = count_query.where(and_(*filters))
-
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
-
-        # Get users with pagination
-        query = select(User).order_by(desc(User.created_at))
-        if filters:
-            query = query.where(and_(*filters))
-
-        query = query.offset((page - 1) * size).limit(size)
-
-        result = await self.db.execute(query)
-        users = result.scalars().all()
-
-        return list(users), total
+        if search:
+            # Use the base service search functionality
+            return await self._search_entities(
+                model=User,
+                search_fields=["username", "email", "full_name"],
+                search_term=search,
+                additional_filters=filters,
+                page=page,
+                size=size,
+            )
+        else:
+            return await self._list_with_filters(
+                model=User,
+                filters=filters,
+                page=page,
+                size=size,
+                order_by=User.username,
+            )
 
     async def delete_user(self, user_id: int) -> bool:
         """Delete a user and all associated data.

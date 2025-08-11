@@ -5,11 +5,19 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from shared.schemas.auth import (
-    LoginRequest,
-    PasswordResetConfirm,
-    PasswordResetRequest,
-    RegisterRequest,
-    Token,
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 from shared.schemas.common import APIResponse
 from shared.schemas.user import UserResponse

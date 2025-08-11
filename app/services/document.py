@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import UploadFile
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.document import DocumentUpdate
@@ -288,7 +288,7 @@ class DocumentService(BaseService):
             self._log_operation_error(operation, e, document_id=str(document_id))
             raise
 
-    async def get_processing_status(
+    async def get_status(
         self, document_id: int, task_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get document processing status including background task information.
@@ -465,6 +465,7 @@ class DocumentService(BaseService):
         user_id: int,
         page: int = 1,
         size: int = 20,
+        search: Optional[str] = None,
         file_type: Optional[str] = None,
         status_filter: Optional[str] = None,
     ) -> Tuple[List[Document], int]:
@@ -490,24 +491,24 @@ class DocumentService(BaseService):
         if status_filter:
             filters.append(Document.status == status_filter)
 
-        # Count total documents
-        count_query = select(func.count(Document.id)).where(and_(*filters))
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
-
-        # Get documents with pagination
-        query = (
-            select(Document)
-            .where(and_(*filters))
-            .order_by(desc(Document.created_at))
-            .offset((page - 1) * size)
-            .limit(size)
-        )
-
-        result = await self.db.execute(query)
-        documents = result.scalars().all()
-
-        return list(documents), total
+        if search:
+            # Use the base service search functionality
+            return await self._search_entities(
+                model=Document,
+                search_fields=["title", "summary", "content"],
+                search_term=search,
+                additional_filters=filters,
+                page=page,
+                size=size,
+            )
+        else:
+            return await self._list_with_filters(
+                model=Document,
+                filters=filters,
+                page=page,
+                size=size,
+                order_by=Document.title,
+            )
 
     async def update_document(
         self, document_id: int, request: DocumentUpdate, user_id: int

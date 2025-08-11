@@ -551,28 +551,16 @@ class UsersClient:
         size: int = 20,
         active_only: Optional[bool] = None,
         superuser_only: Optional[bool] = None,
+        search: Optional[str] = None,
     ) -> PaginatedResponse[UserResponse]:
-        """List users with optional filtering and pagination.
-
-        Args:
-            page: Page number for pagination (default: 1).
-            size: Number of users per page (default: 20).
-            active_only: Filter to only active users if True.
-            superuser_only: Filter to only superusers if True.
-
-        Returns:
-            PaginatedResponse: Paginated list of users.
-
-        Raises:
-            ApiError: If the request fails or insufficient permissions.
-
-        """
+        """List users with optional filtering and pagination."""
         params = filter_query(
             {
                 "page": page,
                 "size": size,
                 "active_only": active_only,
                 "superuser_only": superuser_only,
+                "search": search,
             }
         )
         return await self.sdk._request("/api/v1/users/", UserResponse, params=params)
@@ -682,24 +670,17 @@ class DocumentsClient:
         size: int = 20,
         file_type: Optional[str] = None,
         status: Optional[str] = None,
-    ) -> PaginatedResponse:
-        """List documents with optional filtering and pagination.
-
-        Args:
-            page: Page number for pagination (default: 1).
-            size: Number of documents per page (default: 20).
-            file_type: Filter by file type (e.g., 'pdf', 'txt').
-            status: Filter by processing status (e.g., 'completed', 'processing').
-
-        Returns:
-            PaginatedResponse: Paginated list of documents.
-
-        Raises:
-            ApiError: If the request fails.
-
-        """
+        search: Optional[str] = None,
+    ) -> PaginatedResponse[DocumentResponse]:
+        """List documents with optional filtering and pagination."""
         params = filter_query(
-            {"page": page, "size": size, "file_type": file_type, "status": status}
+            {
+                "page": page,
+                "size": size,
+                "file_type": file_type,
+                "status": status,
+                "search": search,
+            }
         )
         return await self.sdk._request(
             "/api/v1/documents/", DocumentResponse, params=params

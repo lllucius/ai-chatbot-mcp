@@ -6,25 +6,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.analytics import (
-    AnalyticsExportPayload,
-    AnalyticsOverviewPayload,
-    AnalyticsPerformancePayload,
-    AnalyticsTrendsPayload,
-    AnalyticsUsagePayload,
-    AnalyticsUserAnalyticsPayload,
-    ConversationsOverview,
-    DailyStat,
-    DailyTrend,
-    DBPerformanceEntry,
-    DetailedUserAnalyticsPayload,
-    DocumentProcessingPerformance,
-    DocumentsOverview,
-    SystemHealthScore,
-    SystemMetricsInfo,
-    TopUser,
-    TrendSummary,
-    UsageMetrics,
-    UsersOverview,
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 from shared.schemas.common import APIResponse
 

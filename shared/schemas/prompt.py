@@ -6,7 +6,7 @@ All fields have the 'description' argument.
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -78,3 +78,33 @@ class PromptListResponse(BaseModel):
     pages: int = Field(..., description="Total number of pages")
 
     model_config = {"from_attributes": True}
+
+
+class PromptStatisticsData(BaseModel):
+    """Prompt statistics data."""
+
+    total_prompts: int = Field(..., description="Total number of prompts")
+    active_prompts: int = Field(..., description="Number of active prompts")
+    default_prompt: Optional[str] = Field(..., description="Name of default prompt")
+    usage_stats: Dict[str, Any] = Field(
+        default_factory=dict, description="Usage statistics"
+    )
+    most_used: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Most frequently used prompts"
+    )
+    recently_used: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Most frequently used prompts"
+    )
+    categories: List[str] = Field(
+        default_factory=list, description="Category breakdown"
+    )
+    total_tags: int = Field(..., description="Total number of tags")
+
+
+class PromptCategoriesData(BaseModel):
+    """Prompt categories and tags data."""
+
+    categories: List[str] = Field(
+        default_factory=list, description="Available prompt categories"
+    )
+    tags: List[str] = Field(default_factory=list, description="Available prompt tags")

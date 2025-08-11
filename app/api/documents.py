@@ -1,38 +1,32 @@
 """Document management API endpoints."""
 
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.common import APIResponse
-from shared.schemas.document import (
-    BackgroundTaskResponse,
-    DocumentResponse,
-    DocumentUpdate,
-    DocumentUploadResponse,
-    ProcessingConfigResponse,
-    ProcessingStatusResponse,
-    QueueStatusResponse,
+from shared.schemas.common import (
+    APIResponse,
+    PaginatedResponse,
+    PaginationParams,
 )
-from shared.schemas.document_responses import (
-    AdvancedSearchData,
-    BulkReprocessResponse,
-    CleanupDeletedResponse,
-    CleanupDryRunResponse,
-    CleanupPreviewItem,
-    DocumentFileTypeStats,
-    DocumentProcessingStats,
-    DocumentRecentActivity,
-    DocumentSearchCriteria,
-    DocumentSearchResult,
-    DocumentStatisticsData,
-    DocumentStorageStats,
-    DocumentTopUser,
-    DocumentUserInfo,
+from shared.schemas.document import (
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..config import settings
@@ -78,7 +72,7 @@ async def upload_document(
         file_type=document.file_type,
         file_size=document.file_size,
         mime_type=document.mime_type,
-        processing_status=document.status,
+        status=document.status,
         owner_id=document.owner_id,
         metainfo=document.metainfo,
         chunk_count=document.chunk_count,
@@ -98,54 +92,44 @@ async def upload_document(
     )
 
 
-@router.get("/", response_model=APIResponse[List[DocumentResponse]])
+@router.get("/", response_model=APIResponse[PaginatedResponse[DocumentResponse]])
 @handle_api_errors("Failed to retrieve documents")
 async def list_documents(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None, description="Search in documents"),
     file_type: Optional[str] = Query(None),
     status_filter: Optional[str] = Query(None, alias="status"),
     current_user: User = Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
-) -> APIResponse[List[DocumentResponse]]:
+) -> APIResponse[PaginatedResponse[DocumentResponse]]:
     """List user's documents with pagination and filtering."""
-    log_api_call(
-        "list_documents",
-        user_id=str(current_user.id),
-        page=page,
-        size=size,
-        file_type=file_type,
-        status_filter=status_filter,
-    )
+    log_api_call("list_documents", user_id=current_user.id)
+
     documents, total = await document_service.list_documents(
         user_id=current_user.id,
-        page=page,
-        size=size,
         file_type=file_type,
         status_filter=status_filter,
+        search=search,
+        page=page,
+        size=size,
     )
-    responses = [
-        DocumentResponse(
-            id=document.id,
-            title=document.title,
-            filename=document.filename,
-            file_type=document.file_type,
-            file_size=document.file_size,
-            mime_type=document.mime_type,
-            processing_status=document.status,
-            owner_id=document.owner_id,
-            metainfo=document.metainfo,
-            chunk_count=document.chunk_count,
-            created_at=document.created_at,
-            updated_at=document.updated_at,
-        )
-        for document in documents
-    ]
 
-    return APIResponse[List[DocumentResponse]](
+    document_responses = [DocumentResponse.model_validate(document) for document in documents]
+
+    payload = PaginatedResponse(
+        items=document_responses,
+        pagination=PaginationParams(
+            total=total,
+            page=page,
+            per_page=size,
+        ),
+    )
+
+    return APIResponse[PaginatedResponse[DocumentResponse]](
         success=True,
         message="Documents retrieved successfully",
-        data=responses,
+        data=payload,
     )
 
 
@@ -169,7 +153,7 @@ async def get_document(
         file_type=document.file_type,
         file_size=document.file_size,
         mime_type=document.mime_type,
-        processing_status=document.status,
+        status=document.status,
         owner_id=document.owner_id,
         metainfo=document.metainfo,
         chunk_count=document.chunk_count,
@@ -234,7 +218,7 @@ async def delete_document(
     "/byid/{document_id}/status", response_model=APIResponse[ProcessingStatusResponse]
 )
 @handle_api_errors("Failed to get processing status", log_errors=True)
-async def get_processing_status(
+async def get_status(
     document_id: int,
     task_id: Optional[str] = Query(
         None, description="Optional task ID for background processing details"
@@ -244,16 +228,16 @@ async def get_processing_status(
 ) -> APIResponse[ProcessingStatusResponse]:
     """Get document processing status with optional background task information."""
     log_api_call(
-        "get_processing_status",
+        "get_status",
         user_id=str(user.id),
         document_id=str(document_id),
         task_id=task_id,
     )
     if task_id:
-        status_info = await service.get_processing_status(document_id, task_id)
+        status_info = await service.get_status(document_id, task_id)
         message = "Enhanced processing status retrieved"
     else:
-        status_info = await service.get_processing_status(document_id, None)
+        status_info = await service.get_status(document_id, None)
         message = "Processing status retrieved"
 
     payload = ProcessingStatusResponse(

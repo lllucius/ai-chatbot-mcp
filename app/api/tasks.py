@@ -8,20 +8,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.schemas.common import APIResponse, ErrorResponse
-from shared.schemas.task_responses import (
-    ActiveTaskInfo,
-    ActiveTasksData,
-    DocumentProcessingStats,
-    QueueInfo,
-    QueueStatusData,
-    TaskInfo,
-    TaskMonitoringData,
-    TasksSummary,
-    TaskStatisticsData,
-    TaskSystemStatusData,
-    WorkerInfo,
-    WorkersSummary,
-    WorkerStatusData,
+from shared.schemas.task import (
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..database import get_db

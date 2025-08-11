@@ -10,49 +10,30 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.schemas.admin_responses import RegistryStatsResponse
+from shared.schemas.admin import RegistryStatsResponse
 from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
 from shared.schemas.conversation import (
-    ChatRequest,
-    ChatResponse,
-    ConversationCreate,
-    ConversationResponse,
-    ConversationStats,
-    ConversationUpdate,
-    MessageResponse,
-    StreamCompleteResponse,
-    StreamContentResponse,
-    StreamEndResponse,
-    StreamErrorResponse,
-    StreamStartResponse,
-    StreamToolCallResponse,
-)
-from shared.schemas.conversation_responses import (
-    ArchiveConversationsResult,
-    ArchivePreviewItem,
-    ArchivePreviewResponse,
-    ConversationExportData,
-    ConversationExportDataCSV,
-    ConversationExportDataJSON,
-    ConversationExportDataText,
-    ConversationMetadata,
-    ConversationSearchCriteria,
-    ConversationSearchData,
-    ConversationSearchMatchingMessage,
-    ConversationSearchResult,
-    ConversationSearchUserInfo,
-    ConversationStatsConversations,
-    ConversationStatsData,
-    ConversationStatsMessages,
-    ConversationStatsRecentActivity,
-    ConversationStatsUserEngagement,
-    ExportedMessage,
-    ExportInfo,
-    ImportConversationResult,
+    AdvancedSearchResponse,
+    ConversationStatsResponse,
+    DocumentStatsResponse,
+    ProfileStatsResponse,
+    PromptCategoriesResponse,
+    PromptStatsResponse,
+    QueueResponse,
+    RegistryStatsResponse,
+    SearchResponse,
+    TaskMonitorResponse,
+    TaskStatsResponse,
+    TaskStatusResponse,
+    WorkersResponse,
 )
 
 from ..database import AsyncSessionLocal, get_db
-from ..dependencies import get_current_superuser, get_current_user, get_conversation_service
+from ..dependencies import (
+    get_conversation_service,
+    get_current_superuser,
+    get_current_user,
+)
 from ..models.conversation import Conversation, Message
 from ..models.user import User
 from ..services.conversation import ConversationService
