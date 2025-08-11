@@ -393,3 +393,19 @@ class BulkReprocessResponse(BaseModelSchema):
     total_found: int
     errors: List[str]
     criteria: dict
+
+
+class QueueStatusResponse(BaseResponse):
+    """Response schema for document processing queue status."""
+
+    queue_size: int = Field(..., description="Number of items in queue")
+    active_tasks: int = Field(..., description="Number of currently active tasks")
+    max_concurrent_tasks: int = Field(
+        ..., description="Maximum concurrent tasks allowed"
+    )
+    completed_tasks: int = Field(..., description="Number of completed tasks")
+    worker_running: bool = Field(
+        ..., description="Whether the worker is currently running"
+    )
+
+

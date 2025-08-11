@@ -150,6 +150,7 @@ from shared.schemas.document import (
     ProcessingConfigRequest,
     ProcessingConfigResponse,
     ProcessingStatusResponse,
+    QueueStatusResponse,
 )
 from shared.schemas.health import (
     ApplicationHealthData,
@@ -404,6 +405,7 @@ __all__ = [
     "ProcessingConfigRequest",
     "ProcessingConfigResponse",
     "ProcessingStatusResponse",
+    "QueueStatusResponse",
     # Health schemas
     "ApplicationHealthData",
     "CacheHealthData",
