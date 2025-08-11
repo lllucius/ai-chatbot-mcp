@@ -32,13 +32,13 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from client.ai_chatbot_sdk import AIChatbotSDK, ApiError
 from client.config import (
     ClientConfig,
     get_default_backup_dir,
     get_default_token_file,
     load_config,
 )
+from sdk.ai_chatbot_sdk import AIChatbotSDK, ApiError
 from shared.schemas import (
     ChatRequest,
     DocumentSearchRequest,

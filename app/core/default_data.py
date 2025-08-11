@@ -8,8 +8,8 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_service import MCPService
+from app.services.profile_service import LLMProfileService
 from app.services.prompt_service import PromptService
 from app.services.user import UserService
 from shared.schemas.mcp import MCPServerCreateSchema

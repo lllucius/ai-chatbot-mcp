@@ -19,8 +19,8 @@ from app.services.auth import AuthService
 from app.services.conversation import ConversationService
 from app.services.document import DocumentService
 from app.services.embedding import EmbeddingService
-from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_service import MCPService
+from app.services.profile_service import LLMProfileService
 from app.services.prompt_service import PromptService
 from app.services.search import SearchService
 from app.services.user import UserService

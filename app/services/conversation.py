@@ -15,9 +15,9 @@ from app.core.exceptions import NotFoundError, ValidationError
 from app.models.conversation import Conversation, Message
 from app.services.base import BaseService
 from app.services.embedding import EmbeddingService
-from app.services.llm_profile_service import LLMProfileService
 from app.services.mcp_service import MCPService
 from app.services.openai_client import OpenAIClient
+from app.services.profile_service import LLMProfileService
 from app.services.prompt_service import PromptService
 from app.services.search import SearchService
 from shared.schemas.conversation import (

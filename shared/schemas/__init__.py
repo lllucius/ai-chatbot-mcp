@@ -181,12 +181,6 @@ from shared.schemas.health import (
     SystemMetricsResponse,
     SystemResourceMetrics,
 )
-from shared.schemas.llm_profile import (
-    LLMProfileCreate,
-    LLMProfileResponse,
-    LLMProfileStatisticsData,
-    LLMProfileUpdate,
-)
 from shared.schemas.mcp import (
     MCPBatchUsageSchema,
     MCPConnectionStatusSchema,
@@ -211,6 +205,12 @@ from shared.schemas.mcp import (
     MCPToolUsageStatsSchema,
     OpenAIToolCallSchema,
     OpenAIToolSchema,
+)
+from shared.schemas.profile import (
+    LLMProfileCreate,
+    LLMProfileResponse,
+    LLMProfileStatisticsData,
+    LLMProfileUpdate,
 )
 from shared.schemas.prompt import (
     PromptCategoriesData,

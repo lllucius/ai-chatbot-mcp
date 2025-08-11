@@ -19,11 +19,11 @@ timestamps, and consistent table naming conventions.
 from app.models.base import BaseModelDB, BigSerialMixin, TimestampMixin
 from app.models.conversation import Conversation, Message
 from app.models.document import Document, DocumentChunk
-from app.models.llm_profile import LLMProfile
 
 # Import new registry models
 from app.models.mcp_server import MCPServer
 from app.models.mcp_tool import MCPTool
+from app.models.profile import LLMProfile
 from app.models.prompt import Prompt
 
 # Import database models (SQLAlchemy)

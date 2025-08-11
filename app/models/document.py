@@ -8,9 +8,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import JSON, BigInteger
+from sqlalchemy import JSON, BigInteger, Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModelDB

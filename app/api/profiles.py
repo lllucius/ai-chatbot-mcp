@@ -10,7 +10,7 @@ from app.dependencies import (
     get_profile_service,
 )
 from app.models.user import User
-from app.services.llm_profile_service import LLMProfileService
+from app.services.profile_service import LLMProfileService
 from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.common import (
     APIResponse,
@@ -18,7 +18,7 @@ from shared.schemas.common import (
     PaginatedResponse,
     PaginationParams,
 )
-from shared.schemas.llm_profile import (
+from shared.schemas.profile import (
     LLMProfileCreate,
     LLMProfileResponse,
     LLMProfileStatisticsData,

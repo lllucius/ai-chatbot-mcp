@@ -1,61 +1,20 @@
-# Web Framework
-fastapi
-uvicorn[standard]
-python-multipart
-
-# Database
-sqlalchemy[asyncio]
-asyncpg
-alembic
-pgvector
-
-# Authentication & Security
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart
-
-# AI & ML
-openai
-tiktoken
-numpy
-
-# Data Validation
-pydantic
-pydantic-settings
-
-# MCP Client
-fastmcp
-
-# Utilities
-python-dotenv
-httpx
-psutil
-
-# CLI Framework
-async_typer
-typer
-rich
-
-# Development
-pytest
-pytest-asyncio
-black
-isort
-mypy
-
-# Document Processing - Unstructured (replaces PyPDF2, python-docx, striprtf)
-unstructured>=0.15.0
-filetype
-beautifulsoup4
-nltk
-
-# Background Tasks
-celery>=5.3.0
-redis>=4.5.0
-
-# Text Preprocessing
-regex
-langdetect
-
-# CLI Shell Integration  
-shellingham
+alembic==1.12.1
+async_typer==0.1.9
+fastapi==0.116.1
+fastmcp==2.11.2
+filetype==1.2.0
+httpx==0.28.1
+numpy==2.3.2
+openai==1.99.6
+pgvector==0.2.4
+psutil==7.0.0
+pydantic==2.11.7
+pydantic_settings==2.10.1
+python-dotenv==1.1.1
+python_jose==3.3.0
+rich==14.1.0
+SQLAlchemy==2.0.23
+tiktoken==0.9.0
+typer==0.16.0
+unstructured==0.18.9
+uvicorn==0.35.0
