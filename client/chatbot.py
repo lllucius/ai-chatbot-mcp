@@ -946,11 +946,15 @@ class CommandHandler:
         subcmd = args[0]
         if subcmd == "list":
             servers = await self.sdk.mcp.list_servers(detailed=True)
-            # MCP list_servers returns Dict[str, Any] with 'servers' key
-            server_list = servers.get("servers", []) if isinstance(servers, dict) else []
             prettify_list(
-                server_list,
-                columns=["name", "url", "enabled", "connected", "description"],
+                [s.model_dump() if hasattr(s, 'model_dump') else s for s in servers],
+                columns=[
+                    "name",
+                    "url",
+                    "enabled",
+                    "connected",
+                    "description"
+                ],
                 title="MCP Servers",
             )
         elif subcmd == "add":

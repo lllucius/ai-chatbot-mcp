@@ -19,6 +19,8 @@ from shared.schemas.mcp import (
     MCPToolResponse,
     MCPToolsResponse,
     MCPToolUsageStatsSchema,
+    MCPToolExecutionRequestSchema,
+    MCPToolExecutionResultSchema,
 )
 
 router = APIRouter(tags=["mcp"])
@@ -234,19 +236,19 @@ async def disable_tool(
     )
 
 
-@router.get("/stats", response_model=APIResponse[MCPToolUsageStatsSchema])
+@router.get("/stats", response_model=APIResponse[List[MCPToolUsageStatsSchema]])
 @handle_api_errors("Failed to get MCP statistics")
 async def get_mcp_stats(
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
     mcp_service: MCPService = Depends(get_mcp_service),
-) -> APIResponse[MCPToolUsageStatsSchema]:
+) -> APIResponse[List[MCPToolUsageStatsSchema]]:
     """Get comprehensive MCP usage statistics and performance analytics."""
     log_api_call("get_mcp_stats", user_id=current_user.id)
 
     stats = await mcp_service.get_tool_stats()
 
-    return APIResponse[MCPToolUsageStatsSchema](
+    return APIResponse[List[MCPToolUsageStatsSchema]](
         success=True,
         message="MCP statistics retrieved successfully",
         data=stats,
@@ -284,14 +286,14 @@ async def get_tool_details(
     )
 
 
-@router.post("/tools/byname/{tool_name}/test", response_model=APIResponse)
+@router.post("/tools/byname/{tool_name}/test", response_model=APIResponse[MCPToolExecutionResultSchema])
 @handle_api_errors("Failed to test MCP tool")
 async def test_tool(
     tool_name: str,
     test_params: Optional[Dict[str, Any]] = None,
     current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> APIResponse[MCPToolExecutionResultSchema]:
     """Test execution of a specific MCP tool with optional parameters.
 
     Executes a test run of the specified tool to verify functionality,
@@ -300,12 +302,16 @@ async def test_tool(
     log_api_call("test_mcp_tool", user_id=current_user.id)
 
     mcp_service = MCPService(db)
+    req = MCPToolExecutionRequestSchema(
+        tool_name=tool_name,
+        parameters=test_params or {}
+    )
+    res = await mcp_service.call_tool(req)
 
-    await mcp_service.test_tool_execution(tool_name, test_params or {})
-
-    return APIResponse(
+    return APIResponse[MCPToolExecutionResultSchema](
         success=True,
         message=f"Tool '{tool_name}' test completed successfully",
+        data=res
     )
 
 

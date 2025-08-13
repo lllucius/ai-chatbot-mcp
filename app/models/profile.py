@@ -12,7 +12,7 @@ from sqlalchemy import JSON, Boolean, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import BaseModelDB
-from app.utils.timestamp import get_current_timestamp
+from app.utils.timestamp import utcnow
 
 
 class LLMProfile(BaseModelDB):
@@ -134,7 +134,7 @@ class LLMProfile(BaseModelDB):
     def record_usage(self):
         """Record a profile usage event."""
         self.usage_count += 1
-        self.last_used_at = get_current_timestamp()
+        self.last_used_at = utcnow()
 
     def to_openai_params(self) -> dict:
         """Convert LLM profile to OpenAI API parameters dictionary.

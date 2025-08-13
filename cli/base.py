@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 
 from client.config import load_config
-from sdk.ai_chatbot_sdk import AIChatbotSDK
+from sdk.ai_chatbot_sdk import AIChatbotSDK, ApiError
 
 TOKEN_FILE = Path.home() / ".ai-chatbot-cli" / "token"
 
@@ -286,6 +286,9 @@ class CLIManager:
         """
         try:
             self._sdk.clear_token()
+            with open(self.token_file, "w") as f:
+                json.dump({}, f)
+            self.token_file.chmod(0o600)
         except Exception as e:
             raise APIError(f"Failed to clear authentication token: {str(e)}")
 
@@ -320,7 +323,7 @@ class CLIManager:
         if not self.has_token():
             return
         try:
-            self._sdk.auth.logout()  # Sync method
+            await self._sdk.auth.logout()
         except Exception:
             pass
         finally:
@@ -590,17 +593,6 @@ def confirm_action(message: str, default: bool = False) -> bool:
         return default
 
     return response in ["y", "yes", "true", "1"]
-
-
-def paginate_results(data: list, page_size: int = 20) -> list:
-    """Paginate results for display."""
-    if len(data) <= page_size:
-        return data
-    total_pages = (len(data) + page_size - 1) // page_size
-    info_message(
-        f"Showing first {page_size} of {len(data)} results ({total_pages} pages total)"
-    )
-    return data[:page_size]
 
 
 def format_timestamp(timestamp: str) -> str:

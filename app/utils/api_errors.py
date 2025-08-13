@@ -73,9 +73,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=_format_error_response(
-                        str(e), "VALIDATION_ERROR", include_details
-                    ),
+                    detail=e.message
                 )
 
             except AuthenticationError as e:
@@ -89,9 +87,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=_format_error_response(
-                        str(e), "AUTHENTICATION_ERROR", include_details
-                    ),
+                    detail=e.message,
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
@@ -106,9 +102,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=_format_error_response(
-                        str(e), "AUTHORIZATION_ERROR", include_details
-                    ),
+                    detail=e.message
                 )
 
             except NotFoundError as e:
@@ -122,9 +116,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_format_error_response(
-                        str(e), "NOT_FOUND_ERROR", include_details
-                    ),
+                    detail=e.message
                 )
 
             except (DocumentError, SearchError) as e:
@@ -139,11 +131,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=_format_error_response(
-                        str(e),
-                        getattr(e, "error_code", "SERVICE_ERROR"),
-                        include_details,
-                    ),
+                    detail=e.message
                 )
 
             except ExternalServiceError as e:
@@ -164,9 +152,7 @@ def handle_api_errors(
                 )
                 raise HTTPException(
                     status_code=status_code,
-                    detail=_format_error_response(
-                        str(e), "EXTERNAL_SERVICE_ERROR", include_details
-                    ),
+                    detail=e.message
                 )
 
             except ChatbotPlatformException as e:
@@ -182,12 +168,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=_format_error_response(
-                        getattr(e, "message", str(e)),
-                        getattr(e, "error_code", "PLATFORM_ERROR"),
-                        include_details,
-                        getattr(e, "details", None),
-                    ),
+                    detail=getattr(e, "message", str(e))
                 )
 
             except Exception as e:
@@ -204,9 +185,7 @@ def handle_api_errors(
                     )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=_format_error_response(
-                        default_message, "INTERNAL_SERVER_ERROR", include_details
-                    ),
+                    detail=default_message,
                 )
 
         return wrapper

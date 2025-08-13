@@ -11,7 +11,7 @@ from sqlalchemy import JSON, Boolean, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import BaseModelDB
-from app.utils.timestamp import get_current_timestamp
+from app.utils.timestamp import utcnow
 
 
 class Prompt(BaseModelDB):
@@ -87,7 +87,7 @@ class Prompt(BaseModelDB):
     def record_usage(self):
         """Record a prompt usage event."""
         self.usage_count += 1
-        self.last_used_at = get_current_timestamp()
+        self.last_used_at = utcnow()
 
     def __repr__(self) -> str:
         """Return string representation of Prompt model."""

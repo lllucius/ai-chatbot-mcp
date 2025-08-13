@@ -429,10 +429,14 @@ class MCPService:
         """
         tool = await self.db.execute(select(MCPTool).where(MCPTool.name == tool_name))
         tool = tool.scalar_one_or_none()
+        print("=========================tool", tool)
         if not tool:
             return False
+        print("ASDFASDF")
         tool.record_usage(success, duration_ms)
+        print("QWERQWER")
         await self.db.commit()
+        print("#############################")
         return True
 
     async def batch_record_tool_usage(self, usage_records: List[Dict[str, Any]]) -> int:
@@ -643,6 +647,7 @@ class MCPService:
             transport = StreamableHttpTransport(server_url)
             client = Client(transport, timeout=timeout)
             async with client:
+                await client.ping()
                 tools_response = await client.list_tools()
                 if hasattr(tools_response, "tools"):
                     tools_list = tools_response.tools
@@ -1088,3 +1093,4 @@ class MCPService:
         logger.info("Force refreshing MCP client from registry (connections cleared)")
         await self.disconnect_all()
         await self.initialize()
+        await self.discover_tools_all_servers()

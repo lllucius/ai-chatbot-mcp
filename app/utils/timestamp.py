@@ -41,13 +41,13 @@ Use Cases:
 - Integration with external systems requiring specific timestamp formats and standards
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from typing import Union
 
 
 def utcnow() -> datetime:
     """Get current UTC datetime with timezone awareness and enterprise precision."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def get_current_timestamp() -> str:

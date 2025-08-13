@@ -9,7 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.database import get_db
+from app.database import get_db, get_session
 from app.dependencies import get_current_superuser
 from app.models.user import User
 from app.utils.api_errors import handle_api_errors, log_api_call
@@ -341,7 +341,7 @@ async def create_database_backup(
 ) -> APIResponse[DatabaseBackupResult]:
     """Create a comprehensive database backup using PostgreSQL dump utilities."""
     log_api_call("create_database_backup", user_id=str(current_user.id))
-
+    print("OUTPUT", output_file)
     if not output_file:
         timestamp = utcnow().strftime("%Y%m%d_%H%M%S")
         output_file = f"backup_{timestamp}.sql"
@@ -473,17 +473,20 @@ async def restore_database(
 async def vacuum_database(
     analyze: bool = Query(True, description="Run ANALYZE after VACUUM"),
     current_user: User = Depends(get_current_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session),
 ) -> APIResponse[VacuumResult]:
     """Execute database maintenance with VACUUM operations for optimal performance."""
     log_api_call("vacuum_database", user_id=str(current_user.id), analyze=analyze)
 
+    print(dir(db))
     try:
+        conn = db.execution_options(isolation_level="AUTOCOMMIT")
+
         if analyze:
-            await db.execute(text("VACUUM ANALYZE"))
+            await conn.execute(text("VACUUM ANALYZE"))
             message = "Database VACUUM ANALYZE completed successfully"
         else:
-            await db.execute(text("VACUUM"))
+            await conn.execute(text("VACUUM"))
             message = "Database VACUUM completed successfully"
 
         await db.commit()

@@ -124,6 +124,18 @@ from shared.schemas.conversation import (
     StreamStartResponse,
     StreamToolCallResponse,
 )
+from shared.schemas.database import (
+    DatabaseAnalysisResponse,
+    DatabaseBackupResult,
+    DatabaseDowngradeResult,
+    DatabaseMigrationsResponse,
+    DatabaseQueryResponse,
+    DatabaseRestoreResult,
+    DatabaseStatusResponse,
+    DatabaseTablesResponse,
+    DatabaseUpgradeResult,
+    VacuumResult,
+)
 from shared.schemas.document import (
     AdvancedSearchData,
     BackgroundTaskResponse,
@@ -379,6 +391,17 @@ __all__ = [
     "StreamErrorResponse",
     "StreamStartResponse",
     "StreamToolCallResponse",
+    # Database schemas
+    "DatabaseAnalysisResponse",
+    "DatabaseBackupResult",
+    "DatabaseDowngradeResult",
+    "DatabaseMigrationsResponse",
+    "DatabaseQueryResponse",
+    "DatabaseRestoreResult",
+    "DatabaseStatusResponse",
+    "DatabaseTablesResponse",
+    "DatabaseUpgradeResult",
+    "VacuumResult",
     # Document schemas
     "AdvancedSearchData",
     "BackgroundTaskResponse",

@@ -10,7 +10,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from cli.base import error_message, format_timestamp, get_sdk, success_message
+from cli.base import error_message, format_timestamp, get_sdk, success_message, ApiError
 
 conversation_app = AsyncTyper(
     help="Conversation management commands", rich_markup_mode=None
@@ -41,7 +41,7 @@ async def list(
             for conv in resp.items:
                 conv_data.append(
                     {
-                        "ID": str(conv.id)[:8] + "...",
+                        "ID": str(conv.id)[:8],
                         "Title": conv.title,
                         "Active": "✓" if conv.is_active else "✗",
                         "Messages": str(conv.message_count),
@@ -56,9 +56,10 @@ async def list(
             )
         else:
             print("No conversations found.")
+    except ApiError as e:
+        error_message(f"Failed to list conversations: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to list conversations: {str(e)}")
-        raise SystemExit(1)
 
 
 @conversation_app.async_command()
@@ -81,9 +82,10 @@ async def show(
             from cli.base import display_key_value_pairs
 
             display_key_value_pairs(conv_details, "Conversation Details")
+    except ApiError as e:
+        error_message(f"Failed to get conversation details: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get conversation details: {str(e)}")
-        raise SystemExit(1)
 
 
 @conversation_app.async_command()
@@ -102,6 +104,7 @@ async def export(
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
         success_message(f"Conversation exported to {filename}")
+    except ApiError as e:
+        error_message(f"Failed to export conversation: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to export conversation: {str(e)}")
-        raise SystemExit(1)

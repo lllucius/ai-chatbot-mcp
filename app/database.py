@@ -5,62 +5,6 @@ creation, connection pooling, and database initialization utilities for the AI
 Chatbot Platform. Implements production-ready database patterns with connection
 reliability, performance optimization, and operational excellence for PostgreSQL
 with PGVector extension support.
-
-Database Architecture:
-- Async SQLAlchemy integration with optimal connection management and pooling
-- PostgreSQL with PGVector extension for high-performance vector operations
-- Connection lifecycle management with automatic reconnection and error recovery
-- Transaction management with proper isolation levels and rollback handling
-- Database migration support with version control and deployment automation
-- Multi-environment configuration with development, staging, and production settings
-
-Connection Management:
-- Async connection pooling with configurable pool sizes and connection limits
-- Connection health monitoring with automatic failover and recovery
-- Connection string configuration with security and performance optimization
-- SSL/TLS support for secure database connections in production environments
-- Connection timeout and retry logic for reliability in distributed systems
-- Resource management with proper connection cleanup and garbage collection
-
-Performance Optimization:
-- Connection pooling optimization with proper sizing and connection reuse
-- Query optimization with prepared statements and execution plan caching
-- Database indexing support with vector indexing for PGVector operations
-- Connection load balancing for read replicas and distributed database setups
-- Memory management with connection pool sizing and resource limits
-- Query performance monitoring with execution time tracking and optimization
-
-Vector Database Features:
-- PGVector extension integration for high-performance vector storage and retrieval
-- Vector indexing with IVFFlat and HNSW algorithms for fast similarity search
-- Embedding storage optimization with compression and memory efficiency
-- Vector query optimization with distance calculations and similarity thresholds
-- Vector dimension validation and constraint enforcement
-- Integration with embedding services and machine learning workflows
-
-Security Features:
-- Secure connection string handling with credential protection
-- Database authentication with role-based access control
-- SSL/TLS encryption for data in transit
-- Connection security validation and certificate management
-- Database audit logging for compliance and security monitoring
-- Integration with external secret management and credential rotation
-
-Operational Excellence:
-- Database initialization with schema creation and default data setup
-- Migration management with version control and automated deployment
-- Health check endpoints for database connectivity monitoring
-- Database backup and recovery integration with automated scheduling
-- Performance monitoring with connection metrics and query analysis
-- Integration with database monitoring and alerting systems
-
-Use Cases:
-- Production deployment with high-availability database clusters
-- Development environment setup with local database instances
-- Testing environment with isolated database instances and test data
-- Container orchestration with database service discovery and configuration
-- Cloud deployment with managed database services and auto-scaling
-- Microservices architecture with database per service patterns
 """
 
 import asyncio
@@ -124,16 +68,16 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
+async def get_session() -> AsyncSession:
+    """Returns unprotected DB session"""
+    return AsyncSessionLocal()
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency to get database session with improved error handling.
-
-    Yields:
-        AsyncSession: Database session for request scope
-
-    """
+    """Dependency to get database session with improved error handling."""
     session = None
     try:
-        session = AsyncSessionLocal()
+        session = await get_session()
+
         # Test connection health
         await session.execute(text("SELECT 1"))
 

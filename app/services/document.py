@@ -62,34 +62,6 @@ class DocumentService(BaseService):
         This method handles the initial document creation phase including file
         validation, storage, and database record creation. The document is marked
         as "pending" for subsequent processing stages.
-
-        Args:
-            file: Uploaded file object with content and metadata
-            title: Human-readable title for the document
-            user_id: int of the document owner
-
-        Returns:
-            Document: Created document object with pending processing status
-
-        Raises:
-            ValidationError: If file validation fails (type, size, format)
-            DocumentError: If file processing or storage fails
-            Exception: If database operation fails
-
-        Processing Steps:
-        1. Validate file type and size against configured limits
-        2. Generate secure unique filename to prevent conflicts
-        3. Save file to configured upload directory
-        4. Extract file metadata and technical information
-        5. Create database record with pending status
-        6. Log operation for monitoring and debugging
-
-        Example:
-            >>> with open("document.pdf", "rb") as f:
-            ...     upload_file = UploadFile(filename="document.pdf", file=f)
-            ...     doc = await document_service.create_document(upload_file, "My PDF", user_id)
-            >>> print(f"Created document {doc.id} with status: {doc.status}")
-
         """
         operation = "create_document"
         self._log_operation_start(
@@ -234,20 +206,7 @@ class DocumentService(BaseService):
             raise DocumentError(f"Document creation failed: {e}")
 
     async def start_processing(self, document_id: int, priority: int = 5) -> str:
-        """Start background document processing (text extraction and chunking).
-
-        Args:
-            document_id: Document ID to process
-            priority: Processing priority (lower = higher priority)
-
-        Returns:
-            str: Task ID for tracking background processing
-
-        Raises:
-            NotFoundError: If document not found
-            ValidationError: If document is already processing
-
-        """
+        """Start background document processing (text extraction and chunking)."""
         operation = "start_processing"
 
         try:
@@ -290,19 +249,10 @@ class DocumentService(BaseService):
     async def get_status(
         self, document_id: int, task_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Get document processing status including background task information.
-
-        Args:
-            document_id: Document ID
-            task_id: Optional task ID for background processing
-
-        Returns:
-            Dict[str, Any]: Comprehensive processing status
-
-        """
+        """Get document processing status including background task information."""
         try:
             await self._ensure_db_session()
-
+            
             # Get document
             document = await self.get_document_by_id(document_id)
             if not document:
@@ -336,7 +286,8 @@ class DocumentService(BaseService):
                     )
 
             return status_info
-
+        except (NotFoundError, ValidationError):
+            raise
         except Exception as e:
             logger.error(
                 f"Failed to get processing status for document {document_id}: {e}"
@@ -446,6 +397,7 @@ class DocumentService(BaseService):
             )
         )
         document = result.scalar_one_or_none()
+        print("DOCUM", document)
 
         if not document:
             raise NotFoundError("Document not found")

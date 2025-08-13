@@ -10,120 +10,6 @@ The SDK covers all platform functionality including authentication, user managem
 conversation handling, document processing, analytics, MCP integration, and
 administrative operations. All methods are async and should be called with await
 for optimal performance.
-
-Key Features:
-    - Complete platform API coverage with async operations
-    - Type-safe operations with Pydantic models and validation
-    - Comprehensive error handling with detailed exception information
-    - Automatic retry mechanisms with exponential backoff
-    - Streaming support for real-time operations with parsed JSON events
-    - Authentication management with automatic token refresh
-
-API Coverage:
-    - Authentication: Login, logout, token management, user verification
-    - Users: User creation, management, profile updates, administrative operations
-    - Conversations: Chat management, message handling, conversation analytics
-    - Documents: Upload, processing, search, vector embedding generation
-    - Analytics: System metrics, user analytics, performance monitoring
-    - Database: Administrative operations, health checks, maintenance
-    - Tasks: Background job management, queue monitoring, worker scaling
-    - MCP: Model Context Protocol integration, tool management
-    - Profiles: LLM parameter management, optimization, A/B testing
-    - Prompts: Template management, versioning, performance analytics
-
-Authentication Flow:
-    The SDK implements secure JWT-based authentication with automatic token
-    management and refresh capabilities. Tokens are managed transparently
-    for all authenticated operations.
-
-Error Handling:
-    The SDK provides comprehensive error handling with structured exceptions
-    that include HTTP status codes, detailed error messages, and context
-    information for debugging and monitoring.
-
-Performance Features:
-    - Async operations for non-blocking I/O and high throughput
-    - Connection pooling and keep-alive for efficient HTTP operations
-    - Request batching for bulk operations
-    - Streaming support for large data transfers
-    - Configurable timeouts and retry policies
-
-Type Safety:
-    All SDK operations use Pydantic models for request/response validation,
-    providing compile-time type checking and runtime validation for robust
-    application development.
-
-Use Cases:
-    - Application development and platform integration
-    - Automated testing and validation workflows
-    - Data analysis and reporting applications
-    - System administration and monitoring tools
-    - Custom AI applications and workflow automation
-
-Example Usage:
-    ```python
-    import asyncio
-    from ai_chatbot_sdk import AIChatbotSDK
-    from shared.schemas import ChatRequest
-
-    async def main():
-        # Initialize SDK
-        sdk = AIChatbotSDK(
-            base_url="https://api.chatbot.example.com",
-            timeout=30
-        )
-
-        # Authenticate
-        token = await sdk.auth.login("username", "password")
-        sdk.set_token(token.access_token)
-
-        # Create conversation
-        conversation = await sdk.conversations.create(
-            title="Customer Support Session"
-        )
-
-        # Send message
-        chat_request = ChatRequest(
-            conversation_id=conversation.id,
-            user_message="Hello, how can you help me today?"
-        )
-        response = await sdk.conversations.chat(chat_request)
-
-        # Stream a conversation (yields parsed event dictionaries)
-        async for event in sdk.conversations.chat_stream(chat_request):
-            if event.get("type") == "content":
-                print(event["content"], end="", flush=True)
-            elif event.get("type") == "complete":
-                print(f"\nResponse complete: {event['response']}")
-            elif event.get("type") == "error":
-                print(f"Error: {event['error']}")
-
-        # Search documents
-        search_results = await sdk.documents.search(
-            query="machine learning best practices",
-            limit=10
-        )
-
-        # Get analytics
-        overview = await sdk.analytics.get_overview()
-
-    # Run the example
-    asyncio.run(main())
-    ```
-
-Integration Patterns:
-    - Microservices architecture with async service communication
-    - Event-driven applications with real-time data processing
-    - Data pipeline integration for document processing and analysis
-    - Monitoring and alerting system integration
-    - Custom dashboard and reporting application development
-
-Performance Considerations:
-    - Use connection pooling for multiple concurrent operations
-    - Implement proper error handling and retry logic
-    - Consider rate limiting for high-volume operations
-    - Use streaming operations for large data transfers
-    - Monitor token expiration and refresh proactively
 """
 
 import json
@@ -143,6 +29,7 @@ from shared.schemas import (  # Base and common schemas; Conversation schemas; D
     ConversationResponse,
     ConversationStatsResponse,
     ConversationUpdate,
+    DatabaseBackupResult,
     DatabaseHealthResponse,
     DocumentResponse,
     DocumentSearchRequest,
@@ -239,7 +126,6 @@ async def handle_response(
         raise ApiError(resp.status_code, resp.reason_phrase, url, body)
 
     json_data = resp.json()
-    print("DATA", json_data)
     try:
         aresp = APIResponse.model_validate(json_data)
     except ValidationError:
@@ -453,9 +339,11 @@ class AuthClient:
 
     async def logout(self) -> BaseResponse:
         """Logout current user and invalidate token."""
-        return await self.sdk._request(
+        response = await self.sdk._request(
             "/api/v1/auth/logout", BaseResponse, method="POST"
         )
+        self.sdk.clear_token()
+        return response
 
     async def refresh(self) -> Token:
         """Refresh authentication token."""
@@ -1540,12 +1428,23 @@ class DatabaseClient:
             "/api/v1/database/downgrade", BaseResponse, method="POST"
         )
 
-    async def backup(self, output: Optional[str] = None) -> BaseResponse:
+    async def backup(self, output: Optional[str] = None) -> DatabaseBackupResult:
         """Create database backup."""
-        data = filter_query({"output": output})
+        params = filter_query(
+            {
+                "output_file": output,
+            }
+        )
+        r =  await self.sdk._request(
+            "/api/v1/database/backup", DatabaseBackupResult, method="POST", json=params
+        )
+        print("ASDFASDFASDFASDFASDF", r)
+        return  r
         return await self.sdk._request(
             "/api/v1/database/backup", BaseResponse, method="POST", json=data
         )
+
+
 
     async def restore(self, backup_file: str) -> BaseResponse:
         """Restore database from backup."""

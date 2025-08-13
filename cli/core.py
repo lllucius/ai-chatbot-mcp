@@ -5,6 +5,10 @@ system configuration management, health monitoring, and version information for
 all CLI operations and administrative tasks.
 """
 
+import tracemalloc
+tracemalloc.start()
+
+import getpass
 import os
 from pathlib import Path
 from typing import Optional
@@ -13,8 +17,10 @@ from async_typer import AsyncTyper
 from typer import Option
 
 from cli.base import (
+    ApiError,
     error_message,
     get_cli_manager,
+    get_sdk,
     info_message,
     success_message,
     warning_message,
@@ -43,54 +49,12 @@ async def login(
     Authentication tokens can be saved to secure local storage for persistent
     sessions across CLI invocations. The token is stored with restrictive file
     permissions in the user's home directory.
-
-    Args:
-        username (Optional[str]): Platform username. If not provided, will prompt interactively
-        password (Optional[str]): User password. If not provided, will prompt with masking
-        save_token (bool): Whether to save token to disk for persistent sessions. Defaults to True
-
-    Security Notes:
-        - Passwords are masked during interactive input
-        - Tokens are stored with 0o600 permissions (owner read/write only)
-        - Failed authentication attempts are logged for security monitoring
-        - Tokens include expiration information for automatic refresh
-
-    Performance Notes:
-        - Fast authentication with JWT token generation
-        - Minimal network overhead for login process
-        - Efficient token storage and retrieval
-        - Non-blocking async operations
-
-    Use Cases:
-        - Initial CLI setup and user authentication
-        - Development workflow automation
-        - CI/CD pipeline integration with service accounts
-        - Production system administration
-        - Troubleshooting and debugging sessions
-
-    Example:
-        ```bash
-        # Interactive login with saved token
-        ai-chatbot login
-
-        # Command-line login for automation
-        ai-chatbot login --username admin --password secret
-
-        # Login without saving token (temporary session)
-        ai-chatbot login --no-save-token
-        ```
-
-    Raises:
-        SystemExit: On authentication failure or network errors
-
     """
     try:
         cli_manager = await get_cli_manager()
         if not username:
             username = input("Username: ")
         if not password:
-            import getpass
-
             password = getpass.getpass("Password: ")
         token = await cli_manager.login(username, password)
         if save_token:
@@ -105,9 +69,10 @@ async def login(
         print(f"Access Token: {'*' * 20}")
         print(f"Token Type: {token.token_type}")
         print(f"Expires In: {token.expires_in} seconds")
+    except ApiError as e:
+        error_message(f"Login failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Login failed: {str(e)}")
-        raise SystemExit(1)
 
 
 @core_app.async_command()
@@ -123,45 +88,15 @@ async def logout():
     local token cleanup, providing comprehensive security for user sessions.
     If the server is unreachable, local tokens are still removed to prevent
     potential security issues.
-
-    Security Notes:
-        - Server-side session invalidation prevents token reuse
-        - Local token files are securely removed from disk
-        - All authentication state is cleared from memory
-        - Graceful handling of network failures during logout
-
-    Performance Notes:
-        - Fast local token cleanup regardless of server status
-        - Non-blocking async operation for responsiveness
-        - Minimal network overhead for session invalidation
-        - Immediate feedback to user on completion
-
-    Use Cases:
-        - Ending development sessions securely
-        - Security incident response and token invalidation
-        - Multi-user system cleanup procedures
-        - Automated logout in CI/CD pipelines
-        - Session management in shared environments
-
-    Example:
-        ```bash
-        # Standard logout operation
-        ai-chatbot logout
-        ```
-
-    Note:
-        This command can be safely executed multiple times without error,
-        even if no active session exists. It will always ensure clean
-        authentication state.
-
     """
     try:
         cli_manager = await get_cli_manager()
         await cli_manager.logout()
         success_message("Logged out successfully. Authentication token removed.")
+    except ApiError as e:
+        error_message(f"Logout failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Logout failed: {str(e)}")
-        raise SystemExit(1)
 
 
 @core_app.async_command("auth-status")
@@ -181,14 +116,15 @@ async def auth_status():
                 print(f"Active: {'Yes' if user_info.get('is_active') else 'No'}")
             except Exception as e:
                 error_message(f"Token validation failed: {str(e)}")
-                info_message("Please login again using: python api_manage.py login")
+                info_message("Please login again using: python manage.py login")
         else:
             info_message(
-                "Not authenticated. Use 'python api_manage.py login' to authenticate."
+                "Not authenticated. Use 'python manage.py login' to authenticate."
             )
+    except ApiError as e:
+        error_message(f"Failed to check authorization status: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to check authentication status: {str(e)}")
-        raise SystemExit(1)
 
 
 @core_app.async_command()
@@ -213,9 +149,10 @@ async def version():
         print(f"Description: {app_info.get('description', 'N/A')}")
         print(f"API Status: {app_info.get('status', 'Unknown')}")
         print("CLI Mode: API-based")
+    except ApiError as e:
+        error_message(f"Failed to get version information: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get version information: {str(e)}")
-        raise SystemExit(1)
 
 
 @core_app.async_command()
@@ -278,22 +215,16 @@ async def health():
             success_message("System is healthy and ready to use!")
         else:
             warning_message("Some components need attention. Check the results above.")
-
+    except ApiError as e:
+        error_message(f"Health check failed: {e.body['message']}")                               
     except Exception as e:
         error_message(f"Health check failed: {str(e)}")
-        raise SystemExit(1)
 
 
 @core_app.async_command()
 async def status():
     """Show overall system status summary."""
     try:
-        from client.config import load_config
-        from sdk.ai_chatbot_sdk import AIChatbotSDK
-
-        config = load_config()
-        sdk = AIChatbotSDK(base_url=config.api_base_url, timeout=config.api_timeout)
-
         print("\nSystem Status:")
         print("==============")
         print("AI Chatbot Platform System Status")
@@ -302,44 +233,45 @@ async def status():
         print()
 
         try:
-            overview_response = await sdk.analytics.get_overview()
-            if overview_response and overview_response.get("success", False):
-                data = overview_response["data"]
+            sdk = await get_sdk()
 
-                print("System Overview:")
-                print("-" * 50)
-                print(f"{'Component':<15} {'Metric':<15} {'Value':<15}")
-                print("-" * 50)
+            response = await sdk.analytics.get_overview()
+            print("OIV", response)
+            print("System Overview:")
+            print("-" * 50)
+            print(f"{'Component':<15} {'Metric':<15} {'Value':<15}")
+            print("-" * 50)
 
-                users_data = data.get("users", {})
-                print(
-                    f"{'Users':<15} {'Total':<15} {str(users_data.get('total', 0)):<15}"
-                )
-                print(f"{'':<15} {'Active':<15} {str(users_data.get('active', 0)):<15}")
+            users_data = response.get("users", {})
+            print(
+                f"{'Users':<15} {'Total':<15} {str(users_data.get('total', 0)):<15}"
+            )
+            print(f"{'':<15} {'Active':<15} {str(users_data.get('active', 0)):<15}")
 
-                docs_data = data.get("documents", {})
-                print(
-                    f"{'Documents':<15} {'Total':<15} {str(docs_data.get('total', 0)):<15}"
-                )
-                print(
-                    f"{'':<15} {'Processed':<15} {str(docs_data.get('processed', 0)):<15}"
-                )
+            docs_data = response.get("documents", {})
+            print(
+                f"{'Documents':<15} {'Total':<15} {str(docs_data.get('total', 0)):<15}"
+            )
+            print(
+                f"{'':<15} {'Processed':<15} {str(docs_data.get('processed', 0)):<15}"
+            )
 
-                convs_data = data.get("conversations", {})
-                print(
-                    f"{'Conversations':<15} {'Total':<15} {str(convs_data.get('total', 0)):<15}"
-                )
+            convs_data = response.get("conversations", {})
+            print(
+                f"{'Conversations':<15} {'Total':<15} {str(convs_data.get('total', 0)):<15}"
+            )
 
-                health_data = data.get("system_health", {})
-                print(f"{'Health':<15} {'Score':<15} {health_data.get('score', 0)}/100")
-                print()
-            else:
-                info_message("Unable to retrieve system status from API")
+            health_data = response.get("system_health", {})
+            print(f"{'Health':<15} {'Score':<15} {health_data.get('score', 0)}/100")
+            print()
+        except ApiError as e:
+            error_message(f"Failed to get system status: {e.body['message']}")
         except Exception as e:
             error_message(f"Failed to get system status: {str(e)}")
+    except ApiError as e:
+        error_message(f"Status check failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Status check failed: {str(e)}")
-        raise SystemExit(1)
 
 
 @core_app.async_command()
@@ -349,34 +281,34 @@ async def quickstart():
     print("==========================================")
     print()
     print("1. Authentication:")
-    print("   • Login: python api_manage.py login")
-    print("   • Check status: python api_manage.py auth-status")
-    print("   • Logout: python api_manage.py logout")
+    print("   • Login: python manage.py login")
+    print("   • Check status: python manage.py auth-status")
+    print("   • Logout: python manage.py logout")
     print()
     print("2. User Management:")
-    print("   • List users: python api_manage.py users list")
-    print("   • Create user: python api_manage.py users create")
-    print("   • Show user details: python api_manage.py users show <id>")
+    print("   • List users: python manage.py users list")
+    print("   • Create user: python manage.py users create")
+    print("   • Show user details: python manage.py users show <id>")
     print()
     print("3. Document Management:")
-    print("   • List documents: python api_manage.py documents list")
-    print("   • Show document: python api_manage.py documents show <id>")
+    print("   • List documents: python manage.py documents list")
+    print("   • Show document: python manage.py documents show <id>")
     print()
     print("4. Conversation Management:")
-    print("   • List conversations: python api_manage.py conversations list")
-    print("   • Show conversation: python api_manage.py conversations show <id>")
+    print("   • List conversations: python manage.py conversations list")
+    print("   • Show conversation: python manage.py conversations show <id>")
     print()
     print("5. System Operations:")
-    print("   • Health check: python api_manage.py health")
-    print("   • System status: python api_manage.py status")
-    print("   • Configuration: python api_manage.py config")
+    print("   • Health check: python manage.py health")
+    print("   • System status: python manage.py status")
+    print("   • Configuration: python manage.py config")
     print()
     print("6. Analytics:")
-    print("   • Overview: python api_manage.py analytics overview")
-    print("   • Usage stats: python api_manage.py analytics usage")
+    print("   • Overview: python manage.py analytics overview")
+    print("   • Usage stats: python manage.py analytics usage")
     print()
     print("For more help on any command, add --help:")
-    print("   python api_manage.py <command> --help")
+    print("   python manage.py <command> --help")
     print()
 
 
@@ -431,13 +363,14 @@ async def config():
             )
         else:
             info_message(
-                "No authentication token found. Use 'python api_manage.py login' to authenticate."
+                "No authentication token found. Use 'python manage.py login' to authenticate."
             )
             admin_user = os.getenv("DEFAULT_ADMIN_USERNAME", "admin")
             info_message(f"Default admin username: {admin_user}")
 
+    except ApiError as e:
+        error_message(f"Failed to show configuration: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to show configuration: {str(e)}")
-        raise SystemExit(1)
 
 

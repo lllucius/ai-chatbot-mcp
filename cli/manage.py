@@ -48,5 +48,5 @@ if __name__ == "__main__":
         sys.exit(0)
     except Exception as e:
         print(f"CLI Error: {e}")
-        print("\nFor help, run: python api_manage.py --help")
+        print("\nFor help, run: python manage.py --help")
         sys.exit(1)

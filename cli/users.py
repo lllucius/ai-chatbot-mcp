@@ -4,7 +4,6 @@ This module provides comprehensive user account management functionality through
 async operations and the AI Chatbot SDK with full validation and security controls.
 """
 
-import traceback
 from typing import Optional
 
 from async_typer import AsyncTyper
@@ -46,48 +45,6 @@ async def create(
     User accounts are created with appropriate default settings and can be
     immediately activated for platform access. All creation operations are
     logged for audit and compliance purposes.
-
-    Args:
-        username (str): Unique username for the new account (alphanumeric, underscores, hyphens)
-        email (str): Valid email address for account notifications and recovery
-        password (Optional[str]): Account password. If not provided, will prompt securely
-        full_name (Optional[str]): Display name for the user account
-        superuser (bool): Whether to create account with administrative privileges
-
-    Security Notes:
-        - Passwords are prompted securely with masking if not provided
-        - Username and email uniqueness is validated server-side
-        - Superuser creation requires appropriate administrative privileges
-        - All account creation is logged for security audit trails
-
-    Performance Notes:
-        - Fast account creation with minimal API calls
-        - Efficient validation and error handling
-        - Non-blocking async operations for responsiveness
-        - Immediate feedback on account creation status
-
-    Use Cases:
-        - Onboarding new team members and users
-        - Creating administrative accounts for system management
-        - Bulk user provisioning for organizational setup
-        - Service account creation for automated systems
-        - Testing and development account creation
-
-    Example:
-        ```bash
-        # Interactive user creation
-        ai-chatbot users create john john@example.com
-
-        # Admin user with full details
-        ai-chatbot users create admin admin@example.com --full-name "System Admin" --superuser
-
-        # Automated user creation
-        ai-chatbot users create service service@example.com --password secret123
-        ```
-
-    Raises:
-        SystemExit: On validation errors, authentication failures, or creation conflicts
-
     """
     try:
         sdk = await get_sdk()
@@ -137,12 +94,9 @@ async def create(
                 error_message(f"Failed to promote user to superuser: {str(e)}")
 
     except ApiError as e:
-        error_message(f"Failed to create user: {e}")
-        raise SystemExit(1)
+        error_message(f"Failed to create user: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {e}")
-        traceback.print_exc()
-        raise SystemExit(1)
 
 
 @user_app.async_command()
@@ -210,12 +164,9 @@ async def list(
             info_message(f"Showing {len(users)} of {pagination.total} total users")
 
     except ApiError as e:
-        error_message(f"Failed to list users: {str(e)}")
-        raise SystemExit(1)
+        error_message(f"Failed to list users: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
-        traceback.print_exc()
-        raise SystemExit(1)
 
 
 @user_app.async_command()
@@ -249,12 +200,9 @@ async def show(
         display_key_value_pairs(user_info, f"User Details: {user.username}")
 
     except ApiError as e:
-        error_message(f"Failed to get user: {str(e)}")
-        raise SystemExit(1)
+        error_message(f"Failed to get user: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
-        traceback.print_exc()
-        raise SystemExit(1)
 
 
 @user_app.async_command()
@@ -278,9 +226,6 @@ async def stats():
         display_key_value_pairs(stats_info, "User Statistics")
 
     except ApiError as e:
-        error_message(f"Failed to get user statistics: {str(e)}")
-        raise SystemExit(1)
+        error_message(f"Failed to get user statistics: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
-        traceback.print_exc()
-        raise SystemExit(1)

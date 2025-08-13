@@ -248,8 +248,6 @@ async def get_status(
         message = "Processing status retrieved"
 
     payload = ProcessingStatusResponse(
-        success=True,
-        message=message,
         document_id=document_id,
         status=status_info.get("status"),
         chunk_count=status_info.get("chunk_count", 0),

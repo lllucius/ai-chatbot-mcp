@@ -9,9 +9,10 @@ from typing import Optional
 
 from async_typer import AsyncTyper
 from rich.console import Console
+from rich.table import Table
 from typer import Option
 
-from cli.base import error_message, get_sdk, success_message
+from cli.base import ApiError, error_message, get_sdk, success_message
 
 console = Console()
 
@@ -24,16 +25,15 @@ async def status():
     try:
         sdk = await get_sdk()
         data = await sdk.database.get_status()
-        if data:
-            from rich.table import Table
 
-            table = Table(title="Database Status")
-            for k, v in data.items():
-                table.add_row(str(k), str(v))
-            console.print(table)
+        table = Table(title="Database Status")
+        for k, v in data.items():
+            table.add_row(str(k), str(v))
+        console.print(table)
+    except ApiError as e:
+        error_message(f"Failed to get database status: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get database status: {str(e)}")
-        raise SystemExit(1)
 
 
 @database_app.async_command()
@@ -41,14 +41,12 @@ async def init():
     """Initialize the database."""
     try:
         sdk = await get_sdk()
-        resp = await sdk.database.init_database()
-        if getattr(resp, "success", False):
-            success_message("Database initialized successfully.")
-        else:
-            error_message(getattr(resp, "message", "Failed to initialize database"))
+        await sdk.database.init_database()
+        success_message("Database initialized successfully.")
+    except ApiError as e:
+        error_message(f"Failed to initialize database: {e.body['message']}")                           
     except Exception as e:
         error_message(f"Failed to initialize database: {str(e)}")
-        raise SystemExit(1)
 
 
 @database_app.async_command()
@@ -56,14 +54,12 @@ async def upgrade():
     """Run database migrations/upgrade."""
     try:
         sdk = await get_sdk()
-        resp = await sdk.database.upgrade()
-        if getattr(resp, "success", False):
-            success_message("Database upgraded successfully.")
-        else:
-            error_message(getattr(resp, "message", "Failed to upgrade database"))
+        await sdk.database.upgrade()
+        success_message("Database upgraded successfully.")
+    except ApiError as e:
+        error_message(f"Failed to upgrade database: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to upgrade database: {str(e)}")
-        raise SystemExit(1)
 
 
 @database_app.async_command()
@@ -73,14 +69,12 @@ async def backup(
     """Create database backup."""
     try:
         sdk = await get_sdk()
-        resp = await sdk.database.backup(output)
-        if getattr(resp, "success", False):
-            success_message("Database backup created successfully.")
-        else:
-            error_message(getattr(resp, "message", "Failed to create backup"))
+        response = await sdk.database.backup(output)
+        success_message(f"Database backup created successfully: {response.output_file}")
+    except ApiError as e:
+        error_message(f"Failed to create database backup: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to create database backup: {str(e)}")
-        raise SystemExit(1)
 
 
 @database_app.async_command()
@@ -89,19 +83,17 @@ async def tables():
     try:
         sdk = await get_sdk()
         data = await sdk.database.get_tables()
-        if data:
-            from rich.table import Table
-
-            tables = data.get("tables", [])
-            table = Table(title="Database Tables")
-            table.add_column("Table", style="cyan")
-            table.add_column("Rows", style="green")
-            for t in tables:
-                table.add_row(str(t.get("name", "")), str(t.get("count", 0)))
-            console.print(table)
+        tables = data.get("tables", [])
+        table = Table(title="Database Tables")
+        table.add_column("Table", style="cyan")
+        table.add_column("Rows", style="green")
+        for t in tables:
+            table.add_row(str(t.get("name", "")), str(t.get("count", 0)))
+        console.print(table)
+    except ApiError as e:
+        error_message(f"Failed to list tables: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to list tables: {str(e)}")
-        raise SystemExit(1)
 
 
 @database_app.async_command()
@@ -109,11 +101,9 @@ async def vacuum():
     """Vacuum the database."""
     try:
         sdk = await get_sdk()
-        resp = await sdk.database.vacuum()
-        if getattr(resp, "success", False):
-            success_message("Database vacuum completed successfully.")
-        else:
-            error_message(getattr(resp, "message", "Failed to vacuum database"))
+        await sdk.database.vacuum()
+        success_message("Database vacuum completed successfully.")
+    except ApiError as e:
+        error_message(f"Failed to vacuum database: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to vacuum database: {str(e)}")
-        raise SystemExit(1)

@@ -20,7 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModelDB
-from app.utils.timestamp import get_current_timestamp
+from app.utils.timestamp import utcnow
 
 if TYPE_CHECKING:
     from app.models.mcp_server import MCPServer
@@ -120,7 +120,7 @@ class MCPTool(BaseModelDB):
     def record_usage(self, success: bool, duration_ms: Optional[int] = None):
         """Record a tool usage event."""
         self.usage_count += 1
-        self.last_used_at = get_current_timestamp()
+        self.last_used_at = utcnow()
 
         if success:
             self.success_count += 1
@@ -136,6 +136,8 @@ class MCPTool(BaseModelDB):
                 self.average_duration_ms = int(
                     (total_duration + duration_ms) / self.usage_count
                 )
+        print(self)
+        print(dir(self))
 
     def __repr__(self) -> str:
         """Return string representation of MCPTool model."""

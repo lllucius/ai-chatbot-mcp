@@ -326,7 +326,7 @@ class OpenAIClient:
             full_content = ""
 
             async for chunk in stream:
-                # print("CHUNK", chunk)
+                print("CHUNK", chunk)
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     full_content += content
@@ -361,7 +361,7 @@ class OpenAIClient:
             yield {"type": "error", "error": str(e)}
 
     async def _execute_tool_calls(self, tool_calls) -> List[Dict[str, Any]]:
-        # try:
+        #try:
         print("TOOL_CALLS", tool_calls)
         tools = []
         for tool_call in tool_calls:
