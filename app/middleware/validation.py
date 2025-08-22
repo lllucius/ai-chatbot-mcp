@@ -9,8 +9,10 @@ import logging
 import re
 from typing import Any, Dict, List
 
-from fastapi import HTTPException, Request
-from pydantic import ValidationError
+from fastapi import Request
+from pydantic import ValidationError as PydanticValidationError
+
+from app.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +73,7 @@ class InputValidator:
         Example:
             is_valid = InputValidator.validate_email("user@example.com")
             if not is_valid:
-                raise HTTPException(400, "Invalid email format")
+                raise ValidationError("Invalid email format")
 
         """
         if not email or len(email) > 254:
@@ -278,7 +280,7 @@ async def validate_request_middleware(request: Request, call_next):
         # Check request size (basic DoS protection)
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > 50 * 1024 * 1024:  # 50MB limit
-            raise HTTPException(status_code=413, detail="Request too large")
+            raise ValidationError("Request too large")
 
         # Check for suspicious user agents (basic bot protection)
         user_agent = request.headers.get("user-agent", "")
@@ -289,12 +291,12 @@ async def validate_request_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
 
-    except ValidationError as e:
+    except PydanticValidationError as e:
         logger.warning(f"Request validation failed: {e}")
-        raise HTTPException(status_code=422, detail="Invalid request format")
+        raise ValidationError("Invalid request format")
     except Exception as e:
         logger.error(f"Request validation middleware error: {e}")
-        raise HTTPException(status_code=400, detail="Request validation failed")
+        raise ValidationError("Request validation failed")
 
 
 def validate_search_query(query: str) -> str:
@@ -307,24 +309,24 @@ def validate_search_query(query: str) -> str:
         str: Sanitized query
 
     Raises:
-        HTTPException: If query contains dangerous patterns
+        ValidationError: If query contains dangerous patterns
 
     """
     if not query:
-        raise HTTPException(status_code=400, detail="Search query cannot be empty")
+        raise ValidationError("Search query cannot be empty")
 
     if len(query) > 1000:
-        raise HTTPException(status_code=400, detail="Search query too long")
+        raise ValidationError("Search query too long")
 
     # Check for SQL injection
     if InputValidator.check_sql_injection(query):
         logger.warning(f"Potential SQL injection in search query: {query[:100]}")
-        raise HTTPException(status_code=400, detail="Invalid search query")
+        raise ValidationError("Invalid search query")
 
     # Check for XSS
     if InputValidator.check_xss(query):
         logger.warning(f"Potential XSS in search query: {query[:100]}")
-        raise HTTPException(status_code=400, detail="Invalid search query")
+        raise ValidationError("Invalid search query")
 
     return InputValidator.sanitize_string(query)
 
@@ -340,27 +342,26 @@ def validate_file_upload(
         allowed_types: List of allowed file extensions
 
     Raises:
-        HTTPException: If file validation fails
+        ValidationError: If file validation fails
 
     """
     if not filename:
-        raise HTTPException(status_code=400, detail="Filename cannot be empty")
+        raise ValidationError("Filename cannot be empty")
 
     # Sanitize filename
     filename = InputValidator.sanitize_string(filename)
 
     if not InputValidator.validate_filename(filename):
-        raise HTTPException(status_code=400, detail="Invalid filename format")
+        raise ValidationError("Invalid filename format")
 
     # Check file extension
     if "." not in filename:
-        raise HTTPException(status_code=400, detail="File must have an extension")
+        raise ValidationError("File must have an extension")
 
     extension = filename.split(".")[-1].lower()
     if extension not in allowed_types:
-        raise HTTPException(
-            status_code=400,
-            detail=f"File type '{extension}' not allowed. Allowed types: {', '.join(allowed_types)}",
+        raise ValidationError(
+            f"File type '{extension}' not allowed. Allowed types: {', '.join(allowed_types)}"
         )
 
     # Basic MIME type validation
@@ -388,18 +389,18 @@ def validate_message_content(content: str) -> str:
         str: Sanitized content
 
     Raises:
-        HTTPException: If content is invalid
+        ValidationError: If content is invalid
 
     """
     if not content or not content.strip():
-        raise HTTPException(status_code=400, detail="Message content cannot be empty")
+        raise ValidationError("Message content cannot be empty")
 
     if len(content) > 10000:  # 10KB limit
-        raise HTTPException(status_code=400, detail="Message too long")
+        raise ValidationError("Message too long")
 
     # Check for dangerous patterns
     if InputValidator.check_xss(content):
         logger.warning("Potential XSS in message content")
-        raise HTTPException(status_code=400, detail="Invalid message content")
+        raise ValidationError("Invalid message content")
 
     return InputValidator.sanitize_string(content, max_length=10000)

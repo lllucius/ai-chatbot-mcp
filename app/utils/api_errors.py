@@ -6,9 +6,9 @@ duplication across API endpoints and ensure consistent error responses.
 """
 
 import functools
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
-from fastapi import HTTPException, status
+from fastapi import status
 
 from app.core.exceptions import (
     AuthenticationError,
@@ -21,7 +21,7 @@ from app.core.exceptions import (
     ValidationError,
 )
 from app.core.logging import get_api_logger
-from app.utils.timestamp import get_current_timestamp
+from shared.schemas.common import ErrorResponse
 
 logger = get_api_logger("error_handler")
 
@@ -33,8 +33,8 @@ def handle_api_errors(
 ):
     """Standardize error handling across API endpoints.
 
-    This decorator converts application exceptions into appropriate HTTP
-    exceptions with consistent formatting and optional detailed logging.
+    This decorator converts application exceptions into appropriate RFC9457
+    formatted error responses with consistent formatting and optional detailed logging.
 
     Args:
         default_message: Default error message for unexpected exceptions
@@ -58,10 +58,6 @@ def handle_api_errors(
             try:
                 return await func(*args, **kwargs)
 
-            except HTTPException:
-                # Re-raise HTTPExceptions as they are already properly formatted
-                raise
-
             except ValidationError as e:
                 if log_errors:
                     logger.warning(
@@ -71,9 +67,11 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code="VALIDATION_ERROR",
+                    message=e.message,
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=e.message
+                    error_details=e.details if include_details else None,
                 )
 
             except AuthenticationError as e:
@@ -85,10 +83,11 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code="AUTHENTICATION_ERROR",
+                    message=e.message,
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=e.message,
-                    headers={"WWW-Authenticate": "Bearer"},
+                    error_details=e.details if include_details else None,
                 )
 
             except AuthorizationError as e:
@@ -100,9 +99,11 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code="AUTHORIZATION_ERROR",
+                    message=e.message,
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=e.message
+                    error_details=e.details if include_details else None,
                 )
 
             except NotFoundError as e:
@@ -114,9 +115,11 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code="NOT_FOUND_ERROR",
+                    message=e.message,
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=e.message
+                    error_details=e.details if include_details else None,
                 )
 
             except (DocumentError, SearchError) as e:
@@ -129,9 +132,11 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code=f"{type(e).__name__.upper().replace('ERROR', '')}_ERROR",
+                    message=e.message,
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=e.message
+                    error_details=e.details if include_details else None,
                 )
 
             except ExternalServiceError as e:
@@ -150,9 +155,11 @@ def handle_api_errors(
                     if "not available" in str(e).lower() or "timeout" in str(e).lower()
                     else status.HTTP_502_BAD_GATEWAY
                 )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code="EXTERNAL_SERVICE_ERROR",
+                    message=e.message,
                     status_code=status_code,
-                    detail=e.message
+                    error_details=e.details if include_details else None,
                 )
 
             except ChatbotPlatformException as e:
@@ -166,9 +173,11 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code=getattr(e, "error_code", "PLATFORM_ERROR"),
+                    message=getattr(e, "message", str(e)),
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=getattr(e, "message", str(e))
+                    error_details=e.details if include_details else None,
                 )
 
             except Exception as e:
@@ -183,85 +192,15 @@ def handle_api_errors(
                             "endpoint": func.__name__,
                         },
                     )
-                raise HTTPException(
+                return ErrorResponse.create(
+                    error_code="INTERNAL_SERVER_ERROR",
+                    message=default_message,
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=default_message,
                 )
 
         return wrapper
 
     return decorator
-
-
-def _format_error_response(
-    message: str,
-    error_code: str,
-    include_details: bool = False,
-    details: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    """Format consistent error response structure.
-
-    Args:
-        message: Human-readable error message
-        error_code: Machine-readable error code
-        include_details: Whether to include additional details
-        details: Additional error details
-
-    Returns:
-        dict: Formatted error response
-
-    """
-    response = {
-        "success": False,
-        "error_code": error_code,
-        "message": message,
-        "timestamp": get_current_timestamp(),
-    }
-
-    if include_details and details:
-        response["details"] = details
-
-    return response
-
-
-def create_success_response(
-    data: Any = None,
-    message: str = "Operation successful",
-    metadata: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    """Create standardized success response with structured data organization.
-
-    Generates consistent success response format for all API endpoints with
-    optional data payload and metadata support.
-
-    Args:
-        data: Primary response payload (optional)
-        message: Human-readable success message
-        metadata: Additional response metadata (optional)
-
-    Returns:
-        Dict containing success indicator, message, timestamp, and optional data/metadata
-
-    Example:
-        response = create_success_response(
-            data={"user_id": 123},
-            message="User created successfully"
-        )
-
-    """
-    response = {
-        "success": True,
-        "message": message,
-        "timestamp": get_current_timestamp(),
-    }
-
-    if data is not None:
-        response["data"] = data
-
-    if metadata:
-        response["metadata"] = metadata
-
-    return response
 
 
 def log_api_call(operation: str, **kwargs):

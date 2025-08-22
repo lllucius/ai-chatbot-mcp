@@ -8,7 +8,7 @@ for the AI Chatbot Platform.
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -30,7 +30,7 @@ from app.api import (
     users_router,
 )
 from app.config import settings
-from app.core.exceptions import ChatbotPlatformException
+from app.core.exceptions import ChatbotPlatformException, RateLimitError
 from app.core.logging import get_component_logger, setup_logging
 from app.database import close_db, init_db
 from app.middleware import (
@@ -44,6 +44,7 @@ from app.middleware.performance import start_system_monitoring
 from app.middleware.rate_limiting import start_rate_limiter_cleanup
 from app.utils.caching import start_cache_cleanup_task
 from app.utils.timestamp import get_current_timestamp
+from shared.schemas.common import ErrorResponse
 
 # Setup logging
 setup_logging()
@@ -290,31 +291,34 @@ async def chatbot_platform_exception_handler(
     )
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    """Handle HTTP exceptions with consistent format and preserve headers."""
+@app.exception_handler(RateLimitError)
+async def rate_limit_exception_handler(request: Request, exc: RateLimitError) -> JSONResponse:
+    """Handle rate limit exceptions."""
     logger.warning(
-        f"HTTP error {exc.status_code}: {exc.detail}",
+        f"Rate limit exceeded: {exc.message}",
         extra={
-            "status_code": exc.status_code,
             "path": request.url.path,
             "method": request.method,
+            "details": exc.details,
         },
     )
 
-    # Preserve any headers from the original exception (e.g., Retry-After for rate limiting)
-    headers = getattr(exc, "headers", None) or {}
+    headers = {}
+    if exc.details and "retry_after" in exc.details:
+        headers["Retry-After"] = str(exc.details["retry_after"])
 
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "success": False,
-            "error_code": f"HTTP_{exc.status_code}",
-            "message": exc.detail,
-            "timestamp": get_current_timestamp(),
-        },
-        headers=headers,
+    response = ErrorResponse.create(
+        error_code="RATE_LIMIT_EXCEEDED",
+        message=exc.message,
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        error_details=exc.details,
     )
+
+    # Add headers to the response
+    if headers:
+        response.headers.update(headers)
+
+    return response
 
 
 @app.exception_handler(Exception)
@@ -333,14 +337,10 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
     # Don't expose internal error details in production
     error_message = str(exc) if settings.debug else "Internal server error"
 
-    return JSONResponse(
+    return ErrorResponse.create(
+        error_code="INTERNAL_SERVER_ERROR",
+        message=error_message,
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "success": False,
-            "error_code": "INTERNAL_SERVER_ERROR",
-            "message": error_message,
-            "timestamp": get_current_timestamp(),
-        },
     )
 
 

@@ -11,9 +11,10 @@ import time
 from collections import defaultdict
 from typing import Dict, Optional
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request
 
 from app.config import settings
+from app.core.exceptions import RateLimitError
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +134,7 @@ async def rate_limit_middleware(request: Request, call_next):
         Response: The HTTP response from the downstream handler when rate limits allow
 
     Raises:
-        HTTPException: Raised when rate limits are exceeded (429 Too Many Requests)
+        RateLimitError: Raised when rate limits are exceeded (429 Too Many Requests)
 
     """
     # Get client identifier
@@ -157,10 +158,9 @@ async def rate_limit_middleware(request: Request, call_next):
     if not is_allowed:
         logger.warning(f"Rate limit exceeded for client {client_id} on path {path}")
 
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Rate limit exceeded",
-            headers={"Retry-After": str(retry_after)} if retry_after else {},
+        raise RateLimitError(
+            "Rate limit exceeded",
+            details={"retry_after": retry_after} if retry_after else None
         )
 
     response = await call_next(request)
