@@ -4,11 +4,12 @@ import os
 import subprocess
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.core.exceptions import ExternalServiceError, NotFoundError, ValidationError
 from app.database import get_db, get_session
 from app.dependencies import get_current_superuser
 from app.models.user import User
@@ -265,10 +266,7 @@ async def upgrade_database(
         )
 
         if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Migration failed: {result.stderr}",
-            )
+            raise ExternalServiceError(f"Migration failed: {result.stderr}")
 
         payload = DatabaseUpgradeResult(
             output=result.stdout,
@@ -280,10 +278,7 @@ async def upgrade_database(
             data=payload,
         )
     except subprocess.SubprocessError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Migration execution failed: {str(e)}",
-        )
+        raise ExternalServiceError(f"Migration execution failed: {str(e)}")
     except Exception:
         raise
 
@@ -307,10 +302,7 @@ async def downgrade_database(
         )
 
         if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Downgrade failed: {result.stderr}",
-            )
+            raise ExternalServiceError(f"Downgrade failed: {result.stderr}")
 
         payload = DatabaseDowngradeResult(
             output=result.stdout,
@@ -322,10 +314,7 @@ async def downgrade_database(
             data=payload,
         )
     except subprocess.SubprocessError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Downgrade execution failed: {str(e)}",
-        )
+        raise ExternalServiceError(f"Downgrade execution failed: {str(e)}")
     except Exception:
         raise
 
@@ -380,10 +369,7 @@ async def create_database_backup(
         result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
         if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Backup failed: {result.stderr}",
-            )
+            raise ExternalServiceError(f"Backup failed: {result.stderr}")
 
         # Get file size
         file_size = os.path.getsize(output_file) if os.path.exists(output_file) else 0
@@ -414,10 +400,7 @@ async def restore_database(
     )
 
     if not os.path.exists(backup_file):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Backup file not found: {backup_file}",
-        )
+        raise NotFoundError(f"Backup file not found: {backup_file}")
 
     try:
         # Parse database URL
@@ -450,10 +433,7 @@ async def restore_database(
         result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
         if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Restore failed: {result.stderr}",
-            )
+            raise ExternalServiceError(f"Restore failed: {result.stderr}")
 
         payload = DatabaseRestoreResult(
             message=f"Database restored successfully from {backup_file}",
@@ -668,18 +648,12 @@ async def execute_custom_query(
 
     # Only allow SELECT queries for safety
     if not query_upper.startswith("SELECT"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only SELECT queries are allowed for safety reasons",
-        )
+        raise ValidationError("Only SELECT queries are allowed for safety reasons")
 
     # Check for dangerous keywords in comments or strings
     for keyword in dangerous_keywords:
         if keyword in query_upper:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Query contains potentially dangerous keyword: {keyword}",
-            )
+            raise ValidationError(f"Query contains potentially dangerous keyword: {keyword}")
 
     try:
         # Add LIMIT if not present
