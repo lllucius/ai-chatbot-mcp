@@ -11,7 +11,7 @@ from async_typer import AsyncTyper
 from rich.console import Console
 from typer import Option
 
-from cli.base import error_message, get_sdk, success_message, ApiError
+from cli.base import ApiError, error_message, get_sdk, success_message
 
 console = Console()
 

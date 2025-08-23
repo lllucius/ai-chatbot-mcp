@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -458,8 +458,6 @@ async def readiness_check(
             message="Application is ready to serve traffic",
             data=payload,
         )
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
         payload = ReadinessComponentsPayload(

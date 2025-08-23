@@ -244,7 +244,7 @@ async def validate_request_middleware(request: Request, call_next):
             - Request metadata enhanced with validation results and security context
 
     Raises:
-        HTTPException: Raised for validation failures with specific error codes:
+        ValidationError: Raised for validation failures with specific error codes:
             - 413 Payload Too Large: For oversized requests exceeding configured limits
             - 422 Unprocessable Entity: For malformed request structure and invalid data
             - 400 Bad Request: For general validation failures and security violations

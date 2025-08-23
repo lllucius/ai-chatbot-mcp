@@ -2,8 +2,9 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 
+from app.core.exceptions import NotFoundError, ValidationError
 from app.dependencies import get_current_superuser, get_current_user, get_prompt_service
 from app.models.user import User
 from app.services.prompt_service import PromptService
@@ -75,10 +76,7 @@ async def get_prompt_details(
     prompt = await prompt_service.get_prompt(prompt_name)
 
     if not prompt:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Prompt '{prompt_name}' not found",
-        )
+        raise NotFoundError(f"Prompt '{prompt_name}' not found")
 
     payload = PromptResponse.model_validate(prompt)
     return APIResponse[PromptResponse](
@@ -168,16 +166,10 @@ async def activate_prompt(
     try:
         prompt = await prompt_service.get_prompt(prompt_name)
         if not prompt:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Prompt not found"
-            )
+            raise NotFoundError("Prompt not found")
 
         if prompt.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Prompt is already active"
-            )
+            raise ValidationError("Prompt is already active")
 
         # Activate prompt
         prompt.is_active = True
@@ -187,8 +179,6 @@ async def activate_prompt(
             success=True,
             message=f"Prompt {prompt.name} activated successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await prompt_service.db.rollback()
         raise
@@ -207,16 +197,10 @@ async def deactivate_prompt(
     try:
         prompt = await prompt_service.get_prompt(prompt_name)
         if not prompt:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                ail="Prompt not found"
-            )
+            raise NotFoundError("Prompt not found")
 
         if not prompt.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Prompt is already inactive",
-            )
+            raise ValidationError("Prompt is already inactive")
 
         # Deactivate prompt
         prompt.is_active = False
@@ -226,8 +210,6 @@ async def deactivate_prompt(
             success=True,
             message=f"Prompt {prompt.name} deactivated successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await prompt_service.db.rollback()
         raise
@@ -270,10 +252,7 @@ async def set_default_prompt(
     success = await prompt_service.set_default_prompt(prompt_name)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Prompt '{prompt_name}' not found",
-        )
+        raise NotFoundError(f"Prompt '{prompt_name}' not found")
 
     return APIResponse(
         success=True,

@@ -41,7 +41,7 @@ Use Cases:
 - Integration with external systems requiring specific timestamp formats and standards
 """
 
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime, timezone
 from typing import Union
 
 
