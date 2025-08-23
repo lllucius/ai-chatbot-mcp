@@ -2,10 +2,15 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import (
+    AuthenticationError,
+    NotFoundError,
+    ValidationError,
+)
 from app.database import get_db
 from app.dependencies import get_current_superuser, get_current_user, get_user_service
 from app.models.user import User
@@ -15,7 +20,6 @@ from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.auth import PasswordResetConfirm, PasswordResetRequest
 from shared.schemas.common import (
     APIResponse,
-    ErrorResponse,
     PaginatedResponse,
     PaginationParams,
 )
@@ -80,10 +84,7 @@ async def change_password(
         current_user.id, request.current_password, request.new_password
     )
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_401_FORBIDDEN,
-            detail="Current password is incorrect",
-        )
+        raise AuthenticationError("Current password is incorrect")
     return APIResponse(
         success=True,
         message="Password changed successfully",
@@ -242,17 +243,11 @@ async def delete_user(
 
     # Prevent self-deletion
     if user_id == current_user.id:
-        return ErrorResponse.create(
-            error_code="SELF_DELETION_FORBIDDEN",
-            message="Cannot delete your own account",
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        raise ValidationError("Cannot delete your own account")
 
     success = await user_service.delete_user(user_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise NotFoundError("User not found")
 
     return APIResponse(
         success=True,
@@ -275,16 +270,10 @@ async def promote_user_to_superuser(
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
-            )
+            raise NotFoundError("User not found")
 
         if user.is_superuser:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is already a superuser",
-            )
+            raise ValidationError("User is already a superuser")
 
         # Promote user
         user.is_superuser = True
@@ -294,8 +283,6 @@ async def promote_user_to_superuser(
             success=True,
             message=f"User {user.username} promoted to superuser successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await user_service.db.rollback()
         raise
@@ -315,22 +302,15 @@ async def demote_user_from_superuser(
 
     # Prevent self-demotion
     if current_user.id == user_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot demote yourself"
-        )
+        raise ValidationError("Cannot demote yourself")
 
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise NotFoundError("User not found")
 
         if not user.is_superuser:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is not a superuser",
-            )
+            raise ValidationError("User is not a superuser")
 
         # Demote user
         user.is_superuser = False
@@ -340,8 +320,6 @@ async def demote_user_from_superuser(
             success=True,
             message=f"User {user.username} demoted from superuser successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await user_service.db.rollback()
         raise
@@ -362,14 +340,10 @@ async def activate_user_account(
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise NotFoundError("User not found")
 
         if user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="User is already active"
-            )
+            raise ValidationError("User is already active")
 
         # Activate user
         user.is_active = True
@@ -379,8 +353,6 @@ async def activate_user_account(
             success=True,
             message=f"User {user.username} activated successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await user_service.db.rollback()
         raise
@@ -400,22 +372,15 @@ async def deactivate_user_account(
 
     # Prevent self-deactivation
     if current_user.id == user_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot deactivate yourself"
-        )
+        raise ValidationError("Cannot deactivate yourself")
 
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise NotFoundError("User not found")
 
         if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is already inactive",
-            )
+            raise ValidationError("User is already inactive")
 
         # Deactivate user
         user.is_active = False
@@ -425,8 +390,6 @@ async def deactivate_user_account(
             success=True,
             message=f"User {user.username} deactivated successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await user_service.db.rollback()
         raise
@@ -450,17 +413,11 @@ async def admin_reset_user_password(
     try:
         user = await user_service.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
-            )
+            raise NotFoundError("User not found")
 
         # Validate password strength
         if len(new_password) < 8:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Password must be at least 8 characters long",
-            )
+            raise ValidationError("Password must be at least 8 characters long")
 
         # Update password
         await user_service.update_user_password(user_id, new_password)
@@ -469,8 +426,6 @@ async def admin_reset_user_password(
             success=True,
             message=f"Password reset successfully for user {user.username}",
         )
-    except HTTPException:
-        raise
     except Exception:
         raise
 

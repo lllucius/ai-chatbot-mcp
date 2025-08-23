@@ -10,7 +10,7 @@ from typing import Optional
 from async_typer import AsyncTyper
 from typer import Argument, Option
 
-from cli.base import error_message, format_timestamp, get_sdk, success_message, ApiError
+from cli.base import ApiError, error_message, format_timestamp, get_sdk, success_message
 
 conversation_app = AsyncTyper(
     help="Conversation management commands", rich_markup_mode=None

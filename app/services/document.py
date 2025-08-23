@@ -252,7 +252,7 @@ class DocumentService(BaseService):
         """Get document processing status including background task information."""
         try:
             await self._ensure_db_session()
-            
+
             # Get document
             document = await self.get_document_by_id(document_id)
             if not document:

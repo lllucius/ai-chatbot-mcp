@@ -6,6 +6,7 @@ all CLI operations and administrative tasks.
 """
 
 import tracemalloc
+
 tracemalloc.start()
 
 import getpass
@@ -216,7 +217,7 @@ async def health():
         else:
             warning_message("Some components need attention. Check the results above.")
     except ApiError as e:
-        error_message(f"Health check failed: {e.body['message']}")                               
+        error_message(f"Health check failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Health check failed: {str(e)}")
 

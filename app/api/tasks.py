@@ -4,15 +4,16 @@ import json
 from datetime import timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ExternalServiceError, ValidationError
 from app.database import get_db
 from app.dependencies import get_current_superuser, get_current_user
 from app.models.user import User
 from app.utils.api_errors import handle_api_errors, log_api_call
 from app.utils.timestamp import utcnow
-from shared.schemas.common import APIResponse, ErrorResponse
+from shared.schemas.common import APIResponse
 from shared.schemas.task import (
     ActiveTaskInfo,
     ActiveTasksData,
@@ -39,10 +40,7 @@ def get_celery_app():
 
         return celery_app
     except ImportError:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Celery is not configured or available",
-        )
+        raise ExternalServiceError("Celery is not configured or available")
 
 
 @router.get("/status", response_model=APIResponse[TaskSystemStatusData])
@@ -315,11 +313,7 @@ async def schedule_task(
             task_args = json.loads(args)
             task_kwargs = json.loads(kwargs)
         except json.JSONDecodeError as e:
-            return ErrorResponse.create(
-                error_code="INVALID_JSON_ARGUMENTS",
-                message=f"Invalid JSON in arguments: {str(e)}",
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
+            raise ValidationError(f"Invalid JSON in arguments: {str(e)}")
 
         celery_app = get_celery_app()
 

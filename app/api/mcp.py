@@ -2,9 +2,10 @@
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError
 from app.database import get_db
 from app.dependencies import get_current_superuser, get_mcp_service
 from app.models.user import User
@@ -16,11 +17,11 @@ from shared.schemas.mcp import (
     MCPServerCreateSchema,
     MCPServerSchema,
     MCPServerUpdateSchema,
+    MCPToolExecutionRequestSchema,
+    MCPToolExecutionResultSchema,
     MCPToolResponse,
     MCPToolsResponse,
     MCPToolUsageStatsSchema,
-    MCPToolExecutionRequestSchema,
-    MCPToolExecutionResultSchema,
 )
 
 router = APIRouter(tags=["mcp"])
@@ -94,10 +95,7 @@ async def get_server(
     server = await mcp_service.get_server(server_name)
 
     if not server:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP server '{server_name}' not found",
-        )
+        raise NotFoundError(f"MCP server '{server_name}' not found")
 
     payload = MCPServerSchema.model_validate(server)
     return APIResponse[MCPServerSchema](
@@ -123,10 +121,7 @@ async def update_server(
 
     server = await mcp_service.update_server(server_name, server_update)
     if not server:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP server '{server_name}' not found",
-        )
+        raise NotFoundError(f"MCP server '{server_name}' not found")
 
     payload = MCPServerSchema.model_validate(server)
     return APIResponse[MCPServerSchema](
@@ -149,10 +144,7 @@ async def delete_server(
 
     deleted = await mcp_service.delete_server(server_name)
     if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP server '{server_name}' not found",
-        )
+        raise NotFoundError(f"MCP server '{server_name}' not found")
     return APIResponse(
         success=True,
         message=f"MCP server '{server_name}' deleted successfully",
@@ -202,10 +194,7 @@ async def enable_tool(
     success = await mcp_service.enable_tool(tool_name)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP tool '{tool_name}' not found",
-        )
+        raise NotFoundError(f"MCP tool '{tool_name}' not found")
 
     return APIResponse(
         success=True, message=f"MCP tool '{tool_name}' enabled successfully"
@@ -226,10 +215,7 @@ async def disable_tool(
     success = await mcp_service.disable_tool(tool_name)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MCP tool '{tool_name}' not found",
-        )
+        raise NotFoundError(f"MCP tool '{tool_name}' not found")
 
     return APIResponse(
         success=True, message=f"MCP tool '{tool_name}' disabled successfully"
@@ -273,10 +259,7 @@ async def get_tool_details(
     tool = await mcp_service.get_tool(tool_name)
 
     if not tool:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tool '{tool_name}' not found",
-        )
+        raise NotFoundError(f"Tool '{tool_name}' not found")
 
     payload = MCPToolsResponse.model_validate(tool)
     return APIResponse[MCPToolsResponse](

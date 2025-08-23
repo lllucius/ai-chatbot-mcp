@@ -7,7 +7,6 @@ text extraction, and vector embedding generation.
 """
 
 import os
-
 from typing import Optional
 
 from async_typer import AsyncTyper

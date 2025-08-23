@@ -83,7 +83,7 @@ async def validation_middleware(request: Request, call_next) -> Response:
         Response: The HTTP response from the downstream handler after validation
 
     Raises:
-        HTTPException: Raised for validation failures with appropriate status codes
+        ValidationError: Raised for validation failures with appropriate status codes
             (400, 413, 415, 422)
 
     """
@@ -106,7 +106,7 @@ async def rate_limiting_middleware(request: Request, call_next) -> Response:
             or 429 Too Many Requests when rate limits are exceeded
 
     Raises:
-        HTTPException: Raised when rate limits are exceeded (429 Too Many Requests)
+        RateLimitError: Raised when rate limits are exceeded (429 Too Many Requests)
 
     """
     return await _rate_limit_middleware(request, call_next)

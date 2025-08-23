@@ -44,7 +44,7 @@ async def init():
         await sdk.database.init_database()
         success_message("Database initialized successfully.")
     except ApiError as e:
-        error_message(f"Failed to initialize database: {e.body['message']}")                           
+        error_message(f"Failed to initialize database: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to initialize database: {str(e)}")
 

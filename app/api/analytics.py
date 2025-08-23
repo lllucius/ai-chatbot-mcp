@@ -2,9 +2,10 @@
 
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ValidationError
 from app.database import get_db
 from app.dependencies import get_current_superuser, get_current_user
 from app.models.user import User
@@ -119,9 +120,7 @@ async def get_usage_statistics(
     period_map = {"1d": 1, "7d": 7, "30d": 30, "90d": 90}
 
     if period not in period_map:
-        raise HTTPException(
-            status_code=400, detail="Invalid period. Use: 1d, 7d, 30d, or 90d"
-        )
+        raise ValidationError("Invalid period. Use: 1d, 7d, 30d, or 90d")
 
     days = period_map[period]
     start_date = utcnow() - timedelta(days=days)
@@ -286,9 +285,7 @@ async def get_user_analytics(
     # Parse period
     period_map = {"7d": 7, "30d": 30, "90d": 90}
     if period not in period_map:
-        raise HTTPException(
-            status_code=400, detail="Invalid period. Use: 7d, 30d, or 90d"
-        )
+        raise ValidationError("Invalid period. Use: 7d, 30d, or 90d")
 
     days = period_map[period]
     start_date = utcnow() - timedelta(days=days)
@@ -343,10 +340,7 @@ async def get_user_analytics(
             .limit(top)
         )
     else:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid metric. Use: messages, documents, or conversations",
-        )
+        raise ValidationError("Invalid metric. Use: messages, documents, or conversations")
 
     result = await db.execute(query)
     top_users = [
@@ -473,9 +467,7 @@ async def export_analytics_report(
     log_api_call("export_analytics_report", user_id=str(current_user.id))
 
     if format != "json":
-        raise HTTPException(
-            status_code=400, detail="Only JSON format is currently supported"
-        )
+        raise ValidationError("Only JSON format is currently supported")
 
     # Gather all analytics data
     overview_data_resp = await get_system_overview(current_user, db)

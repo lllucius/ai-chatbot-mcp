@@ -5,11 +5,12 @@ import time
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.database import AsyncSessionLocal, get_db
 from app.dependencies import (
     get_conversation_service,
@@ -471,16 +472,11 @@ async def export_conversation(
     # Get conversation with permission check
     conversation = await conversation_service.get_conversation(conversation_id, current_user.id)
     if not conversation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
-        )
+        raise NotFoundError("Conversation not found")
 
     # Check permissions
     if conversation.user_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this conversation",
-        )
+        raise AuthorizationError("Access denied to this conversation")
 
     # Get messages
     messages_query = (
@@ -637,10 +633,7 @@ async def export_conversation(
         )
 
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid export format. Use: json, txt, or csv",
-        )
+        raise ValidationError("Invalid export format. Use: json, txt, or csv")
 
 
 @router.post(
@@ -659,37 +652,25 @@ async def import_conversation(
     try:
         # Validate file type
         if not file.filename.endswith(".json"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only JSON files are supported for import",
-            )
+            raise ValidationError("Only JSON files are supported for import")
 
         # Read and parse file
         content = await file.read()
         try:
             data = json.loads(content.decode("utf-8"))
         except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid JSON format: {str(e)}",
-            )
+            raise ValidationError(f"Invalid JSON format: {str(e)}")
 
         # Validate data structure
         if "messages" not in data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid conversation format: missing 'messages' field",
-            )
+            raise ValidationError("Invalid conversation format: missing 'messages' field")
 
         # Extract conversation info
         conversation_data = data.get("conversation", {})
         messages_data = data["messages"]
 
         if not messages_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No messages found in import file",
-            )
+            raise ValidationError("No messages found in import file")
 
         # Create new conversation
         conv_title = title or conversation_data.get(
@@ -748,8 +729,6 @@ async def import_conversation(
             data=result,
         )
 
-    except HTTPException:
-        raise
     except Exception:
         await conversation_service.db.rollback()
         raise
@@ -899,19 +878,13 @@ async def search_conversations_and_messages(
                 date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
                 filters.append(Conversation.created_at >= date_from_obj)
             except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date_from format. Use YYYY-MM-DD",
-                )
+                raise ValidationError("Invalid date_from format. Use YYYY-MM-DD")
         if date_to:
             try:
                 date_to_obj = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
                 filters.append(Conversation.created_at < date_to_obj)
             except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date_to format. Use YYYY-MM-DD",
-                )
+                raise ValidationError("Invalid date_to format. Use YYYY-MM-DD")
 
         if filters:
             base_query = base_query.where(and_(*filters))
@@ -1006,8 +979,6 @@ async def search_conversations_and_messages(
             data=payload,
         )
 
-    except HTTPException:
-        raise
     except Exception:
         raise
 

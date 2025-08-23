@@ -2,8 +2,9 @@
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 
+from app.core.exceptions import NotFoundError, ValidationError
 from app.dependencies import (
     get_current_superuser,
     get_current_user,
@@ -108,10 +109,7 @@ async def get_profile_details(
     )
     profile = await profile_service.get_profile(profile_name)
     if not profile:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Profile '{profile_name}' not found",
-        )
+        raise NotFoundError(f"Profile '{profile_name}' not found")
     payload = LLMProfileResponse.model_validate(profile)
     return APIResponse[LLMProfileResponse](
         success=True,
@@ -138,10 +136,7 @@ async def update_profile(
     )
 
     if not updated_profile:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Profile '{profile_name}' not found",
-        )
+        raise NotFoundError(f"Profile '{profile_name}' not found")
     payload = LLMProfileResponse.model_validate(updated_profile)
     return APIResponse[LLMProfileResponse](
         success=True,
@@ -165,14 +160,11 @@ async def delete_profile(
     success = await profile_service.delete_profile(profile_name)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Profile '{profile_name}' not found",
-        )
+        raise NotFoundError(f"Profile '{profile_name}' not found")
 
     return APIResponse(
         success=True,
-        message=f"Profile '{profile_name}' set as default",
+        message=f"Profile '{profile_name}' deleted successfully",
     )
 
 
@@ -192,10 +184,7 @@ async def set_default_profile(
     success = await profile_service.set_default_profile(profile_name)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Profile '{profile_name}' not found",
-        )
+        raise NotFoundError(f"Profile '{profile_name}' not found")
 
     return APIResponse(success=True, message=f"Profile '{profile_name}' set as default")
 
@@ -210,10 +199,7 @@ async def get_default_profile(
     log_api_call("get_default_profile", user_id=current_user.id)
     profile = await profile_service.get_default_profile()
     if not profile:
-        raise HTTPException(
-            status_code=404,
-            detail="Default profile not set",
-        )
+        raise NotFoundError("Default profile not set")
     payload = LLMProfileResponse.model_validate(profile)
     return APIResponse[LLMProfileResponse](
         success=True,
@@ -235,16 +221,10 @@ async def activate_profile(
     try:
         profile = await profile_service.get_profile(profile_name)
         if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Profile not found"
-            )
+            raise NotFoundError("Profile not found")
 
         if profile.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Profile is already active"
-            )
+            raise ValidationError("Profile is already active")
 
         # Activate profile
         profile.is_active = True
@@ -254,8 +234,6 @@ async def activate_profile(
             success=True,
             message=f"Profile {profile.name} activated successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await profile_service.db.rollback()
         raise
@@ -274,16 +252,10 @@ async def deactivate_profile(
     try:
         profile = await profile_service.get_profile(profile_name)
         if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                ail="Profile not found"
-            )
+            raise NotFoundError("Profile not found")
 
         if not profile.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Profile is already inactive",
-            )
+            raise ValidationError("Profile is already inactive")
 
         # Deactivate profile
         profile.is_active = False
@@ -293,8 +265,6 @@ async def deactivate_profile(
             success=True,
             message=f"Profile {profile.name} deactivated successfully",
         )
-    except HTTPException:
-        raise
     except Exception:
         await profile_service.db.rollback()
         raise
