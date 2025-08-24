@@ -212,6 +212,48 @@ async def delete_conversation(
 
 
 @router.get(
+    "/{conversation_id}/messages",
+)
+@handle_api_errors("Failed to retrieve messages")
+async def get_conversation_messages(
+    conversation_id: int,
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    conversation_service: ConversationService = Depends(get_conversation_service),
+) -> APIResponse[PaginatedResponse[MessageResponse]]:
+    """Get paginated messages from a conversation (alternative endpoint pattern)."""
+    log_api_call(
+        "get_conversation_messages",
+        user_id=str(current_user.id),
+        conversation_id=str(conversation_id),
+        page=page,
+        size=size,
+    )
+
+    messages, total = await conversation_service.get_messages(
+        conversation_id, current_user.id, page=page, size=size
+    )
+
+    message_responses = [MessageResponse.model_validate(msg) for msg in messages]
+
+    payload = PaginatedResponse(
+        items=message_responses,
+        pagination=PaginationParams(
+            total=total,
+            page=page,
+            per_page=size,
+        ),
+    )
+
+    return APIResponse[PaginatedResponse[MessageResponse]](
+        success=True,
+        message="Messages retrieved successfully",
+        data=payload,
+    )
+
+
+@router.get(
     "/byid/{conversation_id}/messages",
     response_model=APIResponse[List[MessageResponse]],
 )

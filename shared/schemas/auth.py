@@ -19,6 +19,7 @@ Authentication Schemas:
 - Token: JWT token response with expiration and metadata management
 - PasswordResetRequest: Password reset initiation with email validation
 - PasswordResetConfirm: Password reset completion with strength validation
+- APIKeyResponse: API key information for external integrations
 
 Security Features:
 - Password strength validation with complexity requirements
@@ -61,6 +62,7 @@ Security Standards:
 """
 
 import re
+from datetime import datetime
 from typing import Optional
 
 from pydantic import EmailStr, Field, field_validator
@@ -649,5 +651,61 @@ class PasswordResetConfirm(BaseSchema):
     model_config = {
         "json_schema_extra": {
             "example": {"token": "reset_token_here", "new_password": "NewSecurePass123"}
+        }
+    }
+
+
+class APIKeyResponse(BaseSchema):
+    """Schema for API key information response.
+    
+    Provides secure API key information for external integrations and
+    automated systems. Includes key metadata and usage tracking without
+    exposing sensitive key values.
+    
+    Security Features:
+        - Masked key display for security (shows only prefix/suffix)
+        - Creation and expiration tracking for lifecycle management
+        - Usage statistics for monitoring and analysis
+        - Administrative metadata for key management
+        - Status tracking for active/inactive keys
+    
+    Key Management:
+        - Unique key identification for administrative operations
+        - Creation timestamp for audit and tracking
+        - Expiration handling for automatic key rotation
+        - Usage tracking for security monitoring
+        - Administrative controls for key lifecycle
+    
+    Use Cases:
+        - API key listing for user dashboard display
+        - Administrative key management and oversight
+        - Security monitoring and usage analysis
+        - Key rotation and lifecycle management
+        - Integration management and troubleshooting
+    """
+    
+    id: str = Field(..., description="Unique API key identifier")
+    name: str = Field(..., description="Human-readable key name")
+    key_prefix: str = Field(..., description="First 8 characters of the key for identification")
+    created_at: datetime = Field(..., description="Key creation timestamp")
+    expires_at: Optional[datetime] = Field(None, description="Key expiration timestamp")
+    last_used_at: Optional[datetime] = Field(None, description="Last usage timestamp")
+    usage_count: int = Field(default=0, description="Total usage count")
+    is_active: bool = Field(default=True, description="Whether the key is active")
+    permissions: list[str] = Field(default_factory=list, description="Key permissions/scopes")
+    
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "key_123456",
+                "name": "My Integration Key",
+                "key_prefix": "sk_live_",
+                "created_at": "2023-01-01T00:00:00Z",
+                "expires_at": "2024-01-01T00:00:00Z",
+                "last_used_at": "2023-12-01T12:00:00Z",
+                "usage_count": 150,
+                "is_active": True,
+                "permissions": ["read", "write"]
+            }
         }
     }

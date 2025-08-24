@@ -16,9 +16,11 @@ from fastapi.responses import JSONResponse
 
 # Import API routers
 from app.api import (
+    ab_testing_router,
     analytics_router,
     auth_router,
     conversations_router,
+    data_management_router,
     database_router,
     documents_router,
     health_router,
@@ -27,6 +29,7 @@ from app.api import (
     prompts_router,
     search_router,
     tasks_router,
+    toolserver_router,
     users_router,
 )
 from app.config import settings
@@ -345,11 +348,13 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # API Routes
+app.include_router(ab_testing_router, prefix="/api/v1/ab-testing", tags=["ab-testing"])
 app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(
     conversations_router, prefix="/api/v1/conversations", tags=["conversations"]
 )
+app.include_router(data_management_router, prefix="/api/v1/data-management", tags=["data-management"])
 app.include_router(database_router, prefix="/api/v1/database", tags=["database"])
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
 app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
@@ -358,6 +363,7 @@ app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"]
 app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(tasks_router, prefix="/api/v1/tasks", tags=["tasks"])
+app.include_router(toolserver_router, prefix="/api/v1/toolserver", tags=["tool-servers"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 
 

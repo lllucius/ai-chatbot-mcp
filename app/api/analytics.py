@@ -455,6 +455,66 @@ async def get_usage_trends(
     )
 
 
+@router.get("/users/{user_id}", response_model=APIResponse[dict])
+@handle_api_errors("Failed to get user analytics")
+async def get_user_analytics_by_id(
+    user_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[dict]:
+    """Get detailed analytics for a specific user."""
+    log_api_call("get_user_analytics_by_id", user_id=str(current_user.id), target_user_id=user_id)
+    
+    from sqlalchemy import func, select
+    from app.models.conversation import Conversation, Message
+    from app.models.document import Document
+    from app.models.user import User as UserModel
+    
+    # Get user
+    user_result = await db.execute(select(UserModel).where(UserModel.id == int(user_id)))
+    user = user_result.scalar_one_or_none()
+    
+    if not user:
+        raise ValidationError("User not found")
+    
+    # Get user analytics
+    total_conversations = await db.scalar(
+        select(func.count(Conversation.id)).where(Conversation.user_id == int(user_id))
+    )
+    
+    total_messages = await db.scalar(
+        select(func.count(Message.id))
+        .join(Conversation, Message.conversation_id == Conversation.id)
+        .where(Conversation.user_id == int(user_id))
+    )
+    
+    total_documents = await db.scalar(
+        select(func.count(Document.id)).where(Document.user_id == int(user_id))
+    )
+    
+    # Calculate averages
+    avg_messages_per_conversation = (total_messages / max(total_conversations, 1)) if total_conversations else 0
+    
+    analytics_data = {
+        "user_id": user_id,
+        "username": user.username,
+        "email": user.email,
+        "total_conversations": total_conversations or 0,
+        "total_messages": total_messages or 0,
+        "total_documents": total_documents or 0,
+        "avg_messages_per_conversation": round(avg_messages_per_conversation, 2),
+        "is_active": user.is_active,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+    }
+    
+    return APIResponse[dict](
+        success=True,
+        message="User analytics retrieved successfully",
+        data=analytics_data,
+    )
+
+
 @router.post("/export-report", response_model=APIResponse[AnalyticsExportPayload])
 @handle_api_errors("Failed to export analytics report")
 async def export_analytics_report(

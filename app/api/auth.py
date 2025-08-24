@@ -1,21 +1,22 @@
 """Authentication API endpoints."""
 
-from typing import Annotated
+from typing import Annotated, List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.dependencies import get_auth_service, get_current_user
 from app.models.user import User
 from app.services.auth import AuthService
 from app.utils.api_errors import handle_api_errors, log_api_call
 from shared.schemas.auth import (
+    APIKeyResponse,
     LoginRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     RegisterRequest,
     Token,
 )
-from shared.schemas.common import APIResponse
+from shared.schemas.common import APIResponse, PaginatedResponse, PaginationParams
 from shared.schemas.user import UserResponse
 
 router = APIRouter(tags=["authentication"])
@@ -58,6 +59,53 @@ async def login(
         success=True,
         message="User authenticated successfully",
         data=token_data,
+    )
+
+
+@router.get("/api-keys")
+@handle_api_errors("Failed to retrieve API keys")
+async def get_api_keys(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: User = Depends(get_current_user),
+) -> APIResponse[PaginatedResponse[APIKeyResponse]]:
+    """Get user's API keys with pagination."""
+    log_api_call("get_api_keys", user_id=str(current_user.id))
+    
+    # Mock API keys data - in real implementation this would come from a service
+    api_keys = []
+    for i in range(1, 6):  # Mock 5 keys
+        api_key = APIKeyResponse(
+            id=f"key_{current_user.id}_{i}",
+            name=f"API Key {i}",
+            key_prefix="sk_live_",
+            created_at=current_user.created_at,
+            expires_at=None,
+            last_used_at=None,
+            usage_count=i * 10,
+            is_active=True,
+            permissions=["read", "write"]
+        )
+        api_keys.append(api_key)
+    
+    # Apply pagination
+    start = (page - 1) * size
+    end = start + size
+    paginated_keys = api_keys[start:end]
+    
+    payload = PaginatedResponse(
+        items=paginated_keys,
+        pagination=PaginationParams(
+            total=len(api_keys),
+            page=page,
+            per_page=size,
+        ),
+    )
+    
+    return APIResponse[PaginatedResponse[APIKeyResponse]](
+        success=True,
+        message="API keys retrieved successfully",
+        data=payload,
     )
 
 
