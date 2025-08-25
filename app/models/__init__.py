@@ -21,6 +21,7 @@ from app.models.conversation import Conversation, Message
 from app.models.document import Document, DocumentChunk
 
 # Import new registry models
+from app.models.job import Job
 from app.models.mcp_server import MCPServer
 from app.models.mcp_tool import MCPTool
 from app.models.profile import LLMProfile
@@ -41,6 +42,7 @@ __all__ = [
     "Conversation",
     "Message",
     # Registry models
+    "Job",
     "MCPServer",
     "MCPTool",
     "Prompt",

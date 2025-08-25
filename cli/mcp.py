@@ -14,7 +14,7 @@ from rich.table import Table
 from typer import Argument, Option
 
 from cli.base import (
-    ApiError,
+    APIError,
     error_message,
     get_sdk,
     info_message,
@@ -74,7 +74,7 @@ async def show_server(
         sdk = await get_sdk()
         response = await sdk.mcp.get_server(name)
         _display_server_details(response)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get MCP server: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to show server: {str(e)}")
@@ -104,7 +104,7 @@ async def add_server(
         )
         success_message(f"MCP server '{name}' added successfully")
         _display_server_details(response)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to add MCP server: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to add MCP server: {str(e)}")
@@ -131,7 +131,7 @@ async def remove_server(
         sdk = await get_sdk()
         await sdk.mcp.remove_server(name)
         success_message(f"MCP server '{name}' removed successfully")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to remove MCP server: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to remove MCP server: {str(e)}")
@@ -144,7 +144,7 @@ async def enable_server(name: str = Argument(..., help="Server name to enable"))
         sdk = await get_sdk()
         await sdk.mcp.enable_server(name)
         success_message(f"MCP server '{name}' enabled successfully")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to enable MCP server: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to enable MCP server: {str(e)}")
@@ -157,7 +157,7 @@ async def disable_server(name: str = Argument(..., help="Server name to disable"
         sdk = await get_sdk()
         await sdk.mcp.disable_server(name)
         success_message(f"MCP server '{name}' disabled successfully")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to disable MCP server: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to disable MCP server: {str(e)}")
@@ -232,7 +232,7 @@ async def show_tool(
         sdk = await get_sdk()
         response = await sdk.mcp.get_tool(tool_name, server=server)
         _display_tool_details(response["data"])
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get MCP tool: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get tool: {str(e)}")
@@ -248,7 +248,7 @@ async def enable_tool(
         sdk = await get_sdk()
         response = await sdk.mcp.enable_tool(tool_name, server=server)
         success_message(f"MCP tool '{tool_name}' enabled successfully")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to enable MCP tool: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to enable MCP tool: {str(e)}")
@@ -264,7 +264,7 @@ async def disable_tool(
         sdk = await get_sdk()
         response = await sdk.mcp.disable_tool(tool_name, server=server)
         success_message(f"MCP tool '{tool_name}' disabled successfully")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to disable MCP tool: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to disable MCP tool: {str(e)}")
@@ -295,7 +295,7 @@ async def test_tool(
         success_message(f"MCP tool '{tool_name}' test completed successfully")
         if response.get("content"):
             print(f"Test result: {response['content'][0]['text']}")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to test MCP tool: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to test MCP tool: {str(e)}")
@@ -308,7 +308,7 @@ async def server_status():
         sdk = await get_sdk()
         response = await sdk.mcp.get_servers_status()
         _display_server_status(response)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get server status: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get server status: {str(e)}")
@@ -321,7 +321,7 @@ async def stats():
         sdk = await get_sdk()
         response = await sdk.mcp.get_stats()
         _display_stats(response)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get MCP staistics: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get MCP statistics: {str(e)}")
@@ -338,7 +338,7 @@ async def refresh(
         sdk = await get_sdk()
         response = await sdk.mcp.refresh(server=server)
         success_message("MCP refresh completed successfully")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to refresh MCP servers: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to refresh MCP servers: {str(e)}")

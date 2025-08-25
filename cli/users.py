@@ -90,10 +90,10 @@ async def create(
                     error_message(
                         f"Failed to promote user to superuser: {getattr(promote_result, 'message', '')}"
                     )
-            except ApiError as e:
+            except APIError as e:
                 error_message(f"Failed to promote user to superuser: {str(e)}")
 
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to create user: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {e}")
@@ -163,7 +163,7 @@ async def list(
         if getattr(pagination, "total", 0) > size:
             info_message(f"Showing {len(users)} of {pagination.total} total users")
 
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to list users: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
@@ -199,7 +199,7 @@ async def show(
 
         display_key_value_pairs(user_info, f"User Details: {user.username}")
 
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get user: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")
@@ -225,7 +225,7 @@ async def stats():
 
         display_key_value_pairs(stats_info, "User Statistics")
 
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get user statistics: {e.body['message']}")
     except Exception as e:
         error_message(f"Unexpected error: {str(e)}")

@@ -11,7 +11,7 @@ from async_typer import AsyncTyper
 from rich.console import Console
 from typer import Option
 
-from cli.base import ApiError, error_message, get_sdk, success_message
+from cli.base import APIError, error_message, get_sdk, success_message
 
 console = Console()
 
@@ -38,7 +38,7 @@ async def overview():
                 else:
                     table.add_row(k, str(v))
             console.print(table)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get analytics overview: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get analytics overview: {str(e)}")
@@ -63,7 +63,7 @@ async def usage(
             for k, v in usage.items():
                 table.add_row(str(k), str(v))
             console.print(table)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get usage analytics: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get usage analytics: {str(e)}")
@@ -83,7 +83,7 @@ async def performance():
             for k, v in perf.items():
                 table.add_row(str(k), str(v))
             console.print(table)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get performance metrics: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get performance metrics: {str(e)}")
@@ -104,7 +104,7 @@ async def export_report(
             )
         else:
             error_message(getattr(data, "message", "Failed to export report"))
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to export analytics report: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to export analytics report: {str(e)}")

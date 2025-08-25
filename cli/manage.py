@@ -14,6 +14,7 @@ from cli.conversations import conversation_app
 from cli.core import core_app  # New: core commands (login, auth-status, config, etc.)
 from cli.database import database_app
 from cli.documents import document_app
+from cli.jobs import jobs_app
 from cli.mcp import mcp_app
 from cli.profiles import profile_app
 from cli.prompts import prompt_app
@@ -36,6 +37,7 @@ app.add_typer(conversation_app, name="conversations")
 app.add_typer(analytics_app, name="analytics")
 app.add_typer(database_app, name="database")
 app.add_typer(tasks_app, name="tasks")
+app.add_typer(jobs_app, name="jobs")
 app.add_typer(mcp_app, name="mcp")
 app.add_typer(prompt_app, name="prompts")
 app.add_typer(profile_app, name="profiles")

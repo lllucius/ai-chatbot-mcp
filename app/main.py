@@ -24,6 +24,7 @@ from app.api import (
     database_router,
     documents_router,
     health_router,
+    jobs_router,
     mcp_router,
     profiles_router,
     prompts_router,
@@ -358,6 +359,7 @@ app.include_router(data_management_router, prefix="/api/v1/data-management", tag
 app.include_router(database_router, prefix="/api/v1/database", tags=["database"])
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
 app.include_router(health_router, prefix="/api/v1/health", tags=["health"])
+app.include_router(jobs_router, prefix="/api/v1/jobs", tags=["jobs"])
 app.include_router(mcp_router, prefix="/api/v1/mcp", tags=["mcp"])
 app.include_router(profiles_router, prefix="/api/v1/profiles", tags=["profiles"])
 app.include_router(prompts_router, prefix="/api/v1/prompts", tags=["prompts"])

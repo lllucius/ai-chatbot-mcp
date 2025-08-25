@@ -16,7 +16,7 @@ from rich.table import Table
 from typer import Argument, Option
 
 from cli.base import (
-    ApiError,
+    APIError,
     confirm_action,
     error_message,
     format_file_size,
@@ -73,7 +73,7 @@ async def list(
             console.print(table)
         else:
             info_message("No documents found.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to list documents: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to list documents: {str(e)}")
@@ -101,7 +101,7 @@ async def upload(
             success_message(f"Document uploaded successfully (ID: {doc_id})")
         else:
             error_message(getattr(resp, "message", "Failed to upload document"))
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to upload document: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to upload document: {str(e)}")
@@ -129,7 +129,7 @@ async def show(
         )
         panel = Panel(details, title="Document Details", border_style="magenta")
         console.print(panel)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get document: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get document: {str(e)}")
@@ -160,7 +160,7 @@ async def status(
             )
         panel = Panel(details, title="Processing Status", border_style="blue")
         console.print(panel)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get document status: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get document status: {str(e)}")
@@ -175,7 +175,7 @@ async def reprocess(
         sdk = await get_sdk()
         await sdk.documents.reprocess(int(document_id))
         success_message("Document reprocessing started.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to reprocess document: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to reprocess document: {str(e)}")
@@ -196,7 +196,7 @@ async def delete(
         sdk = await get_sdk()
         await sdk.documents.delete(int(document_id))
         success_message("Document deleted successfully.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to delete document: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to delete document: {str(e)}")

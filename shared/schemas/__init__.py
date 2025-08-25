@@ -193,6 +193,19 @@ from shared.schemas.health import (
     SystemMetricsResponse,
     SystemResourceMetrics,
 )
+from shared.schemas.job import (
+    JobCreate,
+    JobExecutionRequest,
+    JobExecutionResponse,
+    JobListResponse,
+    JobResponse,
+    JobScheduleValidationRequest,
+    JobScheduleValidationResponse,
+    JobSearchParams,
+    JobStatsData,
+    JobStatsResponse,
+    JobUpdate,
+)
 from shared.schemas.mcp import (
     MCPBatchUsageSchema,
     MCPConnectionStatusSchema,
@@ -457,6 +470,18 @@ __all__ = [
     "SystemMetricsPayload",
     "SystemMetricsResponse",
     "SystemResourceMetrics",
+    # Job schemas
+    "JobCreate",
+    "JobExecutionRequest",
+    "JobExecutionResponse",
+    "JobListResponse",
+    "JobResponse",
+    "JobScheduleValidationRequest",
+    "JobScheduleValidationResponse",
+    "JobSearchParams",
+    "JobStatsData",
+    "JobStatsResponse",
+    "JobUpdate",
     # LLM Profile schemas
     "LLMProfileCreate",
     "LLMProfileResponse",

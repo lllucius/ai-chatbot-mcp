@@ -279,6 +279,146 @@ async def create_sample_mcp_servers(db: AsyncSession):
     return created_count
 
 
+async def create_default_jobs(db: AsyncSession):
+    """Create default scheduled jobs for system maintenance and monitoring."""
+    default_jobs = [
+        {
+            "name": "system_health_check",
+            "title": "System Health Check",
+            "description": "Periodic system health monitoring and alerting",
+            "job_type": "system_health_check",
+            "schedule_type": "interval",
+            "schedule_expression": "15",  # Every 15 minutes
+            "timezone": "UTC",
+            "task_name": "app.tasks.system.health_check",
+            "task_queue": "monitoring",
+            "task_priority": 8,
+            "timeout_seconds": 300,
+            "max_retries": 2,
+            "is_enabled": True,
+            "config": {
+                "check_database": True,
+                "check_openai": True,
+                "check_mcp_servers": True,
+                "alert_on_failure": True
+            }
+        },
+        {
+            "name": "document_cleanup",
+            "title": "Document Cleanup",
+            "description": "Clean up old processed documents and temporary files",
+            "job_type": "document_cleanup",
+            "schedule_type": "daily",
+            "schedule_expression": "02:00",  # Daily at 2:00 AM
+            "timezone": "UTC",
+            "task_name": "app.tasks.documents.cleanup_old_documents",
+            "task_queue": "maintenance",
+            "task_priority": 3,
+            "timeout_seconds": 3600,
+            "max_retries": 2,
+            "is_enabled": True,
+            "config": {
+                "older_than_days": 30,
+                "status_filter": "failed",
+                "cleanup_temp_files": True
+            }
+        },
+        {
+            "name": "analytics_aggregation",
+            "title": "Analytics Data Aggregation",
+            "description": "Aggregate usage statistics and generate reports",
+            "job_type": "analytics_aggregation",
+            "schedule_type": "daily",
+            "schedule_expression": "01:00",  # Daily at 1:00 AM
+            "timezone": "UTC",
+            "task_name": "app.tasks.analytics.aggregate_daily_stats",
+            "task_queue": "analytics",
+            "task_priority": 4,
+            "timeout_seconds": 1800,
+            "max_retries": 3,
+            "is_enabled": True,
+            "config": {
+                "aggregate_users": True,
+                "aggregate_documents": True,
+                "aggregate_conversations": True,
+                "retention_days": 90
+            }
+        },
+        {
+            "name": "database_maintenance",
+            "title": "Database Maintenance",
+            "description": "Perform database optimization and maintenance tasks",
+            "job_type": "database_maintenance",
+            "schedule_type": "weekly",
+            "schedule_expression": "0:03:00",  # Weekly on Monday at 3:00 AM
+            "timezone": "UTC",
+            "task_name": "app.tasks.database.maintenance",
+            "task_queue": "maintenance",
+            "task_priority": 2,
+            "timeout_seconds": 7200,
+            "max_retries": 1,
+            "is_enabled": False,  # Disabled by default, enable manually
+            "config": {
+                "vacuum_analyze": True,
+                "reindex_tables": False,
+                "update_statistics": True
+            }
+        },
+        {
+            "name": "mcp_server_health_check",
+            "title": "MCP Server Health Check",
+            "description": "Monitor MCP server connectivity and performance",
+            "job_type": "mcp_server_health_check",
+            "schedule_type": "interval",
+            "schedule_expression": "30",  # Every 30 minutes
+            "timezone": "UTC",
+            "task_name": "app.tasks.mcp.health_check_servers",
+            "task_queue": "monitoring",
+            "task_priority": 6,
+            "timeout_seconds": 600,
+            "max_retries": 3,
+            "is_enabled": True,
+            "config": {
+                "check_connectivity": True,
+                "check_tool_availability": True,
+                "update_status": True,
+                "disable_on_failure": False
+            }
+        }
+    ]
+
+    try:
+        from app.services.job_service import JobService
+        from shared.schemas.job import JobCreate
+        
+        job_service = JobService(db)
+        created_count = 0
+        
+        for job_data in default_jobs:
+            try:
+                # Check if job already exists
+                existing = await job_service.get_job_by_name(job_data["name"], raise_if_not_found=False)
+                if existing:
+                    logger.info(f"Default job '{job_data['name']}' already exists, skipping")
+                    continue
+                
+                # Create job
+                job_schema = JobCreate(**job_data)
+                job = await job_service.create_job(job_schema)
+                logger.info(f"Created default job: {job.name}")
+                created_count += 1
+                
+            except Exception as e:
+                logger.warning(f"Failed to create default job {job_data['name']}: {e}")
+
+        logger.info(f"Created {created_count}/{len(default_jobs)} default jobs")
+        return created_count
+        
+    except Exception as e:
+        logger.error(f"Failed to create default jobs: {e}")
+        return 0
+
+
 async def initialize_default_data(db: AsyncSession):
     """Initialize all default data for the platform."""
     logger.info("Initializing default data for AI Chatbot Platform...")
@@ -300,6 +440,9 @@ async def initialize_default_data(db: AsyncSession):
 
     # Create sample MCP servers
     sample_servers_count = await create_sample_mcp_servers(db)
+    
+    # Create default jobs
+    default_jobs_count = await create_default_jobs(db)
 
     # Summary
     success_count = 0
@@ -315,6 +458,7 @@ async def initialize_default_data(db: AsyncSession):
         + sample_prompts_count
         + sample_profiles_count
         + sample_servers_count
+        + default_jobs_count
     )
 
     logger.info(f"Default data initialization complete - {total_created} items created")
@@ -325,5 +469,6 @@ async def initialize_default_data(db: AsyncSession):
         "sample_prompts": sample_prompts_count,
         "sample_profiles": sample_profiles_count,
         "sample_servers": sample_servers_count,
+        "default_jobs": default_jobs_count,
         "total_created": total_created,
     }

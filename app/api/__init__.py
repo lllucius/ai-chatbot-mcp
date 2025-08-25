@@ -8,6 +8,7 @@ from app.api.data_management import router as data_management_router
 from app.api.database import router as database_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
+from app.api.jobs import router as jobs_router
 from app.api.mcp import router as mcp_router
 from app.api.profiles import router as profiles_router
 from app.api.prompts import router as prompts_router
@@ -25,6 +26,7 @@ __all__ = [
     "database_router",
     "documents_router",
     "health_router",
+    "jobs_router",
     "mcp_router",
     "profiles_router",
     "prompts_router",
