@@ -459,6 +459,23 @@ python manage.py tasks retry-failed
 python manage.py tasks monitor --refresh 5 --duration 300
 ```
 
+### Job Management
+```bash
+# List scheduled jobs
+python manage.py jobs list --status active
+python manage.py jobs list --overdue-only
+
+# Create and manage jobs
+python manage.py jobs create system_backup "System Backup" database_maintenance daily "03:00" "app.tasks.backup"
+python manage.py jobs update 1 --schedule "04:00" --enabled
+python manage.py jobs execute 1 --force
+
+# Job scheduling and validation
+python manage.py jobs validate-schedule daily "09:30"
+python manage.py jobs stats
+python manage.py jobs overdue
+```
+
 ### MCP Server & Tool Management
 ```bash
 # Server management

@@ -5,11 +5,41 @@ ensuring type safety and proper API documentation.
 """
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models.job import JobStatus, JobType, ScheduleType
+
+class JobStatus(str, Enum):
+    """Job status enumeration."""
+    
+    ACTIVE = "active"
+    PAUSED = "paused"
+    DISABLED = "disabled"
+    FAILED = "failed"
+
+
+class JobType(str, Enum):
+    """Job type enumeration."""
+    
+    DOCUMENT_CLEANUP = "document_cleanup"
+    ANALYTICS_AGGREGATION = "analytics_aggregation"
+    USER_ACTIVITY_DIGEST = "user_activity_digest"
+    SYSTEM_HEALTH_CHECK = "system_health_check"
+    DATABASE_MAINTENANCE = "database_maintenance"
+    MCP_SERVER_HEALTH_CHECK = "mcp_server_health_check"
+    CUSTOM = "custom"
+
+
+class ScheduleType(str, Enum):
+    """Schedule type enumeration."""
+    
+    CRON = "cron"  # Traditional cron expression
+    INTERVAL = "interval"  # Simple interval in minutes
+    DAILY = "daily"  # Daily at specific time
+    WEEKLY = "weekly"  # Weekly on specific day/time
+    MONTHLY = "monthly"  # Monthly on specific date/time
 
 
 class JobBase(BaseModel):

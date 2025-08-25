@@ -13,10 +13,10 @@ from sqlalchemy import and_, desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationError
-from app.models.job import Job, JobStatus, JobType, ScheduleType
+from app.models.job import Job
 from app.services.base import BaseService
 from app.utils.timestamp import utcnow
-from shared.schemas.job import JobCreate, JobSearchParams, JobUpdate
+from shared.schemas.job import JobCreate, JobSearchParams, JobUpdate, JobStatus, ScheduleType
 
 
 class JobService(BaseService):
@@ -218,7 +218,7 @@ class JobService(BaseService):
                             Job.next_run_at.is_not(None),
                             Job.next_run_at < now,
                             Job.is_enabled == True,
-                            Job.status == JobStatus.ACTIVE
+                            Job.status == JobStatus.ACTIVE.value
                         )
                     )
                 else:
@@ -228,7 +228,7 @@ class JobService(BaseService):
                             Job.next_run_at.is_(None),
                             Job.next_run_at >= now,
                             Job.is_enabled == False,
-                            Job.status != JobStatus.ACTIVE
+                            Job.status != JobStatus.ACTIVE.value
                         )
                     )
             
@@ -290,7 +290,7 @@ class JobService(BaseService):
                 Job.next_run_at.is_not(None),
                 Job.next_run_at <= now,
                 Job.is_enabled == True,
-                Job.status == JobStatus.ACTIVE
+                Job.status == JobStatus.ACTIVE.value
             )
         )
         
@@ -354,16 +354,16 @@ class JobService(BaseService):
             # Basic counts
             total_jobs = await self.db.scalar(select(func.count(Job.id)))
             active_jobs = await self.db.scalar(
-                select(func.count(Job.id)).where(Job.status == JobStatus.ACTIVE)
+                select(func.count(Job.id)).where(Job.status == JobStatus.ACTIVE.value)
             )
             paused_jobs = await self.db.scalar(
-                select(func.count(Job.id)).where(Job.status == JobStatus.PAUSED)
+                select(func.count(Job.id)).where(Job.status == JobStatus.PAUSED.value)
             )
             disabled_jobs = await self.db.scalar(
-                select(func.count(Job.id)).where(Job.status == JobStatus.DISABLED)
+                select(func.count(Job.id)).where(Job.status == JobStatus.DISABLED.value)
             )
             failed_jobs = await self.db.scalar(
-                select(func.count(Job.id)).where(Job.status == JobStatus.FAILED)
+                select(func.count(Job.id)).where(Job.status == JobStatus.FAILED.value)
             )
             
             # Execution statistics
@@ -379,7 +379,7 @@ class JobService(BaseService):
                         Job.next_run_at.is_not(None),
                         Job.next_run_at <= now,
                         Job.is_enabled == True,
-                        Job.status == JobStatus.ACTIVE
+                        Job.status == JobStatus.ACTIVE.value
                     )
                 )
             )

@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_superuser, get_current_user
-from app.models.job import JobStatus, JobType, ScheduleType
 from app.models.user import User
 from app.services.job_service import JobService
 from app.utils.api_errors import handle_api_errors, log_api_call
@@ -29,6 +28,9 @@ from shared.schemas.job import (
     JobStatsData,
     JobStatsResponse,
     JobUpdate,
+    JobStatus,
+    JobType,
+    ScheduleType,
 )
 
 router = APIRouter(tags=["jobs"])

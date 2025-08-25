@@ -6,44 +6,12 @@ that can create background tasks at scheduled intervals.
 """
 
 from datetime import datetime
-from enum import Enum
 from typing import Any, Dict, Optional
 
 from sqlalchemy import JSON, Boolean, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import BaseModelDB
-
-
-class JobStatus(str, Enum):
-    """Job status enumeration."""
-    
-    ACTIVE = "active"
-    PAUSED = "paused"
-    DISABLED = "disabled"
-    FAILED = "failed"
-
-
-class JobType(str, Enum):
-    """Job type enumeration."""
-    
-    DOCUMENT_CLEANUP = "document_cleanup"
-    ANALYTICS_AGGREGATION = "analytics_aggregation"
-    USER_ACTIVITY_DIGEST = "user_activity_digest"
-    SYSTEM_HEALTH_CHECK = "system_health_check"
-    DATABASE_MAINTENANCE = "database_maintenance"
-    MCP_SERVER_HEALTH_CHECK = "mcp_server_health_check"
-    CUSTOM = "custom"
-
-
-class ScheduleType(str, Enum):
-    """Schedule type enumeration."""
-    
-    CRON = "cron"  # Traditional cron expression
-    INTERVAL = "interval"  # Simple interval in minutes
-    DAILY = "daily"  # Daily at specific time
-    WEEKLY = "weekly"  # Weekly on specific day/time
-    MONTHLY = "monthly"  # Monthly on specific date/time
 
 
 class Job(BaseModelDB):
@@ -59,14 +27,14 @@ class Job(BaseModelDB):
     name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True, index=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
-    job_type: Mapped[JobType] = mapped_column(String(50), nullable=False, index=True)
+    job_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     
     # Status and control
-    status: Mapped[JobStatus] = mapped_column(String(20), nullable=False, default=JobStatus.ACTIVE, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="active", index=True)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     
     # Scheduling configuration
-    schedule_type: Mapped[ScheduleType] = mapped_column(String(20), nullable=False)
+    schedule_type: Mapped[str] = mapped_column(String(20), nullable=False)
     schedule_expression: Mapped[str] = mapped_column(String(200), nullable=False)
     timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
     
@@ -110,7 +78,7 @@ class Job(BaseModelDB):
     @property
     def is_overdue(self) -> bool:
         """Check if the job is overdue for execution."""
-        if not self.next_run_at or not self.is_enabled or self.status != JobStatus.ACTIVE:
+        if not self.next_run_at or not self.is_enabled or self.status != "active":
             return False
         return datetime.utcnow() > self.next_run_at.replace(tzinfo=None)
     

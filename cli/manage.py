@@ -15,6 +15,7 @@ from cli.core import core_app  # New: core commands (login, auth-status, config,
 from cli.database import database_app
 from cli.documents import document_app
 from cli.jobs import jobs_app
+from cli.mcp import mcp_app
 from cli.profiles import profile_app
 from cli.prompts import prompt_app
 from cli.tasks import tasks_app
