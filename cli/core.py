@@ -18,7 +18,7 @@ from async_typer import AsyncTyper
 from typer import Option
 
 from cli.base import (
-    ApiError,
+    APIError,
     error_message,
     get_cli_manager,
     get_sdk,
@@ -70,7 +70,7 @@ async def login(
         print(f"Access Token: {'*' * 20}")
         print(f"Token Type: {token.token_type}")
         print(f"Expires In: {token.expires_in} seconds")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Login failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Login failed: {str(e)}")
@@ -94,7 +94,7 @@ async def logout():
         cli_manager = await get_cli_manager()
         await cli_manager.logout()
         success_message("Logged out successfully. Authentication token removed.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Logout failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Logout failed: {str(e)}")
@@ -122,7 +122,7 @@ async def auth_status():
             info_message(
                 "Not authenticated. Use 'python manage.py login' to authenticate."
             )
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to check authorization status: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to check authentication status: {str(e)}")
@@ -150,7 +150,7 @@ async def version():
         print(f"Description: {app_info.get('description', 'N/A')}")
         print(f"API Status: {app_info.get('status', 'Unknown')}")
         print("CLI Mode: API-based")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get version information: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get version information: {str(e)}")
@@ -216,7 +216,7 @@ async def health():
             success_message("System is healthy and ready to use!")
         else:
             warning_message("Some components need attention. Check the results above.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Health check failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Health check failed: {str(e)}")
@@ -265,11 +265,11 @@ async def status():
             health_data = response.get("system_health", {})
             print(f"{'Health':<15} {'Score':<15} {health_data.get('score', 0)}/100")
             print()
-        except ApiError as e:
+        except APIError as e:
             error_message(f"Failed to get system status: {e.body['message']}")
         except Exception as e:
             error_message(f"Failed to get system status: {str(e)}")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Status check failed: {e.body['message']}")
     except Exception as e:
         error_message(f"Status check failed: {str(e)}")
@@ -369,7 +369,7 @@ async def config():
             admin_user = os.getenv("DEFAULT_ADMIN_USERNAME", "admin")
             info_message(f"Default admin username: {admin_user}")
 
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to show configuration: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to show configuration: {str(e)}")

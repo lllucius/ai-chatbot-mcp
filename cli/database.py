@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 from typer import Option
 
-from cli.base import ApiError, error_message, get_sdk, success_message
+from cli.base import APIError, error_message, get_sdk, success_message
 
 console = Console()
 
@@ -30,7 +30,7 @@ async def status():
         for k, v in data.items():
             table.add_row(str(k), str(v))
         console.print(table)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to get database status: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to get database status: {str(e)}")
@@ -43,7 +43,7 @@ async def init():
         sdk = await get_sdk()
         await sdk.database.init_database()
         success_message("Database initialized successfully.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to initialize database: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to initialize database: {str(e)}")
@@ -56,7 +56,7 @@ async def upgrade():
         sdk = await get_sdk()
         await sdk.database.upgrade()
         success_message("Database upgraded successfully.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to upgrade database: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to upgrade database: {str(e)}")
@@ -71,7 +71,7 @@ async def backup(
         sdk = await get_sdk()
         response = await sdk.database.backup(output)
         success_message(f"Database backup created successfully: {response.output_file}")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to create database backup: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to create database backup: {str(e)}")
@@ -90,7 +90,7 @@ async def tables():
         for t in tables:
             table.add_row(str(t.get("name", "")), str(t.get("count", 0)))
         console.print(table)
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to list tables: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to list tables: {str(e)}")
@@ -103,7 +103,7 @@ async def vacuum():
         sdk = await get_sdk()
         await sdk.database.vacuum()
         success_message("Database vacuum completed successfully.")
-    except ApiError as e:
+    except APIError as e:
         error_message(f"Failed to vacuum database: {e.body['message']}")
     except Exception as e:
         error_message(f"Failed to vacuum database: {str(e)}")
