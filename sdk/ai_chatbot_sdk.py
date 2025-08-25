@@ -1535,6 +1535,69 @@ class TasksClient:
         return await self.sdk._request("/api/v1/tasks/monitor", dict, params=params)
 
 
+class JobsClient:
+    """Client for job management operations."""
+
+    def __init__(self, sdk: "AIChatbotSDK"):
+        """Initialize jobs client."""
+        self.sdk = sdk
+
+    async def list(self, **kwargs) -> Dict[str, Any]:
+        """List jobs with filtering and pagination."""
+        params = filter_query(kwargs)
+        return await self.sdk._request("/api/v1/jobs/", dict, params=params)
+
+    async def get(self, job_id: int) -> Dict[str, Any]:
+        """Get job by ID."""
+        return await self.sdk._request(f"/api/v1/jobs/{job_id}", dict)
+
+    async def create(self, job_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new job."""
+        return await self.sdk._request("/api/v1/jobs/", dict, method="POST", json=job_data)
+
+    async def update(self, job_id: int, job_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update an existing job."""
+        return await self.sdk._request(f"/api/v1/jobs/{job_id}", dict, method="PUT", json=job_data)
+
+    async def delete(self, job_id: int) -> Dict[str, Any]:
+        """Delete a job."""
+        return await self.sdk._request(f"/api/v1/jobs/{job_id}", dict, method="DELETE")
+
+    async def execute(self, job_id: int, execution_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Manually trigger job execution."""
+        return await self.sdk._request(
+            f"/api/v1/jobs/{job_id}/execute", 
+            dict, 
+            method="POST", 
+            json=execution_data or {}
+        )
+
+    async def pause(self, job_id: int) -> Dict[str, Any]:
+        """Pause job execution."""
+        return await self.sdk._request(f"/api/v1/jobs/{job_id}/pause", dict, method="POST")
+
+    async def resume(self, job_id: int) -> Dict[str, Any]:
+        """Resume job execution."""
+        return await self.sdk._request(f"/api/v1/jobs/{job_id}/resume", dict, method="POST")
+
+    async def get_overdue(self) -> Dict[str, Any]:
+        """Get overdue jobs."""
+        return await self.sdk._request("/api/v1/jobs/overdue/list", dict)
+
+    async def get_stats(self) -> Dict[str, Any]:
+        """Get job statistics."""
+        return await self.sdk._request("/api/v1/jobs/stats/overview", dict)
+
+    async def validate_schedule(self, validation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate job schedule configuration."""
+        return await self.sdk._request(
+            "/api/v1/jobs/validate-schedule", 
+            dict, 
+            method="POST", 
+            json=validation_data
+        )
+
+
 class AdminClient:
     """Client for admin operations across different resources."""
 
@@ -1746,6 +1809,7 @@ class AIChatbotSDK:
         self.analytics = AnalyticsClient(self)
         self.database = DatabaseClient(self)
         self.tasks = TasksClient(self)
+        self.jobs = JobsClient(self)
         self.admin = AdminClient(self)
 
     async def __aenter__(self):
